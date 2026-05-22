@@ -124,34 +124,70 @@
     </div>
 
     <script>
-        function openModal() { document.getElementById('orderModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('orderModal').style.display = 'nonse'; }
+const SERVER_URL = 'http://localhost:3000/api';
+
+// Функция, которая автоматически срабатывает при открытии страницы
+window.addEventListener('DOMContentLoaded', () => {
+    loadOrders();
+});
+
+// 1. Скачиваем актуальные заявки с сервера
+async function loadOrders() {
+    try {
+        const response = await fetch(`${SERVER_URL}/orders`);
+        const orders = await response.json();
         
-        function createOrder() {
-            const name = document.getElementById('orderName').value;
-            const category = document.getElementById('orderCategory').value;
-            const deadline = document.getElementById('orderDeadline').value;
+        const tableBody = document.getElementById('orders-table-body');
+        tableBody.innerHTML = ''; // Очищаем таблицу перед заполнением
 
-            if(!name || !deadline) { alert('Заполните все поля'); return; }
-
-            const tableBody = document.getElementById('orders-table-body');
-            const newRow = document.createElement('tr');
-            
-            newRow.innerHTML = `
-                <td>${name}</td>
-                <td>${category}</td>
-                <td><span class="status active">Активна</span></td>
-                <td>0</td>
-                <td>${deadline}</td>
+        orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${order.title}</td>
+                <td>${order.category}</td>
+                <td><span class="status active">${order.status}</span></td>
+                <td>${order.responses}</td>
+                <td>${order.deadline}</td>
             `;
-            
-            tableBody.appendChild(newRow);
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Ошибка при загрузке заявок:', error);
+    }
+}
+
+function openModal() { document.getElementById('orderModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+// 2. Отправляем новую заявку на сервер
+async function createOrder() {
+    const title = document.getElementById('orderName').value;
+    const category = document.getElementById('orderCategory').value;
+    const deadline = document.getElementById('orderDeadline').value;
+
+    if (!title || !deadline) { alert('Заполните все поля'); return; }
+
+    try {
+        const response = await fetch(`${SERVER_URL}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, category, deadline })
+        });
+
+        if (response.ok) {
             closeModal();
+            loadOrders(); // Перезагружаем таблицу актуальными данными с сервера
             
-            // Очистка полей
+            // Очистка полей формы
             document.getElementById('orderName').value = '';
             document.getElementById('orderDeadline').value = '';
+        } else {
+            alert('Не удалось сохранить заявку на сервере');
         }
+    } catch (error) {
+        console.error('Ошибка при отправке заявки:', error);
+    }
+}
     </script>
 </body>
 </html>
