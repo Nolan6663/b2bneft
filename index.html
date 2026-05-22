@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабинет Заказчика — Платформа Закупок</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f4f6f9; color: #333; }
+        
+        /* Боковое меню */
+        .sidebar { width: 240px; background-color: #1a2a40; color: #fff; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .logo { font-weight: bold; font-size: 18px; padding-bottom: 20px; border-bottom: 1px solid #2c3e50; text-align: center; color: #3498db; }
+        .menu-item { padding: 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; list-style: none; }
+        .menu-item:hover, .menu-item.active { background-color: #34495e; }
+        
+        /* Основной контент */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-create { background-color: #2980b9; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-create:hover { background-color: #3498db; }
+        
+        /* Таблица */
+        .section-title { margin-bottom: 15px; font-size: 20px; color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 40px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background-color: #f8fafc; font-weight: 600; color: #718096; }
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status.active { background-color: #e6fffa; color: #319795; }
+        
+        /* Карточки откликов */
+        .responses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .response-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #3498db; }
+        .company-name { font-weight: bold; font-size: 16px; margin-bottom: 10px; }
+        .meta-info { font-size: 14px; color: #718096; margin-bottom: 5px; }
+
+        /* Модальное окно */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .modal-content input, .modal-content select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; width: 100%; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .btn-submit { background-color: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        .btn-close { background-color: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">ЗАВОД — ЗАВОДУ</div>
+        <div><strong style="color: #bdc3c7; font-size: 12px;">КАБИНЕТ ЗАКАЗЧИКА</strong></div>
+        <li class="menu-item active">Мои заявки</li>
+        <li class="menu-item">Последние отклики</li>
+        <li class="menu-item">Сообщения</li>
+        <li class="menu-item">Профиль компании</li>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Управление закупками</h2>
+            <button class="btn-create" onclick="openModal()">+ Создать заявку</button>
+        </div>
+
+        <h3 class="section-title">Активные заявки</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Название заявки</th>
+                    <th>Категория</th>
+                    <th>Статус</th>
+                    <th>Отклики</th>
+                    <th>Дедлайн</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table-body">
+                <tr>
+                    <td>Манжета уплотнительная 50х70х10</td>
+                    <td>РТИ</td>
+                    <td><span class="status active">Активна</span></td>
+                    <td>7</td>
+                    <td>25.05.2026</td>
+                </tr>
+                <tr>
+                    <td>Фланец стальной по чертежу</td>
+                    <td>Металл</td>
+                    <td><span class="status active">Активна</span></td>
+                    <td>5</td>
+                    <td>24.05.2026</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 class="section-title">Последние отклики производителей</h3>
+        <div class="responses-grid">
+            <div class="response-card">
+                <div class="company-name">Завод РТИ-Профи ★ 4.8</div>
+                <div class="meta-info">Срок: 5 дней</div>
+                <div class="meta-info">Цена: 120 ₽/шт</div>
+                <div class="meta-info">Условия: без НДС</div>
+            </div>
+            <div class="response-card">
+                <div class="company-name">Металл-Сервис ★ 4.6</div>
+                <div class="meta-info">Срок: 7 дней</div>
+                <div class="meta-info">Цена: 150 ₽/шт</div>
+                <div class="meta-info">Условия: с НДС</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <h3>Новая заявка на изделие</h3>
+            <input type="text" id="orderName" placeholder="Название детали (например, Втулка бронзовая)">
+            <select id="orderCategory">
+                <option value="РТИ">РТИ</option>
+                <option value="Металл">Металл</option>
+            </select>
+            <input type="text" id="orderDeadline" placeholder="Дедлайн (например, 30.05.2026)">
+            <div class="modal-buttons">
+                <button class="btn-close" onclick="closeModal()">Отмена</button>
+                <button class="btn-submit" onclick="createOrder()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById('orderModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('orderModal').style.display = 'nonse'; }
+        
+        function createOrder() {
+            const name = document.getElementById('orderName').value;
+            const category = document.getElementById('orderCategory').value;
+            const deadline = document.getElementById('orderDeadline').value;
+
+            if(!name || !deadline) { alert('Заполните все поля'); return; }
+
+            const tableBody = document.getElementById('orders-table-body');
+            const newRow = document.createElement('tr');
+            
+            newRow.innerHTML = `
+                <td>${name}</td>
+                <td>${category}</td>
+                <td><span class="status active">Активна</span></td>
+                <td>0</td>
+                <td>${deadline}</td>
+            `;
+            
+            tableBody.appendChild(newRow);
+            closeModal();
+            
+            // Очистка полей
+            document.getElementById('orderName').value = '';
+            document.getElementById('orderDeadline').value = '';
+        }
+    </script>
+</body>
+</html>
