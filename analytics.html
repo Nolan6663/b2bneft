@@ -1,0 +1,431 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Платформа - Аналитический Дашборд</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-sidebar: #090d16;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb;
+            --border-color: rgba(15, 23, 42, 0.06);
+            --blur-effect: blur(16px);
+            --card-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.04);
+            --chart-grid: #e2e8f0;
+            --chart-text: #64748b;
+        }
+
+        body.dark-mode {
+            --bg-main: #030712;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-sidebar: #0b0f19;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+            --chart-grid: #1f2937;
+            --chart-text: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* СAЙДБАР */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: rgba(241, 245, 249, 0.6) !important;
+            text-decoration: none !important;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .theme-container {
+            margin-top: auto;
+            padding-top: 20px;
+            margin-bottom: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .theme-text { font-size: 13px; color: #94a3b8; }
+        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
+        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
+        .theme-switch input:checked + .theme-slider { background-color: #10b981; }
+        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
+
+        /* КОНТЕНТ */
+        .main-content {
+            flex: 1;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            overflow-y: auto;
+        }
+
+        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; }
+        .company-badge { font-size: 14px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
+
+        /* МЕТРИКИ */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: var(--blur-effect);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        .metric-card p { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-card h3 { font-size: 32px; font-weight: 700; margin-top: 12px; letter-spacing: -0.8px; }
+
+        /* СЕТКА ДАШБОРДОВ С ГРАФИКАМИ */
+        .charts-container-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-container-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: var(--blur-effect);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 380px;
+        }
+
+        .chart-box h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; color: var(--text-main); }
+        
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 24px; }
+            .main-content { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h1>B2B Платформа</h1>
+        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
+        
+        <div class="theme-container">
+            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
+            <label class="theme-switch">
+                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                <span class="theme-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Аналитический дашборд</h2>
+            <div id="companyMeta" class="company-badge">Загрузка контекста авторизации...</div>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid"></div>
+
+        <div class="charts-container-grid">
+            <div class="chart-box">
+                <h4 id="mainChartTitle">Динамика и объёмы данных</h4>
+                <div class="canvas-wrapper">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-box">
+                <h4 id="secondaryChartTitle">Структура долей</h4>
+                <div class="canvas-wrapper">
+                    <canvas id="secondaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Изолированная проверка сессии
+        (() => {
+            if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        })();
+
+        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
+        const role = localStorage.getItem('userRole');
+        const companyName = localStorage.getItem('userCompany') || 'Организация';
+        
+        let chartInstanceMain = null;
+        let chartInstanceSecondary = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setupInterface();
+            loadDashboard();
+        });
+
+        function setupInterface() {
+            const backBtn = document.getElementById('backToCabinetBtn');
+            if (backBtn) backBtn.href = role === 'customer' ? 'index.html' : 'producer.html';
+            
+            const metaEl = document.getElementById('companyMeta');
+            if (metaEl) {
+                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Права доступа: <span style="color: ${role === 'customer' ? '#2563eb' : '#10b981'}; font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
+            }
+        }
+
+        // Общие параметры для красивого сглаживания графиков
+        function getChartThemeOptions() {
+            const isDark = document.body.classList.add;
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim();
+            const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim();
+            
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: textColor, font: { family: 'Inter', size: 12, weight: 500 } } },
+                    tooltip: { padding: 12, borderRadius: 8, titleFont: { family: 'Inter' }, bodyFont: { family: 'Inter' } }
+                },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter' } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter' } } }
+                }
+            };
+        }
+
+        async function loadDashboard() {
+            const grid = document.getElementById('metricsGrid');
+            if (!grid) return;
+
+            try {
+                const headers = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
+
+                if (role === 'customer') {
+                    // --- МОДУЛЬ ЗАКАЗЧИКА ---
+                    document.getElementById('mainChartTitle').innerText = 'Анализ конкуренции: количество предложений по тендерам';
+                    document.getElementById('secondaryChartTitle').innerText = 'Доли товарных категорий в закупках';
+
+                    const response = await fetch(`${SERVER_URL}/orders`, { headers });
+                    const orders = await response.json();
+
+                    const totalOrders = orders.length;
+                    const activeOrders = orders.filter(o => o.status !== 'Закрыта').length;
+                    const closedOrders = orders.filter(o => o.status === 'Закрыта').length;
+                    const totalResponses = orders.reduce((sum, o) => sum + (o.responses || 0), 0);
+
+                    grid.innerHTML = `
+                        <div class="metric-card" style="border-left: 4px solid #2563eb;">
+                            <p>Общий пул процедур</p>
+                            <h3>${totalOrders}</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #10b981;">
+                            <p>Активные торги</p>
+                            <h3 style="color: #10b981;">${activeOrders}</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #64748b;">
+                            <p>Архивные лоты</p>
+                            <h3>${closedOrders}</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #f59e0b;">
+                            <p>Всего входящих КП</p>
+                            <h3 style="color: #f59e0b;">${totalResponses}</h3>
+                        </div>
+                    `;
+
+                    // Данные для главного графика (Bar) - предложения на каждый тендер
+                    const labelsMain = orders.map(o => o.title.split(' | ')[0]);
+                    const dataMain = orders.map(o => o.responses || 0);
+
+                    // Данные для кругового графика (Doughnut) - категории
+                    const rtiCount = orders.filter(o => o.category === 'РТИ').length;
+                    const metalCount = orders.filter(o => o.category === 'Металл').length;
+
+                    renderCharts(
+                        'bar', 
+                        { labels: labelsMain, datasets: [{ label: 'Подано КП от заводов', data: dataMain, backgroundColor: '#3b82f6', borderRadius: 6 }] },
+                        'doughnut',
+                        { labels: ['Категория РТИ', 'Категория Металл'], datasets: [{ data: [rtiCount, metalCount], backgroundColor: ['#10b981', '#6366f1'], borderWidth: 0 }] }
+                    );
+
+                } else {
+                    // --- МОДУЛЬ ПРОИЗВОДИТЕЛЯ ---
+                    document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов (₽)';
+                    document.getElementById('secondaryChartTitle').innerText = 'Конверсия поданных коммерческих предложений';
+
+                    const response = await fetch(`${SERVER_URL}/proposals`, { headers });
+                    const allProposals = await response.json();
+
+                    // Вычленяем КП текущей авторизованной организации
+                    const myProps = allProposals.filter(p => p.company === companyName);
+
+                    const totalProps = myProps.length;
+                    const winProps = myProps.filter(p => p.status === 'Выигран').length;
+                    const looseProps = myProps.filter(p => p.status === 'Отклонен').length;
+                    const waitingProps = totalProps - winProps - looseProps;
+                    const totalSum = myProps.filter(p => p.status === 'Выигран').reduce((sum, p) => sum + (p.price || 0), 0);
+
+                    grid.innerHTML = `
+                        <div class="metric-card" style="border-left: 4px solid #6366f1;">
+                            <p>Всего направлено КП</p>
+                            <h3>${totalProps}</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #10b981;">
+                            <p>Утверждено заказчиком</p>
+                            <h3 style="color: #10b981;">${winProps}</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #2563eb;">
+                            <p>Сумма контрактации</p>
+                            <h3 style="color: #2563eb; font-size: 24px; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${totalSum.toLocaleString()} ₽</h3>
+                        </div>
+                        <div class="metric-card" style="border-left: 4px solid #f59e0b;">
+                            <p>На рассмотрении</p>
+                            <h3 style="color: #f59e0b;">${waitingProps}</h3>
+                        </div>
+                    `;
+
+                    // Данные для главного графика (Line) - цены наших выигранных лотов
+                    const winItems = myProps.filter(p => p.status === 'Выигран');
+                    const labelsMain = winItems.map((p, idx) => p.orderTitle ? p.orderTitle.split(' | ')[0] : `Контракт #${idx+1}`);
+                    const dataMain = winItems.map(p => p.price);
+
+                    renderCharts(
+                        'line',
+                        { labels: labelsMain.length ? labelsMain : ['Нет данных'], datasets: [{ label: 'Стоимость сделки', data: dataMain.length ? dataMain : [0], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+                        'pie',
+                        { labels: ['Выиграны', 'Отклонены', 'На рассмотрении'], datasets: [{ data: [winProps, looseProps, waitingProps], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }
+                    );
+                }
+            } catch (error) {
+                console.error('Критический сбой рендеринга дашбордов:', error);
+                grid.innerHTML = `<div style="color: #ef4444; font-weight: 600; padding: 20px;">Ошибка построения интерактивных интерфейсов. Бэкенд недоступен.</div>`;
+            }
+        }
+
+        function renderCharts(typeMain, dataMain, typeSecondary, dataSecondary) {
+            const themeOpts = getChartThemeOptions();
+
+            if (chartInstanceMain) chartInstanceMain.destroy();
+            if (chartInstanceSecondary) chartInstanceSecondary.destroy();
+
+            const ctxMain = document.getElementById('mainChart').getContext('2d');
+            chartInstanceMain = new Chart(ctxMain, {
+                type: typeMain,
+                data: dataMain,
+                options: themeOpts
+            });
+
+            // Для круговых штук убираем сетку осей, чтобы не ломать рендер
+            const secondaryOpts = JSON.parse(JSON.stringify(themeOpts));
+            delete secondaryOpts.scales;
+
+            const ctxSecondary = document.getElementById('secondaryChart').getContext('2d');
+            chartInstanceSecondary = new Chart(ctxSecondary, {
+                type: typeSecondary,
+                data: dataSecondary,
+                options: secondaryOpts
+            });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            const label = document.getElementById('themeLabel');
+            
+            if (checkbox.checked) {
+                body.classList.add('dark-mode');
+                label.innerText = '🌙 Тёмная тема';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                label.innerText = '☀️ Светлая тема';
+                localStorage.setItem('theme', 'light');
+            }
+            // Перерисовываем графики под новую цветовую схему
+            loadDashboard();
+        }
+
+        // Инициализация темы при загрузке
+        const savedTheme = localStorage.getItem('theme');
+        const checkbox = document.getElementById('themeCheckbox');
+        const label = document.getElementById('themeLabel');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (checkbox) checkbox.checked = true;
+            if (label) label.innerText = '🌙 Тёмная тема';
+        }
+    </script>
+</body>
+</html>
