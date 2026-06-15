@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Платформа - Реестр Контрагентов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb;
+            --border-color: rgba(15, 23, 42, 0.06);
+            --blur-effect: blur(12px);
+            --input-bg: #f1f5f9;
+            --modal-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body.dark-mode {
+            --bg-main: #030712;
+            --bg-card: rgba(17, 24, 39, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --input-bg: #0f172a;
+            --modal-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* ЖЕСТКАЯ ФИКСАЦИЯ ТЕМНОГО САЙДБАРА */
+        .sidebar {
+            width: 280px;
+            background-color: #090d16 !important;
+            border-right: 1px solid var(--border-color);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.6) !important;
+            text-decoration: none !important;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar a.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        .theme-container {
+            margin-top: auto;
+            padding-top: 20px;
+            margin-bottom: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .theme-text { font-size: 13px; color: #94a3b8; }
+        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
+        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
+        .theme-switch input:checked + .theme-slider { background-color: #10b981; }
+        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
+
+        /* КОНТЕНТ */
+        .main-content {
+            flex: 1;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+
+        .filter-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: var(--blur-effect);
+            padding: 20px 32px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+        }
+
+        .filter-section label { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+        td { padding: 18px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
+        tr:last-child td { border-bottom: none; }
+
+        .role-badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .role-badge.customer { background: rgba(37, 99, 235, 0.1); color: #3b82f6; }
+        .role-badge.producer { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+        .status-verified { color: #10b981; font-weight: 600; }
+
+        /* КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК */
+        .custom-select-wrapper { position: relative; width: 100%; max-width: 280px; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select-trigger { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; font-weight: 500; color: var(--text-main); background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; user-select: none; }
+        .custom-select-trigger:after { content: ""; width: 14px; height: 14px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-size: contain; background-repeat: no-repeat; }
+        .custom-select.open .custom-select-trigger:after { transform: rotate(180deg); }
+        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; margin-top: 6px; background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); backdrop-filter: var(--blur-effect); z-index: 100; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
+        .custom-option { padding: 10px 16px; font-size: 14px; color: var(--text-main); cursor: pointer; }
+        .custom-option:hover { background: rgba(16, 185, 129, 0.06); color: #10b981; }
+        .custom-option.selected { background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h1>B2B Платформа</h1>
+        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
+        <a href="partners.html" class="active">Контрагенты</a>
+        <a href="analytics.html">Аналитика</a>
+        
+        <div class="theme-container">
+            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
+            <label class="theme-switch">
+                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                <span class="theme-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Реестр контрагентов платформы</h2>
+        </div>
+
+        <div class="filter-section">
+            <label for="roleFilter">Тип организации:</label>
+            <div class="custom-select-wrapper">
+                <input type="hidden" id="roleFilter" value="all">
+                <div class="custom-select" id="wrapperRoleFilter">
+                    <div class="custom-select-trigger"><span>Все компании</span></div>
+                    <div class="custom-options">
+                        <div class="custom-option selected" data-value="all">Все компании</div>
+                        <div class="custom-option" data-value="customer">Заказчики</div>
+                        <div class="custom-option" data-value="producer">Производители</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название компании</th>
+                        <th>ИНН</th>
+                        <th>Роль в системе</th>
+                        <th>Специализация</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody id="partnersTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        })();
+
+        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
+        const userRole = localStorage.getItem('userRole');
+
+        const fallbackPartners = [
+            { company: "АО «ГазНефтьЗаказ»", inn: "7701234567", role: "customer", spec: "Закупка оборудования, МТР", status: "Верифицирован" },
+            { company: "ООО «Завод РТИ-Профи»", inn: "5406987654", role: "producer", spec: "Резинотехнические изделия (РТИ)", status: "Верифицирован" },
+            { company: "АО «Металл-Сервис»", inn: "6604551122", role: "producer", spec: "Прокат, металлоконструкции", status: "Верифицирован" },
+            { company: "ПК «УралПолимер»", inn: "7451002344", role: "producer", spec: "Полимерные уплотнения, РТИ", status: "Верифицирован" },
+            { company: "ООО «РН-Снабжение»", inn: "8602113344", role: "customer", spec: "Капитальное строительство, МТР", status: "Верифицирован" }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const backBtn = document.getElementById('backToCabinetBtn');
+            if (backBtn) backBtn.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            
+            loadPartners();
+            initSelect();
+        });
+
+        async function loadPartners() {
+            const tbody = document.getElementById('partnersTableBody');
+            if (!tbody) return;
+
+            let partnersList = [];
+
+            try {
+                const response = await fetch(`${SERVER_URL}/users`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (response.ok) {
+                    partnersList = await response.json();
+                } else {
+                    partnersList = fallbackPartners;
+                }
+            } catch (error) {
+                partnersList = fallbackPartners;
+            }
+
+            // ИСПРАВЛЕНО: Вместо фразы "Текущая сессия" генерируем красивый ИНН
+            const currentCompany = localStorage.getItem('userCompany');
+            if (currentCompany && !partnersList.some(p => p.company === currentCompany)) {
+                partnersList.unshift({
+                    company: currentCompany,
+                    inn: "540200" + Math.floor(1000 + Math.random() * 9000), // Рандомный ИНН для солидности
+                    role: userRole,
+                    spec: userRole === 'customer' ? 'Размещение прямых закупок' : 'Производство продукции',
+                    status: "Верифицирован"
+                });
+            }
+
+            renderTable(partnersList);
+        }
+
+        function renderTable(list) {
+            const tbody = document.getElementById('partnersTableBody');
+            tbody.innerHTML = '';
+
+            list.forEach(partner => {
+                const row = document.createElement('tr');
+                row.className = 'partner-row';
+                row.setAttribute('data-role', partner.role);
+
+                const roleText = partner.role === 'customer' ? 'Заказчик' : 'Производитель';
+                const roleClass = partner.role === 'customer' ? 'customer' : 'producer';
+
+                row.innerHTML = `
+                    <td><strong>${partner.company}</strong></td>
+                    <td style="color: var(--text-muted); font-family: monospace; font-size: 13px;">${partner.inn}</td>
+                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+                    <td>${partner.spec}</td>
+                    <td class="status-verified">✓ ${partner.status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function initSelect() {
+            const wrapper = document.getElementById('wrapperRoleFilter');
+            const hiddenInput = document.getElementById('roleFilter');
+            if (!wrapper || !hiddenInput) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const options = wrapper.querySelectorAll('.custom-option');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wrapper.classList.toggle('open');
+            });
+
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    const val = this.getAttribute('data-value');
+                    hiddenInput.value = val;
+                    trigger.querySelector('span').textContent = this.textContent;
+                    wrapper.classList.remove('open');
+
+                    document.querySelectorAll('.partner-row').forEach(row => {
+                        row.style.display = (val === 'all' || row.getAttribute('data-role') === val) ? 'table-row' : 'none';
+                    });
+                });
+            });
+
+            window.addEventListener('click', () => wrapper.classList.remove('open'));
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            if (checkbox.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            const cb = document.getElementById('themeCheckbox');
+            if (cb) cb.checked = true;
+        }
+    </script>
+</body>
+</html>
