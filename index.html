@@ -461,7 +461,9 @@
 
         async function loadOrders() {
             try {
-                const response = await fetch(`${SERVER_URL}/orders`);
+                const response = await fetch(`${SERVER_URL}/orders`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
                 const orders = await response.json();
                 
                 const tableBody = document.getElementById('orders-table-body');
@@ -506,11 +508,15 @@
             document.getElementById('proposalsModal').style.display = 'flex';
 
             try {
-                const ordResponse = await fetch(`${SERVER_URL}/orders`);
+                const ordResponse = await fetch(`${SERVER_URL}/orders`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
                 const allOrders = await ordResponse.json();
                 const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId));
 
-                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`);
+                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
                 let proposals = await response.json();
                 
                 proposals.sort((a, b) => a.price - b.price); 
@@ -577,9 +583,12 @@
 
             try {
                 const response = await fetch(`${SERVER_URL}/orders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, category, deadline })
+                method: 'POST',
+                headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({ title, category, deadline })
                 });
 
                 if (response.ok) {
@@ -601,7 +610,8 @@
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
-                    method: 'POST'
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
 
                 if (response.ok) {

@@ -231,7 +231,11 @@
                         const data = await response.json();
                         // Сохраняем сессию в браузер
                         localStorage.setItem('authToken', data.token);
+                        localStorage.setItem('userRole', data.role);
+                        localStorage.setItem('userCompany', data.company || 'ООО «Завод Исполнитель»'); // ДОБАВИТЬ ЭТУ СТРОКУ
+                        localStorage.setItem('authToken', data.token);
                         localStorage.setItem('userRole', data.role); // customer или producer
+
                         
                         // Перенаправляем в зависимости от роли
                         if (data.role === 'customer') {

@@ -145,19 +145,9 @@
             overflow-y: auto;
         }
 
-        .filter-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
-            padding: 20px 32px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
-            position: relative;
-            z-index: 1;
-        }
+        <div class="filter-section" style="background: rgba(16, 185, 129, 0.05); border-left: 5px solid var(--accent-green);">
+            <div><strong>Вы вошли как организация:</strong> <span id="displayCompanyName" style="font-weight: 600; color: var(--accent-green);">Загрузка...</span></div>
+        </div>
 
         .filter-section:has(.custom-select.open) {
             z-index: 999 !important;
@@ -499,7 +489,11 @@
                 
                 const ordersList = document.getElementById('ordersList');
                 if (!ordersList) return;
-                ordersList.innerHTML = ''; 
+                ordersList.innerHTML = '';
+
+                const response = await fetch(`${SERVER_URL}/orders`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
 
                 orders.forEach(order => {
                     const orderItem = document.createElement('div');
@@ -567,7 +561,11 @@
                 
                 const tableBody = document.getElementById('myResponsesTable');
                 if (!tableBody) return;
-                tableBody.innerHTML = ''; 
+                tableBody.innerHTML = '';
+                
+                const response = await fetch(`${SERVER_URL}/proposals`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
 
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
@@ -605,23 +603,23 @@
         async function sendProposal() {
             const priceInput = document.getElementById('proposalPrice');
             const daysInput = document.getElementById('proposalTerms');
-            const companySelect = document.getElementById('companySelect');
+            const token = localStorage.getItem('authToken'); // Получаем токен
 
-            if (!priceInput || !daysInput || !companySelect) return;
+            if (!priceInput || !daysInput) return;
 
             const price = parseFloat(priceInput.value);
             const days = parseInt(daysInput.value, 10);
-            const companyName = companySelect.value;
+            const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»'; // Берем из сессии
 
-            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) {
-                alert('Укажите корректные цену и сроки поставки!');
-                return;
-            }
+            // ... (код валидации оставляешь без изменений) ...
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token // Передаем токен серверу
+                    },
                     body: JSON.stringify({ 
                         orderId: currentOrderId, 
                         orderTitle: currentOrderTitle, 
@@ -673,15 +671,19 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initPremiumSelect('wrapperCompanySelect', 'companySelect');
-            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
-                const val = document.getElementById('categoryFilter').value;
-                document.querySelectorAll('.order-item').forEach(item => {
-                    item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
+            document.addEventListener('DOMContentLoaded', () => {
+                // Вывод имени компании вошедшего юзера
+                const savedCompany = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
+                const displayEl = document.getElementById('displayCompanyName');
+                if (displayEl) displayEl.innerText = savedCompany;
+
+                initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
+                    const val = document.getElementById('categoryFilter').value;
+                    document.querySelectorAll('.order-item').forEach(item => {
+                        item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
+                    });
                 });
             });
-        });
 
         window.addEventListener('click', () => {
             document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
