@@ -405,9 +405,9 @@
                 <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
             </div>
 
-            <div class="form-group">
-                <label>Чертеж / Спецификация (PDF, PNG, DXF)</label>
-                <input type="file" id="orderFile">
+           <div class="form-group">
+                <label>Чертеж / Спецификация / 3D-модель (PDF, DWG, STEP, STP)</label>
+                <input type="file" id="orderFile" accept=".pdf,.png,.dxf,.dwg,.step,.stp">
             </div>
 
             <div class="modal-actions">
@@ -606,7 +606,7 @@
         }   
 
         async function acceptProposal(proposalId) {
-            if (!confirm('Вы уверены, что хотите принять это предложение и закрыть тендер?')) return;
+            if (!confirm('Вы уверены, что хотите принять это предложение и закрыть закупку?')) return;
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {

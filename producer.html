@@ -457,25 +457,34 @@
     </div>
 
     <script>
-        // ПРОВЕРКА РОЛИ И АВТОРИЗАЦИИ (ROUTE GUARD)
-        (() => {
-            const token = localStorage.getItem('authToken');
-            const role = localStorage.getItem('userRole');
-            if (!token || role !== 'producer') {
-                window.location.href = 'login.html';
-            }
-        })();
-        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
+const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
         let currentOrderId = null;
         let currentOrderTitle = "";
 
+        // ПЕРЕРАБОТАННЫЙ СВОБОДНЫЙ ВХОД ДЛЯ ГОСТЕЙ (ROUTE GUARD)
+        const token = localStorage.getItem('authToken');
+        const role = localStorage.getItem('userRole');
+        const isGuest = !token; // Если токена нет — пользователь зашел как гость
+
+        // Если токен есть, но роль чужая — выкидываем
+        if (token && role !== 'producer') {
+            window.location.href = 'login.html';
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadOrdersForProducers();
-            loadMyProposals();
+            if (!isGuest) {
+                loadMyProposals();
+            } else {
+                // Гостю скрываем таблицу его откликов
+                const myResponsesSection = document.querySelector('tbody(#myResponsesTable)?.closest(".section")');
+                const sections = document.querySelectorAll('.section');
+                if (sections[1]) sections[1].style.display = 'none';
+            }
         });
 
         function downloadMockFile(filename) {
-            const blob = new Blob(["Содержимое технической документации для файла: " + filename], { type: "application/octet-stream" });
+            const blob = new Blob(["Файл симуляции 3D-модели/чертежа: " + filename], { type: "application/octet-stream" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = filename;
@@ -485,16 +494,14 @@
 
         async function loadOrdersForProducers() {
             try {
-                const response = await fetch(`${SERVER_URL}/orders`);
+                // Если гость — отправляем запрос без заголовка Authorization
+                const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
+                const response = await fetch(`${SERVER_URL}/orders`, { headers });
                 const orders = await response.json();
                 
                 const ordersList = document.getElementById('ordersList');
                 if (!ordersList) return;
-                ordersList.innerHTML = '';
-
-                const response = await fetch(`${SERVER_URL}/orders`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                ordersList.innerHTML = ''; 
 
                 orders.forEach(order => {
                     const orderItem = document.createElement('div');
@@ -516,34 +523,49 @@
                     let statusText = order.status;
 
                     if (order.status === 'Закрыта') {
-                        statusText = '<span style="color: #e74c3c; font-weight: bold;">Закрыт</span>';
-                        actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Тендер завершён</button>`;
+                        statusText = '<span style="color: #e74c3c; font-weight: bold;">Закупка завершена</span>';
+                        actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Закупка закрыта</button>`;
                     } else {
                         statusText = `<span style="color: #2ecc71; font-weight: bold;">${order.status}</span>`;
-                        actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                        
+                        // Если зашел гость — кнопка ведет на авторизацию
+                        if (isGuest) {
+                            actionButton = `<button class="btn-respond" onclick="window.location.href='login.html'" style="background: #2563eb;">Войти для отклика</button>`;
+                        } else {
+                            actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                        }
                     }
 
+                    // ОГРАНИЧЕНИЕ ПРОСМОТРА ЧЕРТЕЖЕЙ ДЛЯ ГОСТЕЙ
                     let drawingBlock = '';
-                    if (drawingFile && drawingFile !== "Не прикреплен") {
+                    if (isGuest) {
                         drawingBlock = `
-                            <div class="meta" style="margin-top: 8px; color: var(--accent-green); font-weight: 500;">
-                                📁 Чертёж: <a href="#" onclick="downloadMockFile('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-green); text-decoration: underline;">${drawingFile}</a>
+                            <div class="meta" style="margin-top: 8px; color: #ef4444; font-weight: 500;">
+                                🔒 <a href="login.html" style="color: #ef4444; text-decoration: underline;">Авторизуйтесь</a> для просмотра технической документации (STEP, DWG, PDF)
                             </div>
                         `;
                     } else {
-                        drawingBlock = `
-                            <div class="meta" style="margin-top: 8px; color: var(--text-muted);">
-                                📁 Чертёж: отсутствует
-                            </div>
-                        `;
+                        if (drawingFile && drawingFile !== "Не прикреплен") {
+                            drawingBlock = `
+                                <div class="meta" style="margin-top: 8px; color: var(--accent-green); font-weight: 500;">
+                                    📁 Чертёж / 3D-модель: <a href="#" onclick="downloadMockFile('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-green); text-decoration: underline;">${drawingFile}</a>
+                                </div>
+                            `;
+                        } else {
+                            drawingBlock = `
+                                <div class="meta" style="margin-top: 8px; color: var(--text-muted);">
+                                    📁 Чертёж: отсутствует
+                                </div>
+                            `;
+                        }
                     }
 
                     orderItem.innerHTML = `
                         <div class="order-info">
                             <h4>${displayTitle}</h4>
                             <span class="tag ${tagClass}">${order.category}</span>
-                            <span class="meta">Статус: ${statusText} | Уже откликов: ${order.responses}</span>
-                            <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн: ${order.deadline}</div>
+                            <span class="meta">Статус: ${statusText} | Уже предложений: ${order.responses}</span>
+                            <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн поставки: ${order.deadline}</div>
                             ${drawingBlock}
                         </div>
                         ${actionButton}
@@ -557,25 +579,24 @@
 
         async function loadMyProposals() {
             try {
-                const response = await fetch(`${SERVER_URL}/proposals`);
+                const response = await fetch(`${SERVER_URL}/proposals`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
                 const proposals = await response.json();
                 
                 const tableBody = document.getElementById('myResponsesTable');
                 if (!tableBody) return;
-                tableBody.innerHTML = '';
-                
-                const response = await fetch(`${SERVER_URL}/proposals`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                tableBody.innerHTML = ''; 
 
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
+    
                     let badgeClass = 'badge waiting';
                     if (prop.status === 'Выигран') badgeClass = 'badge win';
                     if (prop.status === 'Отклонен') badgeClass = 'badge loose';
 
                     row.innerHTML = `
-                        <td><strong>${prop.orderTitle || 'Заявка #' + prop.orderId}</strong></td>
+                        <td><strong>${prop.orderTitle || 'Закупка #' + prop.orderId}</strong></td>
                         <td>${prop.price} ₽/шт</td>
                         <td>${prop.days} дней</td>
                         <td><span class="${badgeClass}">${prop.status}</span></td>
@@ -591,7 +612,7 @@
             currentOrderId = Number(id);
             currentOrderTitle = title;
             const modalTitle = document.getElementById('modalTitle');
-            if (modalTitle) modalTitle.innerText = `Отклик на: ${title}`;
+            if (modalTitle) modalTitle.innerText = `Подача КП на закупку: ${title}`;
             
             const modal = document.getElementById('respondModal');
             if (modal) modal.style.display = 'flex';
@@ -604,22 +625,27 @@
         async function sendProposal() {
             const priceInput = document.getElementById('proposalPrice');
             const daysInput = document.getElementById('proposalTerms');
-            const token = localStorage.getItem('authToken'); // Получаем токен
 
             if (!priceInput || !daysInput) return;
 
             const price = parseFloat(priceInput.value);
             const days = parseInt(daysInput.value, 10);
-            const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»'; // Берем из сессии
+            const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
 
-            // ... (код валидации оставляешь без изменений) ...
+            priceInput.style.borderColor = '';
+            daysInput.style.borderColor = '';
+
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) {
+                alert('Укажите корректные цену и сроки поставки!');
+                return;
+            }
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token // Передаем токен серверу
+                        'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify({ 
                         orderId: currentOrderId, 
@@ -672,19 +698,27 @@
             });
         }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                // Вывод имени компании вошедшего юзера
-                const savedCompany = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
-                const displayEl = document.getElementById('displayCompanyName');
-                if (displayEl) displayEl.innerText = savedCompany;
+        document.addEventListener('DOMContentLoaded', () => {
+            // Если гость — выводим системное уведомление в шапку организации
+            const displayEl = document.getElementById('displayCompanyName');
+            if (displayEl) {
+                displayEl.innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'Завод Исполнитель');
+            }
 
-                initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
-                    const val = document.getElementById('categoryFilter').value;
-                    document.querySelectorAll('.order-item').forEach(item => {
-                        item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
-                    });
+            // Убираем селект выбора компании для гостя, чтобы не мозолил глаза
+            const companyFilterSection = document.querySelector('.filter-section');
+            if (isGuest && companyFilterSection) {
+                companyFilterSection.style.background = 'rgba(239, 68, 6 red, 0.05)';
+                companyFilterSection.style.borderColor = '#ef4444';
+            }
+
+            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
+                const val = document.getElementById('categoryFilter').value;
+                document.querySelectorAll('.order-item').forEach(item => {
+                    item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
                 });
             });
+        });
 
         window.addEventListener('click', () => {
             document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
@@ -701,6 +735,10 @@
                 localStorage.setItem('theme', 'light');
             }
         }
+
+        // Синхронизация сохранённой темы при открытии
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') document.body.classList.add('dark-mode');
     </script>
 </body>
 </html>
