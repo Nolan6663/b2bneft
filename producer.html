@@ -344,11 +344,145 @@
         .custom-option { position: relative; padding: 12px 18px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; transition: all 0.15s ease; }
         .custom-option:hover { background: rgba(16, 185, 129, 0.06); color: var(--accent-green); padding-left: 22px; }
         .custom-option.selected { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); font-weight: 600; }
+/* КОМПЛЕКСНЫЙ ФИКС КНОПОК И СТИЛИЗАЦИИ ПУЗЫРЕЙ ЧАТА */
+        .order-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .btn-chat-secondary {
+            background: transparent !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+            padding: 0 18px !important;
+            border-radius: 10px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            height: 42px !important; /* Выравниваем высоту в один уровень с главной кнопкой */
+            box-sizing: border-box !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-chat-secondary:hover {
+            background: rgba(148, 163, 184, 0.08) !important;
+            border-color: var(--text-muted) !important;
+        }
+        
+        .order-actions .btn-respond {
+            height: 42px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+
+        /* СТИЛИЗАЦИЯ ДИАЛОГОВОГО ОКНА И КОНТЕЙНЕРА СООБЩЕНИЙ */
+        #chatModal .modal-content {
+            width: 500px !important;
+            max-width: 95vw !important;
+            padding: 24px !important;
+            background: var(--modal-bg) !important;
+            border-radius: 20px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+        }
+
+        #chatModal .chat-container {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 360px !important;
+            background: var(--input-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 14px !important;
+            overflow: hidden !important;
+        }
+
+        #chatModal .chat-messages {
+            flex: 1 !important;
+            padding: 16px !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+        }
+
+        /* ВОЗВРАЩАЕМ ПУЗЫРИ ДЛЯ ТЕКСТА СООБЩЕНИЙ */
+        #chatModal .chat-bubble {
+            max-width: 75% !important;
+            padding: 10px 16px !important;
+            border-radius: 16px !important;
+            font-size: 14px !important;
+            line-height: 1.4 !important;
+            word-break: break-word !important;
+            display: inline-block !important;
+        }
+
+        #chatModal .chat-bubble.me {
+            background: var(--accent-green) !important;
+            color: white !important;
+            align-self: flex-end !important;
+            border-bottom-right-radius: 4px !important;
+        }
+
+        #chatModal .chat-bubble.partner {
+            background: rgba(148, 163, 184, 0.2) !important;
+            color: var(--text-main) !important;
+            align-self: flex-start !important;
+            border-bottom-left-radius: 4px !important;
+        }
+
+        /* СТРОКА ВВОДА И КНОПКА ОТПРАВКИ */
+        #chatModal .chat-input-area {
+            display: flex !important;
+            gap: 10px !important;
+            padding: 12px !important;
+            background: var(--bg-card) !important;
+            border-top: 1px solid var(--border-color) !important;
+            align-items: center !important;
+        }
+
+        #chatModal .chat-input-area input {
+            flex: 1 !important;
+            height: 40px !important;
+            padding: 0 14px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border-color) !important;
+            background: var(--input-bg) !important;
+            color: var(--text-main) !important;
+            outline: none !important;
+        }
+
+        #chatModal .chat-input-area .btn-chat-submit {
+            height: 40px !important;
+            padding: 0 16px !important;
+            border-radius: 8px !important;
+            background: var(--accent-green) !important;
+            color: white !important;
+            border: none !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+        }
+
+        /* Мобильная адаптивная верстка */
+        @media (max-width: 768px) {
+            .order-item { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+            .order-actions { width: 100% !important; justify-content: flex-end !important; }
+            #chatModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
+            #chatModal .chat-container { height: calc(100vh - 160px) !important; }
+        }
     </style>
 </head>
 <body>
-
-<div class="sidebar">
+    <div class="sidebar">
         <h1>B2B Платформа</h1>
         
         <a href="producer.html" class="active">Актуальные закупки</a>
@@ -364,11 +498,9 @@
             </label>
         </div>
 
+        <!-- Ссылка должна лежать СТРОГО внутри сайдбара, прямо перед его закрытием -->
         <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
-    </div>
-
-        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
-    </div>
+    </div> <!-- Вот этот </div> закрывает исключительно сайдбар -->
 
     <div class="main-content">
         <div class="header">
@@ -433,6 +565,22 @@
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeRespondModal()">Отмена</button>
                 <button class="btn-modal-submit" id="submitProposalBtn" onclick="sendProposal()">Отправить КП</button>
+            </div>
+        </div>
+    </div>
+<!-- МОДАЛЬНОЕ ОКНО ЧАТА С ФИКСИРОВАННОЙ СТРУКТУРОЙ -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content">
+            <h3 id="chatModalTitle">Обсуждение спецификации</h3>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatModalMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatModalInput" placeholder="Напишите сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
+                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">Отправить</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeChatModal()">Закрыть</button>
             </div>
         </div>
     </div>
@@ -504,16 +652,20 @@
                     let actionButton = '';
                     let statusText = order.status;
 
+                    // Замена класса на btn-chat-secondary и удаление инлайн-стилей синего фона
+                    let chatBtn = isGuest 
+                        ? `<button class="btn-chat-secondary" onclick="window.location.href='login.html'">💬 Чат</button>`
+                        : `<button class="btn-chat-secondary" onclick="openGlobalChat(${order.id}, '${displayTitle.replace(/'/g, "\\'")}', '${localStorage.getItem('userCompany')}')">💬 Чат</button>`;
+
                     if (order.status === 'Закрыта') {
                         statusText = '<span style="color: #e74c3c; font-weight: bold;">Закупка завершена</span>';
-                        actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Закупка закрыта</button>`;
+                        actionButton = `<div class="order-actions">${chatBtn}<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Закупка закрыта</button></div>`;
                     } else {
                         statusText = `<span style="color: #2ecc71; font-weight: bold;">${order.status}</span>`;
-                        
                         if (isGuest) {
-                            actionButton = `<button class="btn-respond" onclick="window.location.href='login.html'" style="background: #2563eb;">Войти для отклика</button>`;
+                            actionButton = `<div class="order-actions">${chatBtn}<button class="btn-respond" onclick="window.location.href='login.html'" style="background: #2563eb;">Войти для отклика</button></div>`;
                         } else {
-                            actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                            actionButton = `<div class="order-actions">${chatBtn}<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button></div>`;
                         }
                     }
 
@@ -714,6 +866,58 @@
 
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+        let activeChatKey = null;
+
+        function openGlobalChat(orderId, orderTitle, company) {
+            activeChatKey = `b2b_chat_${orderId}_${company}`;
+            document.getElementById('chatModalTitle').innerText = `Чат по закупке: ${orderTitle}`;
+            document.getElementById('chatModal').style.display = 'flex';
+            renderChatHistory();
+        }
+
+        function closeChatModal() {
+            document.getElementById('chatModal').style.display = 'none';
+        }
+
+        function renderChatHistory() {
+            const container = document.getElementById('chatModalMessages');
+            if (!container || !activeChatKey) return;
+            container.innerHTML = '';
+
+            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
+            
+            if (history.length === 0) {
+                // Стартовая инициализация, если чат пустой
+                history = [{ sender: 'system', text: 'Чат открыт. Здесь вы можете обсудить допуски чертежей и параметры 3D-моделей напрямую с заказчиком.' }];
+                localStorage.setItem(activeChatKey, JSON.stringify(history));
+            }
+
+            history.forEach(msg => {
+                const bubble = document.createElement('div');
+                if (msg.sender === 'system') {
+                    bubble.className = 'chat-bubble';
+                    bubble.style = 'background:transparent; color:var(--text-muted); text-align:center; max-width:100%; font-size:12px; font-style:italic;';
+                } else {
+                    // Если отправитель producer, а мы в кабинете производителя — это "me" (справа)
+                    bubble.className = msg.sender === 'producer' ? 'chat-bubble me' : 'chat-bubble partner';
+                }
+                bubble.innerText = msg.text;
+                container.appendChild(bubble);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendGlobalChatMessage() {
+            const input = document.getElementById('chatModalInput');
+            if (!input || !input.value.trim() || !activeChatKey) return;
+
+            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
+            history.push({ sender: 'producer', text: input.value.trim() });
+            localStorage.setItem(activeChatKey, JSON.stringify(history));
+            
+            input.value = '';
+            renderChatHistory();
+        }
     </script>
 </body>
 </html>
