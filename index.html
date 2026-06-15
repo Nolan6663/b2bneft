@@ -357,7 +357,7 @@
             </label>
         </div>
 
-        <a href="producer.html" class="switch-link">Войти как Производитель</a>
+        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
@@ -441,6 +441,14 @@
     </div>
 
     <script>
+    // ПРОВЕРКА РОЛИ И АВТОРИЗАЦИИ (ROUTE GUARD)
+        (() => {
+            const token = localStorage.getItem('authToken');
+            const role = localStorage.getItem('userRole');
+            if (!token || role !== 'customer') {
+                window.location.href = 'login.html';
+            }
+        })();
         const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
 
         window.addEventListener('DOMContentLoaded', () => {
