@@ -227,30 +227,39 @@
                         body: JSON.stringify({ email, password })
                     });
 
+                    // ЕСЛИ СЕРВЕР ГОТОВ И ВСЕ ОК
                     if (response.ok) {
                         const data = await response.json();
-                        // Сохраняем сессию в браузер
                         localStorage.setItem('authToken', data.token);
                         localStorage.setItem('userRole', data.role);
-                        localStorage.setItem('userCompany', data.company || 'ООО «Завод Исполнитель»'); // ДОБАВИТЬ ЭТУ СТРОКУ
-                        localStorage.setItem('authToken', data.token);
-                        localStorage.setItem('userRole', data.role); // customer или producer
-
+                        localStorage.setItem('userCompany', data.company || 'ООО «Завод Исполнитель»');
                         
-                        // Перенаправляем в зависимости от роли
-                        if (data.role === 'customer') {
-                            window.location.href = 'index.html';
-                        } else {
-                            window.location.href = 'producer.html';
-                        }
-                    } else {
+                        window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
+                        return;
+                    } 
+                    
+                    // ЕСЛИ СЕРВЕР СУЩЕСТВУЕТ, НО ПАРОЛЬ НЕВЕРНЫЙ
+                    if (response.status !== 404) {
                         const err = await response.json();
-                        alert(e.error || 'Неверный логин или пароль');
+                        alert(err.error || 'Неверный логин или пароль');
+                        return;
                     }
                 } catch (error) {
-                    console.error('Ошибка авторизации:', error);
-                    alert('Ошибка соединения с сервером');
+                    console.log('Бэкенд-роуты не найдены, включаем режим MVP-симуляции...');
                 }
+
+                // КРАШ-ТЕСТ ФОЛБЕК: Если бэк выдал 404, симулируем успешный вход для тестов
+                alert('Уведомление: Бэкенд авторизации (404) не найден. Включаю локальный тестовый режим!');
+                
+                // Автоматически определяем роль для теста по домену почты (просто лайфхак)
+                const isProducer = email.includes('prod') || email.includes('zavod');
+                
+                localStorage.setItem('authToken', 'mock-valid-jwt-token-12345');
+                localStorage.setItem('userRole', isProducer ? 'producer' : 'customer');
+                localStorage.setItem('userCompany', isProducer ? 'ООО «УралПолимер»' : 'АО «ГазНефтьЗаказ»');
+                
+                window.location.href = isProducer ? 'producer.html' : 'index.html';
+
             } else {
                 // РЕЖИМ РЕГИСТРАЦИИ
                 const company = document.getElementById('regCompany').value.trim();
@@ -265,15 +274,27 @@
                     });
 
                     if (response.ok) {
-                        alert('Регистрация успешна! Теперь вы можете войти.');
+                        alert('Регистрация на сервере успешна! Теперь воспользуйтесь входом.');
                         switchTab('login');
-                    } else {
+                        return;
+                    }
+                    
+                    if (response.status !== 404) {
                         const err = await response.json();
                         alert(err.error || 'Ошибка при регистрации');
+                        return;
                     }
                 } catch (error) {
-                    console.error('Ошибка регистрации:', error);
+                    console.log('Бэкенд-роуты не найдены, симулируем регистрацию...');
                 }
+
+                // ФОЛБЕК ДЛЯ РЕГИСТРАЦИИ: сохраняем введённую компанию в память, чтобы логин её подтянул
+                alert(`Локальный режим: Компания «${company}» успешно зарегистрирована на фронтенде! Переключаю на вход.`);
+                localStorage.setItem('userCompany', company);
+                switchTab('login');
+                
+                // Сразу подставим email, чтобы не вводить дважды
+                document.getElementById('authEmail').value = email;
             }
         }
     </script>
