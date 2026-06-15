@@ -628,12 +628,15 @@
                         actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${order.title.replace(/'/g, "\\'")}')">Откликнуться</button>`;
                     }
 
-                    orderItem.innerHTML = `
+                orderItem.innerHTML = `
                         <div class="order-info">
                             <h4>${order.title}</h4>
                             <span class="tag ${tagClass}">${order.category}</span>
                             <span class="meta">Статус: ${statusText} | Уже откликов: ${order.responses}</span>
                             <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн: ${order.deadline}</div>
+                            <div class="meta" style="margin-top: 8px; color: var(--accent-green); font-weight: 500;">
+                                📁 Чертёж: <a href="#" onclick="alert('Скачивание файла: ${order.drawing || 'чертеж.pdf'}'); return false;" style="color: var(--accent-green); text-decoration: underline;">${order.drawing || 'чертеж.pdf'}</a>
+                            </div>
                         </div>
                         ${actionButton}
                     `;

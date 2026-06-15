@@ -344,6 +344,19 @@
             td { padding: 10px 0; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.08); }
             td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
         }
+    /* СТИЛИЗАЦИЯ ПОЛЯ ВЫБОРА ФАЙЛА */
+        .form-group input[type="file"] {
+            padding: 10px 12px;
+            border: 2px dashed var(--border-color);
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .form-group input[type="file"]:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-main);
+        }
     </style>
 </head>
 <body>
@@ -410,7 +423,10 @@
                 <label>Дедлайн поставки</label>
                 <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
             </div>
-
+            <div class="form-group">
+                <label>Чертеж / Спецификация (PDF, PNG, DXF)</label>
+                <input type="file" id="orderFile">
+            </div>
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeModal()">Отмена</button>
                 <button class="btn-modal-submit" onclick="createOrder()">Добавить</button>
@@ -537,16 +553,20 @@
             }
         }
 
-        async function createOrder() {
+       async function createOrder() {
             const titleInput = document.getElementById('orderName');
             const categoryInput = document.getElementById('orderCategory');
             const deadlineInput = document.getElementById('orderDeadline');
+            const fileInput = document.getElementById('orderFile'); // Наше новое поле
 
-            if (!titleInput || !deadlineInput) return;
+            if (!titleInput || !deadlineInput || !fileInput) return;
 
             const title = titleInput.value.trim();
             const category = categoryInput.value;
             const deadline = deadlineInput.value.trim();
+            
+            // Получаем только имя файла для передачи в JSON (базовая симуляция для MVP)
+            const drawing = fileInput.files.length > 0 ? fileInput.files[0].name : "Не прикреплен";
 
             titleInput.style.borderColor = '#ccc';
             deadlineInput.style.borderColor = '#ccc';
@@ -562,7 +582,7 @@
                 const response = await fetch(`${SERVER_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, category, deadline })
+                    body: JSON.stringify({ title, category, deadline, drawing }) // Добавили drawing
                 });
 
                 if (response.ok) {
@@ -570,13 +590,14 @@
                     loadOrders(); 
                     titleInput.value = '';
                     deadlineInput.value = '';
+                    fileInput.value = ''; // Сброс поля файла
                 } else {
                     alert('Ошибка сервера при создании заявки');
                 }
             } catch (error) {
                 console.error('Ошибка при отправке заявки:', error);
             }
-        }   
+        }
 
         async function acceptProposal(proposalId) {
             if (!confirm('Вы уверены, что хотите принять это предложение и закрыть тендер?')) return;
