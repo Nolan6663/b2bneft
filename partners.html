@@ -164,11 +164,12 @@
 </head>
 <body>
 
-    <div class="sidebar">
+<div class="sidebar">
         <h1>B2B Платформа</h1>
-        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
-        <a href="partners.html" class="active">Контрагенты</a>
-        <a href="analytics.html">Аналитика</a>
+        <a href="producer.html" id="navOrders">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
+        <a href="partners.html" id="navPartners">Контрагенты</a>
+        <a href="analytics.html" id="navAnalytics">Аналитика</a>
         
         <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
@@ -177,6 +178,7 @@
                 <span class="theme-slider"></span>
             </label>
         </div>
+        <a href="#" class="switch-link" style="margin-top:20px; color:rgba(255,255,255,0.6);" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">

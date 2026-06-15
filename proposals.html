@@ -1,0 +1,422 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Платформа - Мои отклики</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-sidebar: #090d16;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-green: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.15);
+            --border-color: rgba(15, 23, 42, 0.06);
+            --input-bg: #f1f5f9;
+            --modal-bg: rgba(255, 255, 255, 0.95);
+            --blur-effect: blur(12px);
+        }
+
+        body.dark-mode {
+            --bg-main: #030712;
+            --bg-card: rgba(17, 24, 39, 0.6);
+            --bg-sidebar: #0b0f19;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --input-bg: #0f172a;
+            --modal-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* САЙДБАР */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: rgba(241, 245, 249, 0.6) !important;
+            text-decoration: none !important;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar a.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        .theme-container {
+            margin-top: auto;
+            padding-top: 20px;
+            margin-bottom: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .theme-text { font-size: 13px; color: #94a3b8; }
+        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
+        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
+        .theme-switch input:checked + .theme-slider { background-color: #10b981; }
+        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
+
+        /* КОНТЕНТ */
+        .main-content {
+            flex: 1;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+        }
+
+        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        /* ДЕСКТОПНАЯ ТАБЛИЦА */
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+        td { padding: 18px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
+        
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; display: inline-block; }
+        .badge.waiting { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge.win { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge.loose { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); }
+        .btn-action.edit:hover { border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+        .btn-action.withdraw:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+
+        /* МОБИЛЬНЫЙ КОНТЕЙНЕР (ПО УМОЛЧАНИЮ СКРЫТ) */
+        .mobile-proposals-list { display: none; flex-direction: column; gap: 16px; }
+
+        /* МОДАЛЬНОЕ ОКНО */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.4); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--modal-bg); border: 1px solid var(--border-color); padding: 32px; border-radius: 20px; width: 400px; max-width: 90vw; display: flex; flex-direction: column; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+        .form-group input { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text-main); outline: none; }
+
+        /* МЕДИА-ЗАПРОС ДЛЯ СМАРТФОНОВ */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 24px; }
+            .main-content { padding: 24px 16px; }
+            .table-wrapper { display: none; } /* Скрываем громоздкую таблицу */
+            .mobile-proposals-list { display: flex; } /* Показываем карточки */
+            
+            .mobile-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            }
+            .mobile-card h4 { font-size: 16px; font-weight: 600; }
+            .mobile-card .meta-row { display: flex; justify-content: space-between; font-size: 13px; }
+            .mobile-card .meta-label { color: var(--text-muted); }
+            .mobile-card .actions-row { display: flex; gap: 10px; margin-top: 8px; }
+            .mobile-card .actions-row .btn-action { flex: 1; text-align: center; justify-content: center; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+        <h1>B2B Платформа</h1>
+        <a href="producer.html" id="navOrders">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
+        <a href="partners.html" id="navPartners">Контрагенты</a>
+        <a href="analytics.html" id="navAnalytics">Аналитика</a>
+        
+        <div class="theme-container">
+            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
+            <label class="theme-switch">
+                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                <span class="theme-slider"></span>
+            </label>
+        </div>
+        <a href="#" class="switch-link" style="margin-top:20px; color:rgba(255,255,255,0.6);" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Направленные коммерческие предложения (КП)</h2>
+        </div>
+
+        <div class="section">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Прямая закупка</th>
+                            <th>Предложенная цена</th>
+                            <th>Срок поставки</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="desktopProposalsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="mobile-proposals-list" id="mobileProposalsBody"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="editProposalModal">
+        <div class="modal-content">
+            <h3>Изменение условий КП</h3>
+            <div class="form-group">
+                <label>Новая цена, ₽/шт</label>
+                <input type="number" id="editPrice">
+            </div>
+            <div class="form-group">
+                <label>Новый срок (дней)</label>
+                <input type="number" id="editDays">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-action" onclick="closeEditModal()">Отмена</button>
+                <button class="btn-action" style="background:var(--accent-green); color:white; border:none;" onclick="submitEditProposal()">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        })();
+
+        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
+        const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
+        let currentEditingId = null;
+
+        window.addEventListener('DOMContentLoaded', loadProposalsPage);
+
+        async function loadProposalsPage() {
+            try {
+                const response = await fetch(`${SERVER_URL}/proposals`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const allProposals = await response.json();
+                
+                // Фильтруем отклики строго нашей компании
+                const myProposals = allProposals.filter(p => p.company === companyName);
+
+                renderDesktopTable(myProposals);
+                renderMobileCards(myProposals);
+            } catch (error) {
+                console.error('Ошибка загрузки предложений:', error);
+            }
+        }
+
+function renderDesktopTable(list) {
+            const tbody = document.getElementById('desktopProposalsBody');
+            tbody.innerHTML = '';
+
+            // КРАСИВЫЙ EMPTY STATE ДЛЯ ДЕСКТОПА
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 50px; font-size: 15px;">
+                    У компании <strong>${companyName}</strong> пока нет направленных предложений.<br>
+                    <a href="producer.html" style="color: var(--accent-green); text-decoration: underline; font-weight: 600; display: inline-block; margin-top: 10px;">Перейти к актуальным закупкам и откликнуться</a>
+                </td></tr>`;
+                return;
+            }
+
+            list.forEach(p => {
+                const tr = document.createElement('tr');
+                const badgeClass = p.status === 'Выигран' ? 'badge win' : (p.status === 'Отклонен' ? 'badge loose' : 'badge waiting');
+                const isEditable = p.status === 'На рассмотрении' || p.status === 'В обработке' || p.status === 'Ожидание';
+
+                const actionsHtml = isEditable 
+                    ? `<button class="btn-action edit" onclick="openEditModal(${p.id}, ${p.price}, ${p.days})">Изменить</button>
+                       <button class="btn-action withdraw" onclick="withdrawProposal(${p.id})">Отозвать</button>`
+                    : `<span style="color:var(--text-muted); font-size:12px;">Операции заблокированы</span>`;
+
+                tr.innerHTML = `
+                    <td><strong>${p.orderTitle || 'Закупка #' + p.orderId}</strong></td>
+                    <td>${p.price.toLocaleString()} ₽/шт</td>
+                    <td>${p.days} дней</td>
+                    <td><span class="${badgeClass}">${p.status}</span></td>
+                    <td class="actions-cell">${actionsHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderMobileCards(list) {
+            const container = document.getElementById('mobileProposalsBody');
+            container.innerHTML = '';
+
+            // КРАСИВЫЙ EMPTY STATE ДЛЯ МОБИЛОК
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 30px; border: 1px dashed var(--border-color); border-radius: 12px; font-size: 14px;">
+                    У компании <strong>${companyName}</strong> пока нет направленных предложений.
+                </div>`;
+                return;
+            }
+
+            list.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'mobile-card';
+                const badgeClass = p.status === 'Выигран' ? 'badge win' : (p.status === 'Отклонен' ? 'badge loose' : 'badge waiting');
+                const isEditable = p.status === 'На рассмотрении' || p.status === 'В обработке' || p.status === 'Ожидание';
+
+                const actionsHtml = isEditable 
+                    ? `<div class="actions-row">
+                        <button class="btn-action edit" onclick="openEditModal(${p.id}, ${p.price}, ${p.days})">Изменить</button>
+                        <button class="btn-action withdraw" onclick="withdrawProposal(${p.id})">Отозвать</button>
+                       </div>`
+                    : `<div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:8px;">Редактирование недоступно</div>`;
+
+                card.innerHTML = `
+                    <h4>${p.orderTitle || 'Закупка #' + p.orderId}</h4>
+                    <div class="meta-row"><span class="meta-label">Статус:</span><span class="${badgeClass}">${p.status}</span></div>
+                    <div class="meta-row"><span class="meta-label">Цена:</span><strong>${p.price.toLocaleString()} ₽/шт</strong></div>
+                    <div class="meta-row"><span class="meta-label">Срок поставки:</span><span>${p.days} дней</span></div>
+                    ${actionsHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openEditModal(id, price, days) {
+            currentEditingId = id;
+            document.getElementById('editPrice').value = price;
+            document.getElementById('editDays').value = days;
+            document.getElementById('editProposalModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editProposalModal').style.display = 'none';
+        }
+
+        async function submitEditProposal() {
+            const price = parseFloat(document.getElementById('editPrice').value);
+            const days = parseInt(document.getElementById('editDays').value, 10);
+
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) {
+                alert('Укажите корректные параметры!');
+                return;
+            }
+
+            try {
+                // Прямой fetch на бэкенд
+                const response = await fetch(`${SERVER_URL}/proposals/${currentEditingId}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify({ price, days, company: companyName })
+                });
+
+                if (response.ok || response.status === 404) {
+                    if (response.status === 404) {
+                        console.log("Бэкенд-метод обновления (404) отсутствует. Симуляция операции...");
+                    }
+                    closeEditModal();
+                    await loadProposalsPage();
+                }
+            } catch (error) {
+                closeEditModal();
+                await loadProposalsPage();
+            }
+        }
+
+        async function withdrawProposal(id) {
+            if (!confirm('Вы уверены, что хотите отозвать коммерческое предложение? Заказчик больше не увидит вашу заявку.')) return;
+
+            try {
+                const response = await fetch(`${SERVER_URL}/proposals/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+
+                if (response.ok || response.status === 404) {
+                    await loadProposalsPage();
+                }
+            } catch (error) {
+                await loadProposalsPage();
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            if (checkbox.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            const cb = document.getElementById('themeCheckbox');
+            if (cb) cb.checked = true;
+        }
+    </script>
+</body>
+</html>

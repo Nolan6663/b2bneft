@@ -482,13 +482,12 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
+<div class="sidebar">
         <h1>B2B Платформа</h1>
-        
-        <a href="producer.html" class="active">Актуальные закупки</a>
-        <a href="#">Мои отклики</a>
-        <a href="partners.html">Контрагенты</a>
-        <a href="analytics.html">Аналитика</a>
+        <a href="producer.html" id="navOrders">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
+        <a href="partners.html" id="navPartners">Контрагенты</a>
+        <a href="analytics.html" id="navAnalytics">Аналитика</a>
         
         <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
@@ -496,11 +495,11 @@
                 <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
                 <span class="theme-slider"></span>
             </label>
-        </div>
+        </div> <!-- Этот тег закрывает ТОЛЬКО переключатель темы -->
 
-        <!-- Ссылка должна лежать СТРОГО внутри сайдбара, прямо перед его закрытием -->
+        <!-- Ссылка должна лежать ЗДЕСЬ, внутри класса .sidebar -->
         <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
-    </div> <!-- Вот этот </div> закрывает исключительно сайдбар -->
+    </div> <!-- Этот тег закрывает САЙДБАР. И только после него начинается main-content -->
 
     <div class="main-content">
         <div class="header">
