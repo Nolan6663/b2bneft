@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Платформа - Кабинет Заказчика</title>
     <style>
-/* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
+        /* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
         :root {
             --bg-main: #f8fafc;
             --bg-card: rgba(255, 255, 255, 0.8);
@@ -54,7 +54,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-/* ПОЛНОЕ ИСПРАВЛЕНИЕ СAЙДБАРА */
+        /* ПОЛНОЕ ИСПРАВЛЕНИЕ СAЙДБАРА */
         .sidebar {
             width: 280px;
             background-color: var(--bg-sidebar);
@@ -62,7 +62,7 @@
             padding: 40px 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Плотный аккуратный шаг между пунктами */
+            gap: 8px;
         }
 
         .sidebar h1 {
@@ -75,50 +75,28 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Полный сброс фиолетового цвета для ВСЕХ ссылок меню */
         .sidebar a {
             display: flex;
             align-items: center;
             padding: 12px 16px;
             border-radius: 10px;
-            color: rgba(241, 245, 249, 0.6) !important; /* Матовый светлый текст по умолчанию */
+            color: rgba(241, 245, 249, 0.6) !important;
             text-decoration: none !important;
             font-size: 14px;
             font-weight: 500;
         }
 
-        /* Эффект при наведении */
         .sidebar a:hover {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.04);
         }
 
-        /* Активный пункт меню */
         .sidebar a.active {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.08);
             font-weight: 600;
         }
 
-        /* Контейнер переключателя темы (всегда прижат вниз) */
-        .theme-container {
-            margin-top: auto; /* Выталкивает весь блок в самый низ */
-            padding-top: 20px;
-            margin-bottom: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .theme-text {
-            font-size: 13px;
-            font-weight: 500;
-            color: #94a3b8;
-        }
-
-        /* Нижняя кнопка смены кабинета */
         .sidebar .switch-link {
             margin-top: 0;
             padding: 14px;
@@ -143,10 +121,12 @@
         .theme-container {
             margin-top: auto;
             padding-top: 20px;
+            margin-bottom: 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            width: 100%;
         }
         .theme-text { font-size: 13px; font-weight: 500; color: #64748b; }
         .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
@@ -221,7 +201,7 @@
         }
         .btn-view:hover { background: var(--text-main); color: var(--bg-main); border-color: transparent; }
 
-/* ПРЕМИАЛЬНЫЙ ДИЗАЙН МОДАЛЬНЫХ ОКН */
+        /* ПРЕМИАЛЬНЫЙ ДИЗАЙН МОДАЛЬНЫХ ОКН */
         .modal {
             position: fixed;
             top: 0; left: 0; 
@@ -244,7 +224,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
-            gap: 20px; /* Вертикальный стек для всех блоков внутри */
+            gap: 20px;
         }
 
         .modal-content h3 {
@@ -268,7 +248,6 @@
             color: var(--text-muted);
         }
 
-        /* Поля ввода на всю ширину контейнера */
         .form-group input, 
         .form-group select {
             width: 100%;
@@ -289,7 +268,6 @@
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        /* Блок кнопок внизу */
         .modal-actions {
             display: flex;
             justify-content: flex-end;
@@ -320,8 +298,10 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
+            background-color: var(--accent-blue); 
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
-        .btn-modal-submit { background-color: var(--accent-blue); box-shadow: 0 4px 12px var(--accent-glow); }
+
         /* СТИЛИЗАЦИЯ КНОПКИ ПРИНЯТЬ КП */
         .btn-accept {
             background-color: #10b981;
@@ -345,18 +325,37 @@
         .btn-accept:active {
             transform: translateY(0);
         }
-        </style>
+
+        /* ВОССТАНОВЛЕННАЯ АДАПТИВНАЯ ВЕРСТКА */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 24px; gap: 12px; }
+            .sidebar h1 { margin-bottom: 16px; }
+            .theme-container { margin-top: 16px; padding-top: 16px; }
+            .main-content { padding: 30px 20px; gap: 24px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .btn-create { width: 100%; text-align: center; }
+            .section { padding: 20px; }
+            
+            /* Превращаем таблицы в адаптивные блоки */
+            table, th, td, tbody, tr { display: block; width: 100%; }
+            th { display: none; }
+            tr { border: 1px solid var(--border-color); border-radius: 14px; margin-bottom: 16px; background: var(--bg-card); padding: 12px; }
+            td { padding: 10px 0; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.08); }
+            td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
+    <div class="sidebar">
         <h1>B2B Платформа</h1>
         
         <a href="#" class="active">Мои заявки</a>
         <a href="#">Контрагенты</a>
         <a href="#">Аналитика</a>
         
-<div class="theme-container">
+        <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
             <label class="theme-switch">
                 <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
@@ -369,7 +368,7 @@
 
     <div class="main-content">
         <div class="header">
-            <h2>Актуальные заявки</h2>
+            <h2>Aктуальные заявки</h2>
             <button class="btn-create" onclick="openModal()">+ Создать заявку</button>
         </div>
 
@@ -385,13 +384,12 @@
                         <th>Дедлайн</th>
                     </tr>
                 </thead>
-                <tbody id="orders-table-body">
-                    </tbody>
+                <tbody id="orders-table-body"></tbody>
             </table>
         </div>
     </div>
 
-   <div class="modal" id="orderModal">
+    <div class="modal" id="orderModal">
         <div class="modal-content">
             <h3>Новая заявка на производство</h3>
             
@@ -421,27 +419,26 @@
     </div>
 
     <div class="modal" id="proposalsModal">
-            <div class="modal-content" style="width: 650px; max-width: 90vw;">
-                <h3 id="proposalsModalTitle">Входящие предложения</h3>
-                <div style="overflow-x: auto; margin-top: 15px;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background-color: #f8fafc; text-align: left;">
-                                <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 30%;">Поставщик</th>
-                                <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 25%;">Цена</th>
-                                <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 20%;">Срок</th>
-                                <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 15%;">Статус</th>
-                                <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 10%; text-align: center;">Действие</th>
-                            </tr>
-                        </thead>
-                        <tbody id="proposals-table-body">
-                            </tbody>
-                    </table>
-                </div>
-                    <div class="modal-actions">
-                        <button class="btn-modal-cancel" onclick="closeProposalsModal()">Закрыть</button>
-                    </div>
+        <div class="modal-content" style="width: 650px; max-width: 90vw;">
+            <h3 id="proposalsModalTitle">Входящие предложения</h3>
+            <div style="overflow-x: auto; margin-top: 15px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; text-align: left;">
+                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 30%;">Поставщик</th>
+                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 25%;">Цена</th>
+                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 20%;">Срок</th>
+                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 15%;">Статус</th>
+                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 10%; text-align: center;">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposals-table-body"></tbody>
+                </table>
             </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeProposalsModal()">Закрыть</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -479,7 +476,7 @@
                         <td style="color: #2980b9; font-weight: bold;">${order.responses} (посмотреть)</td>
                         <td>${order.deadline}</td>
                     `;
-             tableBody.appendChild(row);
+                    tableBody.appendChild(row);
                 });
             } catch (error) {
                 console.error('Ошибка при загрузке заявок:', error);
@@ -487,60 +484,58 @@
         }
 
         async function viewProposals(orderId, orderTitle) {
-    document.getElementById('proposalsModalTitle').innerText = `Отклики на: ${orderTitle}`;
-    const tableBody = document.getElementById('proposals-table-body');
-    
-    if (tableBody) {
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">Загрузка предложений...</td></tr>';
-    }
-    document.getElementById('proposalsModal').style.display = 'flex';
+            document.getElementById('proposalsModalTitle').innerText = `Отклики на: ${orderTitle}`;
+            const tableBody = document.getElementById('proposals-table-body');
+            
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">Загрузка предложений...</td></tr>';
+            }
+            document.getElementById('proposalsModal').style.display = 'flex';
 
-    try {
-        const ordResponse = await fetch(`${SERVER_URL}/orders`);
-        const allOrders = await ordResponse.json();
-        const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId));
+            try {
+                const ordResponse = await fetch(`${SERVER_URL}/orders`);
+                const allOrders = await ordResponse.json();
+                const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId));
 
-        const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`);
-        let proposals = await response.json(); // Изменили на let
-        
-        // Автоматическая сортировка по возрастанию цены
-        proposals.sort((a, b) => a.price - b.price); 
-
-        tableBody.innerHTML = ''; 
-
-        if (proposals.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">На эту заявку пока никто не откликнулся</td></tr>`;
-        } else {
-            proposals.forEach(prop => {
-                const row = document.createElement('tr');
+                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`);
+                let proposals = await response.json();
                 
-                let badgeClass = 'badge waiting';
-                if (prop.status === 'Выигран') badgeClass = 'badge win';
-                if (prop.status === 'Отклонен') badgeClass = 'badge loose';
+                proposals.sort((a, b) => a.price - b.price); 
 
-                const isClosed = currentOrder && currentOrder.status === 'Закрыта';
-                const actionCell = !isClosed 
-                    ? `<button class="btn-accept" onclick="acceptProposal(${prop.id})">Принять</button>`
+                tableBody.innerHTML = ''; 
 
-                    : `<span style="font-size: 12px; color: #94a3b8;">Завершен</span>`;
+                if (proposals.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">На эту заявку пока никто не откликнулся</td></tr>`;
+                } else {
+                    proposals.forEach(prop => {
+                        const row = document.createElement('tr');
+                        
+                        let badgeClass = 'badge waiting';
+                        if (prop.status === 'Выигран') badgeClass = 'badge win';
+                        if (prop.status === 'Отклонен') badgeClass = 'badge loose';
 
-                row.innerHTML = `
-                    <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px;"><strong>${prop.company}</strong></td>
-                    <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.price} ₽/шт</td>
-                    <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.days} дней</td>
-                    <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;"><span class="${badgeClass}">${prop.status}</span></td>
-                    <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${actionCell}</td>
-                `;
-                tableBody.appendChild(row);
-            });
+                        const isClosed = currentOrder && currentOrder.status === 'Закрыта';
+                        const actionCell = !isClosed 
+                            ? `<button class="btn-accept" onclick="acceptProposal(${prop.id})">Принять</button>`
+                            : `<span style="font-size: 12px; color: #94a3b8;">Завершен</span>`;
+
+                        row.innerHTML = `
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px;"><strong>${prop.company}</strong></td>
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.price} ₽/шт</td>
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.days} дней</td>
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;"><span class="${badgeClass}">${prop.status}</span></td>
+                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${actionCell}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка при получении предложений:', error);
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ef4444;">Ошибка загрузки данных с сервера</td></tr>`;
+                }
+            }
         }
-    } catch (error) {
-        console.error('Ошибка при получении предложений:', error);
-        if (tableBody) {
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ef4444;">Ошибка загрузки данных с сервера</td></tr>`;
-        }
-    }
-}
 
         async function createOrder() {
             const titleInput = document.getElementById('orderName');
@@ -553,11 +548,9 @@
             const category = categoryInput.value;
             const deadline = deadlineInput.value.trim();
 
-            // Сбрасываем старые красные рамки, если они были
             titleInput.style.borderColor = '#ccc';
             deadlineInput.style.borderColor = '#ccc';
 
-            // Проверка на пустоту
             if (!title || !deadline) {
                 alert('Пожалуйста, заполните все поля заявки!');
                 if (!title) titleInput.style.borderColor = '#e74c3c';
@@ -584,58 +577,59 @@
                 console.error('Ошибка при отправке заявки:', error);
             }
         }   
-   async function acceptProposal(proposalId) {
-    if (!confirm('Вы уверены, что хотите принять это предложение и закрыть тендер?')) return;
 
-    try {
-        const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
-            method: 'POST'
-        });
+        async function acceptProposal(proposalId) {
+            if (!confirm('Вы уверены, что хотите принять это предложение и закрыть тендер?')) return;
 
-        if (response.ok) {
-            closeProposalsModal();
-            loadOrders(); // Перерисовываем главную таблицу заказчика
-        } else {
-            const err = await response.json();
-            alert(err.error || 'Ошибка при выборе победителя');
+            try {
+                const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    closeProposalsModal();
+                    loadOrders(); 
+                } else {
+                    const err = await response.json();
+                    alert(err.error || 'Ошибка при выборе победителя');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
-    }
-}
-// ДИНАМИЧЕСКАЯ СМЕНА ТЕМЫ И ТЕКСТА
-function toggleTheme() {
-    const body = document.body;
-    const checkbox = document.getElementById('themeCheckbox');
-    const label = document.getElementById('themeLabel');
-    if (!checkbox || !label) return;
 
-    if (checkbox.checked) {
-        body.classList.add('dark-mode');
-        label.innerText = '🌙 Тёмная тема';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        body.classList.remove('dark-mode');
-        label.innerText = '☀️ Светлая тема';
-        localStorage.setItem('theme', 'light');
-    }
-}
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            const label = document.getElementById('themeLabel');
+            if (!checkbox || !label) return;
 
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme');
-    const body = document.body;
-    const checkbox = document.getElementById('themeCheckbox');
-    const label = document.getElementById('themeLabel');
-    
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-        if (checkbox) checkbox.checked = true;
-        if (label) label.innerText = '🌙 Тёмная тема';
-    } else {
-        if (checkbox) checkbox.checked = false;
-        if (label) label.innerText = '☀️ Светлая тема';
-    }
-});
+            if (checkbox.checked) {
+                body.classList.add('dark-mode');
+                label.innerText = '🌙 Тёмная тема';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                label.innerText = '☀️ Светлая тема';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            const label = document.getElementById('themeLabel');
+            
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                if (checkbox) checkbox.checked = true;
+                if (label) label.innerText = '🌙 Тёмная тема';
+            } else {
+                if (checkbox) checkbox.checked = false;
+                if (label) label.innerText = '☀️ Светлая тема';
+            }
+        });
     </script>
 </body>
 </html>
