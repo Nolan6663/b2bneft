@@ -227,7 +227,6 @@
                         body: JSON.stringify({ email, password })
                     });
 
-                    // ЕСЛИ СЕРВЕР ГОТОВ И ВСЕ ОК
                     if (response.ok) {
                         const data = await response.json();
                         localStorage.setItem('authToken', data.token);
@@ -238,7 +237,6 @@
                         return;
                     } 
                     
-                    // ЕСЛИ СЕРВЕР СУЩЕСТВУЕТ, НО ПАРОЛЬ НЕВЕРНЫЙ
                     if (response.status !== 404) {
                         const err = await response.json();
                         alert(err.error || 'Неверный логин или пароль');
@@ -248,20 +246,26 @@
                     console.log('Бэкенд-роуты не найдены, включаем режим MVP-симуляции...');
                 }
 
-                // КРАШ-ТЕСТ ФОЛБЕК: Если бэк выдал 404, симулируем успешный вход для тестов
+                // --- ИСПРАВЛЕННЫЙ ФОЛБЕК ВХОДА ДЛЯ СИМУЛЯЦИИ ---
                 alert('Уведомление: Бэкенд авторизации (404) не найден. Включаю локальный тестовый режим!');
                 
-                // Автоматически определяем роль для теста по домену почты (просто лайфхак)
-                const isProducer = email.includes('prod') || email.includes('zavod');
+                // Сначала проверяем, какую роль мы сохранили при регистрации. 
+                // Если там пусто, то падаем на проверку по тексту почты.
+                const savedRole = localStorage.getItem('mockRole');
+                const isProducer = savedRole ? (savedRole === 'producer') : (email.includes('prod') || email.includes('zavod'));
                 
                 localStorage.setItem('authToken', 'mock-valid-jwt-token-12345');
                 localStorage.setItem('userRole', isProducer ? 'producer' : 'customer');
-                localStorage.setItem('userCompany', isProducer ? 'ООО «УралПолимер»' : 'АО «ГазНефтьЗаказ»');
+                
+                // Если при регистрации имя компании не сохранилось, даем дефолтное
+                if (!localStorage.getItem('userCompany')) {
+                    localStorage.setItem('userCompany', isProducer ? 'ООО «УралПолимер»' : 'АО «ГазНефтьЗаказ»');
+                }
                 
                 window.location.href = isProducer ? 'producer.html' : 'index.html';
 
             } else {
-                // РЕЖИМ РЕГИСТРАЦИИ
+                // --- РЕЖИМ РЕГИСТРАЦИИ ---
                 const company = document.getElementById('regCompany').value.trim();
                 const inn = document.getElementById('regInn').value.trim();
                 const role = document.getElementById('regRole').value;
@@ -288,12 +292,12 @@
                     console.log('Бэкенд-роуты не найдены, симулируем регистрацию...');
                 }
 
-                // ФОЛБЕК ДЛЯ РЕГИСТРАЦИИ: сохраняем введённую компанию в память, чтобы логин её подтянул
-                alert(`Локальный режим: Компания «${company}» успешно зарегистрирована на фронтенде! Переключаю на вход.`);
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Запоминаем роль и компанию в сессию для последующего входа
+                alert(`Локальный режим: Профиль компании «${company}» сохранен как ${role === 'producer' ? 'Производитель' : 'Заказчик'}!`);
                 localStorage.setItem('userCompany', company);
-                switchTab('login');
+                localStorage.setItem('mockRole', role); // Сохраняем истинную роль
                 
-                // Сразу подставим email, чтобы не вводить дважды
+                switchTab('login');
                 document.getElementById('authEmail').value = email;
             }
         }
