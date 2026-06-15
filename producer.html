@@ -155,19 +155,15 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+            position: relative;
+            z-index: 1;
+        }
+
+        .filter-section:has(.custom-select.open) {
+            z-index: 999 !important;
         }
 
         .filter-section label { font-size: 14px; font-weight: 500; color: var(--text-muted); }
-        
-        .filter-section select {
-            background: var(--input-bg);
-            border: 1px solid transparent;
-            padding: 10px 16px;
-            border-radius: 8px;
-            color: var(--input-text);
-            outline: none;
-            font-size: 14px;
-        }
 
         /* КАРТОЧКИ ТЕНДЕРОВ */
         .order-item {
@@ -333,48 +329,17 @@
             box-shadow: 0 4px 12px var(--accent-glow);
         }
 
-        /* ПОЛЗУНОК ТЕМЫ */
         .theme-switch {
             position: relative;
             display: inline-block;
             width: 40px;
             height: 20px;
         }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .theme-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155;
-            border-radius: 20px;
-            transition: 0.3s;
-        }
-
-        .theme-slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            border-radius: 50%;
-            transition: 0.3s;
-        }
-
-        .theme-switch input:checked + .theme-slider {
-            background-color: var(--accent-green);
-        }
-
-        .theme-switch input:checked + .theme-slider:before {
-            transform: translateX(20px);
-        }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; transition: 0.3s; }
+        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s; }
+        .theme-switch input:checked + .theme-slider { background-color: var(--accent-green); }
+        .theme-switch input:checked + .theme-slider:before { transform: translateX(20px); }
 
         /* АДАПТИВНАЯ ВЕРСТКА */
         @media (max-width: 768px) {
@@ -383,117 +348,25 @@
             .main-content { padding: 24px; }
             .order-item { flex-direction: column; align-items: stretch; gap: 16px; }
             .btn-respond { width: 100%; text-align: center; }
-            
-            /* Исправление адаптива таблиц */
             table, th, td { display: block; width: 100%; }
             th { display: none; }
             td { text-align: right; padding-left: 50%; position: relative; border-bottom: 1px solid var(--border-color); }
             tr { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; display: block; background: var(--bg-card); }
         }
-/* КАСТOmnыЕ ПРЕМИУМ ВЫПАДАЮЩИЕ СПИСКИ */
-        .custom-select-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 320px;
-        }
 
-        .custom-select {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .custom-select-trigger {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 18px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-main);
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px; /* Плавное сильное скругление */
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Минималистичная стрелочка через SVG */
-        .custom-select-trigger:after {
-            content: "";
-            width: 14px;
-            height: 14px;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-            background-size: contain;
-            background-repeat: no-repeat;
-            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body.dark-mode .custom-select-trigger:after {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-        }
-
-        /* Вращение стрелки при открытии */
-        .custom-select.open .custom-select-trigger:after {
-            transform: rotate(180deg);
-        }
-
-        .custom-select.open .custom-select-trigger {
-            border-color: var(--accent-green);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        /* Контейнер со списком вариантов */
-        .custom-options {
-            position: absolute;
-            display: block;
-            top: 100%; left: 0; right: 0;
-            margin-top: 8px;
-            background: var(--modal-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-            backdrop-filter: var(--blur-effect);
-            z-index: 100;
-            overflow: hidden;
-            
-            /* ЭФФЕКТ ПЛАВНОГО ВЫПАДЕНИЯ */
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-12px) scale(0.97);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .custom-select.open .custom-options {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0) scale(1);
-        }
-
-        /* Элементы списка */
-        .custom-option {
-            position: relative;
-            padding: 12px 18px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .custom-option:hover {
-            background: rgba(16, 185, 129, 0.06);
-            color: var(--accent-green);
-            padding-left: 22px; /* Эффект легкого сдвига при наведении */
-        }
-
-        .custom-option.selected {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-green);
-            font-weight: 600;
-        }
+        /* КАСТOMНЫЕ ВЫПАДАЮЩИЕ СПИСКИ */
+        .custom-select-wrapper { position: relative; width: 100%; max-width: 320px; }
+        .custom-select { position: relative; display: flex; flex-direction: column; }
+        .custom-select-trigger { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; font-size: 14px; font-weight: 500; color: var(--text-main); background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; cursor: pointer; user-select: none; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .custom-select-trigger:after { content: ""; width: 14px; height: 14px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-size: contain; background-repeat: no-repeat; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        body.dark-mode .custom-select-trigger:after { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); }
+        .custom-select.open .custom-select-trigger:after { transform: rotate(180deg); }
+        .custom-select.open .custom-select-trigger { border-color: var(--accent-green); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; margin-top: 8px; background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); backdrop-filter: var(--blur-effect); z-index: 100; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-12px) scale(0.97); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .custom-option { position: relative; padding: 12px 18px; font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; transition: all 0.15s ease; }
+        .custom-option:hover { background: rgba(16, 185, 129, 0.06); color: var(--accent-green); padding-left: 22px; }
+        .custom-option.selected { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -515,10 +388,11 @@
         <a href="index.html" class="switch-link">Войти как Заказчик</a>
     </div>
 
-<div class="main-content">
-    <div class="header">
-        <h2>Кабинет Производителя</h2>
-    </div>
+    <div class="main-content">
+        <div class="header">
+            <h2>Кабинет Производителя</h2>
+        </div>
+        
         <div class="filter-section" style="background: rgba(16, 185, 129, 0.05); border-left: 5px solid var(--accent-green);">
             <label for="companySelect"><strong>Вы вошли как организация:</strong></label>
             <div class="custom-select-wrapper">
@@ -601,6 +475,15 @@
             loadMyProposals();
         });
 
+        function downloadMockFile(filename) {
+            const blob = new Blob(["Содержимое технической документации для файла: " + filename], { type: "application/octet-stream" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
         async function loadOrdersForProducers() {
             try {
                 const response = await fetch(`${SERVER_URL}/orders`);
@@ -617,6 +500,15 @@
                     
                     const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
 
+                    let displayTitle = order.title;
+                    let drawingFile = "Не прикреплен";
+                    
+                    if (order.title && order.title.includes(' | ')) {
+                        const parts = order.title.split(' | ');
+                        displayTitle = parts[0];
+                        drawingFile = parts[1];
+                    }
+
                     let actionButton = '';
                     let statusText = order.status;
 
@@ -625,18 +517,31 @@
                         actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Тендер завершён</button>`;
                     } else {
                         statusText = `<span style="color: #2ecc71; font-weight: bold;">${order.status}</span>`;
-                        actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${order.title.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                        actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
                     }
 
-                orderItem.innerHTML = `
+                    let drawingBlock = '';
+                    if (drawingFile && drawingFile !== "Не прикреплен") {
+                        drawingBlock = `
+                            <div class="meta" style="margin-top: 8px; color: var(--accent-green); font-weight: 500;">
+                                📁 Чертёж: <a href="#" onclick="downloadMockFile('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-green); text-decoration: underline;">${drawingFile}</a>
+                            </div>
+                        `;
+                    } else {
+                        drawingBlock = `
+                            <div class="meta" style="margin-top: 8px; color: var(--text-muted);">
+                                📁 Чертёж: отсутствует
+                            </div>
+                        `;
+                    }
+
+                    orderItem.innerHTML = `
                         <div class="order-info">
-                            <h4>${order.title}</h4>
+                            <h4>${displayTitle}</h4>
                             <span class="tag ${tagClass}">${order.category}</span>
                             <span class="meta">Статус: ${statusText} | Уже откликов: ${order.responses}</span>
                             <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн: ${order.deadline}</div>
-                            <div class="meta" style="margin-top: 8px; color: var(--accent-green); font-weight: 500;">
-                                📁 Чертёж: <a href="#" onclick="alert('Скачивание файла: ${order.drawing || 'чертеж.pdf'}'); return false;" style="color: var(--accent-green); text-decoration: underline;">${order.drawing || 'чертеж.pdf'}</a>
-                            </div>
+                            ${drawingBlock}
                         </div>
                         ${actionButton}
                     `;
@@ -658,7 +563,6 @@
 
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
-    
                     let badgeClass = 'badge waiting';
                     if (prop.status === 'Выигран') badgeClass = 'badge win';
                     if (prop.status === 'Отклонен') badgeClass = 'badge loose';
@@ -701,20 +605,8 @@
             const days = parseInt(daysInput.value, 10);
             const companyName = companySelect.value;
 
-            priceInput.style.borderColor = '';
-            daysInput.style.borderColor = '';
-
-            if (isNaN(price) || isNaN(days)) {
-                alert('Укажите цену и сроки поставки!');
-                if (isNaN(price)) priceInput.style.borderColor = '#e74c3c';
-                if (isNaN(days)) daysInput.style.borderColor = '#e74c3c';
-                return;
-            }
-
-            if (price <= 0 || days <= 0) {
-                alert('Цена и срок поставки должны быть больше нуля!');
-                if (price <= 0) priceInput.style.borderColor = '#e74c3c';
-                if (days <= 0) daysInput.style.borderColor = '#e74c3c';
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) {
+                alert('Укажите корректные цену и сроки поставки!');
                 return;
             }
 
@@ -737,7 +629,6 @@
                     daysInput.value = '';
                     await loadOrdersForProducers(); 
                     await loadMyProposals();        
-                    if (typeof filterOrders === 'function') filterOrders();
                 } else {
                     alert('Сервер отклонил сохранение КП');
                 }
@@ -745,28 +636,6 @@
                 console.error('Ошибка при отправке предложения:', error);
             }
         }
-
-       function filterOrders() {
-            const selectedCategory = document.getElementById('categoryFilter').value;
-            const orderItems = document.querySelectorAll('.order-item');
-            
-            orderItems.forEach(item => {
-                const itemCategory = item.getAttribute('data-category');
-                if (selectedCategory === 'all' || itemCategory === selectedCategory) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        } // ФУНКЦИЯ ФИЛЬТРАЦИИ ПРАВИЛЬНО ЗАКРЫТА ЗДЕСЬ
-
-        // ЛОГИКА ДЛЯ ОЖИВЛЕНИЯ ПРЕМИУМ ВЫПАДАЮЩИХ СПИСКОВ
-        document.addEventListener('DOMContentLoaded', () => {
-            initPremiumSelect('wrapperCompanySelect', 'companySelect');
-            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
-                if (typeof filterOrders === 'function') filterOrders();
-            });
-        });
 
         function initPremiumSelect(wrapperId, hiddenInputId, callback) {
             const wrapper = document.getElementById(wrapperId);
@@ -776,7 +645,6 @@
             const trigger = wrapper.querySelector('.custom-select-trigger');
             const options = wrapper.querySelectorAll('.custom-option');
 
-            // Переключатель открытия/закрытия
             trigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.querySelectorAll('.custom-select').forEach(el => {
@@ -785,25 +653,28 @@
                 wrapper.classList.toggle('open');
             });
 
-            // Обработка выбора элемента
             options.forEach(option => {
                 option.addEventListener('click', function() {
                     options.forEach(opt => opt.classList.remove('selected'));
                     this.classList.add('selected');
-
-                    const value = this.getAttribute('data-value');
-                    const text = this.textContent;
-
-                    trigger.querySelector('span').textContent = text;
-                    hiddenInput.value = value; 
+                    hiddenInput.value = this.getAttribute('data-value');
+                    trigger.querySelector('span').textContent = this.textContent;
                     wrapper.classList.remove('open');
-
                     if (callback) callback();
                 });
             });
         }
 
-        // Закрытие всех списков при клике в пустую область экрана
+        document.addEventListener('DOMContentLoaded', () => {
+            initPremiumSelect('wrapperCompanySelect', 'companySelect');
+            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
+                const val = document.getElementById('categoryFilter').value;
+                document.querySelectorAll('.order-item').forEach(item => {
+                    item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
+                });
+            });
+        });
+
         window.addEventListener('click', () => {
             document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
         });
@@ -811,35 +682,14 @@
         function toggleTheme() {
             const body = document.body;
             const checkbox = document.getElementById('themeCheckbox');
-            const label = document.getElementById('themeLabel');
-            if (!checkbox || !label) return;
-
             if (checkbox.checked) {
                 body.classList.add('dark-mode');
-                label.innerText = '🌙 Тёмная тема';
                 localStorage.setItem('theme', 'dark');
             } else {
                 body.classList.remove('dark-mode');
-                label.innerText = '☀️ Светлая тема';
                 localStorage.setItem('theme', 'light');
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme');
-            const body = document.body;
-            const checkbox = document.getElementById('themeCheckbox');
-            const label = document.getElementById('themeLabel');
-            
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                if (checkbox) checkbox.checked = true;
-                if (label) label.innerText = '🌙 Тёмная тема';
-            } else {
-                if (checkbox) checkbox.checked = false;
-                if (label) label.innerText = '☀️ Светлая тема';
-            }
-        });
     </script>
 </body>
 </html>

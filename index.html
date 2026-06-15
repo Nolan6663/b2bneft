@@ -189,18 +189,6 @@
         .status-badge.active { background: rgba(16, 185, 129, 0.08); color: #10b981; }
         .status-badge.closed { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
 
-        .btn-view {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .btn-view:hover { background: var(--text-main); color: var(--bg-main); border-color: transparent; }
-
         /* ПРЕМИАЛЬНЫЙ ДИЗАЙН МОДАЛЬНЫХ ОКН */
         .modal {
             position: fixed;
@@ -268,6 +256,20 @@
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
+        /* КAСТOМНЫЙ ИНПУТ ФАЙЛА */
+        .form-group input[type="file"] {
+            padding: 10px 12px;
+            border: 2px dashed var(--border-color);
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .form-group input[type="file"]:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-main);
+        }
+
         .modal-actions {
             display: flex;
             justify-content: flex-end;
@@ -302,7 +304,6 @@
             box-shadow: 0 4px 12px var(--accent-glow);
         }
 
-        /* СТИЛИЗАЦИЯ КНОПКИ ПРИНЯТЬ КП */
         .btn-accept {
             background-color: #10b981;
             color: #ffffff;
@@ -315,15 +316,10 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
             transition: all 0.2s ease;
         }
-
         .btn-accept:hover {
             background-color: #059669;
             box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);
             transform: translateY(-1px);
-        }
-
-        .btn-accept:active {
-            transform: translateY(0);
         }
 
         /* ВОССТАНОВЛЕННАЯ АДАПТИВНАЯ ВЕРСТКА */
@@ -336,26 +332,11 @@
             .header { flex-direction: column; align-items: flex-start; gap: 16px; }
             .btn-create { width: 100%; text-align: center; }
             .section { padding: 20px; }
-            
-            /* Превращаем таблицы в адаптивные блоки */
             table, th, td, tbody, tr { display: block; width: 100%; }
             th { display: none; }
             tr { border: 1px solid var(--border-color); border-radius: 14px; margin-bottom: 16px; background: var(--bg-card); padding: 12px; }
             td { padding: 10px 0; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.08); }
             td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
-        }
-    /* СТИЛИЗАЦИЯ ПОЛЯ ВЫБОРА ФАЙЛА */
-        .form-group input[type="file"] {
-            padding: 10px 12px;
-            border: 2px dashed var(--border-color);
-            background: transparent;
-            cursor: pointer;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .form-group input[type="file"]:hover {
-            border-color: var(--accent-blue);
-            color: var(--text-main);
         }
     </style>
 </head>
@@ -381,7 +362,7 @@
 
     <div class="main-content">
         <div class="header">
-            <h2>Aктуальные заявки</h2>
+            <h2>Актуальные заявки</h2>
             <button class="btn-create" onclick="openModal()">+ Создать заявку</button>
         </div>
 
@@ -423,10 +404,12 @@
                 <label>Дедлайн поставки</label>
                 <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
             </div>
+
             <div class="form-group">
                 <label>Чертеж / Спецификация (PDF, PNG, DXF)</label>
                 <input type="file" id="orderFile">
             </div>
+
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeModal()">Отмена</button>
                 <button class="btn-modal-submit" onclick="createOrder()">Добавить</button>
@@ -481,12 +464,18 @@
                     const row = document.createElement('tr');
                     row.className = 'clickable-row';
                     row.style.cursor = 'pointer';
-                    row.onclick = () => viewProposals(order.id, order.title);
+                    
+                    let displayTitle = order.title;
+                    if (order.title && order.title.includes(' | ')) {
+                        displayTitle = order.title.split(' | ')[0];
+                    }
+                    
+                    row.onclick = () => viewProposals(order.id, displayTitle);
 
                     const statusClass = order.status === 'Закрыта' ? 'status closed' : 'status active';
 
                     row.innerHTML = `
-                        <td><strong>${order.title}</strong></td>
+                        <td><strong>${displayTitle}</strong></td>
                         <td>${order.category}</td>
                         <td><span class="${statusClass}">${order.status}</span></td>
                         <td style="color: #2980b9; font-weight: bold;">${order.responses} (посмотреть)</td>
@@ -553,27 +542,27 @@
             }
         }
 
-       async function createOrder() {
+        async function createOrder() {
             const titleInput = document.getElementById('orderName');
             const categoryInput = document.getElementById('orderCategory');
             const deadlineInput = document.getElementById('orderDeadline');
-            const fileInput = document.getElementById('orderFile'); // Наше новое поле
+            const fileInput = document.getElementById('orderFile');
 
             if (!titleInput || !deadlineInput || !fileInput) return;
 
-            const title = titleInput.value.trim();
+            const cleanTitle = titleInput.value.trim();
             const category = categoryInput.value;
             const deadline = deadlineInput.value.trim();
-            
-            // Получаем только имя файла для передачи в JSON (базовая симуляция для MVP)
+
             const drawing = fileInput.files.length > 0 ? fileInput.files[0].name : "Не прикреплен";
+            const title = `${cleanTitle} | ${drawing}`;
 
             titleInput.style.borderColor = '#ccc';
             deadlineInput.style.borderColor = '#ccc';
 
-            if (!title || !deadline) {
+            if (!cleanTitle || !deadline) {
                 alert('Пожалуйста, заполните все поля заявки!');
-                if (!title) titleInput.style.borderColor = '#e74c3c';
+                if (!cleanTitle) titleInput.style.borderColor = '#e74c3c';
                 if (!deadline) deadlineInput.style.borderColor = '#e74c3c';
                 return;
             }
@@ -582,7 +571,7 @@
                 const response = await fetch(`${SERVER_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, category, deadline, drawing }) // Добавили drawing
+                    body: JSON.stringify({ title, category, deadline })
                 });
 
                 if (response.ok) {
@@ -590,14 +579,14 @@
                     loadOrders(); 
                     titleInput.value = '';
                     deadlineInput.value = '';
-                    fileInput.value = ''; // Сброс поля файла
+                    fileInput.value = '';
                 } else {
                     alert('Ошибка сервера при создании заявки');
                 }
             } catch (error) {
                 console.error('Ошибка при отправке заявки:', error);
             }
-        }
+        }   
 
         async function acceptProposal(proposalId) {
             if (!confirm('Вы уверены, что хотите принять это предложение и закрыть тендер?')) return;
