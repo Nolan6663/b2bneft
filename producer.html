@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Платформа - Кабинет Производителя</title>
     <style>
-/* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
+        /* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
         :root {
             --bg-main: #f8fafc;
             --bg-card: rgba(255, 255, 255, 0.8);
@@ -63,7 +63,7 @@
             padding: 40px 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Плотный аккуратный шаг между пунктами */
+            gap: 8px;
         }
 
         .sidebar h1 {
@@ -76,34 +76,30 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Полный сброс фиолетового цвета для ВСЕХ ссылок меню */
         .sidebar a {
             display: flex;
             align-items: center;
             padding: 12px 16px;
             border-radius: 10px;
-            color: rgba(241, 245, 249, 0.6) !important; /* Матовый светлый текст по умолчанию */
+            color: rgba(241, 245, 249, 0.6) !important;
             text-decoration: none !important;
             font-size: 14px;
             font-weight: 500;
         }
 
-        /* Эффект при наведении */
         .sidebar a:hover {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.04);
         }
 
-        /* Активный пункт меню */
         .sidebar a.active {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.08);
             font-weight: 600;
         }
 
-        /* Контейнер переключателя темы (всегда прижат вниз) */
         .theme-container {
-            margin-top: auto; /* Выталкивает весь блок в самый низ */
+            margin-top: auto;
             padding-top: 20px;
             margin-bottom: 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -119,7 +115,6 @@
             color: #94a3b8;
         }
 
-        /* Нижняя кнопка смены кабинета */
         .sidebar .switch-link {
             margin-top: 0;
             padding: 14px;
@@ -150,7 +145,6 @@
             overflow-y: auto;
         }
 
-        /* ФИЛЬТРЫ */
         .filter-section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -175,7 +169,7 @@
             font-size: 14px;
         }
 
-        /* КАРТОЧКИ ТЕНДЕРОВ — ЭФФЕКТ СТЭКЛА */
+        /* КАРТОЧКИ ТЕНДЕРОВ */
         .order-item {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -219,7 +213,7 @@
         .tag.rti { background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .tag.metal { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
 
-        /* ТАБЛИЦА МОИХ ОТКЛИКОВ */
+        /* ТАБЛИЦА ОТКЛИКОВ */
         .section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -238,49 +232,108 @@
         .badge.win { background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .badge.loose { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
-        /* МОДАЛКИ */
+        /* МОДАЛЬНЫЕ ОКНА */
         .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(3, 7, 18, 0.4); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content {
-            background: var(--modal-bg); border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect); padding: 40px; border-radius: 24px; width: 480px;
-        }
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-        .form-group label { font-size: 13px; color: var(--text-muted); }
-        .form-group input, .form-group select {
-            background: var(--input-bg); border: 1px solid transparent; padding: 14px; border-radius: 10px; color: var(--input-text); outline: none;
-        }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
-        .btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 24px; border-radius: 10px; cursor: pointer; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 24px; }
-            .main-content { padding: 24px; }
-            .order-item { flex-direction: column; align-items: stretch; gap: 16px; }
-            .btn-respond { width: 100%; text-align: center; }
-        }
-        /* СТИЛИ ИСПРАВЛЕНИЯ ПОЛЗУНКА ТЕМЫ */
-        .theme-container {
-            margin-top: auto; /* Прижимает блок к самому низу */
-            padding-top: 15px;
-            margin-bottom: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
+            position: fixed;
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.5);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
             align-items: center;
-            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 20px;
+            width: 460px;
+            max-width: 95vw;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-content h3 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             width: 100%;
         }
 
-        .theme-text {
+        .form-group label {
             font-size: 13px;
             font-weight: 500;
-            color: #94a3b8;
+            color: var(--text-muted);
         }
 
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: var(--input-text);
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-modal-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-modal-cancel:hover {
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        .btn-modal-submit {
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background-color: var(--accent-green); 
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* ПОЛЗУНОК ТЕМЫ */
         .theme-switch {
             position: relative;
             display: inline-block;
@@ -315,7 +368,6 @@
             transition: 0.3s;
         }
 
-        /* Зеленая подсветка для производителя */
         .theme-switch input:checked + .theme-slider {
             background-color: var(--accent-green);
         }
@@ -323,11 +375,130 @@
         .theme-switch input:checked + .theme-slider:before {
             transform: translateX(20px);
         }
+
+        /* АДАПТИВНАЯ ВЕРСТКА */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 24px; }
+            .main-content { padding: 24px; }
+            .order-item { flex-direction: column; align-items: stretch; gap: 16px; }
+            .btn-respond { width: 100%; text-align: center; }
+            
+            /* Исправление адаптива таблиц */
+            table, th, td { display: block; width: 100%; }
+            th { display: none; }
+            td { text-align: right; padding-left: 50%; position: relative; border-bottom: 1px solid var(--border-color); }
+            tr { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; display: block; background: var(--bg-card); }
+        }
+/* КАСТOmnыЕ ПРЕМИУМ ВЫПАДАЮЩИЕ СПИСКИ */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .custom-select {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .custom-select-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px; /* Плавное сильное скругление */
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Минималистичная стрелочка через SVG */
+        .custom-select-trigger:after {
+            content: "";
+            width: 14px;
+            height: 14px;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-size: contain;
+            background-repeat: no-repeat;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.dark-mode .custom-select-trigger:after {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        }
+
+        /* Вращение стрелки при открытии */
+        .custom-select.open .custom-select-trigger:after {
+            transform: rotate(180deg);
+        }
+
+        .custom-select.open .custom-select-trigger {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Контейнер со списком вариантов */
+        .custom-options {
+            position: absolute;
+            display: block;
+            top: 100%; left: 0; right: 0;
+            margin-top: 8px;
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            backdrop-filter: var(--blur-effect);
+            z-index: 100;
+            overflow: hidden;
+            
+            /* ЭФФЕКТ ПЛАВНОГО ВЫПАДЕНИЯ */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-12px) scale(0.97);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-select.open .custom-options {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Элементы списка */
+        .custom-option {
+            position: relative;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .custom-option:hover {
+            background: rgba(16, 185, 129, 0.06);
+            color: var(--accent-green);
+            padding-left: 22px; /* Эффект легкого сдвига при наведении */
+        }
+
+        .custom-option.selected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
+    <div class="sidebar">
         <h1>B2B Платформа</h1>
         
         <a href="#" class="active">Актуальные тендеры</a>
@@ -344,31 +515,43 @@
         <a href="index.html" class="switch-link">Войти как Заказчик</a>
     </div>
 
-    <div class="main-content">
-        <div class="header">
-            <h2>Кабинет Производителя</h2>
-        </div>
-              <div class="filter-section" style="background: #eef2f7; border-left: 5px solid #2ecc71;">
-                <label for="companySelect"><strong>Вы вошли как организация:</strong></label>
-                <select id="companySelect">
-                    <option value="Завод РТИ-Профи">ООО «Завод РТИ-Профи»</option>
-                    <option value="Металл-Сервис">АО «Металл-Сервис»</option>
-                    <option value="УралПолимер">ПК «УралПолимер»</option>
-                </select>
+<div class="main-content">
+    <div class="header">
+        <h2>Кабинет Производителя</h2>
+    </div>
+        <div class="filter-section" style="background: rgba(16, 185, 129, 0.05); border-left: 5px solid var(--accent-green);">
+            <label for="companySelect"><strong>Вы вошли как организация:</strong></label>
+            <div class="custom-select-wrapper">
+                <input type="hidden" id="companySelect" value="Завод РТИ-Профи">
+                <div class="custom-select" id="wrapperCompanySelect">
+                    <div class="custom-select-trigger"><span>ООО «Завод РТИ-Профи»</span></div>
+                    <div class="custom-options">
+                        <div class="custom-option selected" data-value="Завод РТИ-Профи">ООО «Завод РТИ-Профи»</div>
+                        <div class="custom-option" data-value="Металл-Сервис">АО «Металл-Сервис»</div>
+                        <div class="custom-option" data-value="УралПолимер">ПК «УралПолимер»</div>
+                    </div>
+                </div>
             </div>
+        </div>
+
         <div class="filter-section">
             <label for="categoryFilter">Фильтр по категориям:</label>
-            <select id="categoryFilter" onchange="filterOrders()">
-                <option value="all">Все категории</option>
-                <option value="РТИ">РТИ</option>
-                <option value="Металл">Металл</option>
-            </select>
+            <div class="custom-select-wrapper">
+                <input type="hidden" id="categoryFilter" value="all">
+                <div class="custom-select" id="wrapperCategoryFilter">
+                    <div class="custom-select-trigger"><span>Все категории</span></div>
+                    <div class="custom-options">
+                        <div class="custom-option selected" data-value="all">Все категории</div>
+                        <div class="custom-option" data-value="РТИ">РТИ</div>
+                        <div class="custom-option" data-value="Металл">Металл</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="section">
             <h3>Доступные тендеры (Заявки заказчиков)</h3>
-            <div id="ordersList" class="orders-list">
-                </div>
+            <div id="ordersList" class="orders-list"></div>
         </div>
 
         <div class="section">
@@ -382,25 +565,33 @@
                         <th>Статус отклика</th>
                     </tr>
                 </thead>
-                <tbody id="myResponsesTable">
-                    </tbody>
+                <tbody id="myResponsesTable"></tbody>
             </table>
         </div>
     </div>
 
     <div class="modal" id="respondModal">
         <div class="modal-content">
-            <h3 id="modalTargetTitle">Отклик на тендер</h3>
-            <input type="number" id="offerPrice" placeholder="Цена, ₽/шт">
-            <input type="number" id="offerDays" placeholder="Срок поставки (дней)">
-            <div class="modal-buttons">
-                <button class="btn-close" onclick="closeRespondModal()">Отмена</button>
-                <button class="btn-submit" onclick="sendProposal()">Отправить КП</button>
+            <h3 id="modalTitle">Отклик на заявку</h3>
+            
+            <div class="form-group">
+                <label>Цена, ₽/шт</label>
+                <input type="number" id="proposalPrice" placeholder="Укажите цену за единицу">
+            </div>
+
+            <div class="form-group">
+                <label>Срок поставки (дней)</label>
+                <input type="number" id="proposalTerms" placeholder="Например, 14">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeRespondModal()">Отмена</button>
+                <button class="btn-modal-submit" id="submitProposalBtn" onclick="sendProposal()">Отправить КП</button>
             </div>
         </div>
     </div>
 
-<script>
+    <script>
         const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
         let currentOrderId = null;
         let currentOrderTitle = "";
@@ -410,49 +601,48 @@
             loadMyProposals();
         });
 
-async function loadOrdersForProducers() {
-    try {
-        const response = await fetch(`${SERVER_URL}/orders`);
-        const orders = await response.json();
-        
-        const ordersList = document.getElementById('ordersList');
-        if (!ordersList) return;
-        ordersList.innerHTML = ''; 
+        async function loadOrdersForProducers() {
+            try {
+                const response = await fetch(`${SERVER_URL}/orders`);
+                const orders = await response.json();
+                
+                const ordersList = document.getElementById('ordersList');
+                if (!ordersList) return;
+                ordersList.innerHTML = ''; 
 
-        orders.forEach(order => {
-            const orderItem = document.createElement('div');
-            orderItem.className = 'order-item';
-            orderItem.setAttribute('data-category', order.category);
-            
-            const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
+                orders.forEach(order => {
+                    const orderItem = document.createElement('div');
+                    orderItem.className = 'order-item';
+                    orderItem.setAttribute('data-category', order.category);
+                    
+                    const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
 
-            // Логика для кнопки: если тендер закрыт, блокируем отклик
-            let actionButton = '';
-            let statusText = order.status;
+                    let actionButton = '';
+                    let statusText = order.status;
 
-            if (order.status === 'Закрыта') {
-                statusText = '<span style="color: #e74c3c; font-weight: bold;">Закрыт (Победитель выбран)</span>';
-                actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Тендер завершён</button>`;
-            } else {
-                statusText = `<span style="color: #2ecc71; font-weight: bold;">${order.status}</span>`;
-                actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${order.title.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                    if (order.status === 'Закрыта') {
+                        statusText = '<span style="color: #e74c3c; font-weight: bold;">Закрыт</span>';
+                        actionButton = `<button class="btn-respond" style="background-color: #95a5a6; cursor: not-allowed;" disabled>Тендер завершён</button>`;
+                    } else {
+                        statusText = `<span style="color: #2ecc71; font-weight: bold;">${order.status}</span>`;
+                        actionButton = `<button class="btn-respond" onclick="openRespondModal(${order.id}, '${order.title.replace(/'/g, "\\'")}')">Откликнуться</button>`;
+                    }
+
+                    orderItem.innerHTML = `
+                        <div class="order-info">
+                            <h4>${order.title}</h4>
+                            <span class="tag ${tagClass}">${order.category}</span>
+                            <span class="meta">Статус: ${statusText} | Уже откликов: ${order.responses}</span>
+                            <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн: ${order.deadline}</div>
+                        </div>
+                        ${actionButton}
+                    `;
+                    ordersList.appendChild(orderItem);
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке заявок для производителей:', error);
             }
-
-            orderItem.innerHTML = `
-                <div class="order-info">
-                    <h4>${order.title}</h4>
-                    <span class="tag ${tagClass}">${order.category}</span>
-                    <span class="meta">Статус: ${statusText} | Уже откликов: ${order.responses}</span>
-                    <div class="meta" style="margin-top: 5px; font-weight: bold;">Дедлайн: ${order.deadline}</div>
-                </div>
-                ${actionButton}
-            `;
-            ordersList.appendChild(orderItem);
-        });
-    } catch (error) {
-        console.error('Ошибка при загрузке заявок для производителей:', error);
-    }
-}
+        }
 
         async function loadMyProposals() {
             try {
@@ -486,7 +676,7 @@ async function loadOrdersForProducers() {
         function openRespondModal(id, title) {
             currentOrderId = Number(id);
             currentOrderTitle = title;
-            const modalTitle = document.getElementById('modalTargetTitle');
+            const modalTitle = document.getElementById('modalTitle');
             if (modalTitle) modalTitle.innerText = `Отклик на: ${title}`;
             
             const modal = document.getElementById('respondModal');
@@ -498,8 +688,8 @@ async function loadOrdersForProducers() {
         }
 
         async function sendProposal() {
-            const priceInput = document.getElementById('offerPrice');
-            const daysInput = document.getElementById('offerDays');
+            const priceInput = document.getElementById('proposalPrice');
+            const daysInput = document.getElementById('proposalTerms');
             const companySelect = document.getElementById('companySelect');
 
             if (!priceInput || !daysInput || !companySelect) return;
@@ -508,11 +698,9 @@ async function loadOrdersForProducers() {
             const days = parseInt(daysInput.value, 10);
             const companyName = companySelect.value;
 
-            // Сбрасываем стили ошибок
-            priceInput.style.borderColor = '#ccc';
-            daysInput.style.borderColor = '#ccc';
+            priceInput.style.borderColor = '';
+            daysInput.style.borderColor = '';
 
-            // Проверка 1: Заполнено ли вообще
             if (isNaN(price) || isNaN(days)) {
                 alert('Укажите цену и сроки поставки!');
                 if (isNaN(price)) priceInput.style.borderColor = '#e74c3c';
@@ -520,7 +708,6 @@ async function loadOrdersForProducers() {
                 return;
             }
 
-            // Проверка 2: Логика чисел (цена и срок должны быть больше нуля)
             if (price <= 0 || days <= 0) {
                 alert('Цена и срок поставки должны быть больше нуля!');
                 if (price <= 0) priceInput.style.borderColor = '#e74c3c';
@@ -556,54 +743,100 @@ async function loadOrdersForProducers() {
             }
         }
 
-function filterOrders() {
-    const selectedCategory = document.getElementById('categoryFilter').value;
-    const orderItems = document.querySelectorAll('.order-item');
-    
-    orderItems.forEach(item => {
-        const itemCategory = item.getAttribute('data-category');
-        
-        if (selectedCategory === 'all' || itemCategory === selectedCategory) {
-            item.style.display = 'flex'; // Показываем карточку
-        } else {
-            item.style.display = 'none'; // Скрываем карточку
+       function filterOrders() {
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            const orderItems = document.querySelectorAll('.order-item');
+            
+            orderItems.forEach(item => {
+                const itemCategory = item.getAttribute('data-category');
+                if (selectedCategory === 'all' || itemCategory === selectedCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        } // ФУНКЦИЯ ФИЛЬТРАЦИИ ПРАВИЛЬНО ЗАКРЫТА ЗДЕСЬ
+
+        // ЛОГИКА ДЛЯ ОЖИВЛЕНИЯ ПРЕМИУМ ВЫПАДАЮЩИХ СПИСКОВ
+        document.addEventListener('DOMContentLoaded', () => {
+            initPremiumSelect('wrapperCompanySelect', 'companySelect');
+            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
+                if (typeof filterOrders === 'function') filterOrders();
+            });
+        });
+
+        function initPremiumSelect(wrapperId, hiddenInputId, callback) {
+            const wrapper = document.getElementById(wrapperId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            if (!wrapper || !hiddenInput) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const options = wrapper.querySelectorAll('.custom-option');
+
+            // Переключатель открытия/закрытия
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select').forEach(el => {
+                    if (el !== wrapper) el.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+
+            // Обработка выбора элемента
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent;
+
+                    trigger.querySelector('span').textContent = text;
+                    hiddenInput.value = value; 
+                    wrapper.classList.remove('open');
+
+                    if (callback) callback();
+                });
+            });
         }
-    });
-}
-// ДИНАМИЧЕСКАЯ СМЕНА ТЕМЫ ДЛЯ КАБИНЕТА ПРОИЗВОДИТЕЛЯ
-function toggleTheme() {
-    const body = document.body;
-    const checkbox = document.getElementById('themeCheckbox');
-    const label = document.getElementById('themeLabel');
-    if (!checkbox || !label) return;
 
-    if (checkbox.checked) {
-        body.classList.add('dark-mode');
-        label.innerText = '🌙 Тёмная тема';
-        localStorage.setItem('theme', 'dark');
-    } else {
-        body.classList.remove('dark-mode');
-        label.innerText = '☀️ Светлая тема';
-        localStorage.setItem('theme', 'light');
-    }
-}
+        // Закрытие всех списков при клике в пустую область экрана
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
+        });
 
-// Автоматическая проверка темы при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme');
-    const body = document.body;
-    const checkbox = document.getElementById('themeCheckbox');
-    const label = document.getElementById('themeLabel');
-    
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-        if (checkbox) checkbox.checked = true;
-        if (label) label.innerText = '🌙 Тёмная тема';
-    } else {
-        if (checkbox) checkbox.checked = false;
-        if (label) label.innerText = '☀️ Светлая тема';
-    }
-});
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            const label = document.getElementById('themeLabel');
+            if (!checkbox || !label) return;
+
+            if (checkbox.checked) {
+                body.classList.add('dark-mode');
+                label.innerText = '🌙 Тёмная тема';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                label.innerText = '☀️ Светлая тема';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const checkbox = document.getElementById('themeCheckbox');
+            const label = document.getElementById('themeLabel');
+            
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                if (checkbox) checkbox.checked = true;
+                if (label) label.innerText = '🌙 Тёмная тема';
+            } else {
+                if (checkbox) checkbox.checked = false;
+                if (label) label.innerText = '☀️ Светлая тема';
+            }
+        });
     </script>
 </body>
 </html>

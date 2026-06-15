@@ -53,6 +53,7 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
+
 /* ПОЛНОЕ ИСПРАВЛЕНИЕ СAЙДБАРА */
         .sidebar {
             width: 280px;
@@ -220,46 +221,108 @@
         }
         .btn-view:hover { background: var(--text-main); color: var(--bg-main); border-color: transparent; }
 
-        /* ПРЕМИАЛЬНЫЕ МОДАЛКИ */
+/* ПРЕМИАЛЬНЫЙ ДИЗАЙН МОДАЛЬНЫХ ОКН */
         .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(3, 7, 18, 0.4); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
+            position: fixed;
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.5);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
+
         .modal-content {
-            background: var(--modal-bg); border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect); padding: 40px; border-radius: 24px;
-            width: 540px; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            background: var(--modal-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 20px;
+            width: 460px;
+            max-width: 95vw;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Вертикальный стек для всех блоков внутри */
         }
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-        .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
-        .form-group input, .form-group select {
-            background: var(--input-bg); border: 1px solid transparent;
-            padding: 14px; border-radius: 10px; color: var(--input-text); font-size: 14px; outline: none;
+
+        .modal-content h3 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            margin-bottom: 4px;
         }
-        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); background: transparent; }
-        
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
-        .btn-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 14px; }
 
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
-        .badge.waiting { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .badge.win { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .badge.loose { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        .btn-accept { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
-        .btn-accept:hover { background: #059669; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 24px; }
-            .main-content { padding: 24px; }
-            table, th, td { display: block; width: 100%; }
-            th { display: none; }
-            td { text-align: right; padding-left: 50%; position: relative; }
-            tr { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; display: block; background: var(--bg-card); }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
         }
-        }        </style>
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Поля ввода на всю ширину контейнера */
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: var(--input-text);
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Блок кнопок внизу */
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-modal-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-modal-cancel:hover {
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        .btn-modal-submit {
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-modal-submit { background-color: var(--accent-blue); box-shadow: 0 4px 12px var(--accent-glow); }
+        </style>
 </head>
 <body>
 
@@ -270,7 +333,7 @@
         <a href="#">Контрагенты</a>
         <a href="#">Аналитика</a>
         
-        <div class="theme-container">
+<div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
             <label class="theme-switch">
                 <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
@@ -305,18 +368,31 @@
         </div>
     </div>
 
-    <div class="modal" id="orderModal">
+   <div class="modal" id="orderModal">
         <div class="modal-content">
             <h3>Новая заявка на производство</h3>
-            <input type="text" id="orderName" placeholder="Наименование изделия">
-            <select id="orderCategory">
-                <option value="РТИ">РТИ</option>
-                <option value="Металл">Металл</option>
-            </select>
-            <input type="text" id="orderDeadline" placeholder="Дедлайн (например, 30.05.2026)">
-            <div class="modal-buttons">
-                <button class="btn-close" onclick="closeModal()">Отмена</button>
-                <button class="btn-submit" onclick="createOrder()">Добавить</button>
+            
+            <div class="form-group">
+                <label>Наименование изделия</label>
+                <input type="text" id="orderName" placeholder="Например, Манжета резиновая армированная">
+            </div>
+
+            <div class="form-group">
+                <label>Категория</label>
+                <select id="orderCategory">
+                    <option value="РТИ">РТИ</option>
+                    <option value="Металл">Металл</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Дедлайн поставки</label>
+                <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeModal()">Отмена</button>
+                <button class="btn-modal-submit" onclick="createOrder()">Добавить</button>
             </div>
         </div>
     </div>
@@ -339,9 +415,9 @@
                             </tbody>
                     </table>
                 </div>
-                <div class="modal-buttons" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button class="btn-close" onclick="closeProposalsModal()">Закрыть</button>
-                </div>
+                    <div class="modal-actions">
+                        <button class="btn-modal-cancel" onclick="closeProposalsModal()">Закрыть</button>
+                    </div>
             </div>
     </div>
 
