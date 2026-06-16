@@ -75,27 +75,10 @@
             font-weight: 500;
         }
 
-        .sidebar a:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.04);
-        }
+        .sidebar a:hover { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.04); }
+        .sidebar a.active { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.08); font-weight: 600; }
 
-        .sidebar a.active {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.08);
-            font-weight: 600;
-        }
-
-        .theme-container {
-            margin-top: auto;
-            padding-top: 20px;
-            margin-bottom: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
+        .theme-container { margin-top: auto; padding-top: 20px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .theme-text { font-size: 13px; color: #94a3b8; }
         .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .theme-switch input { opacity: 0; width: 0; height: 0; }
@@ -103,137 +86,47 @@
         .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
         .theme-switch input:checked + .theme-slider { background-color: #10b981; }
         .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
+        .sidebar .switch-link { color:#fff !important; font-size:13px; text-decoration:none; margin-top:10px; padding:10px; text-align:center; border:1px solid rgba(255,255,255,0.1); border-radius:8px; }
 
-        /* КОНТЕНТ */
-        .main-content {
-            flex: 1;
-            padding: 50px 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            overflow-y: auto;
-        }
+        .main-content { flex: 1; padding: 50px 60px; display: flex; flex-direction: column; gap: 30px; overflow-y: auto; }
+        .filter-section { background: var(--bg-card); border: 1px solid var(--border-color); backdrop-filter: var(--blur-effect); padding: 20px 32px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; }
 
-        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-
-        .filter-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
-            padding: 20px 32px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
-        }
-
-        .filter-section label { font-size: 14px; font-weight: 500; color: var(--text-muted); }
-
-        .section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-        }
-
+        .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
         td { padding: 18px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
-        tr:last-child td { border-bottom: none; }
 
         .role-badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-block; }
         .role-badge.customer { background: rgba(37, 99, 235, 0.1); color: #3b82f6; }
         .role-badge.producer { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-
         .status-verified { color: #10b981; font-weight: 600; }
 
-        /* КАСТОМНЫЙ ВЫПАДАЮЩИЙ СПИСОК */
         .custom-select-wrapper { position: relative; width: 100%; max-width: 280px; }
         .custom-select { position: relative; display: flex; flex-direction: column; }
-        .custom-select-trigger { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; font-weight: 500; color: var(--text-main); background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; user-select: none; }
+        .custom-select-trigger { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: var(--text-main); background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; }
         .custom-select-trigger:after { content: ""; width: 14px; height: 14px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-size: contain; background-repeat: no-repeat; }
         .custom-select.open .custom-select-trigger:after { transform: rotate(180deg); }
-        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; margin-top: 6px; background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08); backdrop-filter: var(--blur-effect); z-index: 100; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; }
+        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; margin-top: 6px; background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 14px; z-index: 100; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; }
         .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
         .custom-option { padding: 10px 16px; font-size: 14px; color: var(--text-main); cursor: pointer; }
         .custom-option:hover { background: rgba(16, 185, 129, 0.06); color: #10b981; }
-        .custom-option.selected { background: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 600; }
-        /* ==========================================================================
-           ЦЕНТР УВЕДОМЛЕНИЙ (ЖЕСТКАЯ ИЗОЛЯЦИЯ)
-           ========================================================================== */
-        .header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            width: 100% !important;
-            gap: 16px !important;
-            margin-bottom: 24px !important;
-        }
 
-        .bell-btn {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            padding: 10px 16px !important;
-            border-radius: 12px !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            font-size: 16px !important;
-            position: relative !important;
-            color: var(--text-main) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
-            transition: all 0.2s ease !important;
-            height: 42px !important;
-            box-sizing: border-box !important;
-        }
+        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
+        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
+        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
+        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
+        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
+        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
+        .notification-item:last-child { border-bottom: none !important; }
+        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
 
-        .bell-btn:hover {
-            border-color: var(--text-muted) !important;
-            background: rgba(148, 163, 184, 0.05) !important;
-        }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: var(--modal-bg); border: 1px solid var(--border-color); padding: 40px; border-radius: 20px; width: 460px; max-width: 95vw; display: flex; flex-direction: column; gap: 20px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-modal-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 24px; border-radius: 10px; cursor: pointer; }
 
-        .bell-badge {
-            background: #ef4444 !important;
-            color: white !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
-            padding: 2px 6px !important;
-            border-radius: 20px !important;
-            display: none; /* Управляется через JS */
-            line-height: 1 !important;
-        }
-
-        .notification-item {
-            padding: 14px 16px !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            font-size: 13.5px !important;
-            line-height: 1.4 !important;
-            color: var(--text-main) !important;
-            background: transparent !important;
-        }
-        .notification-item:last-child { 
-            border-bottom: none !important; 
-        }
-        
-        .notification-item .time {
-            font-size: 11px !important;
-            color: var(--text-muted) !important;
-            margin-top: 5px !important;
-            font-family: monospace !important;
-        }
-
-        /* Адаптивность для мобильных устройств */
         @media (max-width: 768px) {
-            #notificationModal .modal-content {
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100vh !important;
-                border-radius: 0 !important;
-                padding: 20px !important;
-            }
+            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
@@ -241,7 +134,8 @@
 
     <div class="sidebar">
         <h1>B2B Платформа</h1>
-        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
+        <a href="#" id="mainCabinetLink">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
         <a href="partners.html" class="active">Контрагенты</a>
         <a href="analytics.html">Аналитика</a>
         
@@ -252,16 +146,17 @@
                 <span class="theme-slider"></span>
             </label>
         </div>
+        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
-            <div class="header">
-                <h2>Реестр контрагентов платформы</h2>
-                <button class="bell-btn" onclick="openNotificationsModal()">
-                    <span>🔔</span>
-                    <span class="bell-badge" id="bellBadge">0</span>
-                </button>
-            </div>
+        <div class="header">
+            <h2>Реестр контрагентов платформы</h2>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <span>🔔</span>
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+        </div>
 
         <div class="filter-section">
             <label for="roleFilter">Тип организации:</label>
@@ -294,6 +189,17 @@
         </div>
     </div>
 
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);"></div>
+            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         (() => {
             if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
@@ -311,135 +217,69 @@
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
-            const backBtn = document.getElementById('backToCabinetBtn');
-            if (backBtn) backBtn.href = userRole === 'customer' ? 'index.html' : 'producer.html';
-            
-            loadPartners();
-            initSelect();
-            initNotifications();
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) {
+                mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+                mainLink.innerText = userRole === 'customer' ? 'Мои заявки' : 'Актуальные закупки';
+            }
+            loadPartners(); initSelect(); initNotifications();
         });
 
         async function loadPartners() {
-            const tbody = document.getElementById('partnersTableBody');
-            if (!tbody) return;
-
+            const tbody = document.getElementById('partnersTableBody'); if (!tbody) return;
             let partnersList = [];
-
             try {
-                const response = await fetch(`${SERVER_URL}/users`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
-                if (response.ok) {
-                    partnersList = await response.json();
-                } else {
-                    partnersList = fallbackPartners;
-                }
-            } catch (error) {
-                partnersList = fallbackPartners;
-            }
+                const response = await fetch(`${SERVER_URL}/users`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
+                partnersList = response.ok ? await response.json() : fallbackPartners;
+            } catch (error) { partnersList = fallbackPartners; }
 
-            // ИСПРАВЛЕНО: Вместо фразы "Текущая сессия" генерируем красивый ИНН
             const currentCompany = localStorage.getItem('userCompany');
             if (currentCompany && !partnersList.some(p => p.company === currentCompany)) {
-                partnersList.unshift({
-                    company: currentCompany,
-                    inn: "540200" + Math.floor(1000 + Math.random() * 9000), // Рандомный ИНН для солидности
-                    role: userRole,
-                    spec: userRole === 'customer' ? 'Размещение прямых закупок' : 'Производство продукции',
-                    status: "Верифицирован"
-                });
+                partnersList.unshift({ company: currentCompany, inn: "540200" + Math.floor(1000 + Math.random() * 9000), role: userRole, spec: userRole === 'customer' ? 'Размещение прямых закупок' : 'Производство продукции', status: "Верифицирован" });
             }
-
             renderTable(partnersList);
         }
 
         function renderTable(list) {
-            const tbody = document.getElementById('partnersTableBody');
-            tbody.innerHTML = '';
-
+            const tbody = document.getElementById('partnersTableBody'); tbody.innerHTML = '';
             list.forEach(partner => {
-                const row = document.createElement('tr');
-                row.className = 'partner-row';
-                row.setAttribute('data-role', partner.role);
-
+                const row = document.createElement('tr'); row.className = 'partner-row'; row.setAttribute('data-role', partner.role);
                 const roleText = partner.role === 'customer' ? 'Заказчик' : 'Производитель';
                 const roleClass = partner.role === 'customer' ? 'customer' : 'producer';
-
-                row.innerHTML = `
-                    <td><strong>${partner.company}</strong></td>
-                    <td style="color: var(--text-muted); font-family: monospace; font-size: 13px;">${partner.inn}</td>
-                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
-                    <td>${partner.spec}</td>
-                    <td class="status-verified">✓ ${partner.status}</td>
-                `;
+                row.innerHTML = `<td><strong>${partner.company}</strong></td><td style="font-family: monospace;">${partner.inn}</td><td><span class="role-badge ${roleClass}">${roleText}</span></td><td>${partner.spec}</td><td class="status-verified">✓ ${partner.status}</td>`;
                 tbody.appendChild(row);
             });
         }
 
         function initSelect() {
-            const wrapper = document.getElementById('wrapperRoleFilter');
-            const hiddenInput = document.getElementById('roleFilter');
+            const wrapper = document.getElementById('wrapperRoleFilter'); const hiddenInput = document.getElementById('roleFilter');
             if (!wrapper || !hiddenInput) return;
-
-            const trigger = wrapper.querySelector('.custom-select-trigger');
-            const options = wrapper.querySelectorAll('.custom-option');
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                wrapper.classList.toggle('open');
-            });
-
+            const trigger = wrapper.querySelector('.custom-select-trigger'); const options = wrapper.querySelectorAll('.custom-option');
+            trigger.addEventListener('click', (e) => { e.stopPropagation(); wrapper.classList.toggle('open'); });
             options.forEach(option => {
                 option.addEventListener('click', function() {
-                    options.forEach(opt => opt.classList.remove('selected'));
-                    this.classList.add('selected');
-                    
-                    const val = this.getAttribute('data-value');
-                    hiddenInput.value = val;
-                    trigger.querySelector('span').textContent = this.textContent;
-                    wrapper.classList.remove('open');
-
-                    document.querySelectorAll('.partner-row').forEach(row => {
-                        row.style.display = (val === 'all' || row.getAttribute('data-role') === val) ? 'table-row' : 'none';
-                    });
+                    options.forEach(opt => opt.classList.remove('selected')); this.classList.add('selected');
+                    const val = this.getAttribute('data-value'); hiddenInput.value = val; trigger.querySelector('span').textContent = this.textContent; wrapper.classList.remove('open');
+                    document.querySelectorAll('.partner-row').forEach(row => { row.style.display = (val === 'all' || row.getAttribute('data-role') === val) ? 'table-row' : 'none'; });
                 });
             });
-
-            window.addEventListener('click', () => wrapper.classList.remove('open'));
         }
 
         function toggleTheme() {
-            const body = document.body;
-            const checkbox = document.getElementById('themeCheckbox');
-            if (checkbox.checked) {
-                body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light');
-            }
+            const body = document.body; const checkbox = document.getElementById('themeCheckbox');
+            if (checkbox.checked) { body.classList.add('dark-mode'); localStorage.setItem('theme', 'dark'); } 
+            else { body.classList.remove('dark-mode'); localStorage.setItem('theme', 'light'); }
         }
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            const cb = document.getElementById('themeCheckbox');
-            if (cb) cb.checked = true;
-        }
-        // ЛОГИКА ЦЕНТРА УВЕДОМЛЕНИЙ
         const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
         const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
 
         function initNotifications() {
             renderNotificationsCount();
-            
-            // Имитация поступления нового уведомления через 6 секунд после загрузки
             setTimeout(() => {
                 const role = localStorage.getItem('userRole');
-                let text = role === 'customer'
-                    ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'."
-                    : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                
+                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
                 addNotification(text);
             }, 6000);
         }
@@ -447,76 +287,30 @@
         function addNotification(text) {
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Проверка на дубликаты при перезагрузке
             if (list.length > 0 && list[0].text === text) return;
-
-            list.unshift({ text, time: timeStr, read: false });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
+            list.unshift({ text, time: timeStr, read: false }); localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
             renderNotificationsCount();
         }
 
         function renderNotificationsCount() {
-            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const unreadCount = list.filter(n => !n.read).length;
-            const badgeEl = document.getElementById('bellBadge');
-            if (!badgeEl) return;
-
-            if (unreadCount > 0) {
-                badgeEl.innerText = unreadCount;
-                badgeEl.style.display = 'inline-block';
-            } else {
-                badgeEl.style.display = 'none';
-            }
+            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || []; const unreadCount = list.filter(n => !n.read).length;
+            const badgeEl = document.getElementById('bellBadge'); if (!badgeEl) return;
+            badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none'; if (unreadCount > 0) badgeEl.innerText = unreadCount;
         }
 
         function openNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'flex';
-            const container = document.getElementById('notificationsList');
-            if (!container) return;
-            
+            document.getElementById('notificationModal').style.display = 'flex'; const container = document.getElementById('notificationsList');
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-
-            if (list.length === 0) {
-                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`;
-                return;
-            }
-
+            if (list.length === 0) { container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return; }
             container.innerHTML = '';
             list.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'notification-item';
-                item.innerHTML = `
-                    <div>${n.text}</div>
-                    <div class="time">⏱ ${n.time}</div>
-                `;
-                container.appendChild(item);
-                n.read = true; // Помечаем как прочитанное
+                const item = document.createElement('div'); item.className = 'notification-item';
+                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`; container.appendChild(item); n.read = true;
             });
-
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
+            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
         }
-
-        function closeNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'none';
-        }
-
-        function clearNotifications() {
-            localStorage.removeItem(B2B_NOTIF_KEY);
-            openNotificationsModal();
-        }
+        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
+        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
-    <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
-            <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);">
-                </div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

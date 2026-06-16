@@ -63,6 +63,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .sidebar h1 {
@@ -146,9 +147,6 @@
             overflow-y: auto;
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; }
-        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-
         .btn-create {
             background-color: var(--accent-blue);
             color: white;
@@ -180,7 +178,6 @@
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: rgba(148, 163, 184, 0.02); }
 
-        /* СТИЛЬНЫЕ ТЕГИ */
         .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
         .tag.rti { background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .tag.metal { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
@@ -230,14 +227,8 @@
             width: 100%;
         }
 
-        .form-group label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .form-group input, 
-        .form-group select {
+        .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+        .form-group input, .form-group select {
             width: 100%;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -250,13 +241,11 @@
             box-sizing: border-box;
         }
 
-        .form-group input:focus, 
-        .form-group select:focus {
+        .form-group input:focus, .form-group select:focus {
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
-        /* КAСТOМНЫЙ ИНПУТ ФАЙЛА */
         .form-group input[type="file"] {
             padding: 10px 12px;
             border: 2px dashed var(--border-color);
@@ -264,10 +253,6 @@
             cursor: pointer;
             font-size: 13px;
             color: var(--text-muted);
-        }
-        .form-group input[type="file"]:hover {
-            border-color: var(--accent-blue);
-            color: var(--text-main);
         }
 
         .modal-actions {
@@ -286,10 +271,6 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-        }
-
-        .btn-modal-cancel:hover {
-            background: rgba(148, 163, 184, 0.08);
         }
 
         .btn-modal-submit {
@@ -313,240 +294,43 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
             transition: all 0.2s ease;
         }
-        .btn-accept:hover {
-            background-color: #059669;
-            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);
-            transform: translateY(-1px);
-        }
 
-        /* ВОССТАНОВЛЕННАЯ АДАПТИВНАЯ ВЕРСТКА */
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; }
+        .badge.waiting { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge.win { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge.loose { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        #chatModal .modal-content { width: 500px !important; max-width: 95vw !important; padding: 24px !important; background: var(--modal-bg) !important; border-radius: 20px !important; display: flex !important; flex-direction: column !important; gap: 16px !important; }
+        #chatModal .chat-container { display: flex !important; flex-direction: column !important; height: 360px !important; background: var(--input-bg) !important; border: 1px solid var(--border-color) !important; border-radius: 14px !important; overflow: hidden !important; }
+        #chatModal .chat-messages { flex: 1 !important; padding: 16px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 12px !important; }
+        #chatModal .chat-bubble { max-width: 75% !important; padding: 10px 16px !important; border-radius: 16px !important; font-size: 14px !important; line-height: 1.4 !important; word-break: break-word !important; display: inline-block !important; }
+        #chatModal .chat-bubble.me { background: #10b981 !important; color: white !important; align-self: flex-end !important; border-bottom-right-radius: 4px !important; }
+        #chatModal .chat-bubble.partner { background: rgba(148, 163, 184, 0.2) !important; color: var(--text-main) !important; align-self: flex-start !important; border-bottom-left-radius: 4px !important; }
+        #chatModal .chat-input-area { display: flex !important; gap: 10px !important; padding: 12px !important; background: var(--bg-card) !important; border-top: 1px solid var(--border-color) !important; align-items: center !important; }
+        #chatModal .chat-input-area input { flex: 1 !important; height: 40px !important; padding: 0 14px !important; border-radius: 8px !important; border: 1px solid var(--border-color) !important; background: var(--input-bg) !important; color: var(--text-main) !important; outline: none !important; }
+        #chatModal .chat-input-area .btn-chat-submit { height: 40px !important; padding: 0 16px !important; border-radius: 8px !important; background: #10b981 !important; color: white !important; border: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; }
+
+        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
+        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
+        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
+        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
+        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
+        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
+        .notification-item:last-child { border-bottom: none !important; }
+        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; padding: 24px; gap: 12px; }
-            .sidebar h1 { margin-bottom: 16px; }
-            .theme-container { margin-top: 16px; padding-top: 16px; }
             .main-content { padding: 30px 20px; gap: 24px; }
-            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
-            .btn-create { width: 100%; text-align: center; }
-            .section { padding: 20px; }
             table, th, td, tbody, tr { display: block; width: 100%; }
             th { display: none; }
             tr { border: 1px solid var(--border-color); border-radius: 14px; margin-bottom: 16px; background: var(--bg-card); padding: 12px; }
             td { padding: 10px 0; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.08); }
             td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
-        }
-/* КОМПЛЕКСНЫЙ ФИКС КНОПОК И СТИЛИЗАЦИИ ПУЗЫРЕЙ ЧАТА */
-        .order-actions {
-            display: flex !important;
-            align-items: center !important;
-            gap: 12px !important;
-            flex-shrink: 0 !important;
-        }
-
-        .btn-chat-secondary {
-            background: transparent !important;
-            color: var(--text-main) !important;
-            border: 1px solid var(--border-color) !important;
-            padding: 0 18px !important;
-            border-radius: 10px !important;
-            font-size: 14px !important;
-            font-weight: 500 !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 6px !important;
-            height: 42px !important; /* Выравниваем высоту в один уровень с главной кнопкой */
-            box-sizing: border-box !important;
-            transition: all 0.2s ease !important;
-        }
-
-        .btn-chat-secondary:hover {
-            background: rgba(148, 163, 184, 0.08) !important;
-            border-color: var(--text-muted) !important;
-        }
-        
-        .order-actions .btn-respond {
-            height: 42px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-sizing: border-box !important;
-        }
-
-        /* СТИЛИЗАЦИЯ ДИАЛОГОВОГО ОКНА И КОНТЕЙНЕРА СООБЩЕНИЙ */
-        #chatModal .modal-content {
-            width: 500px !important;
-            max-width: 95vw !important;
-            padding: 24px !important;
-            background: var(--modal-bg) !important;
-            border-radius: 20px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 16px !important;
-        }
-
-        #chatModal .chat-container {
-            display: flex !important;
-            flex-direction: column !important;
-            height: 360px !important;
-            background: var(--input-bg) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 14px !important;
-            overflow: hidden !important;
-        }
-
-        #chatModal .chat-messages {
-            flex: 1 !important;
-            padding: 16px !important;
-            overflow-y: auto !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 12px !important;
-        }
-
-        /* ВОЗВРАЩАЕМ ПУЗЫРИ ДЛЯ ТЕКСТА СООБЩЕНИЙ */
-        #chatModal .chat-bubble {
-            max-width: 75% !important;
-            padding: 10px 16px !important;
-            border-radius: 16px !important;
-            font-size: 14px !important;
-            line-height: 1.4 !important;
-            word-break: break-word !important;
-            display: inline-block !important;
-        }
-
-        #chatModal .chat-bubble.me {
-            background: var(--accent-green) !important;
-            color: white !important;
-            align-self: flex-end !important;
-            border-bottom-right-radius: 4px !important;
-        }
-
-        #chatModal .chat-bubble.partner {
-            background: rgba(148, 163, 184, 0.2) !important;
-            color: var(--text-main) !important;
-            align-self: flex-start !important;
-            border-bottom-left-radius: 4px !important;
-        }
-
-        /* СТРОКА ВВОДА И КНОПКА ОТПРАВКИ */
-        #chatModal .chat-input-area {
-            display: flex !important;
-            gap: 10px !important;
-            padding: 12px !important;
-            background: var(--bg-card) !important;
-            border-top: 1px solid var(--border-color) !important;
-            align-items: center !important;
-        }
-
-        #chatModal .chat-input-area input {
-            flex: 1 !important;
-            height: 40px !important;
-            padding: 0 14px !important;
-            border-radius: 8px !important;
-            border: 1px solid var(--border-color) !important;
-            background: var(--input-bg) !important;
-            color: var(--text-main) !important;
-            outline: none !important;
-        }
-
-        #chatModal .chat-input-area .btn-chat-submit {
-            height: 40px !important;
-            padding: 0 16px !important;
-            border-radius: 8px !important;
-            background: var(--accent-green) !important;
-            color: white !important;
-            border: none !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-        }
-
-        /* Мобильная адаптивная верстка */
-        @media (max-width: 768px) {
-            .order-item { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-            .order-actions { width: 100% !important; justify-content: flex-end !important; }
-            #chatModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
-            #chatModal .chat-container { height: calc(100vh - 160px) !important; }
-        }
-        /* ==========================================================================
-           ЦЕНТР УВЕДОМЛЕНИЙ (ЖЕСТКАЯ ИЗОЛЯЦИЯ)
-           ========================================================================== */
-        .header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            width: 100% !important;
-            gap: 16px !important;
-            margin-bottom: 24px !important;
-        }
-
-        .bell-btn {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            padding: 10px 16px !important;
-            border-radius: 12px !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            font-size: 16px !important;
-            position: relative !important;
-            color: var(--text-main) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
-            transition: all 0.2s ease !important;
-            height: 42px !important;
-            box-sizing: border-box !important;
-        }
-
-        .bell-btn:hover {
-            border-color: var(--text-muted) !important;
-            background: rgba(148, 163, 184, 0.05) !important;
-        }
-
-        .bell-badge {
-            background: #ef4444 !important;
-            color: white !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
-            padding: 2px 6px !important;
-            border-radius: 20px !important;
-            display: none; /* Управляется через JS */
-            line-height: 1 !important;
-        }
-
-        .notification-item {
-            padding: 14px 16px !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            font-size: 13.5px !important;
-            line-height: 1.4 !important;
-            color: var(--text-main) !important;
-            background: transparent !important;
-        }
-        .notification-item:last-child { 
-            border-bottom: none !important; 
-        }
-        
-        .notification-item .time {
-            font-size: 11px !important;
-            color: var(--text-muted) !important;
-            margin-top: 5px !important;
-            font-family: monospace !important;
-        }
-
-        /* Адаптивность для мобильных устройств */
-        @media (max-width: 768px) {
-            #notificationModal .modal-content {
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100vh !important;
-                border-radius: 0 !important;
-                padding: 20px !important;
-            }
+            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
@@ -554,8 +338,8 @@
 
     <div class="sidebar">
         <h1>B2B Платформа</h1>
-        
         <a href="index.html" class="active">Мои заявки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
         <a href="partners.html">Контрагенты</a>
         <a href="analytics.html">Аналитика</a>
         
@@ -566,7 +350,6 @@
                 <span class="theme-slider"></span>
             </label>
         </div>
-
         <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
@@ -580,7 +363,10 @@
         </div>
 
         <div class="section">
-            <h3>Список размещенных заказов</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Список размещенных заказов</h3>
+                <button class="btn-create" onclick="openModal()">+ Создать закупку</button>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -599,12 +385,10 @@
     <div class="modal" id="orderModal">
         <div class="modal-content">
             <h3>Новая прямая закупка</h3>
-            
             <div class="form-group">
                 <label>Наименование изделия</label>
                 <input type="text" id="orderName" placeholder="Например, Манжета резиновая армированная">
             </div>
-
             <div class="form-group">
                 <label>Категория</label>
                 <select id="orderCategory">
@@ -612,17 +396,14 @@
                     <option value="Металл">Металл</option>
                 </select>
             </div>
-
             <div class="form-group">
                 <label>Дедлайн поставки</label>
                 <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
             </div>
-
            <div class="form-group">
-                <label>Чертеж / Спецификация / 3D-модель (PDF, DWG, STEP, STP)</label>
+                <label>Чертеж / Спецификация (PDF, DWG, STEP)</label>
                 <input type="file" id="orderFile" accept=".pdf,.png,.dxf,.dwg,.step,.stp">
             </div>
-
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeModal()">Отмена</button>
                 <button class="btn-modal-submit" onclick="createOrder()">Добавить</button>
@@ -634,14 +415,14 @@
         <div class="modal-content" style="width: 650px; max-width: 90vw;">
             <h3 id="proposalsModalTitle">Входящие предложения</h3>
             <div style="overflow-x: auto; margin-top: 15px;">
-                <table style="width: 100%; border-collapse: collapse;">
+                <table>
                     <thead>
                         <tr style="background-color: #f8fafc; text-align: left;">
-                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 30%;">Поставщик</th>
-                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 25%;">Цена</th>
-                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 20%;">Срок</th>
-                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 15%;">Статус</th>
-                            <th style="padding: 12px 10px; border-bottom: 2px solid #e2e8f0; width: 10%; text-align: center;">Действие</th>
+                            <th>Поставщик</th>
+                            <th>Цена</th>
+                            <th>Срок</th>
+                            <th>Статус</th>
+                            <th style="text-align: center;">Действие</th>
                         </tr>
                     </thead>
                     <tbody id="proposals-table-body"></tbody>
@@ -652,7 +433,7 @@
             </div>
         </div>
     </div>
-<!-- МОДАЛЬНОЕ ОКНО ЧАТА С ФИКСИРОВАННОЙ СТРУКТУРОЙ -->
+
     <div class="modal" id="chatModal">
         <div class="modal-content">
             <h3 id="chatModalTitle">Обсуждение спецификации</h3>
@@ -669,15 +450,24 @@
         </div>
     </div>
 
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);"></div>
+            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border: transparent; background: transparent; cursor: pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-    // ПРОВЕРКА РОЛИ И АВТОРИЗАЦИИ (ROUTE GUARD)
         (() => {
             const token = localStorage.getItem('authToken');
             const role = localStorage.getItem('userRole');
-            if (!token || role !== 'customer') {
-                window.location.href = 'login.html';
-            }
+            if (!token || role !== 'customer') window.location.href = 'login.html';
         })();
+
         const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -692,10 +482,9 @@
         async function loadOrders() {
             try {
                 const response = await fetch(`${SERVER_URL}/orders`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
                 const orders = await response.json();
-                
                 const tableBody = document.getElementById('orders-table-body');
                 if (!tableBody) return;
                 tableBody.innerHTML = ''; 
@@ -704,21 +493,16 @@
                     const row = document.createElement('tr');
                     row.className = 'clickable-row';
                     row.style.cursor = 'pointer';
-                    
-                    let displayTitle = order.title;
-                    if (order.title && order.title.includes(' | ')) {
-                        displayTitle = order.title.split(' | ')[0];
-                    }
+                    let displayTitle = order.title && order.title.includes(' | ') ? order.title.split(' | ')[0] : order.title;
                     
                     row.onclick = () => viewProposals(order.id, displayTitle);
-
-                    const statusClass = order.status === 'Закрыта' ? 'status closed' : 'status active';
+                    const statusClass = order.status === 'Закрыта' ? 'status-badge closed' : 'status-badge active';
 
                     row.innerHTML = `
                         <td><strong>${displayTitle}</strong></td>
                         <td>${order.category}</td>
                         <td><span class="${statusClass}">${order.status}</span></td>
-                        <td style="color: #2980b9; font-weight: bold;">${order.responses} (посмотреть)</td>
+                        <td style="color: #2563eb; font-weight: bold;">${order.responses} (посмотреть)</td>
                         <td>${order.deadline}</td>
                     `;
                     tableBody.appendChild(row);
@@ -731,62 +515,42 @@
         async function viewProposals(orderId, orderTitle) {
             document.getElementById('proposalsModalTitle').innerText = `Отклики на: ${orderTitle}`;
             const tableBody = document.getElementById('proposals-table-body');
-            
-            if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">Загрузка предложений...</td></tr>';
-            }
+            if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Загрузка...</td></tr>';
             document.getElementById('proposalsModal').style.display = 'flex';
 
             try {
-                const ordResponse = await fetch(`${SERVER_URL}/orders`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const ordResponse = await fetch(`${SERVER_URL}/orders`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
                 const allOrders = await ordResponse.json();
                 const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId));
 
-                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`, {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
                 let proposals = await response.json();
-                
                 proposals.sort((a, b) => a.price - b.price); 
 
                 tableBody.innerHTML = ''; 
-
                 if (proposals.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #7f8c8d;">На эту заявку пока никто не откликнулся</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">На эту заявку пока никто не откликнулся</td></tr>`;
                 } else {
                     proposals.forEach(prop => {
                         const row = document.createElement('tr');
-                        
-                        let badgeClass = 'badge waiting';
-                        if (prop.status === 'Выигран') badgeClass = 'badge win';
-                        if (prop.status === 'Отклонен') badgeClass = 'badge loose';
-
+                        let badgeClass = prop.status === 'Выигран' ? 'badge win' : (prop.status === 'Отклонен' ? 'badge loose' : 'badge waiting');
                         const isClosed = currentOrder && currentOrder.status === 'Закрыта';
                         
-                        // Кнопка чата, передающая ID закупки, имя закупки и имя конкретного завода-откликнувшегося
-                        const chatBtn = `<button class="btn-accept" style="background-color: #3b82f6; margin-bottom: 4px; padding: 6px 12px;" onclick="openCustomerChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')">💬 Чат</button>`;
-
-                        const actionCell = !isClosed 
-                            ? `${chatBtn} <button class="btn-accept" onclick="acceptProposal(${prop.id})">Принять</button>`
-                            : `<span style="font-size: 12px; color: #94a3b8;">Завершен</span>`;
+                        const chatBtn = `<button class="btn-accept" style="background-color: #3b82f6; margin-right:6px;" onclick="openCustomerChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')">💬 Чат</button>`;
+                        const actionCell = !isClosed ? `${chatBtn}<button class="btn-accept" onclick="acceptProposal(${prop.id})">Принять</button>` : `<span>Завершен</span>`;
 
                         row.innerHTML = `
-                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px;"><strong>${prop.company}</strong></td>
-                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.price} ₽/шт</td>
-                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #2c3e50;">${prop.days} дней</td>
-                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0;"><span class="${badgeClass}">${prop.status}</span></td>
-                            <td style="padding: 12px 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${actionCell}</td>
+                            <td><strong>${prop.company}</strong></td>
+                            <td>${prop.price} ₽/шт</td>
+                            <td>${prop.days} дней</td>
+                            <td><span class="${badgeClass}">${prop.status}</span></td>
+                            <td style="text-align: center;">${actionCell}</td>
                         `;
                         tableBody.appendChild(row);
                     });
                 }
             } catch (error) {
-                console.error('Ошибка при получении предложений:', error);
-                if (tableBody) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ef4444;">Ошибка загрузки данных с сервера</td></tr>`;
-                }
+                console.error(error);
             }
         }
 
@@ -796,133 +560,77 @@
             const deadlineInput = document.getElementById('orderDeadline');
             const fileInput = document.getElementById('orderFile');
 
-            if (!titleInput || !deadlineInput || !fileInput) return;
-
             const cleanTitle = titleInput.value.trim();
             const category = categoryInput.value;
             const deadline = deadlineInput.value.trim();
-
             const drawing = fileInput.files.length > 0 ? fileInput.files[0].name : "Не прикреплен";
             const title = `${cleanTitle} | ${drawing}`;
 
-            titleInput.style.borderColor = '#ccc';
-            deadlineInput.style.borderColor = '#ccc';
-
-            if (!cleanTitle || !deadline) {
-                alert('Пожалуйста, заполните все поля заявки!');
-                if (!cleanTitle) titleInput.style.borderColor = '#e74c3c';
-                if (!deadline) deadlineInput.style.borderColor = '#e74c3c';
-                return;
-            }
+            if (!cleanTitle || !deadline) return alert('Заполните обязательные поля!');
 
             try {
                 const response = await fetch(`${SERVER_URL}/orders`, {
-                method: 'POST',
-                headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                },
-                body: JSON.stringify({ title, category, deadline })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                    body: JSON.stringify({ title, category, deadline })
                 });
-
                 if (response.ok) {
-                    closeModal();
-                    loadOrders(); 
-                    titleInput.value = '';
-                    deadlineInput.value = '';
-                    fileInput.value = '';
-                } else {
-                    alert('Ошибка сервера при создании заявки');
+                    closeModal(); loadOrders();
+                    titleInput.value = ''; deadlineInput.value = ''; fileInput.value = '';
                 }
-            } catch (error) {
-                console.error('Ошибка при отправке заявки:', error);
-            }
+            } catch (error) { console.error(error); }
         }   
 
         async function acceptProposal(proposalId) {
             if (!confirm('Вы уверены, что хотите принять это предложение и закрыть закупку?')) return;
-
             try {
                 const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-
-                if (response.ok) {
-                    closeProposalsModal();
-                    loadOrders(); 
-                } else {
-                    const err = await response.json();
-                    alert(err.error || 'Ошибка при выборе победителя');
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-            }
+                if (response.ok) { closeProposalsModal(); loadOrders(); }
+            } catch (error) { console.error(error); }
         }
 
         function toggleTheme() {
             const body = document.body;
             const checkbox = document.getElementById('themeCheckbox');
             const label = document.getElementById('themeLabel');
-            if (!checkbox || !label) return;
-
             if (checkbox.checked) {
-                body.classList.add('dark-mode');
-                label.innerText = '🌙 Тёмная тема';
-                localStorage.setItem('theme', 'dark');
+                body.classList.add('dark-mode'); label.innerText = '🌙 Тёмная тема'; localStorage.setItem('theme', 'dark');
             } else {
-                body.classList.remove('dark-mode');
-                label.innerText = '☀️ Светлая тема';
-                localStorage.setItem('theme', 'light');
+                body.classList.remove('dark-mode'); label.innerText = '☀️ Светлая тема'; localStorage.setItem('theme', 'light');
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme');
-            const body = document.body;
-            const checkbox = document.getElementById('themeCheckbox');
-            const label = document.getElementById('themeLabel');
-            
-            if (savedTheme === 'dark') {
-                body.classList.add('dark-mode');
-                if (checkbox) checkbox.checked = true;
-                if (label) label.innerText = '🌙 Тёмная тема';
-            } else {
-                if (checkbox) checkbox.checked = false;
-                if (label) label.innerText = '☀️ Светлая тема';
-            }
-        });
-        let activeChatKey = null;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            setTimeout(() => { document.getElementById('themeCheckbox').checked = true; document.getElementById('themeLabel').innerText = '🌙 Тёмная тема'; }, 50);
+        }
 
+        let activeChatKey = null;
         function openCustomerChat(orderId, orderTitle, companyName) {
             activeChatKey = `b2b_chat_${orderId}_${companyName}`;
             document.getElementById('chatModalTitle').innerText = `Чат с ${companyName}`;
             document.getElementById('chatModal').style.display = 'flex';
             renderChatHistory();
         }
-
-        function closeChatModal() {
-            document.getElementById('chatModal').style.display = 'none';
-        }
+        function closeChatModal() { document.getElementById('chatModal').style.display = 'none'; }
 
         function renderChatHistory() {
             const container = document.getElementById('chatModalMessages');
             if (!container || !activeChatKey) return;
             container.innerHTML = '';
-
             let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-
             history.forEach(msg => {
                 const bubble = document.createElement('div');
                 if (msg.sender === 'system') {
-                    bubble.className = 'chat-bubble';
-                    bubble.style = 'background:transparent; color:var(--text-muted); text-align:center; max-width:100%; font-size:12px; font-style:italic;';
+                    bubble.className = 'chat-bubble'; bubble.style = 'background:transparent; color:var(--text-muted); text-align:center; max-width:100%; font-size:12px; font-style:italic;';
                 } else {
-                    // Для заказчика "me" — это сообщения от customer
                     bubble.className = msg.sender === 'customer' ? 'chat-bubble me' : 'chat-bubble partner';
                 }
-                bubble.innerText = msg.text;
-                container.appendChild(bubble);
+                bubble.innerText = msg.text; container.appendChild(bubble);
             });
             container.scrollTop = container.scrollHeight;
         }
@@ -930,28 +638,20 @@
         function sendGlobalChatMessage() {
             const input = document.getElementById('chatModalInput');
             if (!input || !input.value.trim() || !activeChatKey) return;
-
             let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
             history.push({ sender: 'customer', text: input.value.trim() });
             localStorage.setItem(activeChatKey, JSON.stringify(history));
-            
-            input.value = '';
-            renderChatHistory();
+            input.value = ''; renderChatHistory();
         }
-        // ЛОГИКА ЦЕНТРА УВЕДОМЛЕНИЙ
+
         const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
         const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
 
         function initNotifications() {
             renderNotificationsCount();
-            
-            // Имитация поступления нового уведомления через 6 секунд после загрузки
             setTimeout(() => {
                 const role = localStorage.getItem('userRole');
-                let text = role === 'customer'
-                    ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'."
-                    : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                
+                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
                 addNotification(text);
             }, 6000);
         }
@@ -959,10 +659,7 @@
         function addNotification(text) {
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Проверка на дубликаты при перезагрузке
             if (list.length > 0 && list[0].text === text) return;
-
             list.unshift({ text, time: timeStr, read: false });
             localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
             renderNotificationsCount();
@@ -972,63 +669,27 @@
             const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
             const unreadCount = list.filter(n => !n.read).length;
             const badgeEl = document.getElementById('bellBadge');
-            if (!badgeEl) return;
-
-            if (unreadCount > 0) {
-                badgeEl.innerText = unreadCount;
-                badgeEl.style.display = 'inline-block';
-            } else {
-                badgeEl.style.display = 'none';
-            }
+            if (badgeEl) badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            if (badgeEl && unreadCount > 0) badgeEl.innerText = unreadCount;
         }
 
         function openNotificationsModal() {
             document.getElementById('notificationModal').style.display = 'flex';
             const container = document.getElementById('notificationsList');
-            if (!container) return;
-            
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-
             if (list.length === 0) {
-                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`;
-                return;
+                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return;
             }
-
             container.innerHTML = '';
             list.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'notification-item';
-                item.innerHTML = `
-                    <div>${n.text}</div>
-                    <div class="time">⏱ ${n.time}</div>
-                `;
-                container.appendChild(item);
-                n.read = true; // Помечаем как прочитанное
+                const item = document.createElement('div'); item.className = 'notification-item';
+                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`;
+                container.appendChild(item); n.read = true;
             });
-
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
+            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
         }
-
-        function closeNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'none';
-        }
-
-        function clearNotifications() {
-            localStorage.removeItem(B2B_NOTIF_KEY);
-            openNotificationsModal();
-        }
+        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
+        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
-    <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
-            <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);">
-                </div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

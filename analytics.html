@@ -33,22 +33,10 @@
             --chart-text: #94a3b8;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0; padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 
-        body {
-            display: flex;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        body { display: flex; background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* СAЙДБАР */
         .sidebar {
             width: 280px;
             background-color: var(--bg-sidebar);
@@ -74,28 +62,16 @@
             align-items: center;
             padding: 12px 16px;
             border-radius: 10px;
-            color: rgba(241, 245, 249, 0.6) !important;
+            color: rgba(255, 255, 255, 0.6) !important;
             text-decoration: none !important;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.2s ease;
         }
 
-        .sidebar a:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.04);
-        }
+        .sidebar a:hover { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.04); }
+        .sidebar a.active { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.08); font-weight: 600; }
 
-        .theme-container {
-            margin-top: auto;
-            padding-top: 20px;
-            margin-bottom: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
+        .theme-container { margin-top: auto; padding-top: 20px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .theme-text { font-size: 13px; color: #94a3b8; }
         .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .theme-switch input { opacity: 0; width: 0; height: 0; }
@@ -103,154 +79,40 @@
         .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
         .theme-switch input:checked + .theme-slider { background-color: #10b981; }
         .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
+        .sidebar .switch-link { color:#fff !important; font-size:13px; text-decoration:none; margin-top:10px; padding:10px; text-align:center; border:1px solid rgba(255,255,255,0.1); border-radius:8px; }
 
-        /* КОНТЕНТ */
-        .main-content {
-            flex: 1;
-            padding: 50px 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-            overflow-y: auto;
-        }
+        .main-content { flex: 1; padding: 50px 60px; display: flex; flex-direction: column; gap: 32px; overflow-y: auto; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); backdrop-filter: var(--blur-effect); padding: 24px; border-radius: 20px; box-shadow: var(--card-shadow); }
+        .metric-card p { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .metric-card h3 { font-size: 32px; font-weight: 700; margin-top: 12px; }
 
-        .header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; }
-        .company-badge { font-size: 14px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
+        .charts-container-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+        @media (max-width: 1100px) { .charts-container-grid { grid-template-columns: 1fr; } }
 
-        /* МЕТРИКИ */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-        }
+        .chart-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 32px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; gap: 20px; min-height: 380px; }
+        .chart-box h4 { font-size: 16px; font-weight: 600; }
+        .canvas-wrapper { position: relative; flex: 1; width: 100%; height: 100%; }
 
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
-            padding: 24px;
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-        .metric-card:hover {
-            transform: translateY(-2px);
-        }
-        .metric-card p { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .metric-card h3 { font-size: 32px; font-weight: 700; margin-top: 12px; letter-spacing: -0.8px; }
+        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
+        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
+        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
+        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
+        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
+        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
+        .notification-item:last-child { border-bottom: none !important; }
+        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
 
-        /* СЕТКА ДАШБОРДОВ С ГРАФИКАМИ */
-        .charts-container-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 24px;
-        }
-
-        @media (max-width: 1100px) {
-            .charts-container-grid { grid-template-columns: 1fr; }
-        }
-
-        .chart-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-height: 380px;
-        }
-
-        .chart-box h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; color: var(--text-main); }
-        
-        .canvas-wrapper {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-        }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: rgba(255,255,255,0.95); border: 1px solid var(--border-color); padding: 40px; border-radius: 20px; width: 460px; max-width: 95vw; display: flex; flex-direction: column; gap: 20px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-modal-cancel { background: transparent; border: 1px solid var(--border-color); color: #000; padding: 12px 24px; border-radius: 10px; cursor: pointer; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; padding: 24px; }
             .main-content { padding: 30px 20px; }
-        }
-        /* ==========================================================================
-           ЦЕНТР УВЕДОМЛЕНИЙ (ЖЕСТКАЯ ИЗОЛЯЦИЯ)
-           ========================================================================== */
-        .header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            width: 100% !important;
-            gap: 16px !important;
-            margin-bottom: 24px !important;
-        }
-
-        .bell-btn {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            padding: 10px 16px !important;
-            border-radius: 12px !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            font-size: 16px !important;
-            position: relative !important;
-            color: var(--text-main) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
-            transition: all 0.2s ease !important;
-            height: 42px !important;
-            box-sizing: border-box !important;
-        }
-
-        .bell-btn:hover {
-            border-color: var(--text-muted) !important;
-            background: rgba(148, 163, 184, 0.05) !important;
-        }
-
-        .bell-badge {
-            background: #ef4444 !important;
-            color: white !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
-            padding: 2px 6px !important;
-            border-radius: 20px !important;
-            display: none; /* Управляется через JS */
-            line-height: 1 !important;
-        }
-
-        .notification-item {
-            padding: 14px 16px !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            font-size: 13.5px !important;
-            line-height: 1.4 !important;
-            color: var(--text-main) !important;
-            background: transparent !important;
-        }
-        .notification-item:last-child { 
-            border-bottom: none !important; 
-        }
-        
-        .notification-item .time {
-            font-size: 11px !important;
-            color: var(--text-muted) !important;
-            margin-top: 5px !important;
-            font-family: monospace !important;
-        }
-
-        /* Адаптивность для мобильных устройств */
-        @media (max-width: 768px) {
-            #notificationModal .modal-content {
-                width: 100% !important;
-                height: 100% !important;
-                max-height: 100vh !important;
-                border-radius: 0 !important;
-                padding: 20px !important;
-            }
+            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
@@ -258,7 +120,10 @@
 
     <div class="sidebar">
         <h1>B2B Платформа</h1>
-        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
+        <a href="#" id="mainCabinetLink">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals">Мои отклики</a>
+        <a href="partners.html">Контрагенты</a>
+        <a href="analytics.html" class="active">Аналитика</a>
         
         <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
@@ -267,6 +132,7 @@
                 <span class="theme-slider"></span>
             </label>
         </div>
+        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
@@ -277,6 +143,7 @@
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
         </div>
+        <div id="companyMeta" class="company-badge"></div>
 
         <div class="metrics-grid" id="metricsGrid"></div>
 
@@ -296,8 +163,18 @@
         </div>
     </div>
 
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: #f1f5f9; border-radius: 12px; border: 1px solid var(--border-color);"></div>
+            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Изолированная проверка сессии
         (() => {
             if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
         })();
@@ -310,215 +187,75 @@
         let chartInstanceSecondary = null;
 
         window.addEventListener('DOMContentLoaded', () => {
-            setupInterface();
-            loadDashboard();
-            initNotifications();
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) {
+                mainLink.href = role === 'customer' ? 'index.html' : 'producer.html';
+                mainLink.innerText = role === 'customer' ? 'Мои заявки' : 'Актуальные закупки';
+            }
+            setupInterface(); loadDashboard(); initNotifications();
         });
 
         function setupInterface() {
-            const backBtn = document.getElementById('backToCabinetBtn');
-            if (backBtn) backBtn.href = role === 'customer' ? 'index.html' : 'producer.html';
-            
             const metaEl = document.getElementById('companyMeta');
             if (metaEl) {
-                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Права доступа: <span style="color: ${role === 'customer' ? '#2563eb' : '#10b981'}; font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
+                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Доступ: <span style="color: ${role === 'customer' ? '#2563eb' : '#10b981'}; font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
             }
         }
 
-        // Общие параметры для красивого сглаживания графиков
         function getChartThemeOptions() {
-            const isDark = document.body.classList.add;
-            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim();
-            const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim();
-            
+            const textColor = '#64748b'; const gridColor = 'rgba(15, 23, 42, 0.06)';
             return {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: textColor, font: { family: 'Inter', size: 12, weight: 500 } } },
-                    tooltip: { padding: 12, borderRadius: 8, titleFont: { family: 'Inter' }, bodyFont: { family: 'Inter' } }
-                },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter' } } },
-                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter' } } }
-                }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: textColor, font: { family: 'Inter', size: 12 } } } },
+                scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } }
             };
         }
 
         async function loadDashboard() {
-            const grid = document.getElementById('metricsGrid');
-            if (!grid) return;
-
+            const grid = document.getElementById('metricsGrid'); if (!grid) return;
             try {
                 const headers = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
-
                 if (role === 'customer') {
-                    // --- МОДУЛЬ ЗАКАЗЧИКА ---
-                    document.getElementById('mainChartTitle').innerText = 'Анализ конкуренции: количество предложений по тендерам';
+                    document.getElementById('mainChartTitle').innerText = 'Количество предложений по тендерам';
                     document.getElementById('secondaryChartTitle').innerText = 'Доли товарных категорий в закупках';
+                    const response = await fetch(`${SERVER_URL}/orders`, { headers }); const orders = await response.json();
 
-                    const response = await fetch(`${SERVER_URL}/orders`, { headers });
-                    const orders = await response.json();
-
-                    const totalOrders = orders.length;
-                    const activeOrders = orders.filter(o => o.status !== 'Закрыта').length;
-                    const closedOrders = orders.filter(o => o.status === 'Закрыта').length;
-                    const totalResponses = orders.reduce((sum, o) => sum + (o.responses || 0), 0);
-
-                    grid.innerHTML = `
-                        <div class="metric-card" style="border-left: 4px solid #2563eb;">
-                            <p>Общий пул процедур</p>
-                            <h3>${totalOrders}</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #10b981;">
-                            <p>Активные торги</p>
-                            <h3 style="color: #10b981;">${activeOrders}</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #64748b;">
-                            <p>Архивные лоты</p>
-                            <h3>${closedOrders}</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #f59e0b;">
-                            <p>Всего входящих КП</p>
-                            <h3 style="color: #f59e0b;">${totalResponses}</h3>
-                        </div>
-                    `;
-
-                    // Данные для главного графика (Bar) - предложения на каждый тендер
-                    const labelsMain = orders.map(o => o.title.split(' | ')[0]);
-                    const dataMain = orders.map(o => o.responses || 0);
-
-                    // Данные для кругового графика (Doughnut) - категории
-                    const rtiCount = orders.filter(o => o.category === 'РТИ').length;
-                    const metalCount = orders.filter(o => o.category === 'Металл').length;
-
-                    renderCharts(
-                        'bar', 
-                        { labels: labelsMain, datasets: [{ label: 'Подано КП от заводов', data: dataMain, backgroundColor: '#3b82f6', borderRadius: 6 }] },
-                        'doughnut',
-                        { labels: ['Категория РТИ', 'Категория Металл'], datasets: [{ data: [rtiCount, metalCount], backgroundColor: ['#10b981', '#6366f1'], borderWidth: 0 }] }
-                    );
-
+                    grid.innerHTML = `<div class="metric-card" style="border-left:4px solid #2563eb;"><p>Всего процедур</p><h3>${orders.length}</h3></div><div class="metric-card" style="border-left:4px solid #10b981;"><p>Активные</p><h3>${orders.filter(o => o.status !== 'Закрыта').length}</h3></div>`;
+                    renderCharts('bar', { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#3b82f6' }] }, 'doughnut', { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#10b981', '#6366f1'] }] });
                 } else {
-                    // --- МОДУЛЬ ПРОИЗВОДИТЕЛЯ ---
                     document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов (₽)';
-                    document.getElementById('secondaryChartTitle').innerText = 'Конверсия поданных коммерческих предложений';
-
-                    const response = await fetch(`${SERVER_URL}/proposals`, { headers });
-                    const allProposals = await response.json();
-
-                    // Вычленяем КП текущей авторизованной организации
+                    document.getElementById('secondaryChartTitle').innerText = 'Конверсия предложений';
+                    const response = await fetch(`${SERVER_URL}/proposals`, { headers }); const allProposals = await response.json();
                     const myProps = allProposals.filter(p => p.company === companyName);
 
-                    const totalProps = myProps.length;
-                    const winProps = myProps.filter(p => p.status === 'Выигран').length;
-                    const looseProps = myProps.filter(p => p.status === 'Отклонен').length;
-                    const waitingProps = totalProps - winProps - looseProps;
-                    const totalSum = myProps.filter(p => p.status === 'Выигран').reduce((sum, p) => sum + (p.price || 0), 0);
-
-                    grid.innerHTML = `
-                        <div class="metric-card" style="border-left: 4px solid #6366f1;">
-                            <p>Всего направлено КП</p>
-                            <h3>${totalProps}</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #10b981;">
-                            <p>Утверждено заказчиком</p>
-                            <h3 style="color: #10b981;">${winProps}</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #2563eb;">
-                            <p>Сумма контрактации</p>
-                            <h3 style="color: #2563eb; font-size: 24px; max-width:100%; overflow:hidden; text-overflow:ellipsis;">${totalSum.toLocaleString()} ₽</h3>
-                        </div>
-                        <div class="metric-card" style="border-left: 4px solid #f59e0b;">
-                            <p>На рассмотрении</p>
-                            <h3 style="color: #f59e0b;">${waitingProps}</h3>
-                        </div>
-                    `;
-
-                    // Данные для главного графика (Line) - цены наших выигранных лотов
-                    const winItems = myProps.filter(p => p.status === 'Выигран');
-                    const labelsMain = winItems.map((p, idx) => p.orderTitle ? p.orderTitle.split(' | ')[0] : `Контракт #${idx+1}`);
-                    const dataMain = winItems.map(p => p.price);
-
-                    renderCharts(
-                        'line',
-                        { labels: labelsMain.length ? labelsMain : ['Нет данных'], datasets: [{ label: 'Стоимость сделки', data: dataMain.length ? dataMain : [0], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
-                        'pie',
-                        { labels: ['Выиграны', 'Отклонены', 'На рассмотрении'], datasets: [{ data: [winProps, looseProps, waitingProps], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }
-                    );
+                    grid.innerHTML = `<div class="metric-card" style="border-left:4px solid #10b981;"><p>Выиграно лотов</p><h3>${myProps.filter(p => p.status === 'Выигран').length}</h3></div>`;
+                    renderCharts('line', { labels: myProps.filter(p => p.status === 'Выигран').map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: myProps.filter(p => p.status === 'Выигран').map(p => p.price), borderColor: '#10b981' }] }, 'pie', { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [myProps.filter(p => p.status === 'Выигран').length, myProps.filter(p => p.status === 'Отклонен').length], backgroundColor: ['#10b981', '#ef4444'] }] });
                 }
-            } catch (error) {
-                console.error('Критический сбой рендеринга дашбордов:', error);
-                grid.innerHTML = `<div style="color: #ef4444; font-weight: 600; padding: 20px;">Ошибка построения интерактивных интерфейсов. Бэкенд недоступен.</div>`;
-            }
+            } catch (error) { console.error(error); }
         }
 
         function renderCharts(typeMain, dataMain, typeSecondary, dataSecondary) {
             const themeOpts = getChartThemeOptions();
-
-            if (chartInstanceMain) chartInstanceMain.destroy();
-            if (chartInstanceSecondary) chartInstanceSecondary.destroy();
-
-            const ctxMain = document.getElementById('mainChart').getContext('2d');
-            chartInstanceMain = new Chart(ctxMain, {
-                type: typeMain,
-                data: dataMain,
-                options: themeOpts
-            });
-
-            // Для круговых штук убираем сетку осей, чтобы не ломать рендер
-            const secondaryOpts = JSON.parse(JSON.stringify(themeOpts));
-            delete secondaryOpts.scales;
-
-            const ctxSecondary = document.getElementById('secondaryChart').getContext('2d');
-            chartInstanceSecondary = new Chart(ctxSecondary, {
-                type: typeSecondary,
-                data: dataSecondary,
-                options: secondaryOpts
-            });
+            if (chartInstanceMain) chartInstanceMain.destroy(); if (chartInstanceSecondary) chartInstanceSecondary.destroy();
+            chartInstanceMain = new Chart(document.getElementById('mainChart').getContext('2d'), { type: typeMain, data: dataMain, options: themeOpts });
+            const sOpts = JSON.parse(JSON.stringify(themeOpts)); delete sOpts.scales;
+            chartInstanceSecondary = new Chart(document.getElementById('secondaryChart').getContext('2d'), { type: typeSecondary, data: dataSecondary, options: sOpts });
         }
 
         function toggleTheme() {
-            const body = document.body;
             const checkbox = document.getElementById('themeCheckbox');
-            const label = document.getElementById('themeLabel');
-            
-            if (checkbox.checked) {
-                body.classList.add('dark-mode');
-                label.innerText = '🌙 Тёмная тема';
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                label.innerText = '☀️ Светлая тема';
-                localStorage.setItem('theme', 'light');
-            }
-            // Перерисовываем графики под новую цветовую схему
-            loadDashboard();
+            if (checkbox.checked) { document.body.classList.add('dark-mode'); localStorage.setItem('theme', 'dark'); }
+            else { document.body.classList.remove('dark-mode'); localStorage.setItem('theme', 'light'); }
         }
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 
-        // Инициализация темы при загрузке
-        const savedTheme = localStorage.getItem('theme');
-        const checkbox = document.getElementById('themeCheckbox');
-        const label = document.getElementById('themeLabel');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            if (checkbox) checkbox.checked = true;
-            if (label) label.innerText = '🌙 Тёмная тема';
-        }
-        // ЛОГИКА ЦЕНТРА УВЕДОМЛЕНИЙ
         const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
         const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
 
         function initNotifications() {
             renderNotificationsCount();
-            
-            // Имитация поступления нового уведомления через 6 секунд после загрузки
             setTimeout(() => {
-                const role = localStorage.getItem('userRole');
-                let text = role === 'customer'
-                    ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'."
-                    : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                
+                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
                 addNotification(text);
             }, 6000);
         }
@@ -526,76 +263,30 @@
         function addNotification(text) {
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Проверка на дубликаты при перезагрузке
             if (list.length > 0 && list[0].text === text) return;
-
-            list.unshift({ text, time: timeStr, read: false });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
+            list.unshift({ text, time: timeStr, read: false }); localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
             renderNotificationsCount();
         }
 
         function renderNotificationsCount() {
-            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const unreadCount = list.filter(n => !n.read).length;
-            const badgeEl = document.getElementById('bellBadge');
-            if (!badgeEl) return;
-
-            if (unreadCount > 0) {
-                badgeEl.innerText = unreadCount;
-                badgeEl.style.display = 'inline-block';
-            } else {
-                badgeEl.style.display = 'none';
-            }
+            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || []; const unreadCount = list.filter(n => !n.read).length;
+            const badgeEl = document.getElementById('bellBadge'); if (!badgeEl) return;
+            badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none'; if (unreadCount > 0) badgeEl.innerText = unreadCount;
         }
 
         function openNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'flex';
-            const container = document.getElementById('notificationsList');
-            if (!container) return;
-            
+            document.getElementById('notificationModal').style.display = 'flex'; const container = document.getElementById('notificationsList');
             let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-
-            if (list.length === 0) {
-                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`;
-                return;
-            }
-
+            if (list.length === 0) { container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return; }
             container.innerHTML = '';
             list.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'notification-item';
-                item.innerHTML = `
-                    <div>${n.text}</div>
-                    <div class="time">⏱ ${n.time}</div>
-                `;
-                container.appendChild(item);
-                n.read = true; // Помечаем как прочитанное
+                const item = document.createElement('div'); item.className = 'notification-item';
+                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`; container.appendChild(item); n.read = true;
             });
-
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
+            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
         }
-
-        function closeNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'none';
-        }
-
-        function clearNotifications() {
-            localStorage.removeItem(B2B_NOTIF_KEY);
-            openNotificationsModal();
-        }
+        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
+        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
-    <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
-            <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);">
-                </div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
