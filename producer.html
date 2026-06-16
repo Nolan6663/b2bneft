@@ -40,10 +40,13 @@
     <div class="main-content">
         <div class="header">
             <h2>Кабинет производителя</h2>
-            <button class="bell-btn" onclick="openNotificationsModal()">
-                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
-                <span class="bell-badge" id="bellBadge">0</span>
-            </button>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <a id="myProfileLink" href="#" class="btn-secondary" style="text-decoration:none; display:none;">Профиль компании →</a>
+                <button class="bell-btn" onclick="openNotificationsModal()">
+                    <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                    <span class="bell-badge" id="bellBadge">0</span>
+                </button>
+            </div>
         </div>
 
         <div class="info-row" id="infoBoxes">
@@ -71,6 +74,7 @@
                     <span id="infoRating" style="color:#54c79f; font-weight:800;">—</span>
                     <span id="infoRatingLabel">Нет данных</span>
                 </div>
+                <div id="infoRatingStats" style="font-size:11px; color:var(--text-secondary); display:none;"></div>
             </div>
         </div>
 
@@ -244,6 +248,18 @@ function renderCompanyStatus(status) {
                     renderCompanyStatus(me.status);
                     document.getElementById('infoRating').innerText = me.rating || '—';
                     document.getElementById('infoRatingLabel').innerText = me.ratingLabel || 'Нет данных';
+                    const statsEl = document.getElementById('infoRatingStats');
+                    if (me.ratingStats) {
+                        statsEl.style.display = 'block';
+                        statsEl.innerText = `${me.ratingStats.won}/${me.ratingStats.resolved} выигранных тендеров`;
+                    } else {
+                        statsEl.style.display = 'none';
+                    }
+                    if (me.id) {
+                        const profileLink = document.getElementById('myProfileLink');
+                        profileLink.style.display = 'inline-flex';
+                        profileLink.href = `company-profile.html?id=${me.id}`;
+                    }
                 } else {
                     renderCompanyStatus('На проверке');
                     document.getElementById('infoRating').innerText = '—';

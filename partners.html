@@ -158,6 +158,7 @@
             <h3 id="companyDetailsName">Компания</h3>
             <div id="companyDetailsBody"></div>
             <div class="modal-actions">
+                <a id="companyProfileLink" href="#" class="btn-secondary" style="text-decoration:none;">Открыть полный профиль →</a>
                 <button class="btn-modal-cancel" onclick="closeCompanyDetails()">Закрыть</button>
             </div>
         </div>
@@ -356,6 +357,9 @@
                 rows += `<div class="company-detail-row"><span>Рейтинг надёжности</span><span>${escapeHtml(c.rating)} · ${escapeHtml(c.ratingLabel || '')}</span></div>`;
             }
             document.getElementById('companyDetailsBody').innerHTML = rows;
+            const profileLink = document.getElementById('companyProfileLink');
+            if (c.id) { profileLink.style.display = 'inline-flex'; profileLink.href = `company-profile.html?id=${c.id}`; }
+            else { profileLink.style.display = 'none'; }
             document.getElementById('companyDetailsModal').style.display = 'flex';
         }
 

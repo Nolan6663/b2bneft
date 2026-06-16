@@ -89,7 +89,7 @@ function deleteDrawingFile(drawing) {
 // этого допускать нельзя.
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-const PUBLIC_PAGES = ['login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html', 'analytics.html'];
+const PUBLIC_PAGES = ['login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html', 'analytics.html', 'company-profile.html'];
 PUBLIC_PAGES.forEach(page => {
     app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page)));
 });
@@ -477,9 +477,119 @@ app.delete('/api/proposals/:proposalId', requireAuth, requireRole('producer'), (
 });
 
 // ===================== COMPANIES (реестр контрагентов) =====================
+// Статус "Верифицирован" и рейтинг надёжности производителя — НЕ статичные
+// данные, а результат реальной активности на платформе:
+//   - производитель верифицируется и получает рейтинг по соотношению
+//     выигранных/отклонённых КП среди уже РАЗРЕШЁННЫХ (не "Ожидает ответа");
+//   - заказчик верифицируется, если у него есть хотя бы одна закрытая закупка.
+// Если у компании вообще нет реальных заказов/предложений (например, это
+// декоративная seed-запись для наполнения реестра) — отдаём как есть из
+// companies.json, чтобы реестр не выглядел пустым для демо-данных.
+
+function computeProducerRating(companyName) {
+    const proposals = readData(PROPOSALS_FILE).filter(p => p.company === companyName);
+    const resolved = proposals.filter(p => p.status === 'Выигран' || p.status === 'Отклонен');
+    if (resolved.length === 0) return null;
+
+    const won = resolved.filter(p => p.status === 'Выигран').length;
+    const winRate = won / resolved.length;
+
+    let rating, ratingLabel;
+    if (winRate >= 0.7 && won >= 3) { rating = 'A+'; ratingLabel = 'Высокий'; }
+    else if (winRate >= 0.5) { rating = 'A'; ratingLabel = 'Высокий'; }
+    else if (winRate >= 0.3) { rating = 'B+'; ratingLabel = 'Средний'; }
+    else if (winRate >= 0.15 || won > 0) { rating = 'B'; ratingLabel = 'Средний'; }
+    else { rating = 'C'; ratingLabel = 'Низкий'; }
+
+    return {
+        status: won > 0 ? 'Верифицирован' : 'На проверке',
+        rating,
+        ratingLabel,
+        ratingStats: { won, resolved: resolved.length }
+    };
+}
+
+function computeCustomerStatus(companyName) {
+    const orders = readData(ORDERS_FILE).filter(o => o.company === companyName);
+    if (orders.length === 0) return null;
+    const closed = orders.filter(o => o.status === 'Закрыта').length;
+    return { status: closed > 0 ? 'Верифицирован' : 'На проверке' };
+}
+
+// Статистика профиля компании — тоже из реальных данных, а не выдуманные цифры.
+function computeProducerStats(companyName) {
+    const proposals = readData(PROPOSALS_FILE).filter(p => p.company === companyName);
+    if (proposals.length === 0) return null;
+    const won = proposals.filter(p => p.status === 'Выигран');
+    const avgDeliveryDays = won.length ? Math.round(won.reduce((s, p) => s + p.days, 0) / won.length) : null;
+    return {
+        completedOrders: won.length,
+        avgDeliveryDays,
+        totalProposals: proposals.length
+    };
+}
+
+function computeCustomerStats(companyName) {
+    const orders = readData(ORDERS_FILE).filter(o => o.company === companyName);
+    if (orders.length === 0) return null;
+    return {
+        postedOrders: orders.length,
+        closedOrders: orders.filter(o => o.status === 'Закрыта').length
+    };
+}
+
+function enrichCompany(c) {
+    if (c.role === 'producer') {
+        const rating = computeProducerRating(c.company);
+        const stats = computeProducerStats(c.company);
+        return { ...c, ...(rating || {}), stats: stats || null };
+    } else {
+        const status = computeCustomerStatus(c.company);
+        const stats = computeCustomerStats(c.company);
+        return { ...c, ...(status || {}), stats: stats || null };
+    }
+}
 
 app.get('/api/companies', (req, res) => {
-    res.json(readData(COMPANIES_FILE));
+    const companies = readData(COMPANIES_FILE);
+    res.json(companies.map(enrichCompany));
+});
+
+app.get('/api/companies/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const companies = readData(COMPANIES_FILE);
+    const company = companies.find(c => c.id === id);
+    if (!company) {
+        return res.status(404).json({ error: 'Компания не найдена' });
+    }
+    res.json(enrichCompany(company));
+});
+
+// Редактировать профиль — только свою собственную компанию.
+app.put('/api/companies/:id', requireAuth, (req, res) => {
+    const id = Number(req.params.id);
+    const companies = readData(COMPANIES_FILE);
+    const company = companies.find(c => c.id === id);
+    if (!company) {
+        return res.status(404).json({ error: 'Компания не найдена' });
+    }
+    if (company.company !== req.user.company) {
+        return res.status(403).json({ error: 'Можно редактировать только профиль своей компании' });
+    }
+
+    const { city, yearsExperience, about, equipment } = req.body;
+    if (city !== undefined) company.city = String(city).slice(0, 100);
+    if (yearsExperience !== undefined) {
+        const n = Number(yearsExperience);
+        company.yearsExperience = Number.isFinite(n) && n >= 0 ? n : null;
+    }
+    if (about !== undefined) company.about = String(about).slice(0, 1000);
+    if (equipment !== undefined && Array.isArray(equipment)) {
+        company.equipment = equipment.map(e => String(e).slice(0, 60)).slice(0, 20);
+    }
+
+    writeData(COMPANIES_FILE, companies);
+    res.json(enrichCompany(company));
 });
 
 // ===================== AUTH =====================
@@ -518,7 +628,11 @@ app.post('/api/auth/register', (req, res) => {
             specialization: '',
             status: 'На проверке',
             rating: null,
-            ratingLabel: null
+            ratingLabel: null,
+            city: '',
+            yearsExperience: null,
+            about: '',
+            equipment: []
         });
         writeData(COMPANIES_FILE, companies);
     }

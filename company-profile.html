@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Профиль компании</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        .profile-header {
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 800; color: #fff;
+        }
+        .profile-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .profile-name-row h2 { font-size: 19px; font-weight: 800; color: var(--text-primary-alt); }
+        .profile-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 6px; font-size: 12.5px; color: var(--text-secondary); }
+        .profile-meta span { display: flex; align-items: center; gap: 5px; }
+
+        .equipment-chip {
+            background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 8px;
+            padding: 7px 12px; font-size: 12.5px; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 6px;
+        }
+        .about-text { font-size: 13.5px; color: var(--text-tertiary); line-height: 1.6; }
+        .empty-hint { font-size: 12.5px; color: var(--text-muted); font-style: italic; }
+
+        .equipment-input-row { display: flex; gap: 8px; }
+        .equipment-tags-edit { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .equipment-tag-edit { display: flex; align-items: center; gap: 6px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; }
+        .equipment-tag-edit button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
+        .equipment-tag-edit button:hover { color: var(--error); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
+        <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
+        <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Профиль компании</h2>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+        </div>
+
+        <div id="profileContent">
+            <div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content">
+            <h3>Редактирование профиля</h3>
+            <div class="form-group">
+                <label>Город</label>
+                <input type="text" id="editCity" placeholder="Например, г. Ярославль">
+            </div>
+            <div class="form-group">
+                <label>Опыт работы, лет</label>
+                <input type="number" id="editYears" min="0" placeholder="Например, 12">
+            </div>
+            <div class="form-group">
+                <label>О компании</label>
+                <textarea id="editAbout" placeholder="Короткое описание компании и специализации"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Оборудование (для производителя)</label>
+                <div class="equipment-input-row">
+                    <input type="text" id="editEquipmentInput" placeholder="Например, Прессы вулканизации" onkeypress="if(event.key==='Enter'){event.preventDefault();addEquipmentTag();}">
+                    <button type="button" class="btn-secondary" onclick="addEquipmentTag()">+ Добавить</button>
+                </div>
+                <div class="equipment-tags-edit" id="editEquipmentTags"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeEditProfile()">Отмена</button>
+                <button class="btn-modal-submit" onclick="saveProfile()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        const userRole = localStorage.getItem('userRole');
+        const myCompany = localStorage.getItem('userCompany');
+        const companyId = new URLSearchParams(window.location.search).get('id');
+        let currentData = null;
+        let editEquipment = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+
+            if (!companyId) {
+                document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не указана</div>';
+                return;
+            }
+            loadProfile();
+            initNotifications();
+        });
+
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${SERVER_URL}/companies/${companyId}`);
+                if (!response.ok) {
+                    document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не найдена</div>';
+                    return;
+                }
+                currentData = await response.json();
+                renderProfile(currentData);
+            } catch (error) {
+                document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Не удалось загрузить профиль</div>';
+            }
+        }
+
+        function avatarLetter(name) { return escapeHtml((name || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase()); }
+        function avatarGradient(role) { return role === 'producer' ? 'var(--avatar-green)' : 'var(--avatar-blue)'; }
+
+        function statusMeta(status) {
+            if (status === 'Верифицирован') return { icon: '✓', cls: 'win' };
+            if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
+            return { icon: '⏱', cls: 'waiting' };
+        }
+
+        function renderProfile(c) {
+            const isOwn = c.company === myCompany;
+            const roleText = c.role === 'customer' ? 'Заказчик' : 'Производитель';
+            const roleClass = c.role === 'customer' ? 'customer' : 'producer';
+            const st = statusMeta(c.status);
+
+            let statsHtml = '';
+            if (c.role === 'producer') {
+                statsHtml = `
+                    <div class="kpi-card"><div class="kpi-label">Выполнено заказов</div><div class="kpi-value">${c.stats ? c.stats.completedOrders : '—'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Средний срок поставки</div><div class="kpi-value">${c.stats && c.stats.avgDeliveryDays != null ? c.stats.avgDeliveryDays + ' дн.' : '—'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Рейтинг надёжности</div><div class="kpi-value" style="color:var(--accent-bright);">${c.rating || '—'}</div><div class="kpi-change" style="color:var(--text-secondary);">${c.ratingLabel || 'Нет данных'}</div></div>
+                `;
+            } else {
+                statsHtml = `
+                    <div class="kpi-card"><div class="kpi-label">Размещено закупок</div><div class="kpi-value">${c.stats ? c.stats.postedOrders : '—'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Закрыто закупок</div><div class="kpi-value">${c.stats ? c.stats.closedOrders : '—'}</div></div>
+                `;
+            }
+
+            const equipmentHtml = (c.equipment && c.equipment.length > 0)
+                ? c.equipment.map(e => `<span class="equipment-chip">🔧 ${escapeHtml(e)}</span>`).join(' ')
+                : '<span class="empty-hint">Оборудование не указано</span>';
+
+            document.getElementById('profileContent').innerHTML = `
+                <div class="section">
+                    <div class="profile-header">
+                        <div class="profile-avatar" style="background:${avatarGradient(c.role)};">${avatarLetter(c.company)}</div>
+                        <div style="flex:1;">
+                            <div class="profile-name-row">
+                                <h2>${escapeHtml(c.company)}</h2>
+                                <span class="badge ${roleClass}">${roleText}</span>
+                                <span class="status-icon ${st.cls}">${st.icon} ${escapeHtml(c.status)}</span>
+                            </div>
+                            <div class="profile-meta">
+                                ${c.city ? `<span>📍 ${escapeHtml(c.city)}</span>` : ''}
+                                ${c.yearsExperience ? `<span>🕒 Опыт работы: ${c.yearsExperience} лет</span>` : ''}
+                                <span>ИНН: ${escapeHtml(c.inn)}</span>
+                            </div>
+                        </div>
+                        ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
+                    </div>
+                </div>
+
+                <div class="kpi-grid">${statsHtml}</div>
+
+                <div class="section">
+                    <h3>О компании</h3>
+                    <div class="about-text">${c.about ? escapeHtml(c.about) : '<span class="empty-hint">Описание не заполнено</span>'}</div>
+                </div>
+
+                <div class="section">
+                    <h3>Специализация и оборудование</h3>
+                    <div style="margin-bottom: 10px; font-size: 13px; color: var(--text-tertiary);">${escapeHtml(c.specialization || 'Не указана')}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">${equipmentHtml}</div>
+                </div>
+            `;
+        }
+
+        function openEditProfile() {
+            editEquipment = currentData.equipment ? [...currentData.equipment] : [];
+            document.getElementById('editCity').value = currentData.city || '';
+            document.getElementById('editYears').value = currentData.yearsExperience || '';
+            document.getElementById('editAbout').value = currentData.about || '';
+            renderEquipmentTagsEdit();
+            document.getElementById('editProfileModal').style.display = 'flex';
+        }
+
+        function closeEditProfile() { document.getElementById('editProfileModal').style.display = 'none'; }
+
+        function renderEquipmentTagsEdit() {
+            const container = document.getElementById('editEquipmentTags');
+            container.innerHTML = editEquipment.map((e, i) => `
+                <span class="equipment-tag-edit">${escapeHtml(e)}<button type="button" onclick="removeEquipmentTag(${i})">✕</button></span>
+            `).join('');
+        }
+
+        function addEquipmentTag() {
+            const input = document.getElementById('editEquipmentInput');
+            const val = input.value.trim();
+            if (!val) return;
+            editEquipment.push(val);
+            input.value = '';
+            renderEquipmentTagsEdit();
+        }
+
+        function removeEquipmentTag(idx) {
+            editEquipment.splice(idx, 1);
+            renderEquipmentTagsEdit();
+        }
+
+        async function saveProfile() {
+            const city = document.getElementById('editCity').value.trim();
+            const yearsExperience = document.getElementById('editYears').value.trim();
+            const about = document.getElementById('editAbout').value.trim();
+
+            try {
+                const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                    body: JSON.stringify({ city, yearsExperience: yearsExperience || null, about, equipment: editEquipment })
+                });
+                if (response.ok) {
+                    currentData = await response.json();
+                    closeEditProfile();
+                    renderProfile(currentData);
+                } else {
+                    const err = await response.json();
+                    alert(err.error || 'Не удалось сохранить профиль');
+                }
+            } catch (error) { console.error(error); }
+        }
+    </script>
+</body>
+</html>

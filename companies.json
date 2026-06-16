@@ -7,7 +7,11 @@
     "specialization": "Производство продукции",
     "status": "Верифицирован",
     "rating": "A+",
-    "ratingLabel": "Высокий"
+    "ratingLabel": "Высокий",
+    "city": "г. Новосибирск",
+    "yearsExperience": 8,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 2,
@@ -17,7 +21,11 @@
     "specialization": "Закупка оборудования, МТР",
     "status": "Верифицирован",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Москва",
+    "yearsExperience": 15,
+    "about": "Закупаем оборудование и материально-технические ресурсы для нефтесервисных проектов.",
+    "equipment": []
   },
   {
     "id": 3,
@@ -27,7 +35,16 @@
     "specialization": "Резинотехнические изделия (РТИ)",
     "status": "Верифицирован",
     "rating": "A+",
-    "ratingLabel": "Высокий"
+    "ratingLabel": "Высокий",
+    "city": "г. Ярославль",
+    "yearsExperience": 12,
+    "about": "Производим манжеты, уплотнения и резинотехнические изделия по чертежам заказчика. Полный цикл от вулканизации до финишной обработки.",
+    "equipment": [
+      "Прессы вулканизации",
+      "Токарные станки",
+      "Резинометс",
+      "Плазменная резка"
+    ]
   },
   {
     "id": 4,
@@ -37,7 +54,15 @@
     "specialization": "Прокат, металлоконструкции",
     "status": "Верифицирован",
     "rating": "A",
-    "ratingLabel": "Высокий"
+    "ratingLabel": "Высокий",
+    "city": "г. Екатеринбург",
+    "yearsExperience": 9,
+    "about": "Изготовление металлоконструкций и прокат по ГОСТ и индивидуальным чертежам.",
+    "equipment": [
+      "Лазерная резка",
+      "Гибочный пресс",
+      "Сварочный участок"
+    ]
   },
   {
     "id": 5,
@@ -47,7 +72,11 @@
     "specialization": "Полимерные уплотнения, РТИ",
     "status": "Верифицирован",
     "rating": "B+",
-    "ratingLabel": "Средний"
+    "ratingLabel": "Средний",
+    "city": "г. Челябинск",
+    "yearsExperience": 6,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 6,
@@ -57,7 +86,11 @@
     "specialization": "Капитальное строительство, МТР",
     "status": "Верифицирован",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Сургут",
+    "yearsExperience": 11,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 7,
@@ -67,7 +100,11 @@
     "specialization": "Закупка нефтепромыслового оборудования",
     "status": "Верифицирован",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Москва",
+    "yearsExperience": 7,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 8,
@@ -77,7 +114,11 @@
     "specialization": "Производство бурового оборудования",
     "status": "На проверке",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Омск",
+    "yearsExperience": 4,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 9,
@@ -87,7 +128,11 @@
     "specialization": "Снабжение, логистика МТР",
     "status": "Верифицирован",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Тюмень",
+    "yearsExperience": 13,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 10,
@@ -97,7 +142,11 @@
     "specialization": "Запасные части, крепёж",
     "status": "Верифицирован",
     "rating": "B",
-    "ratingLabel": "Средний"
+    "ratingLabel": "Средний",
+    "city": "г. Пермь",
+    "yearsExperience": 5,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 11,
@@ -107,7 +156,11 @@
     "specialization": "Сварочные работы, металлоконструкции",
     "status": "Отклонен",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Уфа",
+    "yearsExperience": 3,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 12,
@@ -117,7 +170,11 @@
     "specialization": "Капитальный ремонт скважин",
     "status": "На проверке",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Тюмень",
+    "yearsExperience": 2,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 13,
@@ -127,7 +184,15 @@
     "specialization": "Производство нефтепромыслового оборудования",
     "status": "Верифицирован",
     "rating": "A",
-    "ratingLabel": "Высокий"
+    "ratingLabel": "Высокий",
+    "city": "г. Екатеринбург",
+    "yearsExperience": 18,
+    "about": "Крупный производитель нефтепромыслового оборудования с собственным конструкторским бюро.",
+    "equipment": [
+      "ЧПУ-обработка",
+      "Литейный участок",
+      "Испытательный стенд"
+    ]
   },
   {
     "id": 14,
@@ -137,7 +202,11 @@
     "specialization": "Закупка химреагентов",
     "status": "Верифицирован",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "г. Уфа",
+    "yearsExperience": 10,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 15,
@@ -147,7 +216,11 @@
     "specialization": "",
     "status": "На проверке",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "",
+    "yearsExperience": null,
+    "about": "",
+    "equipment": []
   },
   {
     "id": 16,
@@ -157,6 +230,10 @@
     "specialization": "",
     "status": "На проверке",
     "rating": null,
-    "ratingLabel": null
+    "ratingLabel": null,
+    "city": "",
+    "yearsExperience": null,
+    "about": "",
+    "equipment": []
   }
 ]
