@@ -143,7 +143,7 @@
 
             if (list.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 50px; font-size: 14px;">
-                    У компании <strong>${companyName}</strong> пока нет направленных предложений.<br>
+                    У компании <strong>${escapeHtml(companyName)}</strong> пока нет направленных предложений.<br>
                     <a href="producer.html" style="color: var(--accent-bright); text-decoration: underline; font-weight: 600; display: inline-block; margin-top: 10px;">Перейти к актуальным закупкам</a>
                 </td></tr>`;
                 return;
@@ -160,10 +160,10 @@
                     : `<span style="color:var(--text-muted); font-size:12px;">Блокировано</span>`;
 
                 tr.innerHTML = `
-                    <td><strong>${p.orderTitle || 'Закупка #' + p.orderId}</strong></td>
+                    <td><strong>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</strong></td>
                     <td>${p.price.toLocaleString()} ₽/шт</td>
                     <td>${p.days} дней</td>
-                    <td><span class="status-icon ${cls}">${icon} ${p.status}</span></td>
+                    <td><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></td>
                     <td class="actions-cell">${actionsHtml}</td>
                 `;
                 tbody.appendChild(tr);
@@ -193,8 +193,8 @@
                     : `<div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:8px;">Редактирование недоступно</div>`;
 
                 card.innerHTML = `
-                    <h4>${p.orderTitle || 'Закупка #' + p.orderId}</h4>
-                    <div class="meta-row"><span>Статус:</span><span class="status-icon ${cls}">${icon} ${p.status}</span></div>
+                    <h4>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</h4>
+                    <div class="meta-row"><span>Статус:</span><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></div>
                     <div class="meta-row"><span>Цена:</span><strong>${p.price.toLocaleString()} ₽/шт</strong></div>
                     <div class="meta-row"><span>Срок:</span><span>${p.days} дней</span></div>
                     ${actionsHtml}

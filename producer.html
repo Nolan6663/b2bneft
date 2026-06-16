@@ -289,19 +289,19 @@ function renderCompanyStatus(status) {
                     const drawingBlock = isGuest
                         ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
                         : (drawingFile !== "Не прикреплен"
-                            ? `<div class="meta">📁 Чертеж: <a href="#" onclick="downloadMockFileWrapper('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-bright); text-decoration:underline;">${drawingFile}</a></div>`
+                            ? `<div class="meta">📁 Чертеж: <a href="#" onclick="downloadMockFileWrapper('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(drawingFile)}</a></div>`
                             : `<div class="meta">📁 Чертеж: отсутствует</div>`);
 
                     orderItem.innerHTML = `
                         <div class="order-info">
                             <div class="order-title-row">
-                                <h4>${displayTitle}</h4>
+                                <h4>${escapeHtml(displayTitle)}</h4>
                                 <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
-                                <span class="tag ${tagClass}">${order.category}</span>
+                                <span class="tag ${tagClass}">${escapeHtml(order.category)}</span>
                             </div>
                             ${statusBlock}
                             <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
-                            <div class="meta">Дедлайн: <span class="meta-value">${order.deadline}</span></div>
+                            <div class="meta">Дедлайн: <span class="meta-value">${escapeHtml(order.deadline)}</span></div>
                             ${drawingBlock}
                         </div>
                         <div class="order-actions">${chatBtn}${actionBtn}</div>`;
@@ -324,7 +324,7 @@ function renderCompanyStatus(status) {
                     let icon = '✓', cls = 'win';
                     if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
                     else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
-                    row.innerHTML = `<td><strong>${prop.orderTitle || 'Закупка #' + prop.orderId}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${prop.status}</span></td>`;
+                    row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
                     tableBody.appendChild(row);
                 });
             } catch (error) { console.error(error); }

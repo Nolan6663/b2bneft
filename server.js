@@ -8,7 +8,18 @@ const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+
+// ВАЖНО: раздаём статикой только assets/ и сами HTML-страницы по явному списку.
+// express.static(__dirname) раздавал бы ВСЮ папку проекта, включая users.json
+// (пароли открытым текстом), orders.json, companies.json и сам server.js —
+// этого допускать нельзя.
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+const PUBLIC_PAGES = ['login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html', 'analytics.html'];
+PUBLIC_PAGES.forEach(page => {
+    app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page)));
+});
+app.get('/', (req, res) => res.redirect('/login.html'));
 
 const ORDERS_FILE = path.join(__dirname, 'orders.json');
 const PROPOSALS_FILE = path.join(__dirname, 'proposals.json');
@@ -44,6 +55,37 @@ function plainTitle(title) {
     return title && title.includes(' | ') ? title.split(' | ')[0] : title;
 }
 
+// ===================== AUTH MIDDLEWARE =====================
+// Токен — простая строка 'token-<userId>' (без JWT, см. комментарий ниже
+// у /api/auth/*), но теперь backend реально проверяет её перед мутацией
+// данных: без валидного токена в Authorization запрос отклоняется, а
+// company для заказа/КП берётся из учётной записи токена, а не из тела
+// запроса — это не даёт прислать данные от имени чужой компании.
+
+function requireAuth(req, res, next) {
+    const header = req.headers['authorization'] || '';
+    const match = header.match(/^Bearer\s+token-(\d+)$/);
+    if (!match) {
+        return res.status(401).json({ error: 'Требуется авторизация' });
+    }
+    const users = readData(USERS_FILE);
+    const user = users.find(u => u.id === Number(match[1]));
+    if (!user) {
+        return res.status(401).json({ error: 'Неверный или истёкший токен' });
+    }
+    req.user = user;
+    next();
+}
+
+function requireRole(role) {
+    return (req, res, next) => {
+        if (req.user.role !== role) {
+            return res.status(403).json({ error: 'Недостаточно прав для этого действия' });
+        }
+        next();
+    };
+}
+
 // Создать уведомление для конкретной компании (используется другими эндпоинтами при событиях)
 function addNotification(company, text) {
     if (!company) return;
@@ -74,8 +116,8 @@ app.get('/api/orders', (req, res) => {
 });
 
 // 2. Создать новую заявку
-app.post('/api/orders', (req, res) => {
-    const { title, category, deadline, company } = req.body;
+app.post('/api/orders', requireAuth, requireRole('customer'), (req, res) => {
+    const { title, category, deadline } = req.body;
     if (!title || !category || !deadline) {
         return res.status(400).json({ error: 'Заполните все поля заявки' });
     }
@@ -88,7 +130,7 @@ app.post('/api/orders', (req, res) => {
         status: "Активный",
         responses: 0,
         deadline,
-        company: company || null,
+        company: req.user.company,
         createdAt: new Date().toISOString()
     };
 
@@ -100,8 +142,8 @@ app.post('/api/orders', (req, res) => {
 // ===================== PROPOSALS =====================
 
 // 3. Отправить коммерческое предложение (КП)
-app.post('/api/proposals', (req, res) => {
-    const { orderId, orderTitle, price, days, company } = req.body;
+app.post('/api/proposals', requireAuth, requireRole('producer'), (req, res) => {
+    const { orderId, orderTitle, price, days } = req.body;
     if (!orderId || !price || !days) {
         return res.status(400).json({ error: 'Не указаны ID заявки, цена или сроки' });
     }
@@ -120,7 +162,7 @@ app.post('/api/proposals', (req, res) => {
         orderTitle: orderTitle || order.title,
         price: Number(price),
         days: Number(days),
-        company: company || "Анонимный поставщик",
+        company: req.user.company,
         status: 'Ожидает ответа',
         createdAt: new Date().toISOString()
     };
@@ -152,7 +194,7 @@ app.get('/api/order-proposals/:orderId', (req, res) => {
 });
 
 // 6. Выбрать победителя
-app.post('/api/proposals/:proposalId/accept', (req, res) => {
+app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer'), (req, res) => {
     const proposalId = Number(req.params.proposalId);
     const proposals = readData(PROPOSALS_FILE);
     const orders = readData(ORDERS_FILE);
@@ -165,6 +207,10 @@ app.post('/api/proposals/:proposalId/accept', (req, res) => {
     const order = orders.find(o => o.id === targetProposal.orderId);
     if (!order) {
         return res.status(404).json({ error: 'Связанная заявка не найдена' });
+    }
+
+    if (order.company && order.company !== req.user.company) {
+        return res.status(403).json({ error: 'Принимать предложения может только владелец закупки' });
     }
 
     if (order.status === 'Закрыта') {
@@ -193,7 +239,7 @@ app.post('/api/proposals/:proposalId/accept', (req, res) => {
 });
 
 // 7. Редактировать предложение (только пока статус "Ожидает ответа")
-app.put('/api/proposals/:proposalId', (req, res) => {
+app.put('/api/proposals/:proposalId', requireAuth, requireRole('producer'), (req, res) => {
     const proposalId = Number(req.params.proposalId);
     const { price, days } = req.body;
     if (!price || !days) {
@@ -204,6 +250,9 @@ app.put('/api/proposals/:proposalId', (req, res) => {
     const target = proposals.find(p => p.id === proposalId);
     if (!target) {
         return res.status(404).json({ error: 'Предложение не найдено' });
+    }
+    if (target.company !== req.user.company) {
+        return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
     }
     if (target.status !== 'Ожидает ответа') {
         return res.status(400).json({ error: 'Можно редактировать только предложения в статусе "Ожидает ответа"' });
@@ -216,7 +265,7 @@ app.put('/api/proposals/:proposalId', (req, res) => {
 });
 
 // 8. Отозвать предложение
-app.delete('/api/proposals/:proposalId', (req, res) => {
+app.delete('/api/proposals/:proposalId', requireAuth, requireRole('producer'), (req, res) => {
     const proposalId = Number(req.params.proposalId);
     const proposals = readData(PROPOSALS_FILE);
     const orders = readData(ORDERS_FILE);
@@ -224,6 +273,9 @@ app.delete('/api/proposals/:proposalId', (req, res) => {
     const target = proposals.find(p => p.id === proposalId);
     if (!target) {
         return res.status(404).json({ error: 'Предложение не найдено' });
+    }
+    if (target.company !== req.user.company) {
+        return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
     }
 
     const remaining = proposals.filter(p => p.id !== proposalId);

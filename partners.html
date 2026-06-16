@@ -276,11 +276,11 @@
                 if (partner.status === 'Верифицирован') { statusIcon = '✓'; statusCls = 'win'; }
                 else if (partner.status === 'Отклонен') { statusIcon = '✗'; statusCls = 'loose'; }
                 row.innerHTML = `
-                    <td><strong>${partner.company}</strong></td>
-                    <td style="font-family: monospace;">${partner.inn}</td>
+                    <td><strong>${escapeHtml(partner.company)}</strong></td>
+                    <td style="font-family: monospace;">${escapeHtml(partner.inn)}</td>
                     <td><span class="badge ${roleClass}">${roleText}</span></td>
-                    <td>${partner.specialization || '—'}</td>
-                    <td><span class="status-icon ${statusCls}">${statusIcon} ${partner.status}</span></td>
+                    <td>${escapeHtml(partner.specialization || '—')}</td>
+                    <td><span class="status-icon ${statusCls}">${statusIcon} ${escapeHtml(partner.status)}</span></td>
                     <td class="actions-cell-link">•••</td>
                 `;
                 tbody.appendChild(row);

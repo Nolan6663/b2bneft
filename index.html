@@ -180,11 +180,11 @@
                     const statusCls = order.status === 'Закрыта' ? 'closed' : 'open';
 
                     row.innerHTML = `
-                        <td><strong>${displayTitle}</strong></td>
-                        <td>${order.category}</td>
-                        <td><span class="status-dot ${statusCls}">${order.status}</span></td>
+                        <td><strong>${escapeHtml(displayTitle)}</strong></td>
+                        <td>${escapeHtml(order.category)}</td>
+                        <td><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></td>
                         <td style="color: var(--accent-bright); font-weight: 700;">${order.responses} (посмотреть)</td>
-                        <td>${order.deadline}</td>
+                        <td>${escapeHtml(order.deadline)}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -225,10 +225,10 @@
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><strong>${prop.company}</strong></td>
+                            <td><strong>${escapeHtml(prop.company)}</strong></td>
                             <td>${prop.price} ₽/шт</td>
                             <td>${prop.days} дней</td>
-                            <td><span class="status-icon ${cls}">${icon} ${prop.status}</span></td>
+                            <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>
                             <td style="text-align: center;">${actionCell}</td>
                         `;
                         tableBody.appendChild(row);
