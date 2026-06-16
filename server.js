@@ -101,6 +101,7 @@ const COMPANIES_FILE = path.join(__dirname, 'companies.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
 const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 const NOTIFICATIONS_FILE = path.join(__dirname, 'notifications.json');
+const FAVORITES_FILE = path.join(__dirname, 'favorites.json');
 
 function readData(filePath, defaultData = []) {
     try {
@@ -158,6 +159,21 @@ function requireRole(role) {
         }
         next();
     };
+}
+
+// Мягкая авторизация: если токен есть и валиден — кладёт req.user, иначе
+// просто пропускает дальше без ошибки. Нужна там, где эндпоинт открыт и для
+// гостей (реестр контрагентов), но хочет знать, кто смотрит, если залогинен
+// (например, чтобы пометить избранные компании).
+function optionalAuth(req, res, next) {
+    const header = req.headers['authorization'] || '';
+    const match = header.match(/^Bearer\s+token-(\d+)$/);
+    if (match) {
+        const users = readData(USERS_FILE);
+        const user = users.find(u => u.id === Number(match[1]));
+        if (user) req.user = user;
+    }
+    next();
 }
 
 // Создать уведомление для конкретной компании (используется другими эндпоинтами при событиях)
@@ -538,31 +554,40 @@ function computeCustomerStats(companyName) {
     };
 }
 
-function enrichCompany(c) {
+function enrichCompany(c, ownerCompany) {
+    let enriched;
     if (c.role === 'producer') {
         const rating = computeProducerRating(c.company);
         const stats = computeProducerStats(c.company);
-        return { ...c, ...(rating || {}), stats: stats || null };
+        enriched = { ...c, ...(rating || {}), stats: stats || null };
     } else {
         const status = computeCustomerStatus(c.company);
         const stats = computeCustomerStats(c.company);
-        return { ...c, ...(status || {}), stats: stats || null };
+        enriched = { ...c, ...(status || {}), stats: stats || null };
     }
+    if (ownerCompany) {
+        const favorites = readData(FAVORITES_FILE);
+        enriched.isFavorite = favorites.some(f => f.ownerCompany === ownerCompany && f.companyId === c.id);
+    } else {
+        enriched.isFavorite = false;
+    }
+    return enriched;
 }
 
-app.get('/api/companies', (req, res) => {
+app.get('/api/companies', optionalAuth, (req, res) => {
     const companies = readData(COMPANIES_FILE);
-    res.json(companies.map(enrichCompany));
+    const ownerCompany = req.user ? req.user.company : null;
+    res.json(companies.map(c => enrichCompany(c, ownerCompany)));
 });
 
-app.get('/api/companies/:id', (req, res) => {
+app.get('/api/companies/:id', optionalAuth, (req, res) => {
     const id = Number(req.params.id);
     const companies = readData(COMPANIES_FILE);
     const company = companies.find(c => c.id === id);
     if (!company) {
         return res.status(404).json({ error: 'Компания не найдена' });
     }
-    res.json(enrichCompany(company));
+    res.json(enrichCompany(company, req.user ? req.user.company : null));
 });
 
 // Редактировать профиль — только свою собственную компанию.
@@ -589,7 +614,51 @@ app.put('/api/companies/:id', requireAuth, (req, res) => {
     }
 
     writeData(COMPANIES_FILE, companies);
-    res.json(enrichCompany(company));
+    res.json(enrichCompany(company, req.user.company));
+});
+
+// ===================== ИЗБРАННЫЕ ПОСТАВЩИКИ =====================
+
+app.get('/api/favorites', requireAuth, (req, res) => {
+    const favorites = readData(FAVORITES_FILE).filter(f => f.ownerCompany === req.user.company);
+    const companies = readData(COMPANIES_FILE);
+    const result = favorites
+        .map(f => companies.find(c => c.id === f.companyId))
+        .filter(Boolean)
+        .map(c => enrichCompany(c, req.user.company));
+    res.json(result);
+});
+
+app.post('/api/favorites', requireAuth, (req, res) => {
+    const id = Number(req.body.companyId);
+    if (!id) {
+        return res.status(400).json({ error: 'Не указан ID компании' });
+    }
+    const companies = readData(COMPANIES_FILE);
+    if (!companies.find(c => c.id === id)) {
+        return res.status(404).json({ error: 'Компания не найдена' });
+    }
+
+    const favorites = readData(FAVORITES_FILE);
+    if (favorites.some(f => f.ownerCompany === req.user.company && f.companyId === id)) {
+        return res.status(200).json({ message: 'Уже в избранном' });
+    }
+    favorites.push({
+        id: favorites.length > 0 ? Math.max(...favorites.map(f => f.id)) + 1 : 1,
+        ownerCompany: req.user.company,
+        companyId: id,
+        createdAt: new Date().toISOString()
+    });
+    writeData(FAVORITES_FILE, favorites);
+    res.status(201).json({ message: 'Добавлено в избранное' });
+});
+
+app.delete('/api/favorites/:companyId', requireAuth, (req, res) => {
+    const id = Number(req.params.companyId);
+    const favorites = readData(FAVORITES_FILE);
+    const remaining = favorites.filter(f => !(f.ownerCompany === req.user.company && f.companyId === id));
+    writeData(FAVORITES_FILE, remaining);
+    res.json({ message: 'Удалено из избранного' });
 });
 
 // ===================== AUTH =====================

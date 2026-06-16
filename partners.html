@@ -17,6 +17,10 @@
         .per-page-select { height: 30px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; padding: 0 8px; }
         .actions-cell-link { background: transparent; border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background-color 0.15s ease, color 0.15s ease; }
         .actions-cell-link:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+        .star-btn { font-size: 15px; color: var(--text-secondary); }
+        .star-btn.active { color: #f5b942; }
+        .star-btn:hover { color: #f5b942; }
+        #favoritesFilterBtn.active { background: rgba(245, 185, 66, 0.12); border-color: #f5b942; color: #f5b942; }
         .company-detail-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
         .company-detail-row:last-child { border-bottom: none; }
         .company-detail-row span:first-child { color: var(--text-secondary); }
@@ -116,6 +120,7 @@
                         </div>
                     </div>
                 </div>
+                <button class="btn-secondary btn-reset" id="favoritesFilterBtn" onclick="toggleFavoritesFilter()">☆ Только избранное</button>
                 <button class="btn-secondary btn-reset" onclick="resetFilters()">Сбросить фильтры</button>
             </div>
         </div>
@@ -184,6 +189,7 @@
         let allCompanies = [];
         let currentPage = 1;
         let pageSize = 10;
+        let showOnlyFavorites = false;
 
         const fallbackPartners = [
             { company: "АО «ГазНефтьЗаказ»", inn: "7701234567", role: "customer", specialization: "Закупка оборудования, МТР", status: "Верифицирован" },
@@ -240,6 +246,7 @@
             const status = document.getElementById('statusFilter').value;
 
             const filtered = allCompanies.filter(c => {
+                if (showOnlyFavorites && !c.isFavorite) return false;
                 if (orgType !== 'all' && getOrgType(c.company) !== orgType) return false;
                 if (role !== 'all' && c.role !== role) return false;
                 if (status !== 'all' && c.status !== status) return false;
@@ -256,6 +263,9 @@
 
         function resetFilters() {
             document.getElementById('searchInput').value = '';
+            showOnlyFavorites = false;
+            document.getElementById('favoritesFilterBtn').classList.remove('active');
+            document.getElementById('favoritesFilterBtn').innerText = '☆ Только избранное';
             ['orgTypeFilter', 'roleFilter', 'statusFilter'].forEach(id => document.getElementById(id).value = 'all');
             document.querySelectorAll('.custom-select').forEach(sel => {
                 sel.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
@@ -297,13 +307,17 @@
                 let statusIcon = '⏱', statusCls = 'waiting';
                 if (partner.status === 'Верифицирован') { statusIcon = '✓'; statusCls = 'win'; }
                 else if (partner.status === 'Отклонен') { statusIcon = '✗'; statusCls = 'loose'; }
+                const isOwn = partner.company === localStorage.getItem('userCompany');
+                const starBtn = (!isOwn && partner.id)
+                    ? `<button class="actions-cell-link star-btn ${partner.isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${idx})" title="${partner.isFavorite ? 'Убрать из избранного' : 'В избранное'}">${partner.isFavorite ? '★' : '☆'}</button>`
+                    : '';
                 row.innerHTML = `
                     <td><strong>${escapeHtml(partner.company)}</strong></td>
                     <td style="font-family: monospace;">${escapeHtml(partner.inn)}</td>
                     <td><span class="badge ${roleClass}">${roleText}</span></td>
                     <td>${escapeHtml(partner.specialization || '—')}</td>
                     <td><span class="status-icon ${statusCls}">${statusIcon} ${escapeHtml(partner.status)}</span></td>
-                    <td><button class="actions-cell-link" onclick="openCompanyDetails(${idx})" title="Подробнее">⋯</button></td>
+                    <td>${starBtn}<button class="actions-cell-link" onclick="openCompanyDetails(${idx})" title="Подробнее">⋯</button></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -365,6 +379,36 @@
 
         function closeCompanyDetails() {
             document.getElementById('companyDetailsModal').style.display = 'none';
+        }
+
+        async function toggleFavorite(idx) {
+            const c = currentPageItems[idx];
+            if (!c || !c.id) return;
+            const nowFavorite = !c.isFavorite;
+            try {
+                const response = nowFavorite
+                    ? await fetch(`${SERVER_URL}/favorites`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                        body: JSON.stringify({ companyId: c.id })
+                    })
+                    : await fetch(`${SERVER_URL}/favorites/${c.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                    });
+                if (response.ok) {
+                    const target = allCompanies.find(x => x.id === c.id);
+                    if (target) target.isFavorite = nowFavorite;
+                    renderPage(lastFiltered);
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function toggleFavoritesFilter() {
+            showOnlyFavorites = !showOnlyFavorites;
+            document.getElementById('favoritesFilterBtn').classList.toggle('active', showOnlyFavorites);
+            document.getElementById('favoritesFilterBtn').innerText = showOnlyFavorites ? '★ Только избранное' : '☆ Только избранное';
+            applyFilters();
         }
 
         function exportRegistry() {

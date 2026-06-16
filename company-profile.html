@@ -26,6 +26,7 @@
         }
         .about-text { font-size: 13.5px; color: var(--text-tertiary); line-height: 1.6; }
         .empty-hint { font-size: 12.5px; color: var(--text-muted); font-style: italic; }
+        #favoriteToggleBtn.active { background: rgba(245, 185, 66, 0.12); border-color: #f5b942; color: #f5b942; }
 
         .equipment-input-row { display: flex; gap: 8px; }
         .equipment-tags-edit { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -138,7 +139,9 @@
 
         async function loadProfile() {
             try {
-                const response = await fetch(`${SERVER_URL}/companies/${companyId}`);
+                const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
                 if (!response.ok) {
                     document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не найдена</div>';
                     return;
@@ -200,7 +203,10 @@
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
-                        ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
+                        <div style="display:flex; gap:10px; flex-shrink:0;">
+                            ${!isOwn ? `<button class="btn-secondary ${c.isFavorite ? 'active' : ''}" id="favoriteToggleBtn" onclick="toggleFavorite()">${c.isFavorite ? '★ В избранном' : '☆ В избранное'}</button>` : ''}
+                            ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
+                        </div>
                     </div>
                 </div>
 
@@ -217,6 +223,29 @@
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${equipmentHtml}</div>
                 </div>
             `;
+        }
+
+        async function toggleFavorite() {
+            if (!currentData || !currentData.id) return;
+            const nowFavorite = !currentData.isFavorite;
+            try {
+                const response = nowFavorite
+                    ? await fetch(`${SERVER_URL}/favorites`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                        body: JSON.stringify({ companyId: currentData.id })
+                    })
+                    : await fetch(`${SERVER_URL}/favorites/${currentData.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                    });
+                if (response.ok) {
+                    currentData.isFavorite = nowFavorite;
+                    const btn = document.getElementById('favoriteToggleBtn');
+                    btn.classList.toggle('active', nowFavorite);
+                    btn.innerText = nowFavorite ? '★ В избранном' : '☆ В избранное';
+                }
+            } catch (error) { console.error(error); }
         }
 
         function openEditProfile() {
