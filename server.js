@@ -14,6 +14,8 @@ const ORDERS_FILE = path.join(__dirname, 'orders.json');
 const PROPOSALS_FILE = path.join(__dirname, 'proposals.json');
 const COMPANIES_FILE = path.join(__dirname, 'companies.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
+const MESSAGES_FILE = path.join(__dirname, 'messages.json');
+const NOTIFICATIONS_FILE = path.join(__dirname, 'notifications.json');
 
 function readData(filePath, defaultData = []) {
     try {
@@ -37,6 +39,25 @@ function writeData(filePath, data) {
     }
 }
 
+// Заголовок без подвешенного " | имя_файла_чертежа"
+function plainTitle(title) {
+    return title && title.includes(' | ') ? title.split(' | ')[0] : title;
+}
+
+// Создать уведомление для конкретной компании (используется другими эндпоинтами при событиях)
+function addNotification(company, text) {
+    if (!company) return;
+    const notifications = readData(NOTIFICATIONS_FILE);
+    notifications.push({
+        id: notifications.length > 0 ? Math.max(...notifications.map(n => n.id)) + 1 : 1,
+        company,
+        text,
+        read: false,
+        createdAt: new Date().toISOString()
+    });
+    writeData(NOTIFICATIONS_FILE, notifications);
+}
+
 if (!fs.existsSync(ORDERS_FILE)) {
     const initialOrders = [
         { id: 1, title: "Манжета резиновая армированная", category: "РТИ", status: "Активный", responses: 0, deadline: "25.05.2026", createdAt: new Date().toISOString() },
@@ -54,7 +75,7 @@ app.get('/api/orders', (req, res) => {
 
 // 2. Создать новую заявку
 app.post('/api/orders', (req, res) => {
-    const { title, category, deadline } = req.body;
+    const { title, category, deadline, company } = req.body;
     if (!title || !category || !deadline) {
         return res.status(400).json({ error: 'Заполните все поля заявки' });
     }
@@ -67,6 +88,7 @@ app.post('/api/orders', (req, res) => {
         status: "Активный",
         responses: 0,
         deadline,
+        company: company || null,
         createdAt: new Date().toISOString()
     };
 
@@ -109,6 +131,10 @@ app.post('/api/proposals', (req, res) => {
     writeData(PROPOSALS_FILE, proposals);
     writeData(ORDERS_FILE, orders);
 
+    if (order.company) {
+        addNotification(order.company, `Получен новый отклик на «${plainTitle(order.title)}» от ${newProposal.company}.`);
+    }
+
     res.status(201).json(newProposal);
 });
 
@@ -146,13 +172,16 @@ app.post('/api/proposals/:proposalId/accept', (req, res) => {
     }
 
     order.status = 'Закрыта';
+    const title = plainTitle(order.title);
 
     proposals.forEach(p => {
         if (p.orderId === targetProposal.orderId) {
             if (p.id === proposalId) {
                 p.status = 'Выигран';
+                addNotification(p.company, `Ваше предложение по «${title}» принято! Заказ выигран.`);
             } else {
                 p.status = 'Отклонен';
+                addNotification(p.company, `Ваше предложение по «${title}» отклонено.`);
             }
         }
     });
@@ -271,6 +300,61 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     res.json({ token: 'token-' + user.id, role: user.role, company: user.company });
+});
+
+// ===================== ЧАТ ПО ЗАКУПКЕ =====================
+// Тред определяется парой orderId + company (компания производителя,
+// участвующего в обсуждении), сообщения видны обеим сторонам.
+
+app.get('/api/messages/:orderId/:company', (req, res) => {
+    const orderId = Number(req.params.orderId);
+    const company = req.params.company;
+    const messages = readData(MESSAGES_FILE);
+    res.json(messages.filter(m => m.orderId === orderId && m.company === company));
+});
+
+app.post('/api/messages', (req, res) => {
+    const { orderId, company, sender, text } = req.body;
+    if (!orderId || !company || !sender || !text) {
+        return res.status(400).json({ error: 'Заполните все поля сообщения' });
+    }
+
+    const messages = readData(MESSAGES_FILE);
+    const newMessage = {
+        id: messages.length > 0 ? Math.max(...messages.map(m => m.id)) + 1 : 1,
+        orderId: Number(orderId),
+        company,
+        sender,
+        text: String(text).slice(0, 2000),
+        createdAt: new Date().toISOString()
+    };
+    messages.push(newMessage);
+    writeData(MESSAGES_FILE, messages);
+    res.status(201).json(newMessage);
+});
+
+// ===================== УВЕДОМЛЕНИЯ =====================
+// Создаются автоматически сервером при событиях (новый отклик,
+// принятие/отклонение КП) — см. addNotification() выше.
+
+app.get('/api/notifications/:company', (req, res) => {
+    const list = readData(NOTIFICATIONS_FILE)
+        .filter(n => n.company === req.params.company)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(list);
+});
+
+app.post('/api/notifications/:company/read', (req, res) => {
+    const notifications = readData(NOTIFICATIONS_FILE);
+    notifications.forEach(n => { if (n.company === req.params.company) n.read = true; });
+    writeData(NOTIFICATIONS_FILE, notifications);
+    res.json({ message: 'ok' });
+});
+
+app.delete('/api/notifications/:company', (req, res) => {
+    const notifications = readData(NOTIFICATIONS_FILE).filter(n => n.company !== req.params.company);
+    writeData(NOTIFICATIONS_FILE, notifications);
+    res.json({ message: 'ok' });
 });
 
 app.listen(PORT, () => {

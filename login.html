@@ -37,7 +37,7 @@
         .auth-container p.subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
 
         .tabs { display: flex; gap: 4px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-        .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 9px; }
+        .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 9px; transition: background-color 0.2s ease, color 0.2s ease; }
         .tab.active { background: var(--accent-gradient); color: var(--accent-on-button); }
 
         .form-row-between { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 18px; font-size: 12.5px; }
@@ -52,10 +52,19 @@
             width: 100%; height: var(--btn-height); background: var(--accent-gradient); color: var(--accent-on-button);
             border: none; border-radius: var(--radius-btn); font-size: 14px; font-weight: 700; cursor: pointer;
             margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .btn-auth:hover { filter: brightness(1.05); }
+        .btn-auth:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(65, 189, 151, 0.28); }
+        .btn-auth:active { transform: translateY(0); }
 
         .form-group { margin-bottom: 16px; }
+
+        @media (max-width: 760px) {
+            .auth-page { flex-direction: column; }
+            .auth-branding { width: 100%; padding: 32px 24px; }
+            .auth-branding .auth-footer { position: static; margin-top: 18px; }
+            .auth-form-panel { padding: 32px 20px; }
+        }
     </style>
 </head>
 <body>

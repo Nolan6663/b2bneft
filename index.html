@@ -249,7 +249,7 @@
                 const response = await fetch(`${SERVER_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
-                    body: JSON.stringify({ title, category, deadline })
+                    body: JSON.stringify({ title, category, deadline, company: localStorage.getItem('userCompany') })
                 });
                 if (response.ok) {
                     closeModal(); loadOrders();

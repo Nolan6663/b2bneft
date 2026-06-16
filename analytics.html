@@ -8,9 +8,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .date-range { display: flex; align-items: center; gap: 8px; }
-        .date-range input[type="date"] { height: 38px; width: auto; }
+        .date-range input[type="date"] { height: 38px; width: auto; transition: border-color 0.15s ease; }
+        .date-range input[type="date"]:focus { border-color: var(--accent-bright); }
         .company-badge { font-size: 12.5px; color: var(--text-secondary); }
         .company-badge strong { color: var(--text-primary); }
+
+        @media (max-width: 480px) {
+            .date-range { flex-wrap: wrap; gap: 6px; }
+            .date-range input[type="date"] { font-size: 12px; padding: 0 8px; height: 34px; }
+        }
     </style>
 </head>
 <body>

@@ -8,7 +8,8 @@
     <style>
         .table-wrapper { width: 100%; overflow-x: auto; }
         .actions-cell { display: flex; gap: 8px; justify-content: flex-end; }
-        .btn-action { padding: 7px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--secondary-btn-border); background: transparent; color: var(--secondary-btn-text); }
+        .btn-action { padding: 7px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--secondary-btn-border); background: transparent; color: var(--secondary-btn-text); transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+        .btn-action:hover { transform: translateY(-1px); }
         .btn-action.edit:hover { border-color: #7eb2e8; color: #7eb2e8; }
         .btn-action.withdraw:hover { border-color: var(--error); color: var(--error); }
 

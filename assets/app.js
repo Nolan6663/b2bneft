@@ -7,6 +7,23 @@
 const SERVER_URL = 'http://localhost:5000/api';
 
 /* ---------------------------------------------------------------------
+   Универсальное закрытие модалок: клик по фону или Escape
+   --------------------------------------------------------------------- */
+document.addEventListener('click', (e) => {
+  if (e.target.classList && e.target.classList.contains('modal')) {
+    e.target.style.display = 'none';
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal').forEach(m => {
+      if (getComputedStyle(m).display !== 'none') m.style.display = 'none';
+    });
+  }
+});
+
+/* ---------------------------------------------------------------------
    Auth guard / logout
    --------------------------------------------------------------------- */
 // Вызвать на защищённых страницах: const session = authGuard('producer');
@@ -68,60 +85,68 @@ function downloadMockFile(filename, content) {
 }
 
 /* ---------------------------------------------------------------------
-   Центр уведомлений
+   Защита от XSS при вставке пользовательского текста в innerHTML
+   --------------------------------------------------------------------- */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.innerText = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Центр уведомлений — реальные данные с сервера (события: новый отклик,
+   принятие/отклонение КП), с поллингом для почти-живого обновления.
    --------------------------------------------------------------------- */
 const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
-const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
+let notifPollInterval = null;
 
 function initNotifications() {
-  renderNotificationsCount();
-  setTimeout(() => {
-    const role = localStorage.getItem('userRole');
-    const text = role === 'customer'
-      ? 'Заказчик: Получен новый отклик с ценовым предложением.'
-      : `Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-    addNotification(text);
-  }, 6000);
+  if (currentCompanyName === 'Гость') return;
+  refreshNotificationBadge();
+  if (notifPollInterval) clearInterval(notifPollInterval);
+  notifPollInterval = setInterval(refreshNotificationBadge, 10000);
 }
 
-function addNotification(text) {
-  let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  if (list.length > 0 && list[0].text === text) return;
-  list.unshift({ text, time: timeStr, read: false });
-  localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-  renderNotificationsCount();
-}
-
-function renderNotificationsCount() {
-  const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-  const unreadCount = list.filter(n => !n.read).length;
+async function refreshNotificationBadge() {
   const badgeEl = document.getElementById('bellBadge');
   if (!badgeEl) return;
-  badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-  if (unreadCount > 0) badgeEl.innerText = unreadCount;
+  try {
+    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
+    const list = await response.json();
+    const unreadCount = list.filter(n => !n.read).length;
+    badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    if (unreadCount > 0) badgeEl.innerText = unreadCount;
+  } catch (error) { /* backend недоступен — тихо игнорируем, попробуем на следующем тике */ }
 }
 
-function openNotificationsModal() {
+async function openNotificationsModal() {
   const modal = document.getElementById('notificationModal');
   if (!modal) return;
   modal.style.display = 'flex';
   const container = document.getElementById('notificationsList');
-  let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-  if (list.length === 0) {
-    container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">История уведомлений пуста</div>';
-    return;
+  if (!container) return;
+  container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Загрузка...</div>';
+
+  try {
+    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
+    const list = await response.json();
+    if (list.length === 0) {
+      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">История уведомлений пуста</div>';
+      return;
+    }
+    container.innerHTML = '';
+    list.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'notification-item';
+      const time = new Date(n.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      item.innerHTML = `<div>${escapeHtml(n.text)}</div><div class="time">⏱ ${time}</div>`;
+      container.appendChild(item);
+    });
+    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST' });
+    refreshNotificationBadge();
+  } catch (error) {
+    container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Не удалось загрузить уведомления</div>';
   }
-  container.innerHTML = '';
-  list.forEach(n => {
-    const item = document.createElement('div');
-    item.className = 'notification-item';
-    item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`;
-    container.appendChild(item);
-    n.read = true;
-  });
-  localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-  renderNotificationsCount();
 }
 
 function closeNotificationsModal() {
@@ -129,43 +154,52 @@ function closeNotificationsModal() {
   if (modal) modal.style.display = 'none';
 }
 
-function clearNotifications() {
-  localStorage.removeItem(B2B_NOTIF_KEY);
+async function clearNotifications() {
+  try {
+    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { method: 'DELETE' });
+  } catch (error) { /* ignore */ }
   openNotificationsModal();
 }
 
 /* ---------------------------------------------------------------------
-   Чат по закупке
+   Чат по закупке — сообщения хранятся на сервере (тред = orderId + company
+   производителя), обновляется поллингом, пока модалка открыта.
    --------------------------------------------------------------------- */
-let activeChatKey = null;
+let activeChatOrderId = null;
+let activeChatCompany = null;
+let chatPollInterval = null;
 
 function openGlobalChat(orderId, orderTitle, company) {
-  activeChatKey = `b2b_chat_${orderId}_${company}`;
+  activeChatOrderId = orderId;
+  activeChatCompany = company;
   const titleEl = document.getElementById('chatModalTitle');
   if (titleEl) titleEl.innerText = `Чат по закупке: ${orderTitle}`;
   const modal = document.getElementById('chatModal');
   if (modal) modal.style.display = 'flex';
   renderChatHistory();
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(renderChatHistory, 4000);
 }
 
 function closeChatModal() {
   const modal = document.getElementById('chatModal');
   if (modal) modal.style.display = 'none';
+  if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
 }
 
-function renderChatHistory() {
+async function renderChatHistory() {
   const container = document.getElementById('chatModalMessages');
-  if (!container || !activeChatKey) return;
-  container.innerHTML = '';
-  let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-  if (history.length === 0) {
-    history = [{ sender: 'system', text: 'Чат открыт. Обсудите технические параметры ТЗ напрямую с контрагентом.' }];
-    localStorage.setItem(activeChatKey, JSON.stringify(history));
-  }
-  const myRole = localStorage.getItem('userRole');
-  history.forEach(msg => {
-    const bubble = document.createElement('div');
-    if (msg.sender === 'system') {
+  if (!container || activeChatOrderId == null) return;
+
+  try {
+    const response = await fetch(`${SERVER_URL}/messages/${activeChatOrderId}/${encodeURIComponent(activeChatCompany)}`);
+    const history = await response.json();
+    const myRole = localStorage.getItem('userRole');
+    const wasAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
+
+    container.innerHTML = '';
+    if (history.length === 0) {
+      const bubble = document.createElement('div');
       bubble.className = 'chat-bubble';
       bubble.style.background = 'transparent';
       bubble.style.color = 'var(--text-secondary)';
@@ -174,21 +208,31 @@ function renderChatHistory() {
       bubble.style.fontSize = '12px';
       bubble.style.fontStyle = 'italic';
       bubble.style.alignSelf = 'center';
+      bubble.innerText = 'Чат открыт. Обсудите технические параметры ТЗ напрямую с контрагентом.';
+      container.appendChild(bubble);
     } else {
-      bubble.className = msg.sender === myRole ? 'chat-bubble me' : 'chat-bubble partner';
+      history.forEach(msg => {
+        const bubble = document.createElement('div');
+        bubble.className = msg.sender === myRole ? 'chat-bubble me' : 'chat-bubble partner';
+        bubble.innerText = msg.text;
+        container.appendChild(bubble);
+      });
     }
-    bubble.innerText = msg.text;
-    container.appendChild(bubble);
-  });
-  container.scrollTop = container.scrollHeight;
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  } catch (error) { /* поллинг — тихо пробуем снова на следующем тике */ }
 }
 
-function sendGlobalChatMessage() {
+async function sendGlobalChatMessage() {
   const input = document.getElementById('chatModalInput');
-  if (!input || !input.value.trim() || !activeChatKey) return;
-  let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-  history.push({ sender: localStorage.getItem('userRole'), text: input.value.trim() });
-  localStorage.setItem(activeChatKey, JSON.stringify(history));
+  if (!input || !input.value.trim() || activeChatOrderId == null) return;
+  const text = input.value.trim();
   input.value = '';
+  try {
+    await fetch(`${SERVER_URL}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: activeChatOrderId, company: activeChatCompany, sender: localStorage.getItem('userRole'), text })
+    });
+  } catch (error) { /* ignore, отрисуем то, что есть */ }
   renderChatHistory();
 }
