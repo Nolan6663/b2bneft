@@ -15,7 +15,12 @@
         .btn-reset { white-space: nowrap; }
         .table-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
         .per-page-select { height: 30px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; padding: 0 8px; }
-        .actions-cell-link { color: var(--text-secondary); font-size: 16px; cursor: default; }
+        .actions-cell-link { background: transparent; border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background-color 0.15s ease, color 0.15s ease; }
+        .actions-cell-link:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+        .company-detail-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+        .company-detail-row:last-child { border-bottom: none; }
+        .company-detail-row span:first-child { color: var(--text-secondary); }
+        .company-detail-row span:last-child { color: var(--text-primary); font-weight: 600; text-align: right; }
     </style>
 </head>
 <body>
@@ -145,6 +150,16 @@
         </div>
     </div>
 
+    <div class="modal" id="companyDetailsModal">
+        <div class="modal-content" style="width: 440px;">
+            <h3 id="companyDetailsName">Компания</h3>
+            <div id="companyDetailsBody"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeCompanyDetails()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
@@ -156,6 +171,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
@@ -248,6 +264,7 @@
         }
 
         let lastFiltered = [];
+        let currentPageItems = [];
         function renderPage(filtered) {
             lastFiltered = filtered;
             document.getElementById('resultsCount').innerText = `Найдено компаний: ${filtered.length}`;
@@ -256,6 +273,7 @@
             if (currentPage > totalPages) currentPage = totalPages;
             const start = (currentPage - 1) * pageSize;
             const pageItems = filtered.slice(start, start + pageSize);
+            currentPageItems = pageItems;
 
             renderTable(pageItems);
             renderPagination(totalPages, filtered.length, start, pageItems.length);
@@ -268,7 +286,7 @@
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary); padding: 40px;">Компании не найдены</td></tr>`;
                 return;
             }
-            list.forEach(partner => {
+            list.forEach((partner, idx) => {
                 const row = document.createElement('tr');
                 const roleText = partner.role === 'customer' ? 'Заказчик' : 'Производитель';
                 const roleClass = partner.role === 'customer' ? 'customer' : 'producer';
@@ -281,7 +299,7 @@
                     <td><span class="badge ${roleClass}">${roleText}</span></td>
                     <td>${escapeHtml(partner.specialization || '—')}</td>
                     <td><span class="status-icon ${statusCls}">${statusIcon} ${escapeHtml(partner.status)}</span></td>
-                    <td class="actions-cell-link">•••</td>
+                    <td><button class="actions-cell-link" onclick="openCompanyDetails(${idx})" title="Подробнее">⋯</button></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -317,6 +335,29 @@
             pageSize = Number(document.getElementById('pageSizeSelect').value);
             currentPage = 1;
             renderPage(lastFiltered);
+        }
+
+        function openCompanyDetails(idx) {
+            const c = currentPageItems[idx];
+            if (!c) return;
+            const roleText = c.role === 'customer' ? 'Заказчик' : 'Производитель';
+
+            document.getElementById('companyDetailsName').innerText = c.company;
+            let rows = `
+                <div class="company-detail-row"><span>ИНН</span><span>${escapeHtml(c.inn)}</span></div>
+                <div class="company-detail-row"><span>Роль в системе</span><span>${roleText}</span></div>
+                <div class="company-detail-row"><span>Специализация</span><span>${escapeHtml(c.specialization || '—')}</span></div>
+                <div class="company-detail-row"><span>Статус</span><span>${escapeHtml(c.status)}</span></div>
+            `;
+            if (c.role === 'producer' && c.rating) {
+                rows += `<div class="company-detail-row"><span>Рейтинг надёжности</span><span>${escapeHtml(c.rating)} · ${escapeHtml(c.ratingLabel || '')}</span></div>`;
+            }
+            document.getElementById('companyDetailsBody').innerHTML = rows;
+            document.getElementById('companyDetailsModal').style.display = 'flex';
+        }
+
+        function closeCompanyDetails() {
+            document.getElementById('companyDetailsModal').style.display = 'none';
         }
 
         function exportRegistry() {

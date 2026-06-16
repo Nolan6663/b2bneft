@@ -118,17 +118,72 @@ function escapeHtml(str) {
 }
 
 /* ---------------------------------------------------------------------
-   Центр уведомлений — реальные данные с сервера (события: новый отклик,
-   принятие/отклонение КП), с поллингом для почти-живого обновления.
+   Toast-уведомления (всплывающие карточки в углу экрана)
+   --------------------------------------------------------------------- */
+function showToast(text) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<div class="toast-icon">🔔</div><div class="toast-text">${escapeHtml(text)}</div><button class="toast-close" aria-label="Закрыть">✕</button>`;
+  const dismiss = () => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 220);
+  };
+  toast.querySelector('.toast-close').onclick = dismiss;
+  container.appendChild(toast);
+  setTimeout(dismiss, 6000);
+}
+
+/* ---------------------------------------------------------------------
+   Живые обновления через Socket.IO — чат и уведомления приходят мгновенно,
+   без ожидания следующего тика поллинга. Поллинг ниже остаётся как
+   подстраховка (если соединение оборвалось/не успело переподключиться).
    --------------------------------------------------------------------- */
 const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
+let socket = null;
+
+if (typeof io === 'function') {
+  try {
+    socket = io(SERVER_URL.replace(/\/api$/, ''), { transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => {
+      if (currentCompanyName !== 'Гость') socket.emit('join-company', currentCompanyName);
+      if (activeChatOrderId != null) socket.emit('join-chat', { orderId: activeChatOrderId, company: activeChatCompany });
+    });
+
+    socket.on('notification', (entry) => {
+      if (entry.company !== currentCompanyName) return;
+      showToast(entry.text);
+      refreshNotificationBadge();
+    });
+
+    socket.on('message', (msg) => {
+      if (activeChatOrderId != null && msg.orderId === activeChatOrderId && msg.company === activeChatCompany) {
+        renderChatHistory();
+      }
+    });
+  } catch (error) {
+    console.warn('Socket.IO недоступен, работаем по поллингу:', error);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Центр уведомлений — реальные данные с сервера (события: новый отклик,
+   принятие/отклонение КП). Доставляются мгновенно через socket выше;
+   поллинг здесь — редкая подстраховка на случай разрыва соединения.
+   --------------------------------------------------------------------- */
 let notifPollInterval = null;
 
 function initNotifications() {
   if (currentCompanyName === 'Гость') return;
   refreshNotificationBadge();
   if (notifPollInterval) clearInterval(notifPollInterval);
-  notifPollInterval = setInterval(refreshNotificationBadge, 10000);
+  notifPollInterval = setInterval(refreshNotificationBadge, 25000);
 }
 
 async function refreshNotificationBadge() {
@@ -200,9 +255,10 @@ function openGlobalChat(orderId, orderTitle, company) {
   if (titleEl) titleEl.innerText = `Чат по закупке: ${orderTitle}`;
   const modal = document.getElementById('chatModal');
   if (modal) modal.style.display = 'flex';
+  if (socket) socket.emit('join-chat', { orderId, company });
   renderChatHistory();
   if (chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(renderChatHistory, 4000);
+  chatPollInterval = setInterval(renderChatHistory, 15000);
 }
 
 function closeChatModal() {

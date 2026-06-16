@@ -167,6 +167,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
         let currentOrderId = null;
@@ -248,8 +249,6 @@ function renderCompanyStatus(status) {
             } catch (error) { console.error(error); }
         }
 
-        function downloadMockFileWrapper(filename) { downloadMockFile(filename); }
-
         async function loadOrdersForProducers() {
             try {
                 const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
@@ -267,15 +266,17 @@ function renderCompanyStatus(status) {
                     orderItem.className = 'order-item';
                     orderItem.setAttribute('data-category', order.category);
                     const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
-                    let displayTitle = order.title && order.title.includes(' | ') ? order.title.split(' | ')[0] : order.title;
-                    let drawingFile = order.title && order.title.includes(' | ') ? order.title.split(' | ')[1] : "Не прикреплен";
+                    const displayTitle = order.title;
 
                     const chatBtn = isGuest
                         ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
                         : `<button class="btn-secondary" onclick="openGlobalChat(${order.id}, '${displayTitle.replace(/'/g, "\\'")}', '${localStorage.getItem('userCompany')}')">Открыть чат</button>`;
 
                     let statusBlock, actionBtn;
-                    if (order.status === 'Закрыта') {
+                    if (order.status === 'Отменена') {
+                        statusBlock = `<div class="meta status-dot muted">Закупка отменена заказчиком</div>`;
+                        actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
+                    } else if (order.status === 'Закрыта') {
                         statusBlock = `<div class="meta status-dot closed">Закупка завершена</div>`;
                         actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
                     } else if (isGuest) {
@@ -288,8 +289,8 @@ function renderCompanyStatus(status) {
 
                     const drawingBlock = isGuest
                         ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
-                        : (drawingFile !== "Не прикреплен"
-                            ? `<div class="meta">📁 Чертеж: <a href="#" onclick="downloadMockFileWrapper('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(drawingFile)}</a></div>`
+                        : (order.drawing
+                            ? `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(order.drawing.originalName)}</a></div>`
                             : `<div class="meta">📁 Чертеж: отсутствует</div>`);
 
                     orderItem.innerHTML = `
@@ -323,6 +324,7 @@ function renderCompanyStatus(status) {
                     const row = document.createElement('tr');
                     let icon = '✓', cls = 'win';
                     if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
+                    else if (prop.status === 'Отозвана заказчиком') { icon = '⊘'; cls = 'muted'; }
                     else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
                     row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
                     tableBody.appendChild(row);

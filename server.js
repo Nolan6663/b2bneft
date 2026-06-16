@@ -2,12 +2,86 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+const http = require('http');
 
 const app = express();
 const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// ===================== WEBSOCKET (Socket.IO, опционально) =====================
+// Живые уведомления и чат вместо поллинга: комната "<company>" — для
+// персональных уведомлений компании, комната "chat:<orderId>:<company>" —
+// для конкретного треда чата. Клиент подключается и сам просит join
+// нужных комнат (см. assets/app.js).
+//
+// Пакет socket.io пока не установился (нестабильная сеть при npm install) —
+// require обёрнут в try/catch, чтобы сервер не падал при старте. Как только
+// `npm install socket.io` пройдёт успешно, всё заработает само — без правок кода.
+let Server = null;
+try {
+    Server = require('socket.io').Server;
+} catch (error) {
+    console.warn('socket.io не установлен — живые WebSocket-обновления отключены, работаем через обычный поллинг.');
+}
+
+const httpServer = http.createServer(app);
+const io = Server ? new Server(httpServer, { cors: { origin: '*' } }) : null;
+
+if (io) {
+    io.on('connection', (socket) => {
+        socket.on('join-company', (company) => {
+            if (company) socket.join(company);
+        });
+        socket.on('join-chat', ({ orderId, company }) => {
+            if (orderId != null && company) socket.join(`chat:${orderId}:${company}`);
+        });
+    });
+}
+
+// ===================== ЗАГРУЗКА ЧЕРТЕЖЕЙ =====================
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+
+const ALLOWED_DRAWING_EXT = ['.pdf', '.png', '.jpg', '.jpeg', '.dxf', '.dwg', '.step', '.stp'];
+
+const drawingStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const safeName = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
+        cb(null, safeName);
+    }
+});
+
+const uploadDrawing = multer({
+    storage: drawingStorage,
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15 МБ
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!ALLOWED_DRAWING_EXT.includes(ext)) {
+            return cb(new Error('Недопустимый тип файла. Разрешены: ' + ALLOWED_DRAWING_EXT.join(', ')));
+        }
+        cb(null, true);
+    }
+}).single('drawing');
+
+// Оборачиваем multer, чтобы его ошибки (размер/тип) превращались в обычный JSON-ответ 400,
+// а не падали необработанным исключением.
+function handleDrawingUpload(req, res, next) {
+    uploadDrawing(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить файл' });
+        next();
+    });
+}
+
+function deleteDrawingFile(drawing) {
+    if (!drawing || !drawing.storedName) return;
+    const filePath = path.join(UPLOADS_DIR, drawing.storedName);
+    fs.unlink(filePath, () => {}); // не критично, если файла уже нет
+}
 
 // ВАЖНО: раздаём статикой только assets/ и сами HTML-страницы по явному списку.
 // express.static(__dirname) раздавал бы ВСЮ папку проекта, включая users.json
@@ -87,17 +161,20 @@ function requireRole(role) {
 }
 
 // Создать уведомление для конкретной компании (используется другими эндпоинтами при событиях)
+// и сразу пушнуть его живым клиентам этой компании через WebSocket.
 function addNotification(company, text) {
     if (!company) return;
     const notifications = readData(NOTIFICATIONS_FILE);
-    notifications.push({
+    const entry = {
         id: notifications.length > 0 ? Math.max(...notifications.map(n => n.id)) + 1 : 1,
         company,
         text,
         read: false,
         createdAt: new Date().toISOString()
-    });
+    };
+    notifications.push(entry);
     writeData(NOTIFICATIONS_FILE, notifications);
+    if (io) io.to(company).emit('notification', entry);
 }
 
 if (!fs.existsSync(ORDERS_FILE)) {
@@ -115,8 +192,23 @@ app.get('/api/orders', (req, res) => {
     res.json(readData(ORDERS_FILE));
 });
 
+// 1b. Скачать чертёж/спецификацию, приложенный к закупке
+app.get('/api/orders/:orderId/drawing', (req, res) => {
+    const orderId = Number(req.params.orderId);
+    const orders = readData(ORDERS_FILE);
+    const order = orders.find(o => o.id === orderId);
+    if (!order || !order.drawing) {
+        return res.status(404).json({ error: 'Файл не найден' });
+    }
+    const filePath = path.join(UPLOADS_DIR, order.drawing.storedName);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Файл был удалён с сервера' });
+    }
+    res.download(filePath, order.drawing.originalName);
+});
+
 // 2. Создать новую заявку
-app.post('/api/orders', requireAuth, requireRole('customer'), (req, res) => {
+app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUpload, (req, res) => {
     const { title, category, deadline } = req.body;
     if (!title || !category || !deadline) {
         return res.status(400).json({ error: 'Заполните все поля заявки' });
@@ -131,12 +223,78 @@ app.post('/api/orders', requireAuth, requireRole('customer'), (req, res) => {
         responses: 0,
         deadline,
         company: req.user.company,
+        drawing: req.file ? { originalName: req.file.originalname, storedName: req.file.filename } : null,
         createdAt: new Date().toISOString()
     };
 
     orders.push(newOrder);
     writeData(ORDERS_FILE, orders);
     res.status(201).json(newOrder);
+});
+
+// 2b. Редактировать свою закупку (только пока не закрыта и не отменена)
+app.put('/api/orders/:orderId', requireAuth, requireRole('customer'), handleDrawingUpload, (req, res) => {
+    const orderId = Number(req.params.orderId);
+    const { title, category, deadline } = req.body;
+    if (!title || !category || !deadline) {
+        return res.status(400).json({ error: 'Заполните все поля заявки' });
+    }
+
+    const orders = readData(ORDERS_FILE);
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+        return res.status(404).json({ error: 'Заявка не найдена' });
+    }
+    if (order.company && order.company !== req.user.company) {
+        return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
+    }
+    if (order.status === 'Закрыта' || order.status === 'Отменена') {
+        return res.status(400).json({ error: 'Закрытую или отменённую закупку нельзя редактировать' });
+    }
+
+    order.title = title;
+    order.category = category;
+    order.deadline = deadline;
+    if (req.file) {
+        deleteDrawingFile(order.drawing);
+        order.drawing = { originalName: req.file.originalname, storedName: req.file.filename };
+    }
+    writeData(ORDERS_FILE, orders);
+    res.json(order);
+});
+
+// 2c. Отменить свою закупку — статус "Отменена", ожидающие КП отзываются с уведомлением
+app.post('/api/orders/:orderId/cancel', requireAuth, requireRole('customer'), (req, res) => {
+    const orderId = Number(req.params.orderId);
+    const orders = readData(ORDERS_FILE);
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+        return res.status(404).json({ error: 'Заявка не найдена' });
+    }
+    if (order.company && order.company !== req.user.company) {
+        return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
+    }
+    if (order.status === 'Закрыта') {
+        return res.status(400).json({ error: 'Закупка уже завершена, отменить её нельзя' });
+    }
+    if (order.status === 'Отменена') {
+        return res.status(400).json({ error: 'Закупка уже отменена' });
+    }
+
+    order.status = 'Отменена';
+    const title = plainTitle(order.title);
+
+    const proposals = readData(PROPOSALS_FILE);
+    proposals.forEach(p => {
+        if (p.orderId === orderId && p.status === 'Ожидает ответа') {
+            p.status = 'Отозвана заказчиком';
+            addNotification(p.company, `Закупка «${title}» отменена заказчиком, ваше предложение по ней снято с рассмотрения.`);
+        }
+    });
+
+    writeData(ORDERS_FILE, orders);
+    writeData(PROPOSALS_FILE, proposals);
+    res.json(order);
 });
 
 // ===================== PROPOSALS =====================
@@ -236,6 +394,35 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
     writeData(ORDERS_FILE, orders);
 
     res.json({ message: 'Победитель успешно определен, тендер закрыт' });
+});
+
+// 6b. Точечно отклонить одно предложение — тендер остаётся открытым для остальных
+app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer'), (req, res) => {
+    const proposalId = Number(req.params.proposalId);
+    const proposals = readData(PROPOSALS_FILE);
+    const orders = readData(ORDERS_FILE);
+
+    const targetProposal = proposals.find(p => p.id === proposalId);
+    if (!targetProposal) {
+        return res.status(404).json({ error: 'Предложение не найдено' });
+    }
+
+    const order = orders.find(o => o.id === targetProposal.orderId);
+    if (!order) {
+        return res.status(404).json({ error: 'Связанная заявка не найдена' });
+    }
+    if (order.company && order.company !== req.user.company) {
+        return res.status(403).json({ error: 'Отклонять предложения может только владелец закупки' });
+    }
+    if (targetProposal.status !== 'Ожидает ответа') {
+        return res.status(400).json({ error: 'Можно отклонить только предложение в статусе "Ожидает ответа"' });
+    }
+
+    targetProposal.status = 'Отклонен';
+    addNotification(targetProposal.company, `Ваше предложение по «${plainTitle(order.title)}» отклонено.`);
+
+    writeData(PROPOSALS_FILE, proposals);
+    res.json(targetProposal);
 });
 
 // 7. Редактировать предложение (только пока статус "Ожидает ответа")
@@ -382,6 +569,7 @@ app.post('/api/messages', (req, res) => {
     };
     messages.push(newMessage);
     writeData(MESSAGES_FILE, messages);
+    if (io) io.to(`chat:${newMessage.orderId}:${newMessage.company}`).emit('message', newMessage);
     res.status(201).json(newMessage);
 });
 
@@ -409,6 +597,6 @@ app.delete('/api/notifications/:company', (req, res) => {
     res.json({ message: 'ok' });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Бэкенд-сервер успешно запущен на порту ${PORT}`);
 });

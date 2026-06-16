@@ -104,6 +104,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
@@ -119,6 +120,7 @@
         function statusIcon(status) {
             if (status === 'Выигран') return { icon: '✓', cls: 'win' };
             if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
+            if (status === 'Отозвана заказчиком') return { icon: '⊘', cls: 'muted' };
             return { icon: '⏱', cls: 'waiting' };
         }
 

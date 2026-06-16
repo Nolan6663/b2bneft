@@ -87,6 +87,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
@@ -264,7 +265,7 @@
 
                     renderCharts(
                         'bar',
-                        { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97', borderRadius: 6, maxBarThickness: 46 }] },
+                        { labels: orders.map(o => o.title), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97', borderRadius: 6, maxBarThickness: 46 }] },
                         'doughnut',
                         { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#41bd97', '#3a4a55'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
