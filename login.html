@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Вход</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
     <link rel="stylesheet" href="assets/theme.css">
     <style>
         body { display: flex; min-height: 100vh; }
+
+        .theme-toggle-fab {
+            position: fixed; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 12px;
+            background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-primary);
+            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s ease, border-color 0.15s ease; z-index: 10;
+        }
+        .theme-toggle-fab:hover { transform: translateY(-1px); border-color: var(--secondary-btn-border); }
 
         .auth-page { display: flex; width: 100%; min-height: 100vh; }
 
@@ -68,6 +77,10 @@
     </style>
 </head>
 <body>
+
+    <button class="theme-toggle-fab" onclick="toggleTheme()" title="Переключить тему">
+        <span id="themeIcon">🌙</span>
+    </button>
 
     <div class="auth-page">
         <div class="auth-branding">

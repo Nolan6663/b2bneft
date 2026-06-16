@@ -64,14 +64,61 @@
 
   --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.35);
   --shadow-modal: 0 24px 70px rgba(0, 0, 0, 0.5);
+
+  /* сайдбар — всегда тёмный, не зависит от темы (как в прежней версии сайта) */
+  --sidebar-bg: #0d1620;
+  --sidebar-border: #1b2731;
+  --sidebar-inner: #16222d;
+  --sidebar-text: #7e8b97;
+  --sidebar-text-active: #eef3f6;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
+/* =====================================================================
+   Светлая тема — те же переменные, адаптированная палитра.
+   Переключается классом .light-mode на <html> (см. assets/app.js).
+   ===================================================================== */
+html.light-mode {
+  --bg-darkest: #f3f6f8;
+  --card-bg: #ffffff;
+  --card-border: #e2e8ec;
+  --inner-bg: #f3f6f8;
+  --inner-border: #e5eaee;
+  --table-header-bg: #f1f5f7;
+  --border-subtle: #edf1f3;
+  --border-mid: #dde3e7;
+
+  --text-primary: #16212b;
+  --text-primary-alt: #0f1a22;
+  --text-secondary: #64748b;
+  --text-secondary-alt: #5b6878;
+  --text-tertiary: #475467;
+  --text-muted: #5b6878;
+
+  --accent-bright: #1f8f6b;
+  --accent-on-button: #ffffff;
+
+  --badge-producer-text: #1c7a5c;
+  --badge-customer-text: #1d4ed8;
+
+  --error: #d6473e;
+
+  --input-bg: #f7f9fa;
+  --input-border: #d7dde2;
+  --secondary-btn-border: #cdd5db;
+  --secondary-btn-text: #3c4a59;
+
+  --shadow-card: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 20px 50px rgba(15, 23, 42, 0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
 
 html { color-scheme: dark; }
+html.light-mode { color-scheme: light; }
 html, body { background: var(--bg-darkest); color: var(--text-primary); min-height: 100vh; }
 
-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.75) brightness(1.6); cursor: pointer; }
+html:not(.light-mode) input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.75) brightness(1.6); cursor: pointer; }
+html.light-mode input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 
 body { display: flex; -webkit-font-smoothing: antialiased; }
 
@@ -96,8 +143,8 @@ a { color: inherit; text-decoration: none; }
    --------------------------------------------------------------------- */
 .sidebar {
   width: var(--sidebar-width);
-  background-color: var(--card-bg);
-  border-right: 1px solid var(--card-border);
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   padding: 40px 24px;
   display: flex;
   flex-direction: column;
@@ -107,14 +154,14 @@ a { color: inherit; text-decoration: none; }
 
 .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
 .sidebar-logo img { width: 28px; height: 28px; }
-.sidebar-logo span { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: var(--text-primary-alt); }
+.sidebar-logo span { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: var(--sidebar-text-active); }
 
 .sidebar a {
   display: flex;
   align-items: center;
   padding: 12px 16px;
   border-radius: 10px;
-  color: var(--text-secondary);
+  color: var(--sidebar-text);
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 600;
@@ -123,22 +170,32 @@ a { color: inherit; text-decoration: none; }
 
 .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; opacity: 0.7; flex-shrink: 0; transition: opacity 0.15s ease; }
 .sidebar a:hover .nav-icon, .sidebar a.active .nav-icon { opacity: 1; }
-.sidebar a:hover { color: var(--text-primary); background-color: rgba(255, 255, 255, 0.04); }
-.sidebar a.active { color: var(--text-primary); background-color: var(--inner-bg); font-weight: 700; }
+.sidebar a:hover { color: var(--sidebar-text-active); background-color: rgba(255, 255, 255, 0.04); }
+.sidebar a.active { color: var(--sidebar-text-active); background-color: var(--sidebar-inner); font-weight: 700; }
 
 .sidebar .switch-link {
-  color: var(--text-primary) !important;
+  color: var(--sidebar-text-active) !important;
   font-size: 13px;
   margin-top: 10px;
   padding: 10px;
   text-align: center;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--sidebar-border);
   border-radius: 8px;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
-.sidebar .switch-link:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--text-secondary); }
+.sidebar .switch-link:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--sidebar-text); }
 
-.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--card-border); }
+.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--sidebar-border); }
+
+/* переключатель темы — живёт в тёмном сайдбаре, свои фиксированные цвета */
+.theme-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 14px; }
+.theme-toggle-row .theme-label { font-size: 12.5px; color: var(--sidebar-text); }
+.theme-switch { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; }
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.theme-slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--sidebar-inner); border: 1px solid var(--sidebar-border); border-radius: 20px; transition: background-color 0.2s ease; }
+.theme-slider::before { position: absolute; content: ""; height: 15px; width: 15px; left: 2px; top: 2px; background-color: #fff; border-radius: 50%; transition: transform 0.2s ease; }
+.theme-switch input:checked + .theme-slider { background: var(--accent-gradient); border-color: transparent; }
+.theme-switch input:checked + .theme-slider::before { transform: translateX(17px); }
 
 /* ---------------------------------------------------------------------
    Layout / Header
@@ -399,9 +456,9 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
 #chatModal .modal-content { width: 500px; padding: 22px; }
 #chatModal .chat-container { display: flex; flex-direction: column; height: 360px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 12px; overflow: hidden; }
 #chatModal .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-#chatModal .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 12px; line-height: 1.5; color: #c5cfd6; word-break: break-word; }
-#chatModal .chat-bubble.me { background: #13322a; align-self: flex-end; border-radius: 12px 4px 12px 12px; }
-#chatModal .chat-bubble.partner { background: #172430; align-self: flex-start; border-radius: 4px 12px 12px 12px; }
+#chatModal .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 12px; line-height: 1.5; color: var(--text-primary); word-break: break-word; }
+#chatModal .chat-bubble.me { background: rgba(65, 189, 151, 0.18); align-self: flex-end; border-radius: 12px 4px 12px 12px; }
+#chatModal .chat-bubble.partner { background: var(--card-bg); border: 1px solid var(--card-border); align-self: flex-start; border-radius: 4px 12px 12px 12px; }
 #chatModal .chat-input-area { display: flex; gap: 9px; padding: 12px; background: var(--card-bg); border-top: 1px solid var(--card-border); align-items: center; }
 #chatModal .chat-input-area input { flex: 1; height: 42px; padding: 0 14px; border-radius: var(--radius-input); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); outline: none; }
 #chatModal .btn-chat-submit {
@@ -428,8 +485,10 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
   .sidebar-logo span { font-size: 13px; }
   .sidebar a { padding: 8px 12px; font-size: 12.5px; flex-shrink: 0; white-space: nowrap; }
   .sidebar a .nav-icon { margin-right: 6px; }
-  .sidebar-bottom { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; flex-shrink: 0; }
+  .sidebar-bottom { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
   .sidebar-bottom .switch-link { padding: 8px 14px; font-size: 12px; white-space: nowrap; margin-top: 0; }
+  .theme-toggle-row { padding: 0; }
+  .theme-toggle-row .theme-label { display: none; }
 
   .main-content { padding: 20px 16px; gap: 18px; }
 

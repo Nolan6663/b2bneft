@@ -7,6 +7,30 @@
 const SERVER_URL = 'http://localhost:5000/api';
 
 /* ---------------------------------------------------------------------
+   Светлая / тёмная тема
+   --------------------------------------------------------------------- */
+// Класс .light-mode уже может быть выставлен инлайн-скриптом в <head>
+// (до загрузки CSS, чтобы избежать мигания) — здесь только переключение и UI.
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  syncThemeUI(isLight);
+}
+
+function syncThemeUI(isLight) {
+  const checkbox = document.getElementById('themeCheckbox');
+  if (checkbox) checkbox.checked = isLight;
+  const label = document.getElementById('themeLabel');
+  if (label) label.innerText = isLight ? '☀️ Светлая тема' : '🌙 Тёмная тема';
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.innerText = isLight ? '☀️' : '🌙';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  syncThemeUI(document.documentElement.classList.contains('light-mode'));
+});
+
+/* ---------------------------------------------------------------------
    Универсальное закрытие модалок: клик по фону или Escape
    --------------------------------------------------------------------- */
 document.addEventListener('click', (e) => {

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Кабинет производителя</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
     <link rel="stylesheet" href="assets/theme.css">
     <style>
         .tab-panel { display: none; flex-direction: column; gap: 16px; }
@@ -22,6 +23,13 @@
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
 
         <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
             <a href="#" class="switch-link" onclick="logout(); return false;">Выйти из аккаунта</a>
         </div>
     </div>
