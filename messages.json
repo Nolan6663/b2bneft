@@ -14,5 +14,21 @@
     "sender": "customer",
     "text": "Диапазон рабочих температур: от -40 до +120 градусов.",
     "createdAt": "2026-06-16T14:15:21.085Z"
+  },
+  {
+    "id": 3,
+    "orderId": 2,
+    "company": "OOONAL",
+    "sender": "producer",
+    "text": "Эй",
+    "createdAt": "2026-06-16T17:13:15.454Z"
+  },
+  {
+    "id": 4,
+    "orderId": 2,
+    "company": "OOONAL",
+    "sender": "producer",
+    "text": "Привет",
+    "createdAt": "2026-06-16T17:13:18.445Z"
   }
 ]

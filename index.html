@@ -10,6 +10,19 @@
         .clickable-row { cursor: pointer; }
         .form-group input[type="file"] { padding: 10px 12px; border: 2px dashed var(--input-border); background: transparent; cursor: pointer; height: auto; }
 
+        .chat-icon-btn {
+            width: 28px; height: 28px; flex-shrink: 0; padding: 0; border-radius: 8px;
+            background: transparent; border: 1px solid var(--secondary-btn-border); color: var(--secondary-btn-text);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        }
+        .chat-icon-btn:hover { border-color: var(--accent-bright); color: var(--accent-bright); transform: translateY(-1px); }
+
+        .proposal-actions { display: flex; flex-direction: column; gap: 6px; min-width: 110px; margin-left: auto; }
+        .proposal-actions .btn-primary, .proposal-actions .btn-secondary { height: 30px; font-size: 12px; padding: 0 10px; }
+        .btn-reject { color: var(--error) !important; border-color: rgba(227, 93, 84, 0.4) !important; }
+        .btn-reject:hover { background: rgba(227, 93, 84, 0.08) !important; border-color: var(--error) !important; }
+
         @media (max-width: 768px) {
             table, th, td, tbody, tr { display: block; width: 100%; }
             th { display: none; }
@@ -36,7 +49,10 @@
                     <span class="theme-slider"></span>
                 </label>
             </div>
-            <a href="#" class="switch-link" onclick="logout(); return false;">Выйти из аккаунта</a>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
         </div>
     </div>
 
@@ -289,18 +305,31 @@
                         const isLocked = currentOrder && (currentOrder.status === 'Закрыта' || currentOrder.status === 'Отменена');
                         const isPending = prop.status === 'Ожидает ответа';
 
-                        const chatBtn = `<button class="btn-secondary" style="height:36px; padding:0 14px;" onclick="openGlobalChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')">Чат</button>`;
-                        const actionCell = (!isLocked && isPending)
-                            ? `${chatBtn}<button class="btn-secondary" style="height:36px; padding:0 14px; margin-left:8px; color:var(--error); border-color:rgba(227,93,84,0.4);" onclick="rejectProposal(${prop.id})">Отклонить</button><button class="btn-primary" style="height:36px; padding:0 14px; margin-left:8px;" onclick="acceptProposal(${prop.id})">Принять</button>`
-                            : (!isLocked ? chatBtn : `<span style="color: var(--text-muted);">Завершен</span>`);
+                        const chatIconBtn = !isLocked ? `
+                            <button class="chat-icon-btn" onclick="openGlobalChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')" title="Открыть чат">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            </button>` : '';
+
+                        let actionCell;
+                        if (isLocked) {
+                            actionCell = `<span style="color: var(--text-muted); font-size: 12px;">Завершён</span>`;
+                        } else if (isPending) {
+                            actionCell = `
+                                <div class="proposal-actions">
+                                    <button class="btn-primary" onclick="acceptProposal(${prop.id})">Принять</button>
+                                    <button class="btn-secondary btn-reject" onclick="rejectProposal(${prop.id})">Отклонить</button>
+                                </div>`;
+                        } else {
+                            actionCell = `<span style="color: var(--text-muted); font-size: 12px;">—</span>`;
+                        }
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><strong>${escapeHtml(prop.company)}</strong></td>
+                            <td><div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div></td>
                             <td>${prop.price} ₽/шт</td>
                             <td>${prop.days} дней</td>
                             <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>
-                            <td style="text-align: center;">${actionCell}</td>
+                            <td>${actionCell}</td>
                         `;
                         tableBody.appendChild(row);
                     });
