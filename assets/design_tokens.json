@@ -1,27 +1,76 @@
 {
+  "font": {
+    "family": "Manrope, -apple-system, BlinkMacSystemFont, sans-serif",
+    "weights": [400, 500, 600, 700, 800],
+    "scale": {
+      "kpiNumber": { "size": "27px", "weight": 800 },
+      "sectionHeading": { "size": "21px", "weight": 800 },
+      "cardTitleLg": { "size": "18px", "weight": 800 },
+      "pageHeader": { "size": "16px", "weight": 700 },
+      "cardTitle": { "size": "14px", "weight": 700 },
+      "body": { "size": "13.5px", "weight": 700 },
+      "secondary": { "size": "12.5px", "weight": 600 },
+      "label": { "size": "11.5px", "weight": 600 },
+      "tableHeader": { "size": "10.5px", "weight": 700, "letterSpacing": "0.6px" },
+      "badge": { "size": "9.5px", "weight": 700, "letterSpacing": "0.5px" },
+      "logoWordmark": { "letterSpacing": "3px" }
+    }
+  },
   "colors": {
-    "background": "#F8FAFC",
-    "surface": "#FFFFFF",
-    "sidebar": "#0B1220",
-    "sidebarActive": "#1E293B",
-    "textPrimary": "#0F172A",
-    "textSecondary": "#64748B",
-    "border": "#E2E8F0",
-    "accentGreen": "#10B981",
-    "accentCyan": "#22D3EE",
-    "accentBlue": "#3B82F6",
-    "danger": "#EF4444",
-    "warning": "#F59E0B"
+    "bgDarkest": "#070d12",
+    "cardBg": "#0d1620",
+    "cardBorder": "#1b2731",
+    "innerCardBg": "#101b25",
+    "innerCardBorder": "#1e2b36",
+    "tableHeaderBg": "#11202c",
+    "borderSubtle": "#16222d",
+    "borderMid": "#243240",
+    "textPrimary": "#e9eef2",
+    "textPrimaryAlt": "#eef3f6",
+    "textSecondary": "#7e8b97",
+    "textSecondaryAlt": "#8a96a0",
+    "textTertiary": "#aab4bd",
+    "textMuted": "#9aa6b0",
+    "accentGradient": "linear-gradient(135deg, #2f8f78, #41bd97)",
+    "accentBright": "#54c79f",
+    "accentOnButton": "#eafaf4",
+    "badgeProducerBg": "rgba(70, 150, 110, 0.16)",
+    "badgeProducerText": "#73ce9f",
+    "badgeProducerBorder": "rgba(70, 150, 110, 0.32)",
+    "badgeCustomerBg": "rgba(80, 130, 200, 0.16)",
+    "badgeCustomerText": "#7eb2e8",
+    "badgeCustomerBorder": "rgba(80, 130, 200, 0.32)",
+    "error": "#e35d54",
+    "inputBg": "#0b151d",
+    "inputBorder": "#243240",
+    "secondaryBtnBorder": "#2a3a47",
+    "secondaryBtnText": "#b6c0c9",
+    "avatarGreen": "linear-gradient(135deg, #2f8f78, #41bd97)",
+    "avatarBlue": "linear-gradient(135deg, #3a6ea5, #5b9bd5)",
+    "avatarGold": "linear-gradient(135deg, #b9852f, #d8a850)"
   },
   "radius": {
-    "sm": "8px",
-    "md": "12px",
-    "lg": "20px",
-    "xl": "28px"
+    "cardOuter": "16px",
+    "sectionInner": "12px",
+    "button": "9px",
+    "input": "9px",
+    "badge": "6px"
+  },
+  "sizes": {
+    "inputHeight": "42px",
+    "primaryButtonHeight": "44px",
+    "avatarSm": "26px",
+    "avatarLg": "44px",
+    "sidebarWidth": "280px"
   },
   "shadow": {
-    "card": "0 16px 40px rgba(15, 23, 42, 0.08)",
-    "modal": "0 24px 70px rgba(15, 23, 42, 0.18)"
+    "card": "0 16px 40px rgba(0, 0, 0, 0.35)",
+    "modal": "0 24px 70px rgba(0, 0, 0, 0.5)"
   },
-  "font": "Inter / system-ui / Arial"
+  "logo": {
+    "outerHexFill": "rgba(58, 161, 131, 0.12)",
+    "outerHexStroke": "#3aa183",
+    "outerHexStrokeWidth": 6,
+    "innerTeardropFill": "#46c8a0"
+  }
 }

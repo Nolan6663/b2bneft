@@ -1,368 +1,40 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Платформа - Кабинет Заказчика</title>
+    <title>B2B Нефтесервис — Кабинет заказчика</title>
+    <link rel="stylesheet" href="assets/theme.css">
     <style>
-        /* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
-        :root {
-            --bg-main: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-sidebar: #0b1220;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent-blue: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.18);
-            --border-color: rgba(15, 23, 42, 0.06);
-            --modal-bg: rgba(255, 255, 255, 0.95);
-            --input-bg: #f1f5f9;
-            --input-text: #0f172a;
-            --sidebar-text: #f1f5f9;
-            --blur-effect: blur(12px);
-        }
-
-        body.dark-mode {
-            --bg-main: #030712;
-            --bg-card: rgba(17, 24, 39, 0.6);
-            --bg-sidebar: #0b1220;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-blue: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.28);
-            --border-color: rgba(255, 255, 255, 0.05);
-            --modal-bg: rgba(15, 23, 42, 0.95);
-            --input-bg: #0f172a;
-            --input-text: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-color 0.3s ease, 
-                        box-shadow 0.3s ease;
-        }
-
-        body {
-            display: flex;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ПОЛНОЕ ИСПРАВЛЕНИЕ СAЙДБАРА */
-        .sidebar {
-            width: 280px;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            padding: 40px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
-        }
-        .sidebar-logo img { width: 26px; height: 26px; }
-        .sidebar-logo span {
-            font-size: 17px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            color: #ffffff;
-        }
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 10px;
-            color: rgba(241, 245, 249, 0.6) !important;
-            text-decoration: none !important;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; opacity: 0.65; flex-shrink: 0; }
-        .sidebar a:hover .nav-icon, .sidebar a.active .nav-icon { opacity: 1; }
-
-        .sidebar a:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.04);
-        }
-
-        .sidebar a.active {
-            color: #ffffff !important;
-            background-color: #1e293b;
-            font-weight: 600;
-        }
-
-        .sidebar .switch-link {
-            margin-top: 0;
-            padding: 14px;
-            text-align: center;
-            justify-content: center;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.03) !important;
-            color: #ffffff !important;
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        }
-
-        .sidebar .switch-link:hover {
-            background: #ffffff !important;
-            color: #090d16 !important;
-            border-color: transparent !important;
-            transform: translateY(-1px);
-        }
-
-        /* ТУМБЛЕР ТЕМЫ */
-        .theme-container {
-            margin-top: auto;
-            padding-top: 20px;
-            margin-bottom: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-        }
-        .theme-text { font-size: 13px; font-weight: 500; color: #64748b; }
-        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-        .theme-switch input { opacity: 0; width: 0; height: 0; }
-        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
-        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
-        .theme-switch input:checked + .theme-slider { background-color: var(--accent-blue); }
-        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
-
-        /* ОСНОВНОЙ КОНТЕНТ */
-        .main-content {
-            flex: 1;
-            padding: 50px 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            overflow-y: auto;
-        }
-
-        .btn-create {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 14px var(--accent-glow);
-        }
-        .btn-create:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
-
-        /* КАРТОЧКИ И ТАБЛИЦЫ */
-        .section {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-        }
-
-        .section h3 { font-size: 18px; font-weight: 600; margin-bottom: 24px; letter-spacing: -0.3px; }
-        
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); }
-        td { padding: 18px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(148, 163, 184, 0.02); }
-
-        .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
-        .tag.rti { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .tag.metal { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-
-        .status-badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; }
-        .status-badge.active { background: rgba(16, 185, 129, 0.08); color: #10b981; }
-        .status-badge.closed { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
-
-        /* ПРЕМИАЛЬНЫЙ ДИЗАЙН МОДАЛЬНЫХ ОКН */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; 
-            width: 100%; height: 100%;
-            background: rgba(3, 7, 18, 0.5);
-            backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--modal-bg);
-            border: 1px solid var(--border-color);
-            padding: 40px;
-            border-radius: 20px;
-            width: 460px;
-            max-width: 95vw;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .modal-content h3 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .form-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
-        .form-group input, .form-group select {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 10px;
-            color: var(--input-text);
-            font-size: 14px;
-            font-weight: 500;
-            outline: none;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .form-group input[type="file"] {
-            padding: 10px 12px;
-            border: 2px dashed var(--border-color);
-            background: transparent;
-            cursor: pointer;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .btn-modal-cancel {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .btn-modal-submit {
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            background-color: var(--accent-blue); 
-            box-shadow: 0 4px 12px var(--accent-glow);
-        }
-
-        .btn-accept {
-            background-color: #10b981;
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; }
-        .badge.waiting { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .badge.win { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .badge.loose { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        #chatModal .modal-content { width: 500px !important; max-width: 95vw !important; padding: 24px !important; background: var(--modal-bg) !important; border-radius: 20px !important; display: flex !important; flex-direction: column !important; gap: 16px !important; }
-        #chatModal .chat-container { display: flex !important; flex-direction: column !important; height: 360px !important; background: var(--input-bg) !important; border: 1px solid var(--border-color) !important; border-radius: 14px !important; overflow: hidden !important; }
-        #chatModal .chat-messages { flex: 1 !important; padding: 16px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 12px !important; }
-        #chatModal .chat-bubble { max-width: 75% !important; padding: 10px 16px !important; border-radius: 16px !important; font-size: 14px !important; line-height: 1.4 !important; word-break: break-word !important; display: inline-block !important; }
-        #chatModal .chat-bubble.me { background: #10b981 !important; color: white !important; align-self: flex-end !important; border-bottom-right-radius: 4px !important; }
-        #chatModal .chat-bubble.partner { background: rgba(148, 163, 184, 0.2) !important; color: var(--text-main) !important; align-self: flex-start !important; border-bottom-left-radius: 4px !important; }
-        #chatModal .chat-input-area { display: flex !important; gap: 10px !important; padding: 12px !important; background: var(--bg-card) !important; border-top: 1px solid var(--border-color) !important; align-items: center !important; }
-        #chatModal .chat-input-area input { flex: 1 !important; height: 40px !important; padding: 0 14px !important; border-radius: 8px !important; border: 1px solid var(--border-color) !important; background: var(--input-bg) !important; color: var(--text-main) !important; outline: none !important; }
-        #chatModal .chat-input-area .btn-chat-submit { height: 40px !important; padding: 0 16px !important; border-radius: 8px !important; background: #10b981 !important; color: white !important; border: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; }
-
-        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
-        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
-        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
-        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
-        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
-        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
-        .notification-item:last-child { border-bottom: none !important; }
-        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
+        .clickable-row { cursor: pointer; }
+        .form-group input[type="file"] { padding: 10px 12px; border: 2px dashed var(--input-border); background: transparent; cursor: pointer; height: auto; }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 24px; gap: 12px; }
-            .main-content { padding: 30px 20px; gap: 24px; }
             table, th, td, tbody, tr { display: block; width: 100%; }
             th { display: none; }
-            tr { border: 1px solid var(--border-color); border-radius: 14px; margin-bottom: 16px; background: var(--bg-card); padding: 12px; }
-            td { padding: 10px 0; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.08); }
+            tr { border: 1px solid var(--card-border); border-radius: 14px; margin-bottom: 16px; background: var(--inner-bg); padding: 12px; }
+            td { padding: 10px 0; text-align: left; border-bottom: 1px solid var(--border-subtle); }
             td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
-            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B Платформа</span></div>
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
         <a href="index.html" class="active"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
-        <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
+        <a href="proposals.html"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
 
-        <div class="theme-container">
-            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
-            <label class="theme-switch">
-                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
-                <span class="theme-slider"></span>
-            </label>
+        <div class="sidebar-bottom">
+            <a href="#" class="switch-link" onclick="logout(); return false;">Выйти из аккаунта</a>
         </div>
-        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <h2>Кабинет Заказчика</h2>
+            <h2>Кабинет заказчика</h2>
             <button class="bell-btn" onclick="openNotificationsModal()">
                 <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
@@ -371,8 +43,8 @@
 
         <div class="section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3>Список размещенных заказов</h3>
-                <button class="btn-create" onclick="openModal()">+ Создать закупку</button>
+                <h3>Список размещенных закупок</h3>
+                <button class="btn-primary" onclick="openModal()">+ Создать закупку</button>
             </div>
             <table>
                 <thead>
@@ -398,7 +70,7 @@
             </div>
             <div class="form-group">
                 <label>Категория</label>
-                <select id="orderCategory">
+                <select id="orderCategory" style="width:100%; height:var(--input-height); background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-input); color:var(--text-primary); padding:0 14px; font-size:13px; outline:none;">
                     <option value="РТИ">РТИ</option>
                     <option value="Металл">Металл</option>
                 </select>
@@ -407,7 +79,7 @@
                 <label>Дедлайн поставки</label>
                 <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
             </div>
-           <div class="form-group">
+            <div class="form-group">
                 <label>Чертеж / Спецификация (PDF, DWG, STEP)</label>
                 <input type="file" id="orderFile" accept=".pdf,.png,.dxf,.dwg,.step,.stp">
             </div>
@@ -421,10 +93,10 @@
     <div class="modal" id="proposalsModal">
         <div class="modal-content" style="width: 650px; max-width: 90vw;">
             <h3 id="proposalsModalTitle">Входящие предложения</h3>
-            <div style="overflow-x: auto; margin-top: 15px;">
+            <div style="overflow-x: auto;">
                 <table>
                     <thead>
-                        <tr style="background-color: #f8fafc; text-align: left;">
+                        <tr>
                             <th>Поставщик</th>
                             <th>Цена</th>
                             <th>Срок</th>
@@ -448,7 +120,7 @@
                 <div class="chat-messages" id="chatModalMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chatModalInput" placeholder="Напишите сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
-                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">Отправить</button>
+                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">➤</button>
                 </div>
             </div>
             <div class="modal-actions">
@@ -458,24 +130,19 @@
     </div>
 
     <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);"></div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border: transparent; background: transparent; cursor: pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
 
+    <script src="assets/app.js"></script>
     <script>
-        (() => {
-            const token = localStorage.getItem('authToken');
-            const role = localStorage.getItem('userRole');
-            if (!token || role !== 'customer') window.location.href = 'login.html';
-        })();
-
-        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
+        authGuard('customer');
 
         window.addEventListener('DOMContentLoaded', () => {
             loadOrders();
@@ -494,22 +161,21 @@
                 const orders = await response.json();
                 const tableBody = document.getElementById('orders-table-body');
                 if (!tableBody) return;
-                tableBody.innerHTML = ''; 
+                tableBody.innerHTML = '';
 
                 orders.forEach(order => {
                     const row = document.createElement('tr');
                     row.className = 'clickable-row';
-                    row.style.cursor = 'pointer';
                     let displayTitle = order.title && order.title.includes(' | ') ? order.title.split(' | ')[0] : order.title;
-                    
+
                     row.onclick = () => viewProposals(order.id, displayTitle);
-                    const statusClass = order.status === 'Закрыта' ? 'status-badge closed' : 'status-badge active';
+                    const statusCls = order.status === 'Закрыта' ? 'closed' : 'open';
 
                     row.innerHTML = `
                         <td><strong>${displayTitle}</strong></td>
                         <td>${order.category}</td>
-                        <td><span class="${statusClass}">${order.status}</span></td>
-                        <td style="color: #2563eb; font-weight: bold;">${order.responses} (посмотреть)</td>
+                        <td><span class="status-dot ${statusCls}">${order.status}</span></td>
+                        <td style="color: var(--accent-bright); font-weight: 700;">${order.responses} (посмотреть)</td>
                         <td>${order.deadline}</td>
                     `;
                     tableBody.appendChild(row);
@@ -532,25 +198,29 @@
 
                 const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
                 let proposals = await response.json();
-                proposals.sort((a, b) => a.price - b.price); 
+                proposals.sort((a, b) => a.price - b.price);
 
-                tableBody.innerHTML = ''; 
+                tableBody.innerHTML = '';
                 if (proposals.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">На эту заявку пока никто не откликнулся</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
                 } else {
                     proposals.forEach(prop => {
-                        const row = document.createElement('tr');
-                        let badgeClass = prop.status === 'Выигран' ? 'badge win' : (prop.status === 'Отклонен' ? 'badge loose' : 'badge waiting');
+                        let icon = '✓', cls = 'win';
+                        if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
+                        else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
                         const isClosed = currentOrder && currentOrder.status === 'Закрыта';
-                        
-                        const chatBtn = `<button class="btn-accept" style="background-color: #3b82f6; margin-right:6px;" onclick="openCustomerChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')">💬 Чат</button>`;
-                        const actionCell = !isClosed ? `${chatBtn}<button class="btn-accept" onclick="acceptProposal(${prop.id})">Принять</button>` : `<span>Завершен</span>`;
 
+                        const chatBtn = `<button class="btn-secondary" style="height:36px; padding:0 14px;" onclick="openGlobalChat(${orderId}, '${orderTitle.replace(/'/g, "\\'")}', '${prop.company.replace(/'/g, "\\'")}')">Чат</button>`;
+                        const actionCell = !isClosed
+                            ? `${chatBtn}<button class="btn-primary" style="height:36px; padding:0 14px; margin-left:8px;" onclick="acceptProposal(${prop.id})">Принять</button>`
+                            : `<span style="color: var(--text-muted);">Завершен</span>`;
+
+                        const row = document.createElement('tr');
                         row.innerHTML = `
                             <td><strong>${prop.company}</strong></td>
                             <td>${prop.price} ₽/шт</td>
                             <td>${prop.days} дней</td>
-                            <td><span class="${badgeClass}">${prop.status}</span></td>
+                            <td><span class="status-icon ${cls}">${icon} ${prop.status}</span></td>
                             <td style="text-align: center;">${actionCell}</td>
                         `;
                         tableBody.appendChild(row);
@@ -584,9 +254,12 @@
                 if (response.ok) {
                     closeModal(); loadOrders();
                     titleInput.value = ''; deadlineInput.value = ''; fileInput.value = '';
+                } else {
+                    const err = await response.json();
+                    alert(err.error || 'Не удалось создать закупку');
                 }
             } catch (error) { console.error(error); }
-        }   
+        }
 
         async function acceptProposal(proposalId) {
             if (!confirm('Вы уверены, что хотите принять это предложение и закрыть закупку?')) return;
@@ -596,107 +269,12 @@
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
                 if (response.ok) { closeProposalsModal(); loadOrders(); }
+                else {
+                    const err = await response.json();
+                    alert(err.error || 'Не удалось принять предложение');
+                }
             } catch (error) { console.error(error); }
         }
-
-        function toggleTheme() {
-            const body = document.body;
-            const checkbox = document.getElementById('themeCheckbox');
-            const label = document.getElementById('themeLabel');
-            if (checkbox.checked) {
-                body.classList.add('dark-mode'); label.innerText = '🌙 Тёмная тема'; localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode'); label.innerText = '☀️ Светлая тема'; localStorage.setItem('theme', 'light');
-            }
-        }
-
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            setTimeout(() => { document.getElementById('themeCheckbox').checked = true; document.getElementById('themeLabel').innerText = '🌙 Тёмная тема'; }, 50);
-        }
-
-        let activeChatKey = null;
-        function openCustomerChat(orderId, orderTitle, companyName) {
-            activeChatKey = `b2b_chat_${orderId}_${companyName}`;
-            document.getElementById('chatModalTitle').innerText = `Чат с ${companyName}`;
-            document.getElementById('chatModal').style.display = 'flex';
-            renderChatHistory();
-        }
-        function closeChatModal() { document.getElementById('chatModal').style.display = 'none'; }
-
-        function renderChatHistory() {
-            const container = document.getElementById('chatModalMessages');
-            if (!container || !activeChatKey) return;
-            container.innerHTML = '';
-            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-            history.forEach(msg => {
-                const bubble = document.createElement('div');
-                if (msg.sender === 'system') {
-                    bubble.className = 'chat-bubble'; bubble.style = 'background:transparent; color:var(--text-muted); text-align:center; max-width:100%; font-size:12px; font-style:italic;';
-                } else {
-                    bubble.className = msg.sender === 'customer' ? 'chat-bubble me' : 'chat-bubble partner';
-                }
-                bubble.innerText = msg.text; container.appendChild(bubble);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function sendGlobalChatMessage() {
-            const input = document.getElementById('chatModalInput');
-            if (!input || !input.value.trim() || !activeChatKey) return;
-            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-            history.push({ sender: 'customer', text: input.value.trim() });
-            localStorage.setItem(activeChatKey, JSON.stringify(history));
-            input.value = ''; renderChatHistory();
-        }
-
-        const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
-        const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
-
-        function initNotifications() {
-            renderNotificationsCount();
-            setTimeout(() => {
-                const role = localStorage.getItem('userRole');
-                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                addNotification(text);
-            }, 6000);
-        }
-
-        function addNotification(text) {
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (list.length > 0 && list[0].text === text) return;
-            list.unshift({ text, time: timeStr, read: false });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
-        }
-
-        function renderNotificationsCount() {
-            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const unreadCount = list.filter(n => !n.read).length;
-            const badgeEl = document.getElementById('bellBadge');
-            if (badgeEl) badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-            if (badgeEl && unreadCount > 0) badgeEl.innerText = unreadCount;
-        }
-
-        function openNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'flex';
-            const container = document.getElementById('notificationsList');
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            if (list.length === 0) {
-                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return;
-            }
-            container.innerHTML = '';
-            list.forEach(n => {
-                const item = document.createElement('div'); item.className = 'notification-item';
-                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`;
-                container.appendChild(item); n.read = true;
-            });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
-        }
-        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
-        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
 </body>
 </html>

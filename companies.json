@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1,
+    "company": "NALNAL",
+    "inn": "5402088859",
+    "role": "producer",
+    "specialization": "Производство продукции",
+    "status": "Верифицирован",
+    "rating": "A+",
+    "ratingLabel": "Высокий"
+  },
+  {
+    "id": 2,
+    "company": "АО «ГазНефтьЗаказ»",
+    "inn": "7701234567",
+    "role": "customer",
+    "specialization": "Закупка оборудования, МТР",
+    "status": "Верифицирован",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 3,
+    "company": "ООО «Завод РТИ-Профи»",
+    "inn": "5406987654",
+    "role": "producer",
+    "specialization": "Резинотехнические изделия (РТИ)",
+    "status": "Верифицирован",
+    "rating": "A+",
+    "ratingLabel": "Высокий"
+  },
+  {
+    "id": 4,
+    "company": "АО «Металл-Сервис»",
+    "inn": "6604551122",
+    "role": "producer",
+    "specialization": "Прокат, металлоконструкции",
+    "status": "Верифицирован",
+    "rating": "A",
+    "ratingLabel": "Высокий"
+  },
+  {
+    "id": 5,
+    "company": "ПК «УралПолимер»",
+    "inn": "7451002344",
+    "role": "producer",
+    "specialization": "Полимерные уплотнения, РТИ",
+    "status": "Верифицирован",
+    "rating": "B+",
+    "ratingLabel": "Средний"
+  },
+  {
+    "id": 6,
+    "company": "ООО «РН-Снабжение»",
+    "inn": "8602113344",
+    "role": "customer",
+    "specialization": "Капитальное строительство, МТР",
+    "status": "Верифицирован",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 7,
+    "company": "ООО «НефтьПром»",
+    "inn": "7701234568",
+    "role": "customer",
+    "specialization": "Закупка нефтепромыслового оборудования",
+    "status": "Верифицирован",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 8,
+    "company": "ООО «СибМашЗавод»",
+    "inn": "5500112233",
+    "role": "producer",
+    "specialization": "Производство бурового оборудования",
+    "status": "На проверке",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 9,
+    "company": "АО «ВостокНефтеСнаб»",
+    "inn": "8901234567",
+    "role": "customer",
+    "specialization": "Снабжение, логистика МТР",
+    "status": "Верифицирован",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 10,
+    "company": "ООО «ПромКомплект»",
+    "inn": "6611223344",
+    "role": "producer",
+    "specialization": "Запасные части, крепёж",
+    "status": "Верифицирован",
+    "rating": "B",
+    "ratingLabel": "Средний"
+  },
+  {
+    "id": 11,
+    "company": "ИП Кузнецов А.В.",
+    "inn": "220123456789",
+    "role": "producer",
+    "specialization": "Сварочные работы, металлоконструкции",
+    "status": "Отклонен",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 12,
+    "company": "ООО «ТюменьНефтьГаз»",
+    "inn": "7204001122",
+    "role": "customer",
+    "specialization": "Капитальный ремонт скважин",
+    "status": "На проверке",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 13,
+    "company": "АО «Уралмаш-НефтеМаш»",
+    "inn": "6608123456",
+    "role": "producer",
+    "specialization": "Производство нефтепромыслового оборудования",
+    "status": "Верифицирован",
+    "rating": "A",
+    "ratingLabel": "Высокий"
+  },
+  {
+    "id": 14,
+    "company": "ООО «БашНефтеХим»",
+    "inn": "264012345",
+    "role": "customer",
+    "specialization": "Закупка химреагентов",
+    "status": "Верифицирован",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 15,
+    "company": "OOONAL",
+    "inn": "72525132",
+    "role": "customer",
+    "specialization": "",
+    "status": "На проверке",
+    "rating": null,
+    "ratingLabel": null
+  },
+  {
+    "id": 16,
+    "company": "OOONAL",
+    "inn": "64532435",
+    "role": "producer",
+    "specialization": "",
+    "status": "На проверке",
+    "rating": null,
+    "ratingLabel": null
+  }
+]

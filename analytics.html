@@ -1,160 +1,61 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Платформа - Аналитический Дашборд</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>B2B Нефтесервис — Аналитический дашборд</title>
+    <link rel="stylesheet" href="assets/theme.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-main: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.9);
-            --bg-sidebar: #0b1220;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent-color: #10b981;
-            --border-color: rgba(15, 23, 42, 0.06);
-            --blur-effect: blur(16px);
-            --card-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.04);
-            --chart-grid: #e2e8f0;
-            --chart-text: #64748b;
-        }
-
-        body.dark-mode {
-            --bg-main: #030712;
-            --bg-card: rgba(17, 24, 39, 0.7);
-            --bg-sidebar: #0b1220;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.05);
-            --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
-            --chart-grid: #1f2937;
-            --chart-text: #94a3b8;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-
-        body { display: flex; background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        .sidebar {
-            width: 280px;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            padding: 40px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
-        .sidebar-logo img { width: 26px; height: 26px; }
-        .sidebar-logo span { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; color: #ffffff; }
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 10px;
-            color: rgba(255, 255, 255, 0.6) !important;
-            text-decoration: none !important;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; opacity: 0.65; flex-shrink: 0; }
-        .sidebar a:hover .nav-icon, .sidebar a.active .nav-icon { opacity: 1; }
-
-        .sidebar a:hover { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.04); }
-        .sidebar a.active { color: #ffffff !important; background-color: #1e293b; font-weight: 600; }
-
-        .theme-container { margin-top: auto; padding-top: 20px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .theme-text { font-size: 13px; color: #94a3b8; }
-        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-        .theme-switch input { opacity: 0; width: 0; height: 0; }
-        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
-        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
-        .theme-switch input:checked + .theme-slider { background-color: #10b981; }
-        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
-        .sidebar .switch-link { color:#fff !important; font-size:13px; text-decoration:none; margin-top:10px; padding:10px; text-align:center; border:1px solid rgba(255,255,255,0.1); border-radius:8px; }
-
-        .main-content { flex: 1; padding: 50px 60px; display: flex; flex-direction: column; gap: 32px; overflow-y: auto; }
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
-        .metric-card { background: var(--bg-card); border: 1px solid var(--border-color); backdrop-filter: var(--blur-effect); padding: 24px; border-radius: 20px; box-shadow: var(--card-shadow); }
-        .metric-card p { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .metric-card h3 { font-size: 32px; font-weight: 700; margin-top: 12px; }
-
-        .charts-container-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
-        @media (max-width: 1100px) { .charts-container-grid { grid-template-columns: 1fr; } }
-
-        .chart-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 32px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; gap: 20px; min-height: 380px; }
-        .chart-box h4 { font-size: 16px; font-weight: 600; }
-        .canvas-wrapper { position: relative; flex: 1; width: 100%; height: 100%; }
-
-        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
-        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
-        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
-        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
-        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
-        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
-        .notification-item:last-child { border-bottom: none !important; }
-        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
-
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: rgba(255,255,255,0.95); border: 1px solid var(--border-color); padding: 40px; border-radius: 20px; width: 460px; max-width: 95vw; display: flex; flex-direction: column; gap: 20px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
-        .btn-modal-cancel { background: transparent; border: 1px solid var(--border-color); color: #000; padding: 12px 24px; border-radius: 10px; cursor: pointer; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 24px; }
-            .main-content { padding: 30px 20px; }
-            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
-        }
+        .date-range { display: flex; align-items: center; gap: 8px; }
+        .date-range input[type="date"] { height: 38px; width: auto; }
+        .company-badge { font-size: 12.5px; color: var(--text-secondary); }
+        .company-badge strong { color: var(--text-primary); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B Платформа</span></div>
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
         <a href="#" id="mainCabinetLink"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
         <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html" class="active"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
 
-        <div class="theme-container">
-            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
-            <label class="theme-switch">
-                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
-                <span class="theme-slider"></span>
-            </label>
+        <div class="sidebar-bottom">
+            <a href="#" class="switch-link" onclick="logout(); return false;">Выйти из аккаунта</a>
         </div>
-        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
         <div class="header">
             <h2>Аналитический дашборд</h2>
-            <button class="bell-btn" onclick="openNotificationsModal()">
-                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
-                <span class="bell-badge" id="bellBadge">0</span>
-            </button>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div class="date-range">
+                    <input type="date" id="dateFrom" class="date-input">
+                    <span style="color: var(--text-secondary);">–</span>
+                    <input type="date" id="dateTo" class="date-input">
+                </div>
+                <button class="bell-btn" onclick="openNotificationsModal()">
+                    <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                    <span class="bell-badge" id="bellBadge">0</span>
+                </button>
+            </div>
         </div>
         <div id="companyMeta" class="company-badge"></div>
 
-        <div class="metrics-grid" id="metricsGrid"></div>
+        <div class="kpi-grid" id="metricsGrid"></div>
 
-        <div class="charts-container-grid">
-            <div class="chart-box">
+        <div class="charts-grid">
+            <div class="chart-card">
                 <h4 id="mainChartTitle">Динамика и объёмы данных</h4>
-                <div class="canvas-wrapper">
+                <div style="position: relative; height: 280px;">
                     <canvas id="mainChart"></canvas>
                 </div>
             </div>
-            <div class="chart-box">
+            <div class="chart-card">
                 <h4 id="secondaryChartTitle">Структура долей</h4>
-                <div class="canvas-wrapper">
+                <div style="position: relative; height: 280px;">
                     <canvas id="secondaryChart"></canvas>
                 </div>
             </div>
@@ -162,128 +63,169 @@
     </div>
 
     <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: #f1f5f9; border-radius: 12px; border: 1px solid var(--border-color);"></div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
 
+    <script src="assets/app.js"></script>
     <script>
-        (() => {
-            if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
-        })();
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
-        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
         const role = localStorage.getItem('userRole');
         const companyName = localStorage.getItem('userCompany') || 'Организация';
-        
+
         let chartInstanceMain = null;
         let chartInstanceSecondary = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             const mainLink = document.getElementById('mainCabinetLink');
-            if (mainLink) {
-                mainLink.href = role === 'customer' ? 'index.html' : 'producer.html';
-            }
-            setupInterface(); loadDashboard(); initNotifications();
+            if (mainLink) mainLink.href = role === 'customer' ? 'index.html' : 'producer.html';
+
+            const today = new Date();
+            const from = new Date(today); from.setDate(from.getDate() - 90);
+            document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
+            document.getElementById('dateFrom').value = from.toISOString().slice(0, 10);
+            document.getElementById('dateFrom').addEventListener('change', loadDashboard);
+            document.getElementById('dateTo').addEventListener('change', loadDashboard);
+
+            setupInterface();
+            loadDashboard();
+            initNotifications();
         });
 
         function setupInterface() {
             const metaEl = document.getElementById('companyMeta');
             if (metaEl) {
-                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Доступ: <span style="color: ${role === 'customer' ? '#2563eb' : '#10b981'}; font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
+                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Доступ: <span style="color: var(--accent-bright); font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
             }
         }
 
         function getChartThemeOptions() {
-            const textColor = '#64748b'; const gridColor = 'rgba(15, 23, 42, 0.06)';
+            const textColor = '#7e8b97';
+            const gridColor = '#1c2933';
             return {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: textColor, font: { family: 'Inter', size: 12 } } } },
+                plugins: { legend: { labels: { color: textColor, font: { family: 'Manrope', size: 11.5 } } } },
                 scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } }
             };
         }
 
+        function getRange() {
+            const from = new Date(document.getElementById('dateFrom').value);
+            const to = new Date(document.getElementById('dateTo').value);
+            to.setHours(23, 59, 59, 999);
+            const spanMs = to - from;
+            const prevTo = new Date(from.getTime() - 1);
+            const prevFrom = new Date(from.getTime() - spanMs);
+            return { from, to, prevFrom, prevTo };
+        }
+
+        function inRange(dateStr, from, to) {
+            const d = new Date(dateStr);
+            return d >= from && d <= to;
+        }
+
+        function pctChange(curr, prev) {
+            if (prev === 0) return curr === 0 ? 0 : 100;
+            return ((curr - prev) / prev) * 100;
+        }
+
+        function kpiCard(label, value, changePct) {
+            const isUp = changePct >= 0;
+            const cls = isUp ? 'up' : 'down';
+            const sign = isUp ? '+' : '';
+            return `<div class="kpi-card">
+                <div class="kpi-label">${label}</div>
+                <div class="kpi-value">${value}</div>
+                <div class="kpi-change ${cls}">${sign}${changePct.toFixed(1)}% <span class="kpi-change-note">к прошлому периоду</span></div>
+            </div>`;
+        }
+
         async function loadDashboard() {
-            const grid = document.getElementById('metricsGrid'); if (!grid) return;
+            const grid = document.getElementById('metricsGrid');
+            if (!grid) return;
+            const { from, to, prevFrom, prevTo } = getRange();
+
             try {
                 const headers = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
+
                 if (role === 'customer') {
                     document.getElementById('mainChartTitle').innerText = 'Количество предложений по тендерам';
                     document.getElementById('secondaryChartTitle').innerText = 'Доли товарных категорий в закупках';
-                    const response = await fetch(`${SERVER_URL}/orders`, { headers }); const orders = await response.json();
 
-                    grid.innerHTML = `<div class="metric-card" style="border-left:4px solid #2563eb;"><p>Всего процедур</p><h3>${orders.length}</h3></div><div class="metric-card" style="border-left:4px solid #10b981;"><p>Активные</p><h3>${orders.filter(o => o.status !== 'Закрыта').length}</h3></div>`;
-                    renderCharts('bar', { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#3b82f6' }] }, 'doughnut', { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#10b981', '#6366f1'] }] });
+                    const response = await fetch(`${SERVER_URL}/orders`, { headers });
+                    const allOrders = await response.json();
+                    const orders = allOrders.filter(o => inRange(o.createdAt, from, to));
+                    const prevOrders = allOrders.filter(o => inRange(o.createdAt, prevFrom, prevTo));
+
+                    const closed = orders.filter(o => o.status === 'Закрыта').length;
+                    const prevClosed = prevOrders.filter(o => o.status === 'Закрыта').length;
+                    const responses = orders.reduce((s, o) => s + (o.responses || 0), 0);
+                    const prevResponses = prevOrders.reduce((s, o) => s + (o.responses || 0), 0);
+                    const conversion = orders.length ? (closed / orders.length) * 100 : 0;
+                    const prevConversion = prevOrders.length ? (prevClosed / prevOrders.length) * 100 : 0;
+
+                    grid.innerHTML =
+                        kpiCard('Размещено закупок', orders.length, pctChange(orders.length, prevOrders.length)) +
+                        kpiCard('Получено предложений', responses, pctChange(responses, prevResponses)) +
+                        kpiCard('Завершено закупок', closed, pctChange(closed, prevClosed)) +
+                        kpiCard('Конверсия по тендерам', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion));
+
+                    renderCharts(
+                        'bar',
+                        { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97' }] },
+                        'doughnut',
+                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#41bd97', '#3a4a55'] }] }
+                    );
                 } else {
-                    document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов (₽)';
+                    document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов';
                     document.getElementById('secondaryChartTitle').innerText = 'Конверсия предложений';
-                    const response = await fetch(`${SERVER_URL}/proposals`, { headers }); const allProposals = await response.json();
-                    const myProps = allProposals.filter(p => p.company === companyName);
 
-                    grid.innerHTML = `<div class="metric-card" style="border-left:4px solid #10b981;"><p>Выиграно лотов</p><h3>${myProps.filter(p => p.status === 'Выигран').length}</h3></div>`;
-                    renderCharts('line', { labels: myProps.filter(p => p.status === 'Выигран').map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: myProps.filter(p => p.status === 'Выигран').map(p => p.price), borderColor: '#10b981' }] }, 'pie', { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [myProps.filter(p => p.status === 'Выигран').length, myProps.filter(p => p.status === 'Отклонен').length], backgroundColor: ['#10b981', '#ef4444'] }] });
+                    const response = await fetch(`${SERVER_URL}/proposals`, { headers });
+                    const allProposals = await response.json();
+                    const myAll = allProposals.filter(p => p.company === companyName);
+                    const myProps = myAll.filter(p => inRange(p.createdAt, from, to));
+                    const prevProps = myAll.filter(p => inRange(p.createdAt, prevFrom, prevTo));
+
+                    const won = myProps.filter(p => p.status === 'Выигран');
+                    const prevWon = prevProps.filter(p => p.status === 'Выигран');
+                    const rejected = myProps.filter(p => p.status === 'Отклонен');
+                    const prevRejected = prevProps.filter(p => p.status === 'Отклонен');
+                    const totalSum = won.reduce((s, p) => s + p.price, 0);
+                    const prevSum = prevWon.reduce((s, p) => s + p.price, 0);
+                    const conversion = myProps.length ? (won.length / myProps.length) * 100 : 0;
+                    const prevConversion = prevProps.length ? (prevWon.length / prevProps.length) * 100 : 0;
+
+                    grid.innerHTML =
+                        kpiCard('Выиграно контрактов', won.length, pctChange(won.length, prevWon.length)) +
+                        kpiCard('Общая сумма выигранных', '₽ ' + totalSum.toLocaleString(), pctChange(totalSum, prevSum)) +
+                        kpiCard('Конверсия предложений', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion)) +
+                        kpiCard('Отклонено предложений', rejected.length, pctChange(rejected.length, prevRejected.length));
+
+                    renderCharts(
+                        'line',
+                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#54c79f', backgroundColor: 'rgba(70,200,160,0.2)', fill: true, tension: 0.3 }] },
+                        'pie',
+                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#41bd97', '#3a4a55'] }] }
+                    );
                 }
             } catch (error) { console.error(error); }
         }
 
         function renderCharts(typeMain, dataMain, typeSecondary, dataSecondary) {
             const themeOpts = getChartThemeOptions();
-            if (chartInstanceMain) chartInstanceMain.destroy(); if (chartInstanceSecondary) chartInstanceSecondary.destroy();
+            if (chartInstanceMain) chartInstanceMain.destroy();
+            if (chartInstanceSecondary) chartInstanceSecondary.destroy();
             chartInstanceMain = new Chart(document.getElementById('mainChart').getContext('2d'), { type: typeMain, data: dataMain, options: themeOpts });
             const sOpts = JSON.parse(JSON.stringify(themeOpts)); delete sOpts.scales;
             chartInstanceSecondary = new Chart(document.getElementById('secondaryChart').getContext('2d'), { type: typeSecondary, data: dataSecondary, options: sOpts });
         }
-
-        function toggleTheme() {
-            const checkbox = document.getElementById('themeCheckbox');
-            if (checkbox.checked) { document.body.classList.add('dark-mode'); localStorage.setItem('theme', 'dark'); }
-            else { document.body.classList.remove('dark-mode'); localStorage.setItem('theme', 'light'); }
-        }
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-
-        const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
-        const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
-
-        function initNotifications() {
-            renderNotificationsCount();
-            setTimeout(() => {
-                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                addNotification(text);
-            }, 6000);
-        }
-
-        function addNotification(text) {
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (list.length > 0 && list[0].text === text) return;
-            list.unshift({ text, time: timeStr, read: false }); localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
-        }
-
-        function renderNotificationsCount() {
-            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || []; const unreadCount = list.filter(n => !n.read).length;
-            const badgeEl = document.getElementById('bellBadge'); if (!badgeEl) return;
-            badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none'; if (unreadCount > 0) badgeEl.innerText = unreadCount;
-        }
-
-        function openNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'flex'; const container = document.getElementById('notificationsList');
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            if (list.length === 0) { container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return; }
-            container.innerHTML = '';
-            list.forEach(n => {
-                const item = document.createElement('div'); item.className = 'notification-item';
-                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`; container.appendChild(item); n.read = true;
-            });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
-        }
-        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
-        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
 </body>
 </html>

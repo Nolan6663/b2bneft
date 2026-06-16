@@ -1,228 +1,116 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Платформа - Кабинет Производителя</title>
+    <title>B2B Нефтесервис — Кабинет производителя</title>
+    <link rel="stylesheet" href="assets/theme.css">
     <style>
-        /* ПРЕМИАЛЬНАЯ МИНИМАЛИСТИЧНАЯ ДИЗАЙН-СИСТЕМА */
-        :root {
-            --bg-main: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent-green: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.15);
-            --border-color: rgba(15, 23, 42, 0.06);
-            --modal-bg: rgba(255, 255, 255, 0.95);
-            --input-bg: #f1f5f9;
-            --input-text: #0f172a;
-            --blur-effect: blur(12px);
-        }
-
-        body.dark-mode {
-            --bg-main: #030712;
-            --bg-card: rgba(17, 24, 39, 0.6);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-green: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.25);
-            --border-color: rgba(255, 255, 255, 0.05);
-            --modal-bg: rgba(15, 23, 42, 0.95);
-            --input-bg: #0f172a;
-            --input-text: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            display: flex;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 280px;
-            background-color: #0b1220 !important;
-            border-right: 1px solid var(--border-color);
-            padding: 40px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
-        .sidebar-logo img { width: 26px; height: 26px; }
-        .sidebar-logo span { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; color: #ffffff; }
-
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 10px;
-            color: rgba(255, 255, 255, 0.6) !important;
-            text-decoration: none !important;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; opacity: 0.65; flex-shrink: 0; }
-        .sidebar a:hover .nav-icon, .sidebar a.active .nav-icon { opacity: 1; }
-
-        .sidebar a:hover { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.04); }
-        .sidebar a.active { color: #ffffff !important; background-color: #1e293b; font-weight: 600; }
-
-        .theme-container { margin-top: auto; padding-top: 20px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .theme-text { font-size: 13px; color: #94a3b8; }
-        .theme-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-        .theme-switch input { opacity: 0; width: 0; height: 0; }
-        .theme-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 20px; }
-        .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
-        .theme-switch input:checked + .theme-slider { background-color: #10b981; }
-        .theme-switch input:checked + .theme-slider:before { transform: translateX(16px); }
-        .sidebar .switch-link { color:#fff !important; font-size:13px; text-decoration:none; margin-top:10px; padding:10px; text-align:center; border:1px solid rgba(255,255,255,0.1); border-radius:8px; }
-
-        .main-content { flex: 1; padding: 50px 60px; display: flex; flex-direction: column; gap: 30px; overflow-y: auto; }
-        .filter-section { background: var(--bg-card); border: 1px solid var(--border-color); backdrop-filter: var(--blur-effect); padding: 20px 32px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; }
-
-        .order-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 28px 32px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .order-info h4 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
-        .order-info .meta { font-size: 13px; color: var(--text-muted); margin-top: 8px; display: flex; gap: 15px; }
-
-        .btn-respond { background: var(--accent-green); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px var(--accent-glow); }
-        .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; display: inline-block; }
-        .tag.rti { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .tag.metal { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
-
-        .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 16px; color: var(--text-muted); font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
-        td { padding: 18px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--modal-bg); border: 1px solid var(--border-color); padding: 40px; border-radius: 20px; width: 460px; max-width: 95vw; display: flex; flex-direction: column; gap: 20px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .form-group label { font-size: 13px; color: var(--text-muted); }
-        .form-group input { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; color: var(--text-main); outline: none; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
-        .btn-modal-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 24px; border-radius: 10px; cursor: pointer; }
-
-        /* КАСТОМНЫЙ СЕЛЕКТ */
-        .custom-select-wrapper { position: relative; width: 100%; max-width: 320px; }
-        .custom-select { position: relative; display: flex; flex-direction: column; }
-        .custom-select-trigger { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; font-size: 14px; color: var(--text-main); background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; cursor: pointer; }
-        .custom-select-trigger:after { content: ""; width: 14px; height: 14px; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-size: contain; background-repeat: no-repeat; }
-        .custom-select.open .custom-select-trigger:after { transform: rotate(180deg); }
-        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; margin-top: 8px; background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 16px; z-index: 100; opacity: 0; visibility: hidden; transform: translateY(-12px); transition: all 0.2s ease; }
-        .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
-        .custom-option { padding: 12px 18px; font-size: 14px; color: var(--text-main); cursor: pointer; }
-        .custom-option:hover { background: rgba(16, 185, 129, 0.06); color: var(--accent-green); }
-        .custom-option.selected { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); font-weight: 600; }
-
-        .order-actions { display: flex !important; align-items: center !important; gap: 12px !important; flex-shrink: 0 !important; }
-        .btn-chat-secondary { background: transparent !important; color: var(--text-main) !important; border: 1px solid var(--border-color) !important; padding: 0 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 500 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; height: 42px !important; box-sizing: border-box !important; }
-        .btn-chat-secondary:hover { background: rgba(148, 163, 184, 0.08) !important; border-color: var(--text-muted) !important; }
-
-        #chatModal .modal-content { width: 500px !important; max-width: 95vw !important; padding: 24px !important; background: var(--modal-bg) !important; border-radius: 20px !important; display: flex !important; flex-direction: column !important; gap: 16px !important; }
-        #chatModal .chat-container { display: flex !important; flex-direction: column !important; height: 360px !important; background: var(--input-bg) !important; border: 1px solid var(--border-color) !important; border-radius: 14px !important; overflow: hidden !important; }
-        #chatModal .chat-messages { flex: 1 !important; padding: 16px !important; overflow-y: auto !important; display: flex !important; flex-direction: column !important; gap: 12px !important; }
-        #chatModal .chat-bubble { max-width: 75% !important; padding: 10px 16px !important; border-radius: 16px !important; font-size: 14px !important; line-height: 1.4 !important; word-break: break-word !important; display: inline-block !important; }
-        #chatModal .chat-bubble.me { background: var(--accent-green) !important; color: white !important; align-self: flex-end !important; border-bottom-right-radius: 4px !important; }
-        #chatModal .chat-bubble.partner { background: rgba(148, 163, 184, 0.2) !important; color: var(--text-main) !important; align-self: flex-start !important; border-bottom-left-radius: 4px !important; }
-        #chatModal .chat-input-area { display: flex !important; gap: 10px !important; padding: 12px !important; background: var(--bg-card) !important; border-top: 1px solid var(--border-color) !important; align-items: center !important; }
-        #chatModal .chat-input-area input { flex: 1 !important; height: 40px !important; padding: 0 14px !important; border-radius: 8px !important; border: 1px solid var(--border-color) !important; background: var(--input-bg) !important; color: var(--text-main) !important; outline: none !important; }
-        #chatModal .chat-input-area .btn-chat-submit { height: 40px !important; padding: 0 16px !important; border-radius: 8px !important; background: var(--accent-green) !important; color: white !important; border: none !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; }
-
-        /* ИЗОЛИРОВАННЫЙ ЦЕНТР УВЕДОМЛЕНИЙ */
-        .header { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; gap: 16px !important; margin-bottom: 24px !important; }
-        .bell-btn { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; padding: 10px 16px !important; border-radius: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-size: 16px !important; position: relative !important; color: var(--text-main) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important; transition: all 0.2s ease !important; height: 42px !important; box-sizing: border-box !important; }
-        .bell-btn:hover { border-color: var(--text-muted) !important; background: rgba(148, 163, 184, 0.05) !important; }
-        .bell-badge { background: #ef4444 !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; padding: 2px 6px !important; border-radius: 20px !important; display: none; line-height: 1 !important; }
-        .notification-item { padding: 14px 16px !important; border-bottom: 1px solid var(--border-color) !important; font-size: 13.5px !important; line-height: 1.4 !important; color: var(--text-main) !important; background: transparent !important; }
-        .notification-item:last-child { border-bottom: none !important; }
-        .notification-item .time { font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px !important; font-family: monospace !important; }
-
-        @media (max-width: 768px) {
-            .order-item { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-            .order-actions { width: 100% !important; justify-content: flex-end !important; }
-            #chatModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
-            #chatModal .chat-container { height: calc(100vh - 160px) !important; }
-            #notificationModal .modal-content { width: 100% !important; height: 100% !important; max-height: 100vh !important; border-radius: 0 !important; padding: 20px !important; }
-        }
+        .tab-panel { display: none; flex-direction: column; gap: 16px; }
+        .tab-panel.active { display: flex; }
+        .order-item .order-info h4 { display: inline; }
+        .order-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B Платформа</span></div>
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
         <a href="producer.html" class="active"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
-        <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
+        <a href="proposals.html"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
 
-        <div class="theme-container">
-            <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
-            <label class="theme-switch">
-                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
-                <span class="theme-slider"></span>
-            </label>
+        <div class="sidebar-bottom">
+            <a href="#" class="switch-link" onclick="logout(); return false;">Выйти из аккаунта</a>
         </div>
-        <a href="#" class="switch-link" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <h2>Кабинет Производителя</h2>
+            <h2>Кабинет производителя</h2>
             <button class="bell-btn" onclick="openNotificationsModal()">
                 <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
         </div>
-        
-        <div class="filter-section" id="companyBlock" style="background: rgba(16, 185, 129, 0.05); border-left: 5px solid var(--accent-green);">
-            <div><strong>Вы вошли как организация:</strong> <span id="displayCompanyName" style="font-weight: 600; color: var(--accent-green);">Загрузка...</span></div>
-        </div>
 
-        <div class="filter-section">
-            <label for="categoryFilter">Фильтр по категориям:</label>
-            <div class="custom-select-wrapper">
-                <input type="hidden" id="categoryFilter" value="all">
-                <div class="custom-select" id="wrapperCategoryFilter">
-                    <div class="custom-select-trigger"><span>Все категории</span></div>
-                    <div class="custom-options">
-                        <div class="custom-option selected" data-value="all">Все категории</div>
-                        <div class="custom-option" data-value="РТИ">РТИ</div>
-                        <div class="custom-option" data-value="Металл">Металл</div>
-                    </div>
+        <div class="info-row" id="infoBoxes">
+            <div class="info-box">
+                <div class="info-label">Организация</div>
+                <div class="info-value" id="infoCompany">Загрузка...</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Роль в системе</div>
+                <div class="info-value accent">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+                    Производитель
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Статус аккаунта</div>
+                <div class="info-value accent" id="infoStatus">
+                    <span id="infoStatusIcon"></span>
+                    <span id="infoStatusText">Загрузка...</span>
+                </div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Рейтинг надежности</div>
+                <div class="info-value">
+                    <span id="infoRating" style="color:#54c79f; font-weight:800;">—</span>
+                    <span id="infoRatingLabel">Нет данных</span>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h3>Доступные прямые закупки (Заявки заказчиков)</h3>
+        <div class="tab-strip">
+            <div class="tabs">
+                <button class="tab active" id="tabOrdersBtn" onclick="switchProducerTab('orders')">Прямые закупки (<span id="tabOrdersCount">0</span>)</button>
+                <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">Направленные предложения (<span id="tabProposalsCount">0</span>)</button>
+            </div>
+            <button class="refresh-btn" onclick="refreshActiveTab()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 4v5h-5"></path></svg>
+                Обновить
+            </button>
+        </div>
+
+        <div class="tab-panel active" id="tabOrders">
+            <div class="filter-section" id="companyBlock" style="border-left: 4px solid #41bd97;">
+                <div><strong>Вы вошли как организация:</strong> <span id="displayCompanyName" style="font-weight: 700; color: var(--accent-bright);">Загрузка...</span></div>
+            </div>
+
+            <div class="filter-section">
+                <label for="categoryFilter">Фильтр по категориям:</label>
+                <div class="custom-select-wrapper">
+                    <input type="hidden" id="categoryFilter" value="all">
+                    <div class="custom-select" id="wrapperCategoryFilter">
+                        <div class="custom-select-trigger"><span>Все категории</span></div>
+                        <div class="custom-options">
+                            <div class="custom-option selected" data-value="all">Все категории</div>
+                            <div class="custom-option" data-value="РТИ">РТИ</div>
+                            <div class="custom-option" data-value="Металл">Металл</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="ordersList" class="orders-list"></div>
         </div>
 
-        <div class="section">
-            <h3>Направленные нами предложения (КП)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Изделие</th>
-                        <th>Предложенная цена</th>
-                        <th>Срок поставки</th>
-                        <th>Статус отклика</th>
-                    </tr>
-                </thead>
-                <tbody id="myResponsesTable"></tbody>
-            </table>
+        <div class="tab-panel" id="tabProposals">
+            <div class="section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Закупка</th>
+                            <th>Предложенная цена</th>
+                            <th>Срок поставки</th>
+                            <th>Статус отклика</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myResponsesTable"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -251,7 +139,7 @@
                 <div class="chat-messages" id="chatModalMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chatModalInput" placeholder="Напишите сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
-                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">Отправить</button>
+                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">➤</button>
                 </div>
             </div>
             <div class="modal-actions">
@@ -261,73 +149,154 @@
     </div>
 
     <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);"></div>
-            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
 
+    <script src="assets/app.js"></script>
     <script>
-        const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
         let currentOrderId = null;
         let currentOrderTitle = "";
+        let ordersCache = [];
 
-        const token = localStorage.getItem('authToken');
-        const role = localStorage.getItem('userRole');
-        const isGuest = !token; 
-
-        if (token && role !== 'producer') window.location.href = 'login.html';
+        const session = authGuard('producer');
+        const token = session.token;
+        const role = session.role;
+        const isGuest = session.isGuest;
 
         window.addEventListener('DOMContentLoaded', () => {
+            loadCompanyInfo();
             loadOrdersForProducers();
             initNotifications();
-            if (!isGuest) { loadMyProposals(); } else {
-                const myResponsesTable = document.getElementById('myResponsesTable');
-                if (myResponsesTable) {
-                    const section = myResponsesTable.closest('.section');
-                    if (section) section.style.display = 'none';
-                }
-            }
+            if (!isGuest) { loadMyProposals(); }
+
+            document.getElementById('displayCompanyName').innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»');
+            if (isGuest && document.getElementById('companyBlock')) { document.getElementById('companyBlock').style.borderColor = 'var(--error)'; }
+
+            initCustomSelect('wrapperCategoryFilter', 'categoryFilter', (val) => {
+                document.querySelectorAll('.order-item').forEach(item => {
+                    item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
+                });
+            });
         });
 
-        function downloadMockFile(filename) {
-            const blob = new Blob(["Файл: " + filename], { type: "application/octet-stream" });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename; link.click();
+        function switchProducerTab(tab) {
+            document.getElementById('tabOrdersBtn').classList.toggle('active', tab === 'orders');
+            document.getElementById('tabProposalsBtn').classList.toggle('active', tab === 'proposals');
+            document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
+            document.getElementById('tabProposals').classList.toggle('active', tab === 'proposals');
         }
+
+        function refreshActiveTab() {
+            loadOrdersForProducers();
+            if (!isGuest) loadMyProposals();
+        }
+
+function renderCompanyStatus(status) {
+            let icon, cls;
+            if (status === 'Верифицирован') {
+                cls = 'win';
+                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"></path><path d="M9 12l2 2 4-4"></path></svg>';
+            } else if (status === 'Отклонен') {
+                cls = 'loose';
+                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6M9 9l6 6"></path></svg>';
+            } else {
+                cls = 'waiting';
+                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>';
+            }
+            document.getElementById('infoStatus').className = 'info-value ' + cls;
+            document.getElementById('infoStatusIcon').innerHTML = icon;
+            document.getElementById('infoStatusText').innerText = status;
+        }
+
+        async function loadCompanyInfo() {
+            const companyName = localStorage.getItem('userCompany');
+            document.getElementById('infoCompany').innerText = isGuest ? 'Гость' : (companyName || '—');
+            if (isGuest || !companyName) {
+                renderCompanyStatus('Гостевой доступ');
+                document.getElementById('infoRating').innerText = '—';
+                document.getElementById('infoRatingLabel').innerText = 'Нет данных';
+                return;
+            }
+            try {
+                const response = await fetch(`${SERVER_URL}/companies`);
+                const companies = await response.json();
+                const me = companies.find(c => c.company === companyName && c.role === 'producer');
+                if (me) {
+                    renderCompanyStatus(me.status);
+                    document.getElementById('infoRating').innerText = me.rating || '—';
+                    document.getElementById('infoRatingLabel').innerText = me.ratingLabel || 'Нет данных';
+                } else {
+                    renderCompanyStatus('На проверке');
+                    document.getElementById('infoRating').innerText = '—';
+                    document.getElementById('infoRatingLabel').innerText = 'Нет данных';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function downloadMockFileWrapper(filename) { downloadMockFile(filename); }
 
         async function loadOrdersForProducers() {
             try {
                 const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
                 const response = await fetch(`${SERVER_URL}/orders`, { headers });
                 const orders = await response.json();
+                ordersCache = orders;
+                document.getElementById('tabOrdersCount').innerText = orders.length;
+
                 const ordersList = document.getElementById('ordersList');
                 if (!ordersList) return;
-                ordersList.innerHTML = ''; 
+                ordersList.innerHTML = '';
 
                 orders.forEach(order => {
-                    const orderItem = document.createElement('div'); orderItem.className = 'order-item'; orderItem.setAttribute('data-category', order.category);
+                    const orderItem = document.createElement('div');
+                    orderItem.className = 'order-item';
+                    orderItem.setAttribute('data-category', order.category);
                     const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
                     let displayTitle = order.title && order.title.includes(' | ') ? order.title.split(' | ')[0] : order.title;
                     let drawingFile = order.title && order.title.includes(' | ') ? order.title.split(' | ')[1] : "Не прикреплен";
 
-                    let actionButton = ''; let statusText = order.status;
-                    let chatBtn = isGuest ? `<button class="btn-chat-secondary" onclick="window.location.href='login.html'">💬 Чат</button>` : `<button class="btn-chat-secondary" onclick="openGlobalChat(${order.id}, '${displayTitle.replace(/'/g, "\\'")}', '${localStorage.getItem('userCompany')}')">💬 Чат</button>`;
+                    const chatBtn = isGuest
+                        ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
+                        : `<button class="btn-secondary" onclick="openGlobalChat(${order.id}, '${displayTitle.replace(/'/g, "\\'")}', '${localStorage.getItem('userCompany')}')">Открыть чат</button>`;
 
+                    let statusBlock, actionBtn;
                     if (order.status === 'Закрыта') {
-                        statusText = '<span style="color: #ef4444; font-weight: bold;">Закупка завершена</span>';
-                        actionButton = `<div class="order-actions">${chatBtn}<button class="btn-respond" style="background-color: #94a3b8; cursor: not-allowed;" disabled>Закупка закрыта</button></div>`;
+                        statusBlock = `<div class="meta status-dot closed">Закупка завершена</div>`;
+                        actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
+                    } else if (isGuest) {
+                        statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
+                        actionBtn = `<button class="btn-primary" onclick="window.location.href='login.html'">Войти для отклика</button>`;
                     } else {
-                        statusText = `<span style="color: #10b981; font-weight: bold;">${order.status}</span>`;
-                        actionButton = isGuest ? `<div class="order-actions">${chatBtn}<button class="btn-respond" onclick="window.location.href='login.html'">Войти для отклика</button></div>` : `<div class="order-actions">${chatBtn}<button class="btn-respond" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button></div>`;
+                        statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
+                        actionBtn = `<button class="btn-primary" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
                     }
 
-                    let drawingBlock = isGuest ? `<div class="meta" style="color: #ef4444;">🔒 Авторизуйтесь для просмотра вложений</div>` : (drawingFile !== "Не прикреплен" ? `<div class="meta" style="color: #10b981;">📁 Чертеж: <a href="#" onclick="downloadMockFile('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: #10b981; text-decoration:underline;">${drawingFile}</a></div>` : `<div class="meta">📁 Чертеж: отсутствует</div>`);
+                    const drawingBlock = isGuest
+                        ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
+                        : (drawingFile !== "Не прикреплен"
+                            ? `<div class="meta">📁 Чертеж: <a href="#" onclick="downloadMockFileWrapper('${drawingFile.replace(/'/g, "\\'")}'); return false;" style="color: var(--accent-bright); text-decoration:underline;">${drawingFile}</a></div>`
+                            : `<div class="meta">📁 Чертеж: отсутствует</div>`);
 
-                    orderItem.innerHTML = `<div class="order-info"><h4>${displayTitle}</h4><span class="tag ${tagClass}">${order.category}</span><span class="meta">Статус: ${statusText} | Уже предложений: ${order.responses}</span><div class="meta" style="font-weight:bold;">Дедлайн: ${order.deadline}</div>${drawingBlock}</div>${actionButton}`;
+                    orderItem.innerHTML = `
+                        <div class="order-info">
+                            <div class="order-title-row">
+                                <h4>${displayTitle}</h4>
+                                <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
+                                <span class="tag ${tagClass}">${order.category}</span>
+                            </div>
+                            ${statusBlock}
+                            <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
+                            <div class="meta">Дедлайн: <span class="meta-value">${order.deadline}</span></div>
+                            ${drawingBlock}
+                        </div>
+                        <div class="order-actions">${chatBtn}${actionBtn}</div>`;
                     ordersList.appendChild(orderItem);
                 });
             } catch (error) { console.error(error); }
@@ -337,136 +306,52 @@
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, { headers: { 'Authorization': 'Bearer ' + token } });
                 const proposals = await response.json();
+                document.getElementById('tabProposalsCount').innerText = proposals.length;
+
                 const tableBody = document.getElementById('myResponsesTable');
-                if (!tableBody) return; tableBody.innerHTML = '';
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
-                    let badgeClass = prop.status === 'Выигран' ? 'badge win' : (prop.status === 'Отклонен' ? 'badge loose' : 'badge waiting');
-                    row.innerHTML = `<td><strong>${prop.orderTitle || 'Закупка #' + prop.orderId}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="${badgeClass}">${prop.status}</span></td>`;
+                    let icon = '✓', cls = 'win';
+                    if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
+                    else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
+                    row.innerHTML = `<td><strong>${prop.orderTitle || 'Закупка #' + prop.orderId}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${prop.status}</span></td>`;
                     tableBody.appendChild(row);
                 });
             } catch (error) { console.error(error); }
         }
 
-        function openRespondModal(id, title) { currentOrderId = Number(id); currentOrderTitle = title; document.getElementById('modalTitle').innerText = `Подача КП на: ${title}`; document.getElementById('respondModal').style.display = 'flex'; }
+        function openRespondModal(id, title) {
+            currentOrderId = Number(id); currentOrderTitle = title;
+            document.getElementById('modalTitle').innerText = `Подача КП на: ${title}`;
+            document.getElementById('respondModal').style.display = 'flex';
+        }
         function closeRespondModal() { document.getElementById('respondModal').style.display = 'none'; }
 
         async function sendProposal() {
-            const priceInput = document.getElementById('proposalPrice'); const daysInput = document.getElementById('proposalTerms');
-            const price = parseFloat(priceInput.value); const days = parseInt(daysInput.value, 10);
+            const priceInput = document.getElementById('proposalPrice');
+            const daysInput = document.getElementById('proposalTerms');
+            const price = parseFloat(priceInput.value);
+            const days = parseInt(daysInput.value, 10);
             const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
             if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) return alert('Укажите корректные параметры!');
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({ orderId: currentOrderId, orderTitle: currentOrderTitle, price, days, company: companyName })
                 });
-                if (response.ok) { closeRespondModal(); priceInput.value = ''; daysInput.value = ''; loadOrdersForProducers(); loadMyProposals(); }
+                if (response.ok) {
+                    closeRespondModal(); priceInput.value = ''; daysInput.value = '';
+                    loadOrdersForProducers(); loadMyProposals();
+                } else {
+                    const err = await response.json();
+                    alert(err.error || 'Не удалось отправить предложение');
+                }
             } catch (error) { console.error(error); }
         }
-
-        function initPremiumSelect(wrapperId, hiddenInputId, callback) {
-            const wrapper = document.getElementById(wrapperId); const hiddenInput = document.getElementById(hiddenInputId);
-            if (!wrapper || !hiddenInput) return;
-            const trigger = wrapper.querySelector('.custom-select-trigger'); const options = wrapper.querySelectorAll('.custom-option');
-            trigger.addEventListener('click', (e) => { e.stopPropagation(); wrapper.classList.toggle('open'); });
-            options.forEach(option => {
-                option.addEventListener('click', function() {
-                    options.forEach(opt => opt.classList.remove('selected')); this.classList.add('selected');
-                    hiddenInput.value = this.getAttribute('data-value'); trigger.querySelector('span').textContent = this.textContent;
-                    wrapper.classList.remove('open'); if (callback) callback();
-                });
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('displayCompanyName').innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»');
-            if (isGuest && document.getElementById('companyBlock')) { document.getElementById('companyBlock').style.borderColor = '#ef4444'; }
-            initPremiumSelect('wrapperCategoryFilter', 'categoryFilter', () => {
-                const val = document.getElementById('categoryFilter').value;
-                document.querySelectorAll('.order-item').forEach(item => { item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none'; });
-            });
-        });
-
-        window.addEventListener('click', () => { document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open')); });
-
-        function toggleTheme() {
-            const body = document.body; const checkbox = document.getElementById('themeCheckbox');
-            if (checkbox.checked) { body.classList.add('dark-mode'); localStorage.setItem('theme', 'dark'); } 
-            else { body.classList.remove('dark-mode'); localStorage.setItem('theme', 'light'); }
-        }
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-
-        let activeChatKey = null;
-        function openGlobalChat(orderId, orderTitle, company) {
-            activeChatKey = `b2b_chat_${orderId}_${company}`; document.getElementById('chatModalTitle').innerText = `Чат по закупке: ${orderTitle}`;
-            document.getElementById('chatModal').style.display = 'flex'; renderChatHistory();
-        }
-        function closeChatModal() { document.getElementById('chatModal').style.display = 'none'; }
-
-        function renderChatHistory() {
-            const container = document.getElementById('chatModalMessages'); if (!container || !activeChatKey) return; container.innerHTML = '';
-            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-            if (history.length === 0) {
-                history = [{ sender: 'system', text: 'Чат открыт. Обсудите технические параметры ТЗ напрямую с заказчиком.' }];
-                localStorage.setItem(activeChatKey, JSON.stringify(history));
-            }
-            history.forEach(msg => {
-                const bubble = document.createElement('div');
-                if (msg.sender === 'system') { bubble.className = 'chat-bubble'; bubble.style = 'background:transparent; color:var(--text-muted); text-align:center; max-width:100%; font-size:12px; font-style:italic;'; } 
-                else { bubble.className = msg.sender === 'producer' ? 'chat-bubble me' : 'chat-bubble partner'; }
-                bubble.innerText = msg.text; container.appendChild(bubble);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function sendGlobalChatMessage() {
-            const input = document.getElementById('chatModalInput'); if (!input || !input.value.trim() || !activeChatKey) return;
-            let history = JSON.parse(localStorage.getItem(activeChatKey)) || [];
-            history.push({ sender: 'producer', text: input.value.trim() }); localStorage.setItem(activeChatKey, JSON.stringify(history));
-            input.value = ''; renderChatHistory();
-        }
-
-        const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
-        const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
-
-        function initNotifications() {
-            renderNotificationsCount();
-            setTimeout(() => {
-                const role = localStorage.getItem('userRole');
-                let text = role === 'customer' ? "Заказчик: Получен новый отклик с ценовым предложением." : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
-                addNotification(text);
-            }, 6000);
-        }
-
-        function addNotification(text) {
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (list.length > 0 && list[0].text === text) return;
-            list.unshift({ text, time: timeStr, read: false }); localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
-            renderNotificationsCount();
-        }
-
-        function renderNotificationsCount() {
-            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || []; const unreadCount = list.filter(n => !n.read).length;
-            const badgeEl = document.getElementById('bellBadge'); if (!badgeEl) return;
-            badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none'; if (unreadCount > 0) badgeEl.innerText = unreadCount;
-        }
-
-        function openNotificationsModal() {
-            document.getElementById('notificationModal').style.display = 'flex'; const container = document.getElementById('notificationsList');
-            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
-            if (list.length === 0) { container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`; return; }
-            container.innerHTML = '';
-            list.forEach(n => {
-                const item = document.createElement('div'); item.className = 'notification-item';
-                item.innerHTML = `<div>${n.text}</div><div class="time">⏱ ${n.time}</div>`; container.appendChild(item); n.read = true;
-            });
-            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list)); renderNotificationsCount();
-        }
-        function closeNotificationsModal() { document.getElementById('notificationModal').style.display = 'none'; }
-        function clearNotifications() { localStorage.removeItem(B2B_NOTIF_KEY); openNotificationsModal(); }
     </script>
 </body>
 </html>

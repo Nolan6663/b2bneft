@@ -5,7 +5,8 @@
     "category": "РТИ",
     "status": "Активный",
     "responses": 3,
-    "deadline": "25.05.2026"
+    "deadline": "25.05.2026",
+    "createdAt": "2026-05-18T09:00:00.000Z"
   },
   {
     "id": 2,
@@ -13,7 +14,8 @@
     "category": "Металл",
     "status": "Активный",
     "responses": 0,
-    "deadline": "28.05.2026"
+    "deadline": "28.05.2026",
+    "createdAt": "2026-05-20T10:00:00.000Z"
   },
   {
     "id": 3,
@@ -21,6 +23,7 @@
     "category": "Металл",
     "status": "Закрыта",
     "responses": 1,
-    "deadline": "15.06.2027"
+    "deadline": "15.06.2027",
+    "createdAt": "2026-04-22T11:00:00.000Z"
   }
 ]
