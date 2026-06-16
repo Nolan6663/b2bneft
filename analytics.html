@@ -177,16 +177,88 @@
             .sidebar { width: 100%; padding: 24px; }
             .main-content { padding: 30px 20px; }
         }
+        /* ==========================================================================
+           ЦЕНТР УВЕДОМЛЕНИЙ (ЖЕСТКАЯ ИЗОЛЯЦИЯ)
+           ========================================================================== */
+        .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 16px !important;
+            margin-bottom: 24px !important;
+        }
+
+        .bell-btn {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            padding: 10px 16px !important;
+            border-radius: 12px !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-size: 16px !important;
+            position: relative !important;
+            color: var(--text-main) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01) !important;
+            transition: all 0.2s ease !important;
+            height: 42px !important;
+            box-sizing: border-box !important;
+        }
+
+        .bell-btn:hover {
+            border-color: var(--text-muted) !important;
+            background: rgba(148, 163, 184, 0.05) !important;
+        }
+
+        .bell-badge {
+            background: #ef4444 !important;
+            color: white !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            padding: 2px 6px !important;
+            border-radius: 20px !important;
+            display: none; /* Управляется через JS */
+            line-height: 1 !important;
+        }
+
+        .notification-item {
+            padding: 14px 16px !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            font-size: 13.5px !important;
+            line-height: 1.4 !important;
+            color: var(--text-main) !important;
+            background: transparent !important;
+        }
+        .notification-item:last-child { 
+            border-bottom: none !important; 
+        }
+        
+        .notification-item .time {
+            font-size: 11px !important;
+            color: var(--text-muted) !important;
+            margin-top: 5px !important;
+            font-family: monospace !important;
+        }
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            #notificationModal .modal-content {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100vh !important;
+                border-radius: 0 !important;
+                padding: 20px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
+    <div class="sidebar">
         <h1>B2B Платформа</h1>
-        <a href="producer.html" id="navOrders">Актуальные закупки</a>
-        <a href="proposals.html" id="navProposals">Мои отклики</a>
-        <a href="partners.html" id="navPartners">Контрагенты</a>
-        <a href="analytics.html" id="navAnalytics">Аналитика</a>
+        <a id="backToCabinetBtn" href="#">← Назад в кабинет</a>
         
         <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
@@ -195,13 +267,15 @@
                 <span class="theme-slider"></span>
             </label>
         </div>
-        <a href="#" class="switch-link" style="margin-top:20px; color:rgba(255,255,255,0.6);" onclick="localStorage.clear(); window.location.href='login.html'; return false;">Выйти из аккаунта</a>
     </div>
 
     <div class="main-content">
         <div class="header">
             <h2>Аналитический дашборд</h2>
-            <div id="companyMeta" class="company-badge">Загрузка контекста авторизации...</div>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <span>🔔</span>
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
         </div>
 
         <div class="metrics-grid" id="metricsGrid"></div>
@@ -238,6 +312,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             setupInterface();
             loadDashboard();
+            initNotifications();
         });
 
         function setupInterface() {
@@ -430,6 +505,97 @@
             if (checkbox) checkbox.checked = true;
             if (label) label.innerText = '🌙 Тёмная тема';
         }
+        // ЛОГИКА ЦЕНТРА УВЕДОМЛЕНИЙ
+        const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
+        const B2B_NOTIF_KEY = `b2b_notif_${currentCompanyName}`;
+
+        function initNotifications() {
+            renderNotificationsCount();
+            
+            // Имитация поступления нового уведомления через 6 секунд после загрузки
+            setTimeout(() => {
+                const role = localStorage.getItem('userRole');
+                let text = role === 'customer'
+                    ? "Заказчик: Получен новый отклик с ценовым предложением на тендер 'Фланец стальной ГОСТ'."
+                    : `Производитель: Организация ${currentCompanyName} успешно прошла автоматическую верификацию по ИНН.`;
+                
+                addNotification(text);
+            }, 6000);
+        }
+
+        function addNotification(text) {
+            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Проверка на дубликаты при перезагрузке
+            if (list.length > 0 && list[0].text === text) return;
+
+            list.unshift({ text, time: timeStr, read: false });
+            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
+            renderNotificationsCount();
+        }
+
+        function renderNotificationsCount() {
+            const list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
+            const unreadCount = list.filter(n => !n.read).length;
+            const badgeEl = document.getElementById('bellBadge');
+            if (!badgeEl) return;
+
+            if (unreadCount > 0) {
+                badgeEl.innerText = unreadCount;
+                badgeEl.style.display = 'inline-block';
+            } else {
+                badgeEl.style.display = 'none';
+            }
+        }
+
+        function openNotificationsModal() {
+            document.getElementById('notificationModal').style.display = 'flex';
+            const container = document.getElementById('notificationsList');
+            if (!container) return;
+            
+            let list = JSON.parse(localStorage.getItem(B2B_NOTIF_KEY)) || [];
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 14px;">История уведомлений пуста</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            list.forEach(n => {
+                const item = document.createElement('div');
+                item.className = 'notification-item';
+                item.innerHTML = `
+                    <div>${n.text}</div>
+                    <div class="time">⏱ ${n.time}</div>
+                `;
+                container.appendChild(item);
+                n.read = true; // Помечаем как прочитанное
+            });
+
+            localStorage.setItem(B2B_NOTIF_KEY, JSON.stringify(list));
+            renderNotificationsCount();
+        }
+
+        function closeNotificationsModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        function clearNotifications() {
+            localStorage.removeItem(B2B_NOTIF_KEY);
+            openNotificationsModal();
+        }
     </script>
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px; display: flex; flex-direction: column; gap: 16px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--input-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                </div>
+            <div class="modal-actions" style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn-action" onclick="clearNotifications()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2); font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()" style="padding: 8px 16px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
