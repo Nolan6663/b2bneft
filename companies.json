@@ -235,5 +235,19 @@
     "yearsExperience": null,
     "about": "",
     "equipment": []
+  },
+  {
+    "id": 17,
+    "company": "??? ????",
+    "inn": "",
+    "role": "customer",
+    "specialization": "",
+    "status": "На проверке",
+    "rating": null,
+    "ratingLabel": null,
+    "city": "",
+    "yearsExperience": null,
+    "about": "",
+    "equipment": []
   }
 ]

@@ -30,5 +30,13 @@
     "role": "producer",
     "company": "OOONAL",
     "inn": "64532435"
+  },
+  {
+    "id": 5,
+    "email": "newtest@test.com",
+    "password": "pass123",
+    "role": "customer",
+    "company": "??? ????",
+    "inn": ""
   }
 ]

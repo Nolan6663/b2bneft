@@ -356,7 +356,7 @@ function renderCompanyStatus(status) {
                     let matchBadge = '';
                     if (order.matchScore != null) {
                         const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
-                        matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🎯 ${order.matchScore}% совпадение</span>`;
+                        matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🧩 ${order.matchScore}% совпадение</span>`;
                     }
 
                     const createdStr = order.createdAt
