@@ -179,8 +179,9 @@
                 `;
             }
 
+            const wrenchIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>';
             const equipmentHtml = (c.equipment && c.equipment.length > 0)
-                ? c.equipment.map(e => `<span class="equipment-chip">🔧 ${escapeHtml(e)}</span>`).join(' ')
+                ? c.equipment.map(e => `<span class="equipment-chip">${wrenchIcon} ${escapeHtml(e)}</span>`).join(' ')
                 : '<span class="empty-hint">Оборудование не указано</span>';
 
             document.getElementById('profileContent').innerHTML = `
@@ -194,8 +195,8 @@
                                 <span class="status-icon ${st.cls}">${st.icon} ${escapeHtml(c.status)}</span>
                             </div>
                             <div class="profile-meta">
-                                ${c.city ? `<span>📍 ${escapeHtml(c.city)}</span>` : ''}
-                                ${c.yearsExperience ? `<span>🕒 Опыт работы: ${c.yearsExperience} лет</span>` : ''}
+                                ${c.city ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(c.city)}</span>` : ''}
+                                ${c.yearsExperience ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> Опыт работы: ${c.yearsExperience} лет</span>` : ''}
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
