@@ -273,6 +273,18 @@ function renderCompanyStatus(status) {
                 const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
                 const response = await fetch(`${SERVER_URL}/orders`, { headers });
                 const orders = await response.json();
+
+                if (!isGuest) {
+                    try {
+                        const scoresResponse = await fetch(`${SERVER_URL}/orders/match-scores`, { headers });
+                        if (scoresResponse.ok) {
+                            const scores = await scoresResponse.json();
+                            orders.forEach(o => { o.matchScore = scores[o.id] != null ? scores[o.id] : null; });
+                            orders.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+                        }
+                    } catch (e) { /* матчинг недоступен — показываем как обычно, без сортировки */ }
+                }
+
                 ordersCache = orders;
                 document.getElementById('tabOrdersCount').innerText = orders.length;
 
@@ -312,12 +324,19 @@ function renderCompanyStatus(status) {
                             ? `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(order.drawing.originalName)}</a></div>`
                             : `<div class="meta">📁 Чертеж: отсутствует</div>`);
 
+                    let matchBadge = '';
+                    if (order.matchScore != null) {
+                        const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
+                        matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🎯 ${order.matchScore}% совпадение</span>`;
+                    }
+
                     orderItem.innerHTML = `
                         <div class="order-info">
                             <div class="order-title-row">
                                 <h4>${escapeHtml(displayTitle)}</h4>
                                 <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
                                 <span class="tag ${tagClass}">${escapeHtml(order.category)}</span>
+                                ${matchBadge}
                             </div>
                             ${statusBlock}
                             <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>

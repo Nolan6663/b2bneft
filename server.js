@@ -130,6 +130,52 @@ function plainTitle(title) {
     return title && title.includes(' | ') ? title.split(' | ')[0] : title;
 }
 
+// ===================== УМНЫЙ МАТЧИНГ =====================
+// Считаем % соответствия заказа профилю производителя по специализации
+// и заявленному оборудованию — вместо того, чтобы показывать/рассылать
+// все заказы всем подряд без разбора (как делает большинство досок
+// объявлений). Сравнение по "стемам" (первые 5 букв слова), а не по
+// точному совпадению — иначе из-за русских падежных окончаний
+// ("резиновая" vs "резина") совпадения почти никогда не находились бы.
+
+const CATEGORY_KEYWORDS = {
+    'РТИ': ['рти', 'резин', 'уплотн', 'манжет', 'вулканиз'],
+    'Металл': ['металл', 'прокат', 'сварк', 'металлоконструкц', 'лазерн', 'гибочн', 'чпу', 'литье', 'нефтепромысл']
+};
+
+function stem(word) {
+    return word.slice(0, 5);
+}
+
+function computeMatchScore(order, producer) {
+    const text = `${producer.specialization || ''} ${(producer.equipment || []).join(' ')}`.toLowerCase();
+    if (!text.trim()) return 0;
+
+    let score = 0;
+
+    const keywords = CATEGORY_KEYWORDS[order.category] || [];
+    const categoryHits = keywords.filter(k => text.includes(k)).length;
+    score += Math.min(categoryHits, 3) * 20; // до 60 баллов за соответствие категории
+
+    const titleWords = plainTitle(order.title || '')
+        .toLowerCase()
+        .split(/[^a-zа-яё0-9]+/)
+        .filter(w => w.length > 3);
+    const titleHits = titleWords.filter(w => text.includes(stem(w))).length;
+    score += Math.min(titleHits, 2) * 15; // до 30 баллов за совпадение слов в названии
+
+    return Math.min(100, score);
+}
+
+// Список производителей с их matchScore по конкретному заказу, отсортированный по убыванию.
+function matchedProducers(order, minScore = 0) {
+    const companies = readData(COMPANIES_FILE).filter(c => c.role === 'producer');
+    return companies
+        .map(c => ({ company: c.company, score: computeMatchScore(order, c) }))
+        .filter(m => m.score >= minScore)
+        .sort((a, b) => b.score - a.score);
+}
+
 // ===================== AUTH MIDDLEWARE =====================
 // Токен — простая строка 'token-<userId>' (без JWT, см. комментарий ниже
 // у /api/auth/*), но теперь backend реально проверяет её перед мутацией
@@ -208,6 +254,19 @@ app.get('/api/orders', (req, res) => {
     res.json(readData(ORDERS_FILE));
 });
 
+// 1a. % соответствия каждой активной закупки профилю текущего производителя
+// (умный матчинг — см. computeMatchScore выше)
+app.get('/api/orders/match-scores', requireAuth, requireRole('producer'), (req, res) => {
+    const companies = readData(COMPANIES_FILE);
+    const me = companies.find(c => c.company === req.user.company && c.role === 'producer');
+    const orders = readData(ORDERS_FILE);
+    const scores = {};
+    orders.forEach(order => {
+        scores[order.id] = me ? computeMatchScore(order, me) : 0;
+    });
+    res.json(scores);
+});
+
 // 1b. Скачать чертёж/спецификацию, приложенный к закупке
 app.get('/api/orders/:orderId/drawing', (req, res) => {
     const orderId = Number(req.params.orderId);
@@ -245,6 +304,14 @@ app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUploa
 
     orders.push(newOrder);
     writeData(ORDERS_FILE, orders);
+
+    // Умный матчинг: уведомляем не всех производителей подряд, а только тех,
+    // чей профиль (специализация/оборудование) реально подходит под закупку.
+    const MATCH_NOTIFY_THRESHOLD = 50;
+    matchedProducers(newOrder, MATCH_NOTIFY_THRESHOLD).forEach(m => {
+        addNotification(m.company, `🎯 Новая подходящая закупка (${m.score}% совпадение): «${plainTitle(newOrder.title)}»`);
+    });
+
     res.status(201).json(newOrder);
 });
 
