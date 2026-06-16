@@ -4,6 +4,22 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const http = require('http');
+const crypto = require('crypto');
+
+function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+    return `${salt}:${hash}`;
+}
+
+function verifyPassword(input, stored) {
+    if (!stored || !stored.includes(':')) return input === stored; // legacy plain text
+    const [salt, hash] = stored.split(':');
+    try {
+        const derived = crypto.scryptSync(input, salt, 64).toString('hex');
+        return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(derived, 'hex'));
+    } catch { return false; }
+}
 
 const app = express();
 const PORT = 5000;
@@ -77,6 +93,36 @@ function handleDrawingUpload(req, res, next) {
     });
 }
 
+// ===================== ЗАГРУЗКА ФАЙЛОВ К КП =====================
+const KP_ALLOWED_EXT = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
+
+const kpStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, 'kp-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
+    }
+});
+
+const uploadKP = multer({
+    storage: kpStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!KP_ALLOWED_EXT.includes(ext)) {
+            return cb(new Error('Недопустимый тип файла. Разрешены: ' + KP_ALLOWED_EXT.join(', ')));
+        }
+        cb(null, true);
+    }
+}).single('kpFile');
+
+function handleKPUpload(req, res, next) {
+    uploadKP(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить файл' });
+        next();
+    });
+}
+
 function deleteDrawingFile(drawing) {
     if (!drawing || !drawing.storedName) return;
     const filePath = path.join(UPLOADS_DIR, drawing.storedName);
@@ -140,7 +186,10 @@ function plainTitle(title) {
 
 const CATEGORY_KEYWORDS = {
     'РТИ': ['рти', 'резин', 'уплотн', 'манжет', 'вулканиз'],
-    'Металл': ['металл', 'прокат', 'сварк', 'металлоконструкц', 'лазерн', 'гибочн', 'чпу', 'литье', 'нефтепромысл']
+    'Металл': ['металл', 'прокат', 'сварк', 'металлоконструкц', 'лазерн', 'гибочн', 'чпу', 'литье', 'нефтепромысл'],
+    'Трубопроводная арматура': ['арматур', 'задвиж', 'клапан', 'кран', 'вентил', 'фланц', 'фитинг', 'трубопров'],
+    'Электрооборудование': ['электр', 'кабел', 'двигател', 'трансформ', 'автомат', 'щит', 'пускател'],
+    'Прочее': []
 };
 
 function stem(word) {
@@ -284,7 +333,7 @@ app.get('/api/orders/:orderId/drawing', (req, res) => {
 
 // 2. Создать новую заявку
 app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUpload, (req, res) => {
-    const { title, category, deadline } = req.body;
+    const { title, category, deadline, quantity, description } = req.body;
     if (!title || !category || !deadline) {
         return res.status(400).json({ error: 'Заполните все поля заявки' });
     }
@@ -297,6 +346,8 @@ app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUploa
         status: "Активный",
         responses: 0,
         deadline,
+        quantity: quantity ? Number(quantity) : null,
+        description: description ? String(description).slice(0, 1000) : '',
         company: req.user.company,
         drawing: req.file ? { originalName: req.file.originalname, storedName: req.file.filename } : null,
         createdAt: new Date().toISOString()
@@ -318,7 +369,7 @@ app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUploa
 // 2b. Редактировать свою закупку (только пока не закрыта и не отменена)
 app.put('/api/orders/:orderId', requireAuth, requireRole('customer'), handleDrawingUpload, (req, res) => {
     const orderId = Number(req.params.orderId);
-    const { title, category, deadline } = req.body;
+    const { title, category, deadline, quantity, description } = req.body;
     if (!title || !category || !deadline) {
         return res.status(400).json({ error: 'Заполните все поля заявки' });
     }
@@ -338,6 +389,8 @@ app.put('/api/orders/:orderId', requireAuth, requireRole('customer'), handleDraw
     order.title = title;
     order.category = category;
     order.deadline = deadline;
+    order.quantity = quantity ? Number(quantity) : null;
+    order.description = description !== undefined ? String(description).slice(0, 1000) : (order.description || '');
     if (req.file) {
         deleteDrawingFile(order.drawing);
         order.drawing = { originalName: req.file.originalname, storedName: req.file.filename };
@@ -382,8 +435,23 @@ app.post('/api/orders/:orderId/cancel', requireAuth, requireRole('customer'), (r
 
 // ===================== PROPOSALS =====================
 
-// 3. Отправить коммерческое предложение (КП)
-app.post('/api/proposals', requireAuth, requireRole('producer'), (req, res) => {
+// 3. Скачать файл, приложенный к КП
+app.get('/api/proposals/:proposalId/file', (req, res) => {
+    const proposalId = Number(req.params.proposalId);
+    const proposals = readData(PROPOSALS_FILE);
+    const proposal = proposals.find(p => p.id === proposalId);
+    if (!proposal || !proposal.kpFile) {
+        return res.status(404).json({ error: 'Файл не найден' });
+    }
+    const filePath = path.join(UPLOADS_DIR, proposal.kpFile.storedName);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Файл был удалён с сервера' });
+    }
+    res.download(filePath, proposal.kpFile.originalName);
+});
+
+// 3b. Отправить коммерческое предложение (КП)
+app.post('/api/proposals', requireAuth, requireRole('producer'), handleKPUpload, (req, res) => {
     const { orderId, orderTitle, price, days } = req.body;
     if (!orderId || !price || !days) {
         return res.status(400).json({ error: 'Не указаны ID заявки, цена или сроки' });
@@ -397,6 +465,11 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), (req, res) => {
         return res.status(404).json({ error: 'Заявка с таким ID не найдена' });
     }
 
+    const duplicate = proposals.find(p => p.orderId === Number(orderId) && p.company === req.user.company);
+    if (duplicate) {
+        return res.status(409).json({ error: 'Вы уже подали КП на эту закупку. Отредактируйте существующее предложение.' });
+    }
+
     const newProposal = {
         id: proposals.length > 0 ? Math.max(...proposals.map(p => p.id)) + 1 : 1,
         orderId: Number(orderId),
@@ -405,6 +478,7 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), (req, res) => {
         days: Number(days),
         company: req.user.company,
         status: 'Ожидает ответа',
+        kpFile: req.file ? { originalName: req.file.originalname, storedName: req.file.filename } : null,
         createdAt: new Date().toISOString()
     };
 
@@ -421,9 +495,10 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), (req, res) => {
     res.status(201).json(newProposal);
 });
 
-// 4. Получить все предложения
-app.get('/api/proposals', (req, res) => {
-    res.json(readData(PROPOSALS_FILE));
+// 4. Получить предложения своей компании
+app.get('/api/proposals', requireAuth, (req, res) => {
+    const proposals = readData(PROPOSALS_FILE).filter(p => p.company === req.user.company);
+    res.json(proposals);
 });
 
 // 5. Получить предложения для конкретной заявки
@@ -669,13 +744,16 @@ app.put('/api/companies/:id', requireAuth, (req, res) => {
         return res.status(403).json({ error: 'Можно редактировать только профиль своей компании' });
     }
 
-    const { city, yearsExperience, about, equipment } = req.body;
+    const { city, yearsExperience, about, equipment, specialization, phone, website } = req.body;
     if (city !== undefined) company.city = String(city).slice(0, 100);
     if (yearsExperience !== undefined) {
         const n = Number(yearsExperience);
         company.yearsExperience = Number.isFinite(n) && n >= 0 ? n : null;
     }
     if (about !== undefined) company.about = String(about).slice(0, 1000);
+    if (specialization !== undefined) company.specialization = String(specialization).slice(0, 200);
+    if (phone !== undefined) company.phone = String(phone).slice(0, 30);
+    if (website !== undefined) company.website = String(website).slice(0, 200);
     if (equipment !== undefined && Array.isArray(equipment)) {
         company.equipment = equipment.map(e => String(e).slice(0, 60)).slice(0, 20);
     }
@@ -746,7 +824,7 @@ app.post('/api/auth/register', (req, res) => {
     const newUser = {
         id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
         email,
-        password,
+        password: hashPassword(password),
         role,
         company,
         inn: inn || ''
@@ -783,9 +861,15 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     const users = readData(USERS_FILE);
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (!user) {
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user || !verifyPassword(password, user.password)) {
         return res.status(401).json({ error: 'Неверный email или пароль' });
+    }
+
+    // Если пароль хранился открытым текстом — обновляем до хэша при первом входе
+    if (!user.password.includes(':')) {
+        user.password = hashPassword(password);
+        writeData(USERS_FILE, users);
     }
 
     res.json({ token: 'token-' + user.id, role: user.role, company: user.company });
@@ -802,9 +886,9 @@ app.get('/api/messages/:orderId/:company', (req, res) => {
     res.json(messages.filter(m => m.orderId === orderId && m.company === company));
 });
 
-app.post('/api/messages', (req, res) => {
-    const { orderId, company, sender, text } = req.body;
-    if (!orderId || !company || !sender || !text) {
+app.post('/api/messages', requireAuth, (req, res) => {
+    const { orderId, company, text } = req.body;
+    if (!orderId || !company || !text) {
         return res.status(400).json({ error: 'Заполните все поля сообщения' });
     }
 
@@ -813,7 +897,7 @@ app.post('/api/messages', (req, res) => {
         id: messages.length > 0 ? Math.max(...messages.map(m => m.id)) + 1 : 1,
         orderId: Number(orderId),
         company,
-        sender,
+        sender: req.user.role,
         text: String(text).slice(0, 2000),
         createdAt: new Date().toISOString()
     };
@@ -827,22 +911,31 @@ app.post('/api/messages', (req, res) => {
 // Создаются автоматически сервером при событиях (новый отклик,
 // принятие/отклонение КП) — см. addNotification() выше.
 
-app.get('/api/notifications/:company', (req, res) => {
+app.get('/api/notifications/:company', requireAuth, (req, res) => {
+    if (req.params.company !== req.user.company) {
+        return res.status(403).json({ error: 'Нет доступа к уведомлениям этой компании' });
+    }
     const list = readData(NOTIFICATIONS_FILE)
-        .filter(n => n.company === req.params.company)
+        .filter(n => n.company === req.user.company)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(list);
 });
 
-app.post('/api/notifications/:company/read', (req, res) => {
+app.post('/api/notifications/:company/read', requireAuth, (req, res) => {
+    if (req.params.company !== req.user.company) {
+        return res.status(403).json({ error: 'Нет доступа' });
+    }
     const notifications = readData(NOTIFICATIONS_FILE);
-    notifications.forEach(n => { if (n.company === req.params.company) n.read = true; });
+    notifications.forEach(n => { if (n.company === req.user.company) n.read = true; });
     writeData(NOTIFICATIONS_FILE, notifications);
     res.json({ message: 'ok' });
 });
 
-app.delete('/api/notifications/:company', (req, res) => {
-    const notifications = readData(NOTIFICATIONS_FILE).filter(n => n.company !== req.params.company);
+app.delete('/api/notifications/:company', requireAuth, (req, res) => {
+    if (req.params.company !== req.user.company) {
+        return res.status(403).json({ error: 'Нет доступа' });
+    }
+    const notifications = readData(NOTIFICATIONS_FILE).filter(n => n.company !== req.user.company);
     writeData(NOTIFICATIONS_FILE, notifications);
     res.json({ message: 'ok' });
 });

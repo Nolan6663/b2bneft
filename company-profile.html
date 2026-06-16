@@ -77,8 +77,20 @@
         <div class="modal-content">
             <h3>Редактирование профиля</h3>
             <div class="form-group">
+                <label>Специализация</label>
+                <input type="text" id="editSpecialization" placeholder="Например, Резинотехнические изделия (РТИ)">
+            </div>
+            <div class="form-group">
                 <label>Город</label>
                 <input type="text" id="editCity" placeholder="Например, г. Ярославль">
+            </div>
+            <div class="form-group">
+                <label>Телефон</label>
+                <input type="tel" id="editPhone" placeholder="+7 (999) 123-45-67">
+            </div>
+            <div class="form-group">
+                <label>Сайт</label>
+                <input type="url" id="editWebsite" placeholder="https://example.ru">
             </div>
             <div class="form-group">
                 <label>Опыт работы, лет</label>
@@ -199,7 +211,9 @@
                             </div>
                             <div class="profile-meta">
                                 ${c.city ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(c.city)}</span>` : ''}
-                                ${c.yearsExperience ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> Опыт работы: ${c.yearsExperience} лет</span>` : ''}
+                                ${c.yearsExperience ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> Опыт: ${c.yearsExperience} лет</span>` : ''}
+                                ${c.phone ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"></path></svg> ${escapeHtml(c.phone)}</span>` : ''}
+                                ${c.website ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> <a href="${escapeHtml(c.website)}" target="_blank" rel="noopener" style="color:var(--accent-bright);">Сайт компании</a></span>` : ''}
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
@@ -250,7 +264,10 @@
 
         function openEditProfile() {
             editEquipment = currentData.equipment ? [...currentData.equipment] : [];
+            document.getElementById('editSpecialization').value = currentData.specialization || '';
             document.getElementById('editCity').value = currentData.city || '';
+            document.getElementById('editPhone').value = currentData.phone || '';
+            document.getElementById('editWebsite').value = currentData.website || '';
             document.getElementById('editYears').value = currentData.yearsExperience || '';
             document.getElementById('editAbout').value = currentData.about || '';
             renderEquipmentTagsEdit();
@@ -281,15 +298,19 @@
         }
 
         async function saveProfile() {
+            const specialization = document.getElementById('editSpecialization').value.trim();
             const city = document.getElementById('editCity').value.trim();
             const yearsExperience = document.getElementById('editYears').value.trim();
             const about = document.getElementById('editAbout').value.trim();
+
+            const phone = document.getElementById('editPhone').value.trim();
+            const website = document.getElementById('editWebsite').value.trim();
 
             try {
                 const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
-                    body: JSON.stringify({ city, yearsExperience: yearsExperience || null, about, equipment: editEquipment })
+                    body: JSON.stringify({ specialization, city, phone, website, yearsExperience: yearsExperience || null, about, equipment: editEquipment })
                 });
                 if (response.ok) {
                     currentData = await response.json();

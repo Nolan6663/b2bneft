@@ -9,6 +9,8 @@
     <style>
         .clickable-row { cursor: pointer; }
         .form-group input[type="file"] { padding: 10px 12px; border: 2px dashed var(--input-border); background: transparent; cursor: pointer; height: auto; }
+        .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+        .sortable-th:hover { color: var(--accent-bright); }
 
         .chat-icon-btn {
             width: 28px; height: 28px; flex-shrink: 0; padding: 0; border-radius: 8px;
@@ -37,7 +39,6 @@
     <div class="sidebar">
         <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
         <a href="index.html" class="active"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
-        <a href="proposals.html"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
 
@@ -66,18 +67,30 @@
         </div>
 
         <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h3>Список размещенных закупок</h3>
-                <button class="btn-primary" onclick="openModal()">+ Создать закупку</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-secondary" onclick="exportOrders()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                        Экспорт
+                    </button>
+                    <button class="btn-primary" onclick="openModal()">+ Создать закупку</button>
+                </div>
+            </div>
+            <div class="tabs" style="margin-bottom:16px;">
+                <button class="tab active" id="tabFilterAll" onclick="setStatusFilter('all')">Все&nbsp;(<span id="countAll">0</span>)</button>
+                <button class="tab" id="tabFilterActive" onclick="setStatusFilter('Активный')">Активные&nbsp;(<span id="countActive">0</span>)</button>
+                <button class="tab" id="tabFilterClosed" onclick="setStatusFilter('Закрыта')">Закрытые&nbsp;(<span id="countClosed">0</span>)</button>
+                <button class="tab" id="tabFilterCancelled" onclick="setStatusFilter('Отменена')">Отменённые&nbsp;(<span id="countCancelled">0</span>)</button>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Наименование позиции</th>
-                        <th>Категория</th>
-                        <th>Статус</th>
-                        <th>Отклики</th>
-                        <th>Дедлайн</th>
+                        <th class="sortable-th" onclick="sortBy('title')">Наименование <span id="sort-title"></span></th>
+                        <th class="sortable-th" onclick="sortBy('category')">Категория <span id="sort-category"></span></th>
+                        <th class="sortable-th" onclick="sortBy('status')">Статус <span id="sort-status"></span></th>
+                        <th class="sortable-th" onclick="sortBy('responses')">Отклики <span id="sort-responses"></span></th>
+                        <th class="sortable-th" onclick="sortBy('deadline')">Дедлайн <span id="sort-deadline"></span></th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -98,11 +111,22 @@
                 <select id="orderCategory" style="width:100%; height:var(--input-height); background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-input); color:var(--text-primary); padding:0 14px; font-size:13px; outline:none;">
                     <option value="РТИ">РТИ</option>
                     <option value="Металл">Металл</option>
+                    <option value="Трубопроводная арматура">Трубопроводная арматура</option>
+                    <option value="Электрооборудование">Электрооборудование</option>
+                    <option value="Прочее">Прочее</option>
                 </select>
             </div>
             <div class="form-group">
+                <label>Количество, шт</label>
+                <input type="number" id="orderQuantity" min="1" placeholder="Например, 100">
+            </div>
+            <div class="form-group">
                 <label>Дедлайн поставки</label>
-                <input type="text" id="orderDeadline" placeholder="Например, 30.05.2026">
+                <input type="date" id="orderDeadline">
+            </div>
+            <div class="form-group">
+                <label>Описание / Технические требования</label>
+                <textarea id="orderDescription" placeholder="Материал, ГОСТ, допуски, условия поставки..."></textarea>
             </div>
             <div class="form-group">
                 <label>Чертеж / Спецификация (PDF, DWG, STEP)</label>
@@ -173,8 +197,43 @@
 
         let editingOrderId = null;
         let ordersCache = [];
+        let statusFilter = 'all';
+        let sortField = 'createdAt';
+        let sortDir = -1;
         let currentProposalsOrderId = null;
         let currentProposalsOrderTitle = '';
+
+        function deadlineToSortKey(str) {
+            if (!str) return '';
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+            const p = str.split('.');
+            return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : str;
+        }
+
+        function sortValue(order, field) {
+            switch (field) {
+                case 'title':     return (order.title || '').toLowerCase();
+                case 'category':  return order.category || '';
+                case 'status':    return order.status || '';
+                case 'responses': return order.responses || 0;
+                case 'deadline':  return deadlineToSortKey(order.deadline);
+                default:          return order.createdAt || '';
+            }
+        }
+
+        function sortBy(field) {
+            sortDir = sortField === field ? -sortDir : (field === 'responses' ? -1 : 1);
+            sortField = field;
+            updateSortIndicators();
+            renderOrdersTable();
+        }
+
+        function updateSortIndicators() {
+            ['title', 'category', 'status', 'responses', 'deadline'].forEach(f => {
+                const el = document.getElementById('sort-' + f);
+                if (el) el.innerText = sortField === f ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
+            });
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             loadOrders();
@@ -184,7 +243,9 @@
         function resetOrderForm() {
             document.getElementById('orderName').value = '';
             document.getElementById('orderCategory').value = 'РТИ';
+            document.getElementById('orderQuantity').value = '';
             document.getElementById('orderDeadline').value = '';
+            document.getElementById('orderDescription').value = '';
             document.getElementById('orderFile').value = '';
             document.getElementById('orderFileExisting').style.display = 'none';
         }
@@ -206,7 +267,9 @@
             document.getElementById('orderSubmitBtn').innerText = 'Сохранить';
             document.getElementById('orderName').value = order.title;
             document.getElementById('orderCategory').value = order.category;
-            document.getElementById('orderDeadline').value = order.deadline;
+            document.getElementById('orderQuantity').value = order.quantity || '';
+            document.getElementById('orderDeadline').value = deadlineToInputValue(order.deadline);
+            document.getElementById('orderDescription').value = order.description || '';
             document.getElementById('orderFile').value = '';
             const existingEl = document.getElementById('orderFileExisting');
             if (order.drawing) {
@@ -226,39 +289,93 @@
                 const response = await fetch(`${SERVER_URL}/orders`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-                const orders = await response.json();
-                ordersCache = orders;
-                const tableBody = document.getElementById('orders-table-body');
-                if (!tableBody) return;
-                tableBody.innerHTML = '';
-
-                orders.forEach(order => {
-                    const row = document.createElement('tr');
-                    row.className = 'clickable-row';
-                    const displayTitle = order.title;
-
-                    row.onclick = () => viewProposals(order.id, displayTitle);
-                    const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
-                    const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
-
-                    const actionsCell = isLocked
-                        ? `<span style="color: var(--text-muted); font-size: 12px;">—</span>`
-                        : `<button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px;" onclick="event.stopPropagation(); openEditModal(${order.id})">✎ Изменить</button>
-                           <button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px; margin-left:6px;" onclick="event.stopPropagation(); cancelOrder(${order.id})">✕ Отменить</button>`;
-
-                    row.innerHTML = `
-                        <td><strong>${escapeHtml(displayTitle)}</strong></td>
-                        <td>${escapeHtml(order.category)}</td>
-                        <td><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></td>
-                        <td style="color: var(--accent-bright); font-weight: 700;">${order.responses} (посмотреть)</td>
-                        <td>${escapeHtml(order.deadline)}</td>
-                        <td>${actionsCell}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                ordersCache = await response.json();
+                updateStatusCounts();
+                renderOrdersTable();
             } catch (error) {
                 console.error('Ошибка при загрузке заявок:', error);
             }
+        }
+
+        function updateStatusCounts() {
+            document.getElementById('countAll').innerText = ordersCache.length;
+            document.getElementById('countActive').innerText = ordersCache.filter(o => o.status === 'Активный').length;
+            document.getElementById('countClosed').innerText = ordersCache.filter(o => o.status === 'Закрыта').length;
+            document.getElementById('countCancelled').innerText = ordersCache.filter(o => o.status === 'Отменена').length;
+        }
+
+        function setStatusFilter(status) {
+            statusFilter = status;
+            const tabMap = { 'all': 'All', 'Активный': 'Active', 'Закрыта': 'Closed', 'Отменена': 'Cancelled' };
+            Object.values(tabMap).forEach(s => document.getElementById('tabFilter' + s).classList.remove('active'));
+            document.getElementById('tabFilter' + tabMap[status]).classList.add('active');
+            renderOrdersTable();
+        }
+
+        function renderOrdersTable() {
+            const filtered = statusFilter === 'all' ? ordersCache : ordersCache.filter(o => o.status === statusFilter);
+            const sorted = [...filtered].sort((a, b) => {
+                const va = sortValue(a, sortField), vb = sortValue(b, sortField);
+                if (va < vb) return -sortDir;
+                if (va > vb) return sortDir;
+                return 0;
+            });
+
+            const tableBody = document.getElementById('orders-table-body');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+
+            if (sorted.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-secondary); padding:40px;">Нет закупок</td></tr>`;
+                return;
+            }
+
+            sorted.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = 'clickable-row';
+                const displayTitle = order.title;
+                const createdStr = order.createdAt
+                    ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '';
+
+                row.onclick = () => viewProposals(order.id, displayTitle);
+                const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
+                const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
+
+                const actionsCell = isLocked
+                    ? `<span style="color: var(--text-muted); font-size: 12px;">—</span>`
+                    : `<button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px;" onclick="event.stopPropagation(); openEditModal(${order.id})">✎ Изменить</button>
+                       <button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px; margin-left:6px;" onclick="event.stopPropagation(); cancelOrder(${order.id})">✕ Отменить</button>`;
+
+                row.innerHTML = `
+                    <td>
+                        <strong>${escapeHtml(displayTitle)}</strong>
+                        ${createdStr ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">создана ${createdStr}</div>` : ''}
+                    </td>
+                    <td>${escapeHtml(order.category)}</td>
+                    <td><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></td>
+                    <td style="color: var(--accent-bright); font-weight: 700;">${order.responses} (посмотреть)</td>
+                    <td>${formatDeadline(order.deadline)}</td>
+                    <td>${actionsCell}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function exportOrders() {
+            const filtered = statusFilter === 'all' ? ordersCache : ordersCache.filter(o => o.status === statusFilter);
+            const sorted = [...filtered].sort((a, b) => {
+                const va = sortValue(a, sortField), vb = sortValue(b, sortField);
+                return va < vb ? -sortDir : va > vb ? sortDir : 0;
+            });
+            exportToCSV('zakupki.csv',
+                ['Наименование', 'Категория', 'Статус', 'Отклики', 'Дедлайн', 'Количество', 'Дата создания'],
+                sorted.map(o => [
+                    o.title, o.category, o.status, o.responses,
+                    formatDeadline(o.deadline), o.quantity || '',
+                    o.createdAt ? new Date(o.createdAt).toLocaleDateString('ru-RU') : ''
+                ])
+            );
         }
 
         async function cancelOrder(orderId) {
@@ -323,9 +440,16 @@
                             actionCell = `<span style="color: var(--text-muted); font-size: 12px;">—</span>`;
                         }
 
+                        const fileLink = prop.kpFile
+                            ? `<a href="${SERVER_URL}/proposals/${prop.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline; white-space:nowrap;">📎 Файл КП</a>`
+                            : '';
+
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div></td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div>
+                                ${fileLink}
+                            </td>
                             <td>${prop.price} ₽/шт</td>
                             <td>${prop.days} дней</td>
                             <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>
@@ -342,14 +466,19 @@
         async function saveOrder() {
             const titleInput = document.getElementById('orderName');
             const categoryInput = document.getElementById('orderCategory');
+            const quantityInput = document.getElementById('orderQuantity');
             const deadlineInput = document.getElementById('orderDeadline');
+            const descriptionInput = document.getElementById('orderDescription');
             const fileInput = document.getElementById('orderFile');
 
             const cleanTitle = titleInput.value.trim();
             const category = categoryInput.value;
-            const deadline = deadlineInput.value.trim();
+            const deadlineRaw = deadlineInput.value;
 
-            if (!cleanTitle || !deadline) return alert('Заполните обязательные поля!');
+            if (!cleanTitle || !deadlineRaw) return alert('Заполните обязательные поля!');
+
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            if (new Date(deadlineRaw) < today) return alert('Дедлайн должен быть сегодня или позднее');
 
             const isEdit = editingOrderId !== null;
             const url = isEdit ? `${SERVER_URL}/orders/${editingOrderId}` : `${SERVER_URL}/orders`;
@@ -358,7 +487,9 @@
             const formData = new FormData();
             formData.append('title', cleanTitle);
             formData.append('category', category);
-            formData.append('deadline', deadline);
+            formData.append('deadline', deadlineRaw);
+            if (quantityInput.value) formData.append('quantity', quantityInput.value);
+            formData.append('description', descriptionInput.value.trim());
             if (!isEdit) formData.append('company', localStorage.getItem('userCompany'));
             if (fileInput.files.length > 0) formData.append('drawing', fileInput.files[0]);
 

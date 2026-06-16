@@ -108,6 +108,18 @@ function downloadMockFile(filename, content) {
   link.click();
 }
 
+/* CSV-экспорт: принимает имя файла, массив заголовков и массив строк (массивов значений) */
+function exportToCSV(filename, headers, rows) {
+  const BOM = '﻿';
+  const escape = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const lines = [headers, ...rows].map(row => row.map(escape).join(';')).join('\n');
+  const blob = new Blob([BOM + lines], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
 /* ---------------------------------------------------------------------
    Защита от XSS при вставке пользовательского текста в innerHTML
    --------------------------------------------------------------------- */
@@ -115,6 +127,28 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.innerText = str == null ? '' : String(str);
   return div.innerHTML;
+}
+
+/* ---------------------------------------------------------------------
+   Форматирование дедлайна — поддерживает оба формата хранения:
+   старый DD.MM.YYYY и новый YYYY-MM-DD (ISO date input)
+   --------------------------------------------------------------------- */
+function formatDeadline(str) {
+  if (!str) return '—';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split('-');
+    return `${d}.${m}.${y}`;
+  }
+  return str;
+}
+
+/* Конвертирует DD.MM.YYYY или YYYY-MM-DD в значение для <input type="date"> */
+function deadlineToInputValue(str) {
+  if (!str) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  const parts = str.split('.');
+  if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  return '';
 }
 
 /* ---------------------------------------------------------------------
@@ -190,7 +224,11 @@ async function refreshNotificationBadge() {
   const badgeEl = document.getElementById('bellBadge');
   if (!badgeEl) return;
   try {
-    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
     const list = await response.json();
     const unreadCount = list.filter(n => !n.read).length;
     badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -207,7 +245,9 @@ async function openNotificationsModal() {
   container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Загрузка...</div>';
 
   try {
-    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
+    const token = localStorage.getItem('authToken');
+    const authHeader = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { headers: authHeader });
     const list = await response.json();
     if (list.length === 0) {
       container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">История уведомлений пуста</div>';
@@ -221,7 +261,7 @@ async function openNotificationsModal() {
       item.innerHTML = `<div>${escapeHtml(n.text)}</div><div class="time">⏱ ${time}</div>`;
       container.appendChild(item);
     });
-    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST' });
+    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST', headers: authHeader });
     refreshNotificationBadge();
   } catch (error) {
     container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Не удалось загрузить уведомления</div>';
@@ -235,7 +275,11 @@ function closeNotificationsModal() {
 
 async function clearNotifications() {
   try {
-    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { method: 'DELETE' });
+    const token = localStorage.getItem('authToken');
+    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, {
+      method: 'DELETE',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+    });
   } catch (error) { /* ignore */ }
   openNotificationsModal();
 }
@@ -308,10 +352,11 @@ async function sendGlobalChatMessage() {
   const text = input.value.trim();
   input.value = '';
   try {
+    const token = localStorage.getItem('authToken');
     await fetch(`${SERVER_URL}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId: activeChatOrderId, company: activeChatCompany, sender: localStorage.getItem('userRole'), text })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ orderId: activeChatOrderId, company: activeChatCompany, text })
     });
   } catch (error) { /* ignore, отрисуем то, что есть */ }
   renderChatHistory();

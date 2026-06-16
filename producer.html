@@ -21,6 +21,10 @@
         <a href="proposals.html"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
 
         <div class="sidebar-bottom">
             <div class="theme-toggle-row">
@@ -94,16 +98,25 @@
                 <div><strong>Вы вошли как организация:</strong> <span id="displayCompanyName" style="font-weight: 700; color: var(--accent-bright);">Загрузка...</span></div>
             </div>
 
-            <div class="filter-section">
-                <label for="categoryFilter">Фильтр по категориям:</label>
-                <div class="custom-select-wrapper">
-                    <input type="hidden" id="categoryFilter" value="all">
-                    <div class="custom-select" id="wrapperCategoryFilter">
-                        <div class="custom-select-trigger"><span>Все категории</span></div>
-                        <div class="custom-options">
-                            <div class="custom-option selected" data-value="all">Все категории</div>
-                            <div class="custom-option" data-value="РТИ">РТИ</div>
-                            <div class="custom-option" data-value="Металл">Металл</div>
+            <div class="filter-section" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+                <div style="position:relative; flex:1; min-width:200px;">
+                    <svg style="position:absolute; left:14px; top:50%; transform:translateY(-50%);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c7884" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4"></path></svg>
+                    <input type="text" id="orderSearchInput" class="search-input" placeholder="Поиск по названию или описанию..." style="padding-left:38px; width:100%;">
+                </div>
+                <div>
+                    <label style="font-size:11.5px; color:var(--text-secondary-alt); display:block; margin-bottom:6px;">Категория</label>
+                    <div class="custom-select-wrapper">
+                        <input type="hidden" id="categoryFilter" value="all">
+                        <div class="custom-select" id="wrapperCategoryFilter">
+                            <div class="custom-select-trigger"><span>Все категории</span></div>
+                            <div class="custom-options">
+                                <div class="custom-option selected" data-value="all">Все категории</div>
+                                <div class="custom-option" data-value="РТИ">РТИ</div>
+                                <div class="custom-option" data-value="Металл">Металл</div>
+                                <div class="custom-option" data-value="Трубопроводная арматура">Трубопроводная арматура</div>
+                                <div class="custom-option" data-value="Электрооборудование">Электрооборудование</div>
+                                <div class="custom-option" data-value="Прочее">Прочее</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,6 +152,10 @@
             <div class="form-group">
                 <label>Срок поставки (дней)</label>
                 <input type="number" id="proposalTerms" placeholder="Например, 14">
+            </div>
+            <div class="form-group">
+                <label>Прикрепить КП / прайс-лист (PDF, Word, Excel)</label>
+                <input type="file" id="proposalFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="padding:10px 12px; border:2px dashed var(--input-border); background:transparent; cursor:pointer; height:auto;">
             </div>
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeRespondModal()">Отмена</button>
@@ -195,11 +212,18 @@
             document.getElementById('displayCompanyName').innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»');
             if (isGuest && document.getElementById('companyBlock')) { document.getElementById('companyBlock').style.borderColor = 'var(--error)'; }
 
-            initCustomSelect('wrapperCategoryFilter', 'categoryFilter', (val) => {
+            function applyOrderFilters() {
+                const cat = document.getElementById('categoryFilter').value;
+                const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
                 document.querySelectorAll('.order-item').forEach(item => {
-                    item.style.display = (val === 'all' || item.getAttribute('data-category') === val) ? 'flex' : 'none';
+                    const matchCat = cat === 'all' || item.getAttribute('data-category') === cat;
+                    const matchSearch = !search || (item.getAttribute('data-search') || '').includes(search);
+                    item.style.display = matchCat && matchSearch ? 'flex' : 'none';
                 });
-            });
+            }
+
+            initCustomSelect('wrapperCategoryFilter', 'categoryFilter', applyOrderFilters);
+            document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
         });
 
         function switchProducerTab(tab) {
@@ -256,9 +280,13 @@ function renderCompanyStatus(status) {
                         statsEl.style.display = 'none';
                     }
                     if (me.id) {
+                        localStorage.setItem('myCompanyId', me.id);
                         const profileLink = document.getElementById('myProfileLink');
                         profileLink.style.display = 'inline-flex';
                         profileLink.href = `company-profile.html?id=${me.id}`;
+                        const sidebarLink = document.getElementById('sidebarProfileLink');
+                        sidebarLink.href = `company-profile.html?id=${me.id}`;
+                        sidebarLink.style.display = '';
                     }
                 } else {
                     renderCompanyStatus('На проверке');
@@ -298,6 +326,7 @@ function renderCompanyStatus(status) {
                     orderItem.setAttribute('data-category', order.category);
                     const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
                     const displayTitle = order.title;
+                    orderItem.setAttribute('data-search', `${displayTitle} ${order.description || ''}`.toLowerCase());
 
                     const chatBtn = isGuest
                         ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
@@ -330,6 +359,16 @@ function renderCompanyStatus(status) {
                         matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🎯 ${order.matchScore}% совпадение</span>`;
                     }
 
+                    const createdStr = order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                        : '';
+                    const quantityBlock = order.quantity
+                        ? `<div class="meta">Количество: <span class="meta-value">${order.quantity} шт</span></div>`
+                        : '';
+                    const descriptionBlock = order.description
+                        ? `<div class="meta" style="margin-top:6px; color: var(--text-tertiary); font-size: 12.5px;">${escapeHtml(order.description)}</div>`
+                        : '';
+
                     orderItem.innerHTML = `
                         <div class="order-info">
                             <div class="order-title-row">
@@ -339,8 +378,11 @@ function renderCompanyStatus(status) {
                                 ${matchBadge}
                             </div>
                             ${statusBlock}
+                            ${quantityBlock}
                             <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
-                            <div class="meta">Дедлайн: <span class="meta-value">${escapeHtml(order.deadline)}</span></div>
+                            <div class="meta">Дедлайн: <span class="meta-value">${formatDeadline(order.deadline)}</span></div>
+                            ${createdStr ? `<div class="meta">Размещена: <span class="meta-value">${createdStr}</span></div>` : ''}
+                            ${descriptionBlock}
                             ${drawingBlock}
                         </div>
                         <div class="order-actions">${chatBtn}${actionBtn}</div>`;
@@ -375,21 +417,31 @@ function renderCompanyStatus(status) {
             document.getElementById('modalTitle').innerText = `Подача КП на: ${title}`;
             document.getElementById('respondModal').style.display = 'flex';
         }
-        function closeRespondModal() { document.getElementById('respondModal').style.display = 'none'; }
+        function closeRespondModal() {
+            document.getElementById('respondModal').style.display = 'none';
+            document.getElementById('proposalFile').value = '';
+        }
 
         async function sendProposal() {
             const priceInput = document.getElementById('proposalPrice');
             const daysInput = document.getElementById('proposalTerms');
+            const fileInput = document.getElementById('proposalFile');
             const price = parseFloat(priceInput.value);
             const days = parseInt(daysInput.value, 10);
-            const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
             if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) return alert('Укажите корректные параметры!');
+
+            const formData = new FormData();
+            formData.append('orderId', currentOrderId);
+            formData.append('orderTitle', currentOrderTitle);
+            formData.append('price', price);
+            formData.append('days', days);
+            if (fileInput.files.length > 0) formData.append('kpFile', fileInput.files[0]);
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                    body: JSON.stringify({ orderId: currentOrderId, orderTitle: currentOrderTitle, price, days, company: companyName })
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
                 });
                 if (response.ok) {
                     closeRespondModal(); priceInput.value = ''; daysInput.value = '';

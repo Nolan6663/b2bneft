@@ -35,6 +35,10 @@
         <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
         <a href="partners.html" class="active"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
         <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
 
         <div class="sidebar-bottom">
             <div class="theme-toggle-row">
@@ -202,6 +206,12 @@
         window.addEventListener('DOMContentLoaded', () => {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+
+            if (userRole === 'producer') {
+                const myId = localStorage.getItem('myCompanyId');
+                const sidebarLink = document.getElementById('sidebarProfileLink');
+                if (myId && sidebarLink) { sidebarLink.href = `company-profile.html?id=${myId}`; sidebarLink.style.display = ''; }
+            }
 
             loadPartners();
             initNotifications();

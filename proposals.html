@@ -60,6 +60,12 @@
         </div>
 
         <div class="section">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+                <button class="btn-secondary" onclick="exportProposals()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                    Экспорт КП
+                </button>
+            </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -132,8 +138,8 @@
                 const response = await fetch(`${SERVER_URL}/proposals`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-                const allProposals = await response.json();
-                const myProposals = allProposals.filter(p => p.company === companyName);
+                const myProposals = await response.json();
+                window._myProposalsCache = myProposals;
 
                 renderDesktopTable(myProposals);
                 renderMobileCards(myProposals);
@@ -164,8 +170,12 @@
                        <button class="btn-action withdraw" onclick="withdrawProposal(${p.id})">Отозвать</button>`
                     : `<span style="color:var(--text-muted); font-size:12px;">Блокировано</span>`;
 
+                const fileLink = p.kpFile
+                    ? `<div style="margin-top:4px;"><a href="${SERVER_URL}/proposals/${p.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline;">📎 Файл КП</a></div>`
+                    : '';
+
                 tr.innerHTML = `
-                    <td><strong>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</strong></td>
+                    <td><strong>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</strong>${fileLink}</td>
                     <td>${p.price.toLocaleString()} ₽/шт</td>
                     <td>${p.days} дней</td>
                     <td><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></td>
@@ -197,8 +207,13 @@
                        </div>`
                     : `<div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:8px;">Редактирование недоступно</div>`;
 
+                const mobileFileLink = p.kpFile
+                    ? `<div><a href="${SERVER_URL}/proposals/${p.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline;">📎 Файл КП</a></div>`
+                    : '';
+
                 card.innerHTML = `
                     <h4>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</h4>
+                    ${mobileFileLink}
                     <div class="meta-row"><span>Статус:</span><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></div>
                     <div class="meta-row"><span>Цена:</span><strong>${p.price.toLocaleString()} ₽/шт</strong></div>
                     <div class="meta-row"><span>Срок:</span><span>${p.days} дней</span></div>
@@ -238,6 +253,17 @@
             } catch (error) {
                 alert('Сервер недоступен, изменения не сохранены');
             }
+        }
+
+        function exportProposals() {
+            exportToCSV('moi_kp.csv',
+                ['Закупка', 'Цена (₽/шт)', 'Срок (дней)', 'Статус', 'Файл КП'],
+                (window._myProposalsCache || []).map(p => [
+                    p.orderTitle || 'Закупка #' + p.orderId,
+                    p.price, p.days, p.status,
+                    p.kpFile ? p.kpFile.originalName : ''
+                ])
+            );
         }
 
         async function withdrawProposal(id) {
