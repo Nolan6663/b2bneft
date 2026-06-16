@@ -9,11 +9,11 @@
         :root {
             --bg-main: #f8fafc;
             --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-sidebar: #090d16;
+            --bg-sidebar: #0b1220;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --accent-blue: #2563eb;
-            --accent-glow: rgba(37, 99, 235, 0.15);
+            --accent-blue: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.18);
             --border-color: rgba(15, 23, 42, 0.06);
             --modal-bg: rgba(255, 255, 255, 0.95);
             --input-bg: #f1f5f9;
@@ -25,11 +25,11 @@
         body.dark-mode {
             --bg-main: #030712;
             --bg-card: rgba(17, 24, 39, 0.6);
-            --bg-sidebar: #0b0f19;
+            --bg-sidebar: #0b1220;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --accent-blue: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
+            --accent-blue: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.28);
             --border-color: rgba(255, 255, 255, 0.05);
             --modal-bg: rgba(15, 23, 42, 0.95);
             --input-bg: #0f172a;
@@ -66,14 +66,18 @@
             flex-shrink: 0;
         }
 
-        .sidebar h1 {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 32px;
-            background: linear-gradient(135deg, #3b82f6, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        }
+        .sidebar-logo img { width: 26px; height: 26px; }
+        .sidebar-logo span {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: #ffffff;
         }
 
         .sidebar a {
@@ -87,6 +91,9 @@
             font-weight: 500;
         }
 
+        .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; opacity: 0.65; flex-shrink: 0; }
+        .sidebar a:hover .nav-icon, .sidebar a.active .nav-icon { opacity: 1; }
+
         .sidebar a:hover {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.04);
@@ -94,7 +101,7 @@
 
         .sidebar a.active {
             color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.08);
+            background-color: #1e293b;
             font-weight: 600;
         }
 
@@ -337,12 +344,12 @@
 <body>
 
     <div class="sidebar">
-        <h1>B2B Платформа</h1>
-        <a href="index.html" class="active">Мои заявки</a>
-        <a href="proposals.html" id="navProposals">Мои отклики</a>
-        <a href="partners.html">Контрагенты</a>
-        <a href="analytics.html">Аналитика</a>
-        
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B Платформа</span></div>
+        <a href="index.html" class="active"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
+        <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
+        <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
+
         <div class="theme-container">
             <span id="themeLabel" class="theme-text">☀️ Светлая тема</span>
             <label class="theme-switch">
@@ -357,7 +364,7 @@
         <div class="header">
             <h2>Кабинет Заказчика</h2>
             <button class="bell-btn" onclick="openNotificationsModal()">
-                <span>🔔</span>
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
         </div>

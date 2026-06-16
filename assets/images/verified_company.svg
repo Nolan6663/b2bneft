@@ -1,0 +1,8 @@
+<svg width="480" height="320" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="480" height="320" rx="32" fill="#F8FAFC"/>
+<circle cx="240" cy="128" r="76" fill="#EAFBF5"/>
+<path d="M240 60L300 94V162L240 196L180 162V94L240 60Z" fill="white" stroke="#10B981" stroke-width="4"/>
+<path d="M211 130L232 151L272 106" stroke="#10B981" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="240" y="240" text-anchor="middle" fill="#0F172A" font-family="Inter, Arial" font-weight="700" font-size="20">Компания верифицирована</text>
+<text x="240" y="268" text-anchor="middle" fill="#64748B" font-family="Inter, Arial" font-size="15">Профиль готов к работе на платформе</text>
+</svg>

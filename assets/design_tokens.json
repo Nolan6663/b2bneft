@@ -1,0 +1,27 @@
+{
+  "colors": {
+    "background": "#F8FAFC",
+    "surface": "#FFFFFF",
+    "sidebar": "#0B1220",
+    "sidebarActive": "#1E293B",
+    "textPrimary": "#0F172A",
+    "textSecondary": "#64748B",
+    "border": "#E2E8F0",
+    "accentGreen": "#10B981",
+    "accentCyan": "#22D3EE",
+    "accentBlue": "#3B82F6",
+    "danger": "#EF4444",
+    "warning": "#F59E0B"
+  },
+  "radius": {
+    "sm": "8px",
+    "md": "12px",
+    "lg": "20px",
+    "xl": "28px"
+  },
+  "shadow": {
+    "card": "0 16px 40px rgba(15, 23, 42, 0.08)",
+    "modal": "0 24px 70px rgba(15, 23, 42, 0.18)"
+  },
+  "font": "Inter / system-ui / Arial"
+}

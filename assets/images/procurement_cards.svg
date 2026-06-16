@@ -1,0 +1,11 @@
+<svg width="480" height="320" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="480" height="320" rx="32" fill="#F8FAFC"/>
+<rect x="90" y="78" width="300" height="164" rx="24" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+<rect x="118" y="112" width="112" height="16" rx="8" fill="#10B981" fill-opacity=".24"/>
+<rect x="118" y="148" width="244" height="12" rx="6" fill="#CBD5E1"/>
+<rect x="118" y="176" width="180" height="12" rx="6" fill="#E2E8F0"/>
+<rect x="118" y="206" width="88" height="24" rx="12" fill="#EEF2FF"/>
+<rect x="270" y="198" width="92" height="32" rx="12" fill="#10B981"/>
+<text x="316" y="219" text-anchor="middle" fill="white" font-family="Inter, Arial" font-weight="700" font-size="12">Отклик</text>
+<text x="240" y="274" text-anchor="middle" fill="#64748B" font-family="Inter, Arial" font-size="15">Прямые закупки и коммерческие предложения</text>
+</svg>

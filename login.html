@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -6,22 +6,32 @@
     <title>B2B Платформа - Авторизация</title>
     <style>
         :root {
-            --bg-main: #030712;
-            --bg-card: rgba(17, 24, 39, 0.6);
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.2);
+            --border-color: rgba(15, 23, 42, 0.08);
+            --input-bg: #f1f5f9;
+            --input-text: #0f172a;
+        }
+
+        body.dark-mode {
+            --bg-main: #0b1220;
+            --bg-card: rgba(17, 24, 39, 0.7);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --accent-blue: #3b82f6;
-            --border-color: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.06);
             --input-bg: #0f172a;
             --input-text: #ffffff;
-            --blur-effect: blur(12px);
         }
 
         * {
             box-sizing: border-box;
             margin: 0; padding: 0;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         body {
@@ -29,6 +39,7 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -37,12 +48,11 @@
         .auth-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-effect);
             padding: 40px;
             border-radius: 24px;
             width: 440px;
             max-width: 100%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
         }
 
         .auth-header {
@@ -50,39 +60,43 @@
             margin-bottom: 32px;
         }
 
-        .auth-header h1 {
-            font-size: 24px;
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .auth-logo img { width: 28px; height: 28px; }
+
+        .auth-logo span {
+            font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #3b82f6, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main);
         }
 
         .tabs {
             display: flex;
-            background: var(--input-bg);
-            padding: 4px;
-            border-radius: 12px;
+            gap: 28px;
+            border-bottom: 1px solid var(--border-color);
             margin-bottom: 24px;
-            border: 1px solid var(--border-color);
         }
 
         .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
+            padding: 10px 2px;
             font-size: 14px;
             font-weight: 600;
             color: var(--text-muted);
             cursor: pointer;
-            border-radius: 8px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
         }
 
         .tab.active {
-            background: var(--accent-blue);
-            color: white;
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
 
         .form-group {
@@ -110,13 +124,36 @@
         }
 
         .form-group input:focus, .form-group select:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: -6px 0 18px;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+        }
+
+        .remember-me input { accent-color: var(--accent); }
+
+        .forgot-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
         }
 
         .btn-auth {
             width: 100%;
-            background: var(--accent-blue);
+            background: var(--accent);
             color: white;
             border: none;
             padding: 14px;
@@ -125,24 +162,36 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 14px var(--accent-glow);
         }
 
         .btn-auth:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 6px 20px var(--accent-glow);
         }
 
         .reg-only {
             display: none;
         }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .auth-footer a { color: var(--accent); text-decoration: none; }
     </style>
 </head>
 <body>
 
     <div class="auth-container">
         <div class="auth-header">
-            <h1>B2B Нефтесервис</h1>
+            <div class="auth-logo">
+                <img src="assets/icons_svg/logo_hex.svg" alt="">
+                <span>B2B Платформа</span>
+            </div>
             <p id="authSubtitle" style="color: var(--text-muted); font-size: 14px;">Войдите в свой аккаунт</p>
         </div>
 
@@ -160,6 +209,11 @@
             <div class="form-group">
                 <label>Пароль</label>
                 <input type="password" id="authPassword" required placeholder="••••••••">
+            </div>
+
+            <div class="form-row-between login-only">
+                <label class="remember-me"><input type="checkbox" id="rememberMe">Запомнить меня</label>
+                <a href="#" class="forgot-link" onclick="return false;">Забыли пароль?</a>
             </div>
 
             <div class="form-group reg-only">
@@ -182,16 +236,21 @@
 
             <button type="submit" class="btn-auth" id="btnSubmit">Войти</button>
         </form>
+
+        <div class="auth-footer">© B2B Платформа. Все права защищены.</div>
     </div>
 
     <script>
         const SERVER_URL = 'https://b2b-neft-backend.onrender.com/api';
         let currentMode = 'login';
 
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
         function switchTab(mode) {
             currentMode = mode;
             const tabs = document.querySelectorAll('.tab');
             const regFields = document.querySelectorAll('.reg-only');
+            const loginFields = document.querySelectorAll('.login-only');
             const btnSubmit = document.getElementById('btnSubmit');
             const subtitle = document.getElementById('authSubtitle');
 
@@ -199,6 +258,7 @@
             if(mode === 'login') {
                 tabs[0].classList.add('active');
                 regFields.forEach(f => f.style.display = 'none');
+                loginFields.forEach(f => f.style.display = 'flex');
                 btnSubmit.innerText = 'Войти';
                 subtitle.innerText = 'Войдите в свой аккаунт';
                 document.getElementById('regCompany').removeAttribute('required');
@@ -206,6 +266,7 @@
             } else {
                 tabs[1].classList.add('active');
                 regFields.forEach(f => f.style.display = 'flex');
+                loginFields.forEach(f => f.style.display = 'none');
                 btnSubmit.innerText = 'Зарегистрироваться';
                 subtitle.innerText = 'Создайте профиль компании';
                 document.getElementById('regCompany').setAttribute('required', 'true');
@@ -215,10 +276,10 @@
 
         async function handleAuth(event) {
             event.preventDefault();
-            
+
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
-            
+
             if (currentMode === 'login') {
                 try {
                     const response = await fetch(`${SERVER_URL}/auth/login`, {
@@ -232,11 +293,11 @@
                         localStorage.setItem('authToken', data.token);
                         localStorage.setItem('userRole', data.role);
                         localStorage.setItem('userCompany', data.company || 'ООО «Завод Исполнитель»');
-                        
+
                         window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
                         return;
-                    } 
-                    
+                    }
+
                     if (response.status !== 404) {
                         const err = await response.json();
                         alert(err.error || 'Неверный логин или пароль');
@@ -248,20 +309,20 @@
 
                 // --- ИСПРАВЛЕННЫЙ ФОЛБЕК ВХОДА ДЛЯ СИМУЛЯЦИИ ---
                 alert('Уведомление: Бэкенд авторизации (404) не найден. Включаю локальный тестовый режим!');
-                
-                // Сначала проверяем, какую роль мы сохранили при регистрации. 
+
+                // Сначала проверяем, какую роль мы сохранили при регистрации.
                 // Если там пусто, то падаем на проверку по тексту почты.
                 const savedRole = localStorage.getItem('mockRole');
                 const isProducer = savedRole ? (savedRole === 'producer') : (email.includes('prod') || email.includes('zavod'));
-                
+
                 localStorage.setItem('authToken', 'mock-valid-jwt-token-12345');
                 localStorage.setItem('userRole', isProducer ? 'producer' : 'customer');
-                
+
                 // Если при регистрации имя компании не сохранилось, даем дефолтное
                 if (!localStorage.getItem('userCompany')) {
                     localStorage.setItem('userCompany', isProducer ? 'ООО «УралПолимер»' : 'АО «ГазНефтьЗаказ»');
                 }
-                
+
                 window.location.href = isProducer ? 'producer.html' : 'index.html';
 
             } else {
@@ -282,7 +343,7 @@
                         switchTab('login');
                         return;
                     }
-                    
+
                     if (response.status !== 404) {
                         const err = await response.json();
                         alert(err.error || 'Ошибка при регистрации');
@@ -296,7 +357,7 @@
                 alert(`Локальный режим: Профиль компании «${company}» сохранен как ${role === 'producer' ? 'Производитель' : 'Заказчик'}!`);
                 localStorage.setItem('userCompany', company);
                 localStorage.setItem('mockRole', role); // Сохраняем истинную роль
-                
+
                 switchTab('login');
                 document.getElementById('authEmail').value = email;
             }
