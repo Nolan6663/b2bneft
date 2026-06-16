@@ -111,6 +111,9 @@
             setupInterface();
             loadDashboard();
             initNotifications();
+
+            const themeCb = document.getElementById('themeCheckbox');
+            if (themeCb) themeCb.addEventListener('change', loadDashboard);
         });
 
         function setupInterface() {
@@ -120,14 +123,78 @@
             }
         }
 
+        function cssVar(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
         function getChartThemeOptions() {
-            const textColor = '#7e8b97';
-            const gridColor = '#1c2933';
+            const textColor = cssVar('--text-secondary');
+            const gridColor = cssVar('--border-subtle');
             return {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: textColor, font: { family: 'Manrope', size: 11.5 } } } },
-                scales: { x: { grid: { color: gridColor }, ticks: { color: textColor } }, y: { grid: { color: gridColor }, ticks: { color: textColor } } }
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: textColor, font: { family: 'Manrope', size: 11.5 }, usePointStyle: true, pointStyle: 'circle', padding: 14 } },
+                    tooltip: {
+                        backgroundColor: cssVar('--card-bg'), titleColor: cssVar('--text-primary-alt'), bodyColor: cssVar('--text-tertiary'),
+                        borderColor: cssVar('--card-border'), borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: false,
+                        titleFont: { family: 'Manrope', weight: '700', size: 12 }, bodyFont: { family: 'Manrope', size: 12 }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Manrope', size: 11 } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Manrope', size: 11 } } }
+                }
             };
+        }
+
+        /* Мини-спарклайн (кумулятивный тренд по бакетам периода) — декоративный, но честный: даже при малом числе записей рисует реальный паттерн активности, а не пустую заглушку. */
+        function bucketedCumulative(items, dateField, from, to, valueFn, bucketCount = 10) {
+            const span = Math.max(1, to.getTime() - from.getTime());
+            const bucketMs = span / bucketCount;
+            const buckets = new Array(bucketCount).fill(0);
+            items.forEach(item => {
+                const t = new Date(item[dateField]).getTime();
+                if (t < from.getTime() || t > to.getTime()) return;
+                let idx = Math.floor((t - from.getTime()) / bucketMs);
+                if (idx >= bucketCount) idx = bucketCount - 1;
+                if (idx < 0) idx = 0;
+                buckets[idx] += valueFn ? valueFn(item) : 1;
+            });
+            let cum = 0;
+            return buckets.map(v => (cum += v));
+        }
+
+        function sparklineSVG(values, isUp) {
+            if (!values || values.length < 2) values = [0, 0];
+            const w = 64, h = 28, pad = 3;
+            const max = Math.max(...values, 1);
+            const min = Math.min(...values, 0);
+            const range = (max - min) || 1;
+            const stepX = (w - pad * 2) / (values.length - 1);
+            const points = values.map((v, i) => {
+                const x = pad + i * stepX;
+                const y = h - pad - ((v - min) / range) * (h - pad * 2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+            const color = isUp ? 'var(--accent-bright)' : 'var(--error)';
+            const last = points.split(' ').pop();
+            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="${last.split(',')[0]}" cy="${last.split(',')[1]}" r="2.2" fill="${color}"/>
+            </svg>`;
+        }
+
+        function kpiIcon(type) {
+            const icons = {
+                check: '<path d="M20 6L9 17l-5-5"></path>',
+                money: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>',
+                percent: '<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle>',
+                x: '<circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6M9 9l6 6"></path>',
+                box: '<path d="M21 8l-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>',
+                inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>'
+            };
+            return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[type] || icons.check}</svg>`;
         }
 
         function getRange() {
@@ -150,11 +217,15 @@
             return ((curr - prev) / prev) * 100;
         }
 
-        function kpiCard(label, value, changePct) {
+        function kpiCard(label, value, changePct, iconType, sparkValues) {
             const isUp = changePct >= 0;
             const cls = isUp ? 'up' : 'down';
             const sign = isUp ? '+' : '';
             return `<div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon">${kpiIcon(iconType)}</div>
+                    <div class="kpi-sparkline">${sparklineSVG(sparkValues, isUp)}</div>
+                </div>
                 <div class="kpi-label">${label}</div>
                 <div class="kpi-value">${value}</div>
                 <div class="kpi-change ${cls}">${sign}${changePct.toFixed(1)}% <span class="kpi-change-note">к прошлому периоду</span></div>
@@ -186,16 +257,16 @@
                     const prevConversion = prevOrders.length ? (prevClosed / prevOrders.length) * 100 : 0;
 
                     grid.innerHTML =
-                        kpiCard('Размещено закупок', orders.length, pctChange(orders.length, prevOrders.length)) +
-                        kpiCard('Получено предложений', responses, pctChange(responses, prevResponses)) +
-                        kpiCard('Завершено закупок', closed, pctChange(closed, prevClosed)) +
-                        kpiCard('Конверсия по тендерам', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion));
+                        kpiCard('Размещено закупок', orders.length, pctChange(orders.length, prevOrders.length), 'box', bucketedCumulative(orders, 'createdAt', from, to)) +
+                        kpiCard('Получено предложений', responses, pctChange(responses, prevResponses), 'inbox', bucketedCumulative(orders, 'createdAt', from, to, o => o.responses || 0)) +
+                        kpiCard('Завершено закупок', closed, pctChange(closed, prevClosed), 'check', bucketedCumulative(orders.filter(o => o.status === 'Закрыта'), 'createdAt', from, to)) +
+                        kpiCard('Конверсия по тендерам', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion), 'percent', bucketedCumulative(orders, 'createdAt', from, to));
 
                     renderCharts(
                         'bar',
-                        { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97' }] },
+                        { labels: orders.map(o => o.title.split(' | ')[0]), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97', borderRadius: 6, maxBarThickness: 46 }] },
                         'doughnut',
-                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#41bd97', '#3a4a55'] }] }
+                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#41bd97', '#3a4a55'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
                 } else {
                     document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов';
@@ -217,16 +288,16 @@
                     const prevConversion = prevProps.length ? (prevWon.length / prevProps.length) * 100 : 0;
 
                     grid.innerHTML =
-                        kpiCard('Выиграно контрактов', won.length, pctChange(won.length, prevWon.length)) +
-                        kpiCard('Общая сумма выигранных', '₽ ' + totalSum.toLocaleString(), pctChange(totalSum, prevSum)) +
-                        kpiCard('Конверсия предложений', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion)) +
-                        kpiCard('Отклонено предложений', rejected.length, pctChange(rejected.length, prevRejected.length));
+                        kpiCard('Выиграно контрактов', won.length, pctChange(won.length, prevWon.length), 'check', bucketedCumulative(won, 'createdAt', from, to)) +
+                        kpiCard('Общая сумма выигранных', '₽ ' + totalSum.toLocaleString(), pctChange(totalSum, prevSum), 'money', bucketedCumulative(won, 'createdAt', from, to, p => p.price)) +
+                        kpiCard('Конверсия предложений', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion), 'percent', bucketedCumulative(myProps, 'createdAt', from, to)) +
+                        kpiCard('Отклонено предложений', rejected.length, pctChange(rejected.length, prevRejected.length), 'x', bucketedCumulative(rejected, 'createdAt', from, to));
 
                     renderCharts(
                         'line',
-                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#54c79f', backgroundColor: 'rgba(70,200,160,0.2)', fill: true, tension: 0.3 }] },
+                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#54c79f', backgroundColor: 'rgba(70,200,160,0.2)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: cssVar('--card-bg'), pointBorderColor: '#54c79f', pointBorderWidth: 2 }] },
                         'pie',
-                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#41bd97', '#3a4a55'] }] }
+                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#41bd97', '#3a4a55'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
                 }
             } catch (error) { console.error(error); }
