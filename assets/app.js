@@ -405,7 +405,10 @@ async function renderChatHistory() {
   if (!container || activeChatOrderId == null) return;
 
   try {
-    const response = await fetch(`${SERVER_URL}/messages/${activeChatOrderId}/${encodeURIComponent(activeChatCompany)}`);
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${SERVER_URL}/messages/${activeChatOrderId}/${encodeURIComponent(activeChatCompany)}`, {
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+    });
     const history = await response.json();
     const myRole = localStorage.getItem('userRole');
     const wasAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 4;

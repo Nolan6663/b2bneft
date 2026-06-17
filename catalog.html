@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Каталог производителей</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        /* ── Search bar ── */
+        .catalog-search-row {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .catalog-search-wrap {
+            flex: 1; position: relative;
+        }
+        .catalog-search-wrap svg {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-secondary); pointer-events: none;
+        }
+        .catalog-search-input {
+            width: 100%; height: 44px; padding: 0 14px 0 42px;
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            border-radius: var(--radius-input); color: var(--text-primary);
+            font-size: 13.5px; outline: none; font-family: inherit;
+            transition: border-color 0.15s;
+        }
+        .catalog-search-input:focus { border-color: var(--accent-bright); }
+        .catalog-search-input::placeholder { color: var(--text-secondary); }
+        .catalog-count { font-size: 13px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+
+        /* ── Filter chips ── */
+        .catalog-filters {
+            display: flex; flex-wrap: wrap; gap: 8px;
+        }
+        .filter-chip {
+            padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            cursor: pointer; border: 1px solid var(--inner-border);
+            background: transparent; color: var(--text-secondary);
+            transition: border-color .15s, color .15s, background .15s;
+            font-family: inherit;
+        }
+        .filter-chip:hover:not(.active) { border-color: var(--text-secondary); color: var(--text-primary); }
+        .filter-chip.active { background: var(--accent-gradient); color: var(--accent-on-button); border-color: transparent; }
+
+        /* ── Producer grid ── */
+        .producers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 1100px) { .producers-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px)  { .producers-grid { grid-template-columns: 1fr; } }
+
+        /* ── Producer card ── */
+        .catalog-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 20px 22px;
+            display: flex; flex-direction: column; gap: 14px;
+            transition: border-color .15s, transform .15s, box-shadow .15s;
+        }
+        .catalog-card:hover {
+            border-color: rgba(84,199,159,.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0,0,0,.2);
+        }
+
+        .catalog-card-top {
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .catalog-avatar {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 800; color: #fff;
+        }
+        .catalog-card-main { flex: 1; min-width: 0; }
+        .catalog-card-name {
+            font-size: 14.5px; font-weight: 700; color: var(--text-primary-alt);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .catalog-card-loc {
+            font-size: 12px; color: var(--text-secondary); margin-top: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .catalog-verified {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700; color: var(--accent-bright);
+            background: rgba(84,199,159,.1); border: 1px solid rgba(84,199,159,.25);
+            padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+        }
+
+        /* ── Capability chips ── */
+        .catalog-caps { display: flex; flex-wrap: wrap; gap: 6px; }
+        .catalog-cap-chip {
+            background: var(--inner-bg); border: 1px solid var(--inner-border);
+            border-radius: 6px; padding: 4px 10px; font-size: 11.5px;
+            color: var(--text-tertiary); font-weight: 600;
+        }
+
+        /* ── Free capacity mini-bars ── */
+        .catalog-capacity { display: flex; flex-direction: column; gap: 8px; }
+        .catalog-capacity-title {
+            font-size: 11px; color: var(--text-secondary); font-weight: 600;
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .catalog-cap-bar { display: flex; flex-direction: column; gap: 3px; }
+        .catalog-cap-bar-labels {
+            display: flex; justify-content: space-between;
+            font-size: 11.5px; color: var(--text-secondary);
+        }
+        .catalog-cap-track {
+            height: 5px; background: var(--inner-bg);
+            border-radius: 4px; overflow: hidden; border: 1px solid var(--inner-border);
+        }
+        .catalog-cap-fill {
+            height: 100%; border-radius: 4px;
+            background: var(--accent-gradient); transition: width .4s ease;
+        }
+
+        /* ── Card CTA ── */
+        .catalog-btn {
+            margin-top: auto; font-size: 12.5px; height: 36px; padding: 0 14px;
+            text-decoration: none; justify-content: center;
+        }
+
+        /* ── Empty / loading states ── */
+        .catalog-empty {
+            grid-column: 1 / -1; padding: 60px 20px; text-align: center;
+            color: var(--text-secondary); font-size: 14px; display: flex;
+            flex-direction: column; align-items: center; gap: 12px;
+        }
+        .catalog-empty svg { opacity: .25; }
+        .catalog-loading {
+            grid-column: 1 / -1; padding: 40px 20px; text-align: center;
+            color: var(--text-secondary); font-size: 13.5px;
+        }
+
+        /* ── About snippet ── */
+        .catalog-about {
+            font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="catalog.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h2>Каталог производителей</h2>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="bell-btn" onclick="openNotificationsModal()">
+                    <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                    <span class="bell-badge" id="bellBadge">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="catalog-search-row">
+            <div class="catalog-search-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                    type="text"
+                    class="catalog-search-input"
+                    id="catalogSearch"
+                    placeholder="Поиск по названию, городу, специализации..."
+                    oninput="onSearch(this.value)"
+                >
+            </div>
+            <span class="catalog-count" id="catalogCount"></span>
+        </div>
+
+        <!-- Filters -->
+        <div class="catalog-filters">
+            <button class="filter-chip active" data-cap="" onclick="setFilter(this)">Все</button>
+            <button class="filter-chip" data-cap="РТИ" onclick="setFilter(this)">РТИ</button>
+            <button class="filter-chip" data-cap="Металлообработка" onclick="setFilter(this)">Металлообработка</button>
+            <button class="filter-chip" data-cap="Токарка" onclick="setFilter(this)">Токарка</button>
+            <button class="filter-chip" data-cap="Фрезеровка" onclick="setFilter(this)">Фрезеровка</button>
+            <button class="filter-chip" data-cap="Прессование" onclick="setFilter(this)">Прессование</button>
+            <button class="filter-chip" data-cap="Лазерная резка" onclick="setFilter(this)">Лазерная резка</button>
+            <button class="filter-chip" data-cap="Литьё" onclick="setFilter(this)">Литьё</button>
+            <button class="filter-chip" data-cap="Сварка" onclick="setFilter(this)">Сварка</button>
+        </div>
+
+        <!-- Grid -->
+        <div class="producers-grid" id="producersGrid">
+            <div class="catalog-loading">Загрузка каталога...</div>
+        </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        let allProducers = [];
+        let activeFilter = '';
+        let searchQuery  = '';
+
+        const GRADIENTS = [
+            'linear-gradient(135deg,#2f8f78,#41bd97)',
+            'linear-gradient(135deg,#3a6ea5,#5b9bd5)',
+            'linear-gradient(135deg,#b9852f,#d8a850)',
+            'linear-gradient(135deg,#7b4fa0,#a971d8)',
+            'linear-gradient(135deg,#c04b4b,#e07070)',
+        ];
+
+        async function loadCatalog() {
+            try {
+                const res = await apiFetch(`${SERVER_URL}/catalog`);
+                if (!res.ok) throw new Error();
+                allProducers = await res.json();
+                render();
+            } catch {
+                document.getElementById('producersGrid').innerHTML =
+                    `<div class="catalog-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Не удалось загрузить каталог</p></div>`;
+            }
+        }
+
+        function setFilter(btn) {
+            document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilter = btn.dataset.cap;
+            render();
+        }
+
+        function onSearch(val) {
+            searchQuery = val.trim();
+            render();
+        }
+
+        function filtered() {
+            let list = allProducers;
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                list = list.filter(p =>
+                    (p.company || '').toLowerCase().includes(q) ||
+                    (p.city    || '').toLowerCase().includes(q) ||
+                    (p.specialization || '').toLowerCase().includes(q) ||
+                    (p.about   || '').toLowerCase().includes(q)
+                );
+            }
+            if (activeFilter) {
+                const f = activeFilter.toLowerCase();
+                list = list.filter(p => {
+                    const inCaps = Array.isArray(p.capabilities) &&
+                        p.capabilities.some(c => c.toLowerCase().includes(f));
+                    const inSpec = (p.specialization || '').toLowerCase().includes(f);
+                    return inCaps || inSpec;
+                });
+            }
+            return list;
+        }
+
+        function render() {
+            const list = filtered();
+            const grid = document.getElementById('producersGrid');
+            const n = list.length;
+            document.getElementById('catalogCount').textContent =
+                n === 0 ? 'Не найдено' : `${n} производител${n === 1 ? 'ь' : n < 5 ? 'я' : 'ей'}`;
+
+            if (n === 0) {
+                grid.innerHTML = `<div class="catalog-empty">
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <p>Производители не найдены.<br>Попробуйте изменить фильтр или запрос.</p>
+                </div>`;
+                return;
+            }
+
+            grid.innerHTML = list.map(p => cardHTML(p)).join('');
+        }
+
+        function cardHTML(p) {
+            const letter = (p.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
+            const grad   = GRADIENTS[p.id % GRADIENTS.length];
+
+            const verBadge = p.verifiedByPlatform
+                ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
+                : '';
+
+            const caps = (p.capabilities || []).slice(0, 5)
+                .map(c => `<span class="catalog-cap-chip">${escapeHtml(c)}</span>`)
+                .join('');
+
+            const locParts = [p.city, p.specialization].filter(Boolean);
+
+            const capBars = (p.freeCapacity || []).slice(0, 2).map(fc => `
+                <div class="catalog-cap-bar">
+                    <div class="catalog-cap-bar-labels">
+                        <span>${escapeHtml(fc.name)}</span>
+                        <span style="color:var(--accent-bright);font-weight:700;">${fc.percent}% своб.</span>
+                    </div>
+                    <div class="catalog-cap-track">
+                        <div class="catalog-cap-fill" style="width:${fc.percent}%"></div>
+                    </div>
+                </div>`).join('');
+
+            const capacityBlock = capBars
+                ? `<div class="catalog-capacity">
+                       <div class="catalog-capacity-title">Свободные мощности</div>
+                       ${capBars}
+                   </div>`
+                : '';
+
+            const aboutBlock = p.about
+                ? `<div class="catalog-about">${escapeHtml(p.about)}</div>`
+                : '';
+
+            return `
+            <div class="catalog-card">
+                <div class="catalog-card-top">
+                    <div class="catalog-avatar" style="background:${grad}">${letter}</div>
+                    <div class="catalog-card-main">
+                        <div class="catalog-card-name">${escapeHtml(p.company || '—')}</div>
+                        <div class="catalog-card-loc">${escapeHtml(locParts.join(' · '))}</div>
+                    </div>
+                    ${verBadge}
+                </div>
+                ${caps ? `<div class="catalog-caps">${caps}</div>` : ''}
+                ${aboutBlock}
+                ${capacityBlock}
+                <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn">Открыть профиль →</a>
+            </div>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCatalog);
+    </script>
+</body>
+</html>

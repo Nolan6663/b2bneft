@@ -240,7 +240,7 @@ app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
-    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html',
+    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html',
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
@@ -420,7 +420,7 @@ async function enrichCompany(c, ownerCompany) {
 
 // ===================== ORDERS =====================
 
-app.get('/api/orders', async (req, res, next) => {
+app.get('/api/orders', requireAuth, async (req, res, next) => {
     try {
         const { rows } = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
         res.json(rows.map(rowToOrder));
@@ -438,7 +438,7 @@ app.get('/api/orders/match-scores', requireAuth, requireRole('producer'), async 
     } catch (e) { next(e); }
 });
 
-app.get('/api/orders/:orderId/drawing', async (req, res, next) => {
+app.get('/api/orders/:orderId/drawing', requireAuth, async (req, res, next) => {
     try {
         const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [Number(req.params.orderId)]);
         if (!row || !row.drawing) return res.status(404).json({ error: 'Файл не найден' });
@@ -533,7 +533,7 @@ app.post('/api/orders/:orderId/cancel', requireAuth, requireRole('customer'), as
 
 // ===================== PROPOSALS =====================
 
-app.get('/api/proposals/:proposalId/file', async (req, res, next) => {
+app.get('/api/proposals/:proposalId/file', requireAuth, async (req, res, next) => {
     try {
         const { rows: [row] } = await pool.query('SELECT kp_file FROM proposals WHERE id = $1', [Number(req.params.proposalId)]);
         if (!row || !row.kp_file) return res.status(404).json({ error: 'Файл не найден' });
@@ -591,7 +591,7 @@ app.get('/api/proposals', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
-app.get('/api/order-proposals/:orderId', async (req, res, next) => {
+app.get('/api/order-proposals/:orderId', requireAuth, async (req, res, next) => {
     try {
         const { rows } = await pool.query('SELECT * FROM proposals WHERE order_id = $1', [Number(req.params.orderId)]);
         res.json(rows.map(rowToProposal));
@@ -884,6 +884,19 @@ app.get('/api/capacity', optionalAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ===================== КАТАЛОГ ПРОИЗВОДИТЕЛЕЙ =====================
+
+app.get('/api/catalog', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT * FROM companies
+            WHERE role = 'producer'
+            ORDER BY verified_by_platform DESC, company ASC
+        `);
+        res.json(rows.map(rowToCompany));
+    } catch (e) { next(e); }
+});
+
 // ===================== CRM / АНАЛИТИКА =====================
 
 app.get('/api/producer/crm-stats', requireAuth, requireRole('producer'), async (req, res, next) => {
@@ -1032,45 +1045,41 @@ app.post('/api/auth/login', async (req, res, next) => {
 app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
     try {
         const { role, company } = req.user;
-        let rows;
-        if (role === 'producer') {
-            const { rows: r } = await pool.query(`
-                SELECT m.order_id, o.title AS order_title, m.company,
-                    MAX(m.created_at) AS last_at,
-                    COUNT(CASE WHEN m.sender = 'customer' AND m.read = false THEN 1 END) AS unread_count
-                FROM messages m JOIN orders o ON o.id = m.order_id
-                WHERE m.company = $1
-                GROUP BY m.order_id, o.title, m.company ORDER BY last_at DESC
-            `, [company]);
-            rows = r;
-        } else {
-            const { rows: r } = await pool.query(`
-                SELECT m.order_id, o.title AS order_title, m.company,
-                    MAX(m.created_at) AS last_at,
-                    COUNT(CASE WHEN m.sender = 'producer' AND m.read = false THEN 1 END) AS unread_count
-                FROM messages m JOIN orders o ON o.id = m.order_id
-                WHERE o.company = $1
-                GROUP BY m.order_id, o.title, m.company ORDER BY last_at DESC
-            `, [company]);
-            rows = r;
-        }
+        const unreadSender = role === 'producer' ? 'customer' : 'producer';
+        const whereClause = role === 'producer' ? 'm.company = $1' : 'o.company = $1';
 
-        const result = await Promise.all(rows.map(async (r) => {
-            const { rows: [last] } = await pool.query(
-                'SELECT * FROM messages WHERE order_id = $1 AND company = $2 ORDER BY created_at DESC LIMIT 1',
-                [r.order_id, r.company]
-            );
-            return {
-                orderId: r.order_id,
-                orderTitle: r.order_title || `Заявка #${r.order_id}`,
-                company: r.company,
-                lastMessage: last ? last.text : '',
-                lastSender: last ? last.sender : '',
-                lastAt: r.last_at,
-                unreadCount: Number(r.unread_count) || 0,
-            };
-        }));
-        res.json(result);
+        const { rows } = await pool.query(`
+            WITH last_msg AS (
+                SELECT DISTINCT ON (order_id, company)
+                    order_id, company, text, sender
+                FROM messages
+                ORDER BY order_id, company, created_at DESC
+            )
+            SELECT
+                m.order_id,
+                o.title AS order_title,
+                m.company,
+                MAX(m.created_at) AS last_at,
+                COUNT(CASE WHEN m.sender = $2 AND m.read = false THEN 1 END) AS unread_count,
+                lm.text  AS last_message,
+                lm.sender AS last_sender
+            FROM messages m
+            JOIN orders o ON o.id = m.order_id
+            LEFT JOIN last_msg lm ON lm.order_id = m.order_id AND lm.company = m.company
+            WHERE ${whereClause}
+            GROUP BY m.order_id, o.title, m.company, lm.text, lm.sender
+            ORDER BY last_at DESC
+        `, [company, unreadSender]);
+
+        res.json(rows.map(r => ({
+            orderId: r.order_id,
+            orderTitle: r.order_title || `Заявка #${r.order_id}`,
+            company: r.company,
+            lastMessage: r.last_message || '',
+            lastSender: r.last_sender || '',
+            lastAt: r.last_at,
+            unreadCount: Number(r.unread_count) || 0,
+        })));
     } catch (e) { next(e); }
 });
 
@@ -1087,7 +1096,7 @@ app.post('/api/messages/:orderId/:company/read', requireAuth, async (req, res, n
     } catch (e) { next(e); }
 });
 
-app.get('/api/messages/:orderId/:company', async (req, res, next) => {
+app.get('/api/messages/:orderId/:company', requireAuth, async (req, res, next) => {
     try {
         const { rows } = await pool.query(
             'SELECT * FROM messages WHERE order_id = $1 AND company = $2 ORDER BY created_at ASC',
@@ -1102,9 +1111,23 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
         const { orderId, company, text } = req.body;
         if (!orderId || !company || !text) return res.status(400).json({ error: 'Заполните все поля сообщения' });
 
+        const oid = Number(orderId);
+        const { rows: [order] } = await pool.query('SELECT company FROM orders WHERE id = $1', [oid]);
+        if (!order) return res.status(404).json({ error: 'Заявка не найдена' });
+
+        if (req.user.role === 'customer') {
+            if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+        } else {
+            const { rows: [proposal] } = await pool.query(
+                'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
+                [oid, req.user.company]
+            );
+            if (!proposal) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+        }
+
         const { rows: [newRow] } = await pool.query(
             'INSERT INTO messages (order_id,company,sender,text) VALUES ($1,$2,$3,$4) RETURNING *',
-            [Number(orderId), company, req.user.role, String(text).slice(0, 2000)]
+            [oid, company, req.user.role, String(text).slice(0, 2000)]
         );
         const msg = rowToMessage(newRow);
         if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);
