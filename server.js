@@ -247,33 +247,51 @@ app.get('/', (req, res) => res.redirect('/landing.html'));
 
 // ===================== УМНЫЙ МАТЧИНГ =====================
 const CATEGORY_KEYWORDS = {
-    'РТИ': ['рти', 'резин', 'уплотн', 'манжет', 'вулканиз'],
-    'Металл': ['металл', 'прокат', 'сварк', 'металлоконструкц', 'лазерн', 'гибочн', 'чпу', 'литье', 'нефтепромысл'],
-    'Трубопроводная арматура': ['арматур', 'задвиж', 'клапан', 'кран', 'вентил', 'фланц', 'фитинг', 'трубопров'],
-    'Электрооборудование': ['электр', 'кабел', 'двигател', 'трансформ', 'автомат', 'щит', 'пускател'],
+    'РТИ': ['рти', 'резин', 'уплотн', 'манжет', 'вулканиз', 'прокладк', 'эластом', 'кольц', 'полиур'],
+    'Металл': [
+        'металл', 'прокат', 'сварк', 'металлоконструкц', 'лазерн', 'гибочн', 'чпу', 'литье', 'нефтепромысл',
+        'токар', 'фрезер', 'расточ', 'шлифов', 'штамп', 'ковк', 'нержав', 'алюмин', 'трубн', 'термообр'
+    ],
+    'Трубопроводная арматура': ['арматур', 'задвиж', 'клапан', 'кран', 'вентил', 'фланц', 'фитинг', 'трубопров', 'запорн', 'шаров'],
+    'Электрооборудование': ['электр', 'кабел', 'двигател', 'трансформ', 'автомат', 'щит', 'пускател', 'частотн', 'преобраз'],
     'Прочее': []
 };
 
-function stem(word) { return word.slice(0, 5); }
+function stem(word) { return word.slice(0, 6); }
 
 function plainTitle(title) {
     return title && title.includes(' | ') ? title.split(' | ')[0] : title;
 }
 
 function computeMatchScore(order, producer) {
-    const text = `${producer.specialization || ''} ${(producer.equipment || []).join(' ')}`.toLowerCase();
+    // Объединяем все текстовые поля профиля производителя
+    const text = [
+        producer.specialization || '',
+        (producer.equipment || []).join(' '),
+        (producer.capabilities || []).join(' '),
+        producer.about || '',
+    ].join(' ').toLowerCase();
+
     if (!text.trim()) return 0;
+
     let score = 0;
+
+    // Совпадение по категории (макс 60 баллов)
     const keywords = CATEGORY_KEYWORDS[order.category] || [];
     score += Math.min(keywords.filter(k => text.includes(k)).length, 3) * 20;
-    const titleWords = plainTitle(order.title || '').toLowerCase().split(/[^a-zа-яё0-9]+/).filter(w => w.length > 3);
-    score += Math.min(titleWords.filter(w => text.includes(stem(w))).length, 2) * 15;
-    // Бонус за свободные мощности: есть ресурсы — выше в рекомендациях
+
+    // Совпадение по словам из заголовка и описания заявки (макс 30 баллов)
+    const orderText = `${plainTitle(order.title || '')} ${order.description || ''}`.toLowerCase();
+    const orderWords = [...new Set(orderText.split(/[^a-zа-яё0-9]+/).filter(w => w.length > 4))];
+    score += Math.min(orderWords.filter(w => text.includes(stem(w))).length, 2) * 15;
+
+    // Бонус за свободные мощности
     const cap = producer.freeCapacity || [];
     if (cap.length > 0) {
         const avgFree = cap.reduce((s, c) => s + (c.percent || 0), 0) / cap.length;
         if (avgFree >= 30) score += 10;
     }
+
     return Math.min(100, score);
 }
 
