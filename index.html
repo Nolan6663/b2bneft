@@ -12,6 +12,19 @@
         .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
         .sortable-th:hover { color: var(--accent-bright); }
 
+        .analytics-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+        }
+        .analytics-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 16px 18px;
+        }
+        .analytics-card-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .analytics-card-value { font-size: 28px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
+        .analytics-card-value.accent { color: var(--accent-bright); }
+        .analytics-card-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+        @media (max-width: 700px) { .analytics-row { grid-template-columns: repeat(2, 1fr); } }
+
         .chat-icon-btn {
             width: 28px; height: 28px; flex-shrink: 0; padding: 0; border-radius: 8px;
             background: transparent; border: 1px solid var(--secondary-btn-border); color: var(--secondary-btn-text);
@@ -69,6 +82,29 @@
                 <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
+        </div>
+
+        <div class="analytics-row" id="analyticsRow" style="display:none;">
+            <div class="analytics-card">
+                <div class="analytics-card-label">Закупок за месяц</div>
+                <div class="analytics-card-value" id="anaMonth">—</div>
+                <div class="analytics-card-sub">в этом месяце</div>
+            </div>
+            <div class="analytics-card">
+                <div class="analytics-card-label">Активных</div>
+                <div class="analytics-card-value" id="anaActive">—</div>
+                <div class="analytics-card-sub">ждут предложений</div>
+            </div>
+            <div class="analytics-card">
+                <div class="analytics-card-label">Средний срок</div>
+                <div class="analytics-card-value" id="anaDays">—</div>
+                <div class="analytics-card-sub">дней производства</div>
+            </div>
+            <div class="analytics-card">
+                <div class="analytics-card-label">Экономия</div>
+                <div class="analytics-card-value accent" id="anaSavings">—</div>
+                <div class="analytics-card-sub">vs среднее по рынку</div>
+            </div>
         </div>
 
         <div class="section">
@@ -244,9 +280,25 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             loadOrders();
+            loadAnalytics();
             initNotifications();
             initSidebarBadges();
         });
+
+        async function loadAnalytics() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+                const r = await fetch(`${SERVER_URL}/customer/analytics`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!r.ok) return;
+                const s = await r.json();
+                document.getElementById('anaMonth').textContent = s.monthOrders;
+                document.getElementById('anaActive').textContent = s.activeOrders;
+                document.getElementById('anaDays').textContent = s.avgDays != null ? s.avgDays + ' дн.' : '—';
+                document.getElementById('anaSavings').textContent = s.savings != null ? s.savings + '%' : '—';
+                document.getElementById('analyticsRow').style.display = 'grid';
+            } catch { /* тихо */ }
+        }
 
         function resetOrderForm() {
             document.getElementById('orderName').value = '';

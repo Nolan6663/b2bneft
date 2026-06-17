@@ -830,6 +830,60 @@ app.get('/api/dashboard/counts', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ===================== CRM / АНАЛИТИКА =====================
+
+app.get('/api/producer/crm-stats', requireAuth, requireRole('producer'), async (req, res, next) => {
+    try {
+        const company = req.user.company;
+        const [
+            { rows: [{ n: leads }] },
+            { rows: [{ n: sent }] },
+            { rows: [{ n: won }] },
+            { rows: [{ n: active }] },
+        ] = await Promise.all([
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE status = 'Активный'"),
+            pool.query('SELECT COUNT(*) AS n FROM proposals WHERE company = $1', [company]),
+            pool.query("SELECT COUNT(*) AS n FROM proposals WHERE company = $1 AND status = 'Выигран'", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM proposals WHERE company = $1 AND status = 'Ожидает ответа'", [company]),
+        ]);
+        const conversion = sent > 0 ? Math.round((won / sent) * 100) : 0;
+        res.json({ leads, sent, won, active, conversion });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
+    try {
+        const company = req.user.company;
+        const [
+            { rows: [{ n: monthOrders }] },
+            { rows: [{ n: activeOrders }] },
+            { rows: [{ n: closedOrders }] },
+            { rows: [{ avg: avgDays }] },
+            { rows: savingsRows },
+        ] = await Promise.all([
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND created_at >= date_trunc('month', NOW())", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND status = 'Активный'", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND status = 'Закрыта'", [company]),
+            pool.query(`SELECT ROUND(AVG(p.days)) AS avg
+                FROM proposals p JOIN orders o ON o.id = p.order_id
+                WHERE o.company = $1 AND p.status = 'Выигран'`, [company]),
+            pool.query(`SELECT
+                    (SELECT price FROM proposals WHERE order_id = o.id AND status = 'Выигран' LIMIT 1) AS win_price,
+                    (SELECT AVG(price) FROM proposals WHERE order_id = o.id) AS avg_price
+                FROM orders o WHERE o.company = $1 AND o.status = 'Закрыта'`, [company]),
+        ]);
+        const validRows = savingsRows.filter(r => r.win_price && r.avg_price && r.avg_price > 0);
+        const savings = validRows.length > 0
+            ? Math.round(validRows.reduce((s, r) => s + (1 - r.win_price / r.avg_price), 0) / validRows.length * 100)
+            : null;
+        res.json({
+            monthOrders, activeOrders, closedOrders,
+            avgDays: avgDays ? Math.round(avgDays) : null,
+            savings,
+        });
+    } catch (e) { next(e); }
+});
+
 // ===================== ИЗБРАННЫЕ =====================
 
 app.get('/api/favorites', requireAuth, async (req, res, next) => {

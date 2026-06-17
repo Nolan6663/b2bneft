@@ -11,6 +11,32 @@
         .tab-panel.active { display: flex; }
         .order-item .order-info h4 { display: inline; }
         .order-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+
+        .crm-funnel {
+            display: flex; align-items: stretch; gap: 0;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); overflow: hidden; margin-bottom: 20px;
+        }
+        .crm-step {
+            flex: 1; padding: 16px 20px; position: relative;
+            border-right: 1px solid var(--card-border);
+        }
+        .crm-step:last-child { border-right: none; }
+        .crm-step-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .crm-step-value { font-size: 26px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
+        .crm-step-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+        .crm-step.accent .crm-step-value { color: var(--accent-bright); }
+        .crm-arrow {
+            display: flex; align-items: center; padding: 0 4px;
+            color: var(--text-secondary); font-size: 18px; user-select: none;
+            position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+            z-index: 1;
+        }
+        @media (max-width: 700px) {
+            .crm-funnel { flex-wrap: wrap; }
+            .crm-step { border-right: none; border-bottom: 1px solid var(--card-border); }
+            .crm-step:last-child { border-bottom: none; }
+        }
     </style>
 </head>
 <body>
@@ -84,6 +110,34 @@
                     <span id="infoRatingLabel">Нет данных</span>
                 </div>
                 <div id="infoRatingStats" style="font-size:11px; color:var(--text-secondary); display:none;"></div>
+            </div>
+        </div>
+
+        <div class="crm-funnel" id="crmFunnel" style="display:none;">
+            <div class="crm-step">
+                <div class="crm-step-label">Лидов на рынке</div>
+                <div class="crm-step-value" id="crmLeads">—</div>
+                <div class="crm-step-sub">активных закупок</div>
+            </div>
+            <div class="crm-step">
+                <div class="crm-step-label">Отправлено КП</div>
+                <div class="crm-step-value" id="crmSent">—</div>
+                <div class="crm-step-sub">всего предложений</div>
+            </div>
+            <div class="crm-step">
+                <div class="crm-step-label">В работе</div>
+                <div class="crm-step-value" id="crmActive">—</div>
+                <div class="crm-step-sub">ожидают ответа</div>
+            </div>
+            <div class="crm-step">
+                <div class="crm-step-label">Выиграно</div>
+                <div class="crm-step-value" id="crmWon">—</div>
+                <div class="crm-step-sub">заказов</div>
+            </div>
+            <div class="crm-step accent">
+                <div class="crm-step-label">Конверсия</div>
+                <div class="crm-step-value" id="crmConversion">—</div>
+                <div class="crm-step-sub">КП → победа</div>
             </div>
         </div>
 
@@ -213,7 +267,7 @@
             loadOrdersForProducers();
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals(); }
+            if (!isGuest) { loadMyProposals(); loadCrmStats(); }
 
             document.getElementById('displayCompanyName').innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»');
             if (isGuest && document.getElementById('companyBlock')) { document.getElementById('companyBlock').style.borderColor = 'var(--error)'; }
@@ -395,6 +449,20 @@ function renderCompanyStatus(status) {
                     ordersList.appendChild(orderItem);
                 });
             } catch (error) { console.error(error); }
+        }
+
+        async function loadCrmStats() {
+            try {
+                const r = await fetch(`${SERVER_URL}/producer/crm-stats`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!r.ok) return;
+                const s = await r.json();
+                document.getElementById('crmLeads').textContent = s.leads;
+                document.getElementById('crmSent').textContent = s.sent;
+                document.getElementById('crmActive').textContent = s.active;
+                document.getElementById('crmWon').textContent = s.won;
+                document.getElementById('crmConversion').textContent = s.conversion + '%';
+                document.getElementById('crmFunnel').style.display = 'flex';
+            } catch { /* тихо */ }
         }
 
         async function loadMyProposals() {
