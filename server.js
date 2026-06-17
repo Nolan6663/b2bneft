@@ -1058,6 +1058,7 @@ app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
             SELECT
                 m.order_id,
                 o.title AS order_title,
+                o.company AS customer_company,
                 m.company,
                 MAX(m.created_at) AS last_at,
                 COUNT(CASE WHEN m.sender = $2 AND m.read = false THEN 1 END) AS unread_count,
@@ -1067,7 +1068,7 @@ app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
             JOIN orders o ON o.id = m.order_id
             LEFT JOIN last_msg lm ON lm.order_id = m.order_id AND lm.company = m.company
             WHERE ${whereClause}
-            GROUP BY m.order_id, o.title, m.company, lm.text, lm.sender
+            GROUP BY m.order_id, o.title, o.company, m.company, lm.text, lm.sender
             ORDER BY last_at DESC
         `, [company, unreadSender]);
 
@@ -1075,6 +1076,7 @@ app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
             orderId: r.order_id,
             orderTitle: r.order_title || `Заявка #${r.order_id}`,
             company: r.company,
+            customerCompany: r.customer_company || '',
             lastMessage: r.last_message || '',
             lastSender: r.last_sender || '',
             lastAt: r.last_at,
