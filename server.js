@@ -8,7 +8,22 @@ const multer = require('multer');
 const http = require('http');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { Resend } = require('resend');
+const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+const APP_URL = process.env.APP_URL || 'https://b2bneft.onrender.com';
+
+async function sendEmail(to, subject, html) {
+    if (!resend) { console.log(`[Email] To: ${to} | ${subject}`); return; }
+    try {
+        await resend.emails.send({ from: `B2B Нефтесервис <${EMAIL_FROM}>`, to, subject, html });
+    } catch (e) {
+        console.error('Email error:', e.message);
+    }
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production';
 
@@ -103,6 +118,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много попыток. Попробуйте через 15 минут.' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // ===================== WEBSOCKET =====================
 let Server = null;
@@ -287,6 +313,12 @@ async function optionalAuth(req, res, next) {
         }
         next();
     } catch (e) { next(e); }
+}
+
+async function getCompanyEmail(companyName) {
+    if (!companyName) return null;
+    const { rows: [u] } = await pool.query('SELECT email FROM users WHERE company = $1 LIMIT 1', [companyName]);
+    return u ? u.email : null;
 }
 
 async function addNotification(company, text) {
@@ -528,7 +560,19 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), handleKPUpload,
         });
 
         const newProposal = rowToProposal(newRow);
-        if (orderRow.company) await addNotification(orderRow.company, `Получен новый отклик на «${plainTitle(orderRow.title)}» от ${req.user.company}.`);
+        if (orderRow.company) {
+            const title = plainTitle(orderRow.title);
+            await addNotification(orderRow.company, `Получен новый отклик на «${title}» от ${req.user.company}.`);
+            const email = await getCompanyEmail(orderRow.company);
+            if (email) await sendEmail(email, `Новый отклик на закупку «${title}»`,
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:#41bd97">Новый отклик на закупку</h3>
+                  <p>Компания <strong>${req.user.company}</strong> подала коммерческое предложение по закупке <strong>«${title}»</strong>.</p>
+                  <p>Цена: <strong>${Number(newProposal.price).toLocaleString('ru-RU')} ₽</strong> · Срок: <strong>${newProposal.days} дн.</strong></p>
+                  <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
+                </div>`
+            );
+        }
         res.status(201).json(newProposal);
     } catch (e) { next(e); }
 });
@@ -576,6 +620,20 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
         });
 
         await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
+        await Promise.all(notifs.map(async n => {
+            const email = await getCompanyEmail(n.company);
+            const won = n.text.includes('принято');
+            if (email) await sendEmail(email, won ? `Предложение принято — «${title}»` : `Предложение отклонено — «${title}»`,
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:${won ? '#41bd97' : '#e07070'}">${won ? 'Ваше предложение принято!' : 'Предложение отклонено'}</h3>
+                  <p>${won
+                    ? `Поздравляем! Заказчик выбрал ваше предложение по закупке <strong>«${title}»</strong>.`
+                    : `К сожалению, заказчик выбрал другого поставщика по закупке <strong>«${title}»</strong>.`
+                  }</p>
+                  <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
+                </div>`
+            );
+        }));
         res.json({ message: 'Победитель успешно определен, тендер закрыт' });
     } catch (e) { next(e); }
 });
@@ -591,8 +649,17 @@ app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer
         if (orderRow.company && orderRow.company !== req.user.company) return res.status(403).json({ error: 'Отклонять предложения может только владелец закупки' });
         if (proposalRow.status !== 'Ожидает ответа') return res.status(400).json({ error: 'Можно отклонить только предложение в статусе "Ожидает ответа"' });
 
+        const rejectTitle = plainTitle(orderRow.title);
         await pool.query("UPDATE proposals SET status = 'Отклонен' WHERE id = $1", [proposalId]);
-        await addNotification(proposalRow.company, `Ваше предложение по «${plainTitle(orderRow.title)}» отклонено.`);
+        await addNotification(proposalRow.company, `Ваше предложение по «${rejectTitle}» отклонено.`);
+        const rejectEmail = await getCompanyEmail(proposalRow.company);
+        if (rejectEmail) await sendEmail(rejectEmail, `Предложение отклонено — «${rejectTitle}»`,
+            `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+              <h3 style="color:#e07070">Предложение отклонено</h3>
+              <p>Заказчик отклонил ваше предложение по закупке <strong>«${rejectTitle}»</strong>.</p>
+              <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
+            </div>`
+        );
         const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
         res.json(rowToProposal(updated));
     } catch (e) { next(e); }
@@ -965,8 +1032,48 @@ app.delete('/api/notifications/:company', requireAuth, async (req, res, next) =>
 
 // ===================== НАСТРОЙКИ =====================
 
-app.post('/api/auth/forgot-password', (req, res) => {
-    res.json({ message: 'ok' });
+app.post('/api/auth/forgot-password', async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Укажите email' });
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+        if (user) {
+            await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+            const token = crypto.randomBytes(32).toString('hex');
+            await pool.query(
+                "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '1 hour')",
+                [user.id, token]
+            );
+            const link = `${APP_URL}/login.html?reset=${token}`;
+            await sendEmail(user.email, 'Восстановление пароля — B2B Нефтесервис', `
+                <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a2332">
+                  <h2 style="color:#41bd97">Восстановление пароля</h2>
+                  <p>Поступил запрос на сброс пароля для аккаунта <strong>${user.email}</strong>.</p>
+                  <p>Нажмите кнопку ниже, чтобы задать новый пароль. Ссылка действительна <strong>1 час</strong>.</p>
+                  <a href="${link}" style="display:inline-block;margin:20px 0;padding:12px 28px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Сбросить пароль</a>
+                  <p style="font-size:12px;color:#666">Если вы не запрашивали сброс — просто проигнорируйте это письмо.</p>
+                </div>`
+            );
+        }
+        res.json({ message: 'ok' });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/auth/reset-password', async (req, res, next) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) return res.status(400).json({ error: 'Неверный запрос' });
+        if (newPassword.length < 6) return res.status(400).json({ error: 'Пароль — минимум 6 символов' });
+        const { rows: [row] } = await pool.query(
+            'SELECT * FROM password_reset_tokens WHERE token = $1 AND expires_at > NOW()',
+            [token]
+        );
+        if (!row) return res.status(400).json({ error: 'Ссылка недействительна или истекла. Запросите новую.' });
+        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashPassword(newPassword), row.user_id]);
+        await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [row.user_id]);
+        await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [row.user_id]);
+        res.json({ message: 'Пароль успешно изменён' });
+    } catch (e) { next(e); }
 });
 
 app.post('/api/auth/refresh', async (req, res, next) => {
@@ -1172,11 +1279,23 @@ app.post('/api/verification/:id/approve', requireAuth, requireRole('admin'), asy
         const { rows: [vr] } = await pool.query('SELECT * FROM verification_requests WHERE id = $1', [id]);
         if (!vr) return res.status(404).json({ error: 'Заявка не найдена' });
 
+        const { rows: [companyRow] } = await pool.query('SELECT company FROM companies WHERE id = $1', [vr.company_id]);
         await withTransaction(async (client) => {
             await client.query("UPDATE verification_requests SET status='approved', reviewed_at=NOW() WHERE id=$1", [id]);
             await client.query("UPDATE companies SET verified_by_platform=true, status='Верифицирован' WHERE id=$1", [vr.company_id]);
         });
-
+        if (companyRow) {
+            await addNotification(companyRow.company, 'Ваша компания успешно верифицирована платформой!');
+            const email = await getCompanyEmail(companyRow.company);
+            if (email) await sendEmail(email, 'Верификация пройдена — B2B Нефтесервис',
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:#41bd97">Компания верифицирована!</h3>
+                  <p>Ваша компания <strong>${companyRow.company}</strong> успешно прошла верификацию на платформе B2B Нефтесервис.</p>
+                  <p>Теперь рядом с вашим профилем отображается знак верификации.</p>
+                  <a href="${APP_URL}/company-profile.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть профиль</a>
+                </div>`
+            );
+        }
         res.json({ message: 'Компания верифицирована' });
     } catch (e) { next(e); }
 });
@@ -1188,10 +1307,24 @@ app.post('/api/verification/:id/reject', requireAuth, requireRole('admin'), asyn
         const { rows: [vr] } = await pool.query('SELECT * FROM verification_requests WHERE id = $1', [id]);
         if (!vr) return res.status(404).json({ error: 'Заявка не найдена' });
 
+        const { rows: [rejectCompany] } = await pool.query('SELECT company FROM companies WHERE id = $1', [vr.company_id]);
         await pool.query(
             "UPDATE verification_requests SET status='rejected', admin_comment=$1, reviewed_at=NOW() WHERE id=$2",
             [comment, id]
         );
+        if (rejectCompany) {
+            await addNotification(rejectCompany.company, `Заявка на верификацию отклонена.${comment ? ' Причина: ' + comment : ''}`);
+            const email = await getCompanyEmail(rejectCompany.company);
+            if (email) await sendEmail(email, 'Заявка на верификацию отклонена — B2B Нефтесервис',
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:#e07070">Заявка на верификацию отклонена</h3>
+                  <p>Заявка компании <strong>${rejectCompany.company}</strong> была рассмотрена и отклонена.</p>
+                  ${comment ? `<p><strong>Причина:</strong> ${comment}</p>` : ''}
+                  <p>Вы можете исправить недочёты и подать заявку повторно.</p>
+                  <a href="${APP_URL}/settings.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Настройки профиля</a>
+                </div>`
+            );
+        }
         res.json({ message: 'Заявка отклонена' });
     } catch (e) { next(e); }
 });
