@@ -405,10 +405,8 @@ async function renderChatHistory() {
   if (!container || activeChatOrderId == null) return;
 
   try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${SERVER_URL}/messages/${activeChatOrderId}/${encodeURIComponent(activeChatCompany)}`, {
-      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
-    });
+    const response = await apiFetch(`${SERVER_URL}/messages/${activeChatOrderId}/${encodeURIComponent(activeChatCompany)}`);
+    if (!response.ok) return;
     const history = await response.json();
     const myRole = localStorage.getItem('userRole');
     const wasAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
@@ -444,10 +442,9 @@ async function sendGlobalChatMessage() {
   const text = input.value.trim();
   input.value = '';
   try {
-    const token = localStorage.getItem('authToken');
-    await fetch(`${SERVER_URL}/messages`, {
+    await apiFetch(`${SERVER_URL}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId: activeChatOrderId, company: activeChatCompany, text })
     });
   } catch (error) { /* ignore, отрисуем то, что есть */ }
