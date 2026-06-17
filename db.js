@@ -1,190 +1,145 @@
 'use strict';
-const { DatabaseSync } = require('node:sqlite');
-const path = require('path');
-const fs = require('fs');
+require('dotenv').config();
+const { Pool } = require('pg');
 const crypto = require('crypto');
 
-const db = new DatabaseSync(path.join(__dirname, 'data.db'));
+// Return bigint columns as JS numbers, not strings
+require('pg').types.setTypeParser(20, parseInt);
 
-db.exec('PRAGMA journal_mode = WAL');
-db.exec('PRAGMA foreign_keys = ON');
+const isRender = (process.env.DATABASE_URL || '').includes('render.com');
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-    id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    email    TEXT    UNIQUE NOT NULL,
-    password TEXT    NOT NULL,
-    role     TEXT    NOT NULL,
-    company  TEXT    NOT NULL,
-    inn      TEXT    NOT NULL DEFAULT ''
-);
-CREATE TABLE IF NOT EXISTS companies (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    company          TEXT NOT NULL,
-    inn              TEXT NOT NULL DEFAULT '',
-    role             TEXT NOT NULL,
-    specialization   TEXT NOT NULL DEFAULT '',
-    status           TEXT NOT NULL DEFAULT 'На проверке',
-    city             TEXT NOT NULL DEFAULT '',
-    years_experience INTEGER,
-    about            TEXT NOT NULL DEFAULT '',
-    equipment        TEXT NOT NULL DEFAULT '[]',
-    phone            TEXT NOT NULL DEFAULT '',
-    website          TEXT NOT NULL DEFAULT ''
-);
-CREATE TABLE IF NOT EXISTS orders (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    title       TEXT    NOT NULL,
-    category    TEXT    NOT NULL,
-    status      TEXT    NOT NULL DEFAULT 'Активный',
-    responses   INTEGER NOT NULL DEFAULT 0,
-    deadline    TEXT,
-    quantity    INTEGER,
-    description TEXT    NOT NULL DEFAULT '',
-    company     TEXT    NOT NULL DEFAULT '',
-    drawing     TEXT,
-    created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-);
-CREATE TABLE IF NOT EXISTS proposals (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_id    INTEGER NOT NULL,
-    order_title TEXT,
-    price       REAL    NOT NULL,
-    days        INTEGER NOT NULL,
-    company     TEXT    NOT NULL,
-    status      TEXT    NOT NULL DEFAULT 'Ожидает ответа',
-    kp_file     TEXT,
-    created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-);
-CREATE TABLE IF NOT EXISTS messages (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_id   INTEGER NOT NULL,
-    company    TEXT    NOT NULL,
-    sender     TEXT    NOT NULL,
-    text       TEXT    NOT NULL,
-    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-);
-CREATE TABLE IF NOT EXISTS notifications (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    company    TEXT    NOT NULL,
-    text       TEXT    NOT NULL,
-    read       INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-);
-CREATE TABLE IF NOT EXISTS favorites (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner_company TEXT    NOT NULL,
-    company_id    INTEGER NOT NULL,
-    created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
-    UNIQUE(owner_company, company_id)
-);
-CREATE TABLE IF NOT EXISTS company_photos (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id    INTEGER NOT NULL,
-    stored_name   TEXT    NOT NULL,
-    original_name TEXT    NOT NULL,
-    created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-);
-CREATE TABLE IF NOT EXISTS verification_requests (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    company_id    INTEGER NOT NULL,
-    status        TEXT    NOT NULL DEFAULT 'pending',
-    admin_comment TEXT    NOT NULL DEFAULT '',
-    requested_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
-    reviewed_at   TEXT
-);
-`);
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: isRender ? { rejectUnauthorized: false } : false,
+});
 
-// Разовый импорт из JSON-файлов (запускается только если таблица users пуста)
-(function migrate() {
-    if (db.prepare('SELECT COUNT(*) AS n FROM users').get().n > 0) return;
+async function initDb() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+            id       SERIAL  PRIMARY KEY,
+            email    TEXT    UNIQUE NOT NULL,
+            password TEXT    NOT NULL,
+            role     TEXT    NOT NULL,
+            company  TEXT    NOT NULL,
+            inn      TEXT    NOT NULL DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS companies (
+            id                   SERIAL  PRIMARY KEY,
+            company              TEXT    NOT NULL,
+            inn                  TEXT    NOT NULL DEFAULT '',
+            role                 TEXT    NOT NULL,
+            specialization       TEXT    NOT NULL DEFAULT '',
+            status               TEXT    NOT NULL DEFAULT 'На проверке',
+            city                 TEXT    NOT NULL DEFAULT '',
+            years_experience     INTEGER,
+            about                TEXT    NOT NULL DEFAULT '',
+            equipment            TEXT    NOT NULL DEFAULT '[]',
+            phone                TEXT    NOT NULL DEFAULT '',
+            website              TEXT    NOT NULL DEFAULT '',
+            ogrn                 TEXT    NOT NULL DEFAULT '',
+            director             TEXT    NOT NULL DEFAULT '',
+            founding_year        INTEGER,
+            authorized_capital   TEXT    NOT NULL DEFAULT '',
+            employees            INTEGER,
+            revenue              TEXT    NOT NULL DEFAULT '',
+            machines_count       INTEGER,
+            production_area      INTEGER,
+            video_url            TEXT    NOT NULL DEFAULT '',
+            iso_certificates     TEXT    NOT NULL DEFAULT '[]',
+            quality_certificates TEXT    NOT NULL DEFAULT '[]',
+            capabilities         TEXT    NOT NULL DEFAULT '[]',
+            production_load      INTEGER,
+            verified_by_platform BOOLEAN NOT NULL DEFAULT false
+        );
+        CREATE TABLE IF NOT EXISTS orders (
+            id          SERIAL      PRIMARY KEY,
+            title       TEXT        NOT NULL,
+            category    TEXT        NOT NULL,
+            status      TEXT        NOT NULL DEFAULT 'Активный',
+            responses   INTEGER     NOT NULL DEFAULT 0,
+            deadline    TEXT,
+            quantity    INTEGER,
+            description TEXT        NOT NULL DEFAULT '',
+            company     TEXT        NOT NULL DEFAULT '',
+            drawing     TEXT,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS proposals (
+            id                SERIAL      PRIMARY KEY,
+            order_id          INTEGER     NOT NULL,
+            order_title       TEXT,
+            price             REAL        NOT NULL,
+            days              INTEGER     NOT NULL,
+            company           TEXT        NOT NULL,
+            status            TEXT        NOT NULL DEFAULT 'Ожидает ответа',
+            kp_file           TEXT,
+            created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            completion_status TEXT        NOT NULL DEFAULT 'active'
+        );
+        CREATE TABLE IF NOT EXISTS messages (
+            id         SERIAL      PRIMARY KEY,
+            order_id   INTEGER     NOT NULL,
+            company    TEXT        NOT NULL,
+            sender     TEXT        NOT NULL,
+            text       TEXT        NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            read       BOOLEAN     NOT NULL DEFAULT false
+        );
+        CREATE TABLE IF NOT EXISTS notifications (
+            id         SERIAL      PRIMARY KEY,
+            company    TEXT        NOT NULL,
+            text       TEXT        NOT NULL,
+            read       BOOLEAN     NOT NULL DEFAULT false,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS favorites (
+            id            SERIAL      PRIMARY KEY,
+            owner_company TEXT        NOT NULL,
+            company_id    INTEGER     NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(owner_company, company_id)
+        );
+        CREATE TABLE IF NOT EXISTS company_photos (
+            id            SERIAL      PRIMARY KEY,
+            company_id    INTEGER     NOT NULL,
+            stored_name   TEXT        NOT NULL,
+            original_name TEXT        NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS verification_requests (
+            id            SERIAL      PRIMARY KEY,
+            company_id    INTEGER     NOT NULL,
+            status        TEXT        NOT NULL DEFAULT 'pending',
+            admin_comment TEXT        NOT NULL DEFAULT '',
+            requested_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            reviewed_at   TIMESTAMPTZ
+        );
+    `);
 
-    function readJson(name) {
-        const file = path.join(__dirname, name);
-        try { return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : []; }
-        catch { return []; }
+    const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
+    if (!adminRow) {
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hash = crypto.scryptSync('Admin2025', salt, 64).toString('hex');
+        await pool.query(
+            'INSERT INTO users (email,password,role,company,inn) VALUES ($1,$2,$3,$4,$5)',
+            ['admin@platform.ru', `${salt}:${hash}`, 'admin', '', '']
+        );
+        console.log('✓ Создан аккаунт администратора: admin@platform.ru / Admin2025');
     }
 
-    const insertUser = db.prepare('INSERT OR IGNORE INTO users (id,email,password,role,company,inn) VALUES (?,?,?,?,?,?)');
-    readJson('users.json').forEach(u =>
-        insertUser.run(u.id, u.email, u.password || '', u.role, u.company, u.inn || ''));
+    const { rows: [{ n: orderCount }] } = await pool.query('SELECT COUNT(*) AS n FROM orders');
+    if (orderCount === 0) {
+        await pool.query(
+            "INSERT INTO orders (title,category,status,responses,deadline) VALUES ($1,$2,$3,$4,$5)",
+            ['Манжета резиновая армированная', 'РТИ', 'Активный', 0, '25.05.2026']
+        );
+        await pool.query(
+            "INSERT INTO orders (title,category,status,responses,deadline) VALUES ($1,$2,$3,$4,$5)",
+            ['Фланец стальной ГОСТ', 'Металл', 'Активный', 0, '28.05.2026']
+        );
+    }
 
-    const insertCompany = db.prepare('INSERT OR IGNORE INTO companies (id,company,inn,role,specialization,status,city,years_experience,about,equipment,phone,website) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
-    readJson('companies.json').forEach(c =>
-        insertCompany.run(c.id, c.company, c.inn || '', c.role, c.specialization || '',
-            c.status || 'На проверке', c.city || '', c.yearsExperience ?? null,
-            c.about || '', JSON.stringify(c.equipment || []), c.phone || '', c.website || ''));
-
-    const insertOrder = db.prepare('INSERT OR IGNORE INTO orders (id,title,category,status,responses,deadline,quantity,description,company,drawing,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
-    readJson('orders.json').forEach(o =>
-        insertOrder.run(o.id, o.title, o.category, o.status || 'Активный', o.responses || 0,
-            o.deadline ?? null, o.quantity ?? null, o.description || '', o.company || '',
-            o.drawing ? JSON.stringify(o.drawing) : null,
-            o.createdAt || new Date().toISOString()));
-
-    const insertProposal = db.prepare('INSERT OR IGNORE INTO proposals (id,order_id,order_title,price,days,company,status,kp_file,created_at) VALUES (?,?,?,?,?,?,?,?,?)');
-    readJson('proposals.json').forEach(p =>
-        insertProposal.run(p.id, p.orderId, p.orderTitle ?? null, p.price, p.days,
-            p.company, p.status || 'Ожидает ответа',
-            p.kpFile ? JSON.stringify(p.kpFile) : null,
-            p.createdAt || new Date().toISOString()));
-
-    const insertMsg = db.prepare('INSERT OR IGNORE INTO messages (id,order_id,company,sender,text,created_at) VALUES (?,?,?,?,?,?)');
-    readJson('messages.json').forEach(m =>
-        insertMsg.run(m.id, m.orderId, m.company, m.sender, m.text,
-            m.createdAt || new Date().toISOString()));
-
-    const insertNotif = db.prepare('INSERT OR IGNORE INTO notifications (id,company,text,read,created_at) VALUES (?,?,?,?,?)');
-    readJson('notifications.json').forEach(n =>
-        insertNotif.run(n.id, n.company, n.text, n.read ? 1 : 0,
-            n.createdAt || new Date().toISOString()));
-
-    const insertFav = db.prepare('INSERT OR IGNORE INTO favorites (id,owner_company,company_id,created_at) VALUES (?,?,?,?)');
-    readJson('favorites.json').forEach(f =>
-        insertFav.run(f.id, f.ownerCompany, f.companyId,
-            f.createdAt || new Date().toISOString()));
-
-    console.log('✓ Данные перенесены из JSON в SQLite');
-})();
-
-// Начальные закупки для пустой базы (только при первом запуске без JSON-данных)
-if (db.prepare('SELECT COUNT(*) AS n FROM orders').get().n === 0) {
-    const now = new Date().toISOString();
-    db.prepare("INSERT INTO orders (title,category,status,responses,deadline,created_at) VALUES (?,?,?,?,?,?)")
-        .run('Манжета резиновая армированная', 'РТИ', 'Активный', 0, '25.05.2026', now);
-    db.prepare("INSERT INTO orders (title,category,status,responses,deadline,created_at) VALUES (?,?,?,?,?,?)")
-        .run('Фланец стальной ГОСТ', 'Металл', 'Активный', 0, '28.05.2026', now);
+    console.log('✓ База данных готова');
 }
 
-// Миграция: добавляем расширенные поля профиля (для существующих БД)
-[
-    "ALTER TABLE companies ADD COLUMN ogrn TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE companies ADD COLUMN director TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE companies ADD COLUMN founding_year INTEGER",
-    "ALTER TABLE companies ADD COLUMN authorized_capital TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE companies ADD COLUMN employees INTEGER",
-    "ALTER TABLE companies ADD COLUMN revenue TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE companies ADD COLUMN machines_count INTEGER",
-    "ALTER TABLE companies ADD COLUMN production_area INTEGER",
-    "ALTER TABLE companies ADD COLUMN video_url TEXT NOT NULL DEFAULT ''",
-    "ALTER TABLE companies ADD COLUMN iso_certificates TEXT NOT NULL DEFAULT '[]'",
-    "ALTER TABLE companies ADD COLUMN quality_certificates TEXT NOT NULL DEFAULT '[]'",
-    "ALTER TABLE companies ADD COLUMN capabilities TEXT NOT NULL DEFAULT '[]'",
-    "ALTER TABLE companies ADD COLUMN production_load INTEGER",
-    "ALTER TABLE companies ADD COLUMN verified_by_platform INTEGER NOT NULL DEFAULT 0",
-    "ALTER TABLE messages ADD COLUMN read INTEGER NOT NULL DEFAULT 0",
-    "ALTER TABLE proposals ADD COLUMN completion_status TEXT NOT NULL DEFAULT 'active'",
-].forEach(sql => { try { db.exec(sql); } catch {} });
-
-// Создать администратора при первом запуске
-if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {
-    const ADMIN_EMAIL = 'admin@platform.ru';
-    const ADMIN_PASS  = 'Admin2025';
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hash = crypto.scryptSync(ADMIN_PASS, salt, 64).toString('hex');
-    db.prepare("INSERT INTO users (email,password,role,company,inn) VALUES (?,?,?,?,?)")
-        .run(ADMIN_EMAIL, `${salt}:${hash}`, 'admin', '', '');
-    console.log(`✓ Создан аккаунт администратора: ${ADMIN_EMAIL} / ${ADMIN_PASS}`);
-}
-
-module.exports = db;
+module.exports = { pool, initDb };
