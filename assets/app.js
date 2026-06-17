@@ -207,11 +207,10 @@ if (typeof io === 'function') {
 }
 
 /* ---------------------------------------------------------------------
-   Центр уведомлений — реальные данные с сервера (события: новый отклик,
-   принятие/отклонение КП). Доставляются мгновенно через socket выше;
-   поллинг здесь — редкая подстраховка на случай разрыва соединения.
+   Центр уведомлений — дропдаун под колокольчиком
    --------------------------------------------------------------------- */
 let notifPollInterval = null;
+let notifDropdown = null;
 
 function initNotifications() {
   if (currentCompanyName === 'Гость') return;
@@ -233,44 +232,79 @@ async function refreshNotificationBadge() {
     const unreadCount = list.filter(n => !n.read).length;
     badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
     if (unreadCount > 0) badgeEl.innerText = unreadCount;
-  } catch (error) { /* backend недоступен — тихо игнорируем, попробуем на следующем тике */ }
+  } catch { /* тихо */ }
+}
+
+function _getOrCreateDropdown() {
+  if (notifDropdown) return notifDropdown;
+  notifDropdown = document.createElement('div');
+  notifDropdown.className = 'notif-dropdown';
+  notifDropdown.innerHTML = `
+    <div class="notif-dropdown-header">
+      <span class="notif-dropdown-title">Уведомления</span>
+      <button class="notif-clear-btn" onclick="clearNotifications()">Очистить всё</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>`;
+  document.body.appendChild(notifDropdown);
+  return notifDropdown;
+}
+
+function _positionDropdown(dropdown) {
+  const btn = document.querySelector('.bell-btn');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  dropdown.style.top   = (rect.bottom + 8) + 'px';
+  dropdown.style.right = (window.innerWidth - rect.right) + 'px';
 }
 
 async function openNotificationsModal() {
-  const modal = document.getElementById('notificationModal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  const container = document.getElementById('notificationsList');
-  if (!container) return;
-  container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Загрузка...</div>';
+  const dropdown = _getOrCreateDropdown();
+
+  if (dropdown.classList.contains('open')) {
+    dropdown.classList.remove('open');
+    return;
+  }
+
+  _positionDropdown(dropdown);
+  dropdown.classList.add('open');
+
+  const listEl = document.getElementById('notifList');
+  listEl.innerHTML = '<div class="notif-empty">Загрузка...</div>';
 
   try {
     const token = localStorage.getItem('authToken');
-    const authHeader = token ? { 'Authorization': 'Bearer ' + token } : {};
-    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { headers: authHeader });
-    const list = await response.json();
-    if (list.length === 0) {
-      container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">История уведомлений пуста</div>';
+    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { headers });
+    const items = await response.json();
+
+    if (items.length === 0) {
+      listEl.innerHTML = '<div class="notif-empty"><div class="notif-empty-icon">🔔</div>Уведомлений пока нет</div>';
       return;
     }
-    container.innerHTML = '';
-    list.forEach(n => {
-      const item = document.createElement('div');
-      item.className = 'notification-item';
+
+    listEl.innerHTML = '';
+    items.forEach(n => {
+      const el = document.createElement('div');
+      el.className = 'notif-item' + (n.read ? '' : ' unread');
       const time = new Date(n.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-      item.innerHTML = `<div>${escapeHtml(n.text)}</div><div class="time">⏱ ${time}</div>`;
-      container.appendChild(item);
+      el.innerHTML = `
+        <div class="notif-dot"></div>
+        <div>
+          <div class="notif-item-text">${escapeHtml(n.text)}</div>
+          <div class="notif-item-time">${time}</div>
+        </div>`;
+      listEl.appendChild(el);
     });
-    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST', headers: authHeader });
+
+    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST', headers });
     refreshNotificationBadge();
-  } catch (error) {
-    container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-secondary);font-size:14px;">Не удалось загрузить уведомления</div>';
+  } catch {
+    listEl.innerHTML = '<div class="notif-empty">Не удалось загрузить уведомления</div>';
   }
 }
 
 function closeNotificationsModal() {
-  const modal = document.getElementById('notificationModal');
-  if (modal) modal.style.display = 'none';
+  if (notifDropdown) notifDropdown.classList.remove('open');
 }
 
 async function clearNotifications() {
@@ -280,9 +314,17 @@ async function clearNotifications() {
       method: 'DELETE',
       headers: token ? { 'Authorization': 'Bearer ' + token } : {}
     });
-  } catch (error) { /* ignore */ }
+  } catch { /* ignore */ }
+  if (notifDropdown) notifDropdown.classList.remove('open');
   openNotificationsModal();
 }
+
+document.addEventListener('click', (e) => {
+  if (!notifDropdown || !notifDropdown.classList.contains('open')) return;
+  const btn = document.querySelector('.bell-btn');
+  if (btn && btn.contains(e.target)) return;
+  if (!notifDropdown.contains(e.target)) notifDropdown.classList.remove('open');
+});
 
 /* ---------------------------------------------------------------------
    Чат по закупке — сообщения хранятся на сервере (тред = orderId + company
@@ -360,4 +402,35 @@ async function sendGlobalChatMessage() {
     });
   } catch (error) { /* ignore, отрисуем то, что есть */ }
   renderChatHistory();
+}
+
+/* ---------------------------------------------------------------------
+   Бейджи-счётчики на пунктах сайдбара
+   --------------------------------------------------------------------- */
+function _setBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.style.display = 'inline-block'; }
+  else el.style.display = 'none';
+}
+
+async function initSidebarBadges() {
+  const token = localStorage.getItem('authToken');
+  const role  = localStorage.getItem('userRole');
+  if (!token) return;
+  try {
+    const r = await fetch(`${SERVER_URL}/dashboard/counts`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!r.ok) return;
+    const counts = await r.json();
+    if (role === 'producer') {
+      _setBadge('navBadgeOrders',    counts.activeOrders);
+      _setBadge('navBadgeProposals', counts.pendingProposals);
+    } else {
+      _setBadge('navBadgeOrders',    counts.myActiveOrders);
+      _setBadge('navBadgeProposals', counts.newResponses);
+    }
+    _setBadge('navBadgeMessages', counts.unreadMessages);
+  } catch { /* сервер недоступен — тихо */ }
 }

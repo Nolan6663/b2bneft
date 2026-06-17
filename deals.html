@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Заказы</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        .kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 860px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+
+        .kpi-tile {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 16px 18px;
+        }
+        .kpi-tile-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+        .kpi-tile-value { font-size: 22px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
+        .kpi-tile-value.accent { color: var(--accent-bright); }
+        .kpi-tile-value.sm { font-size: 16px; }
+
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+        .filter-tab {
+            padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            cursor: pointer; border: 1px solid var(--inner-border);
+            background: transparent; color: var(--text-secondary);
+            transition: border-color .15s, color .15s, background .15s;
+        }
+        .filter-tab.active { background: var(--accent-gradient); color: var(--accent-on-button); border-color: transparent; }
+        .filter-tab:hover:not(.active) { border-color: var(--text-secondary); color: var(--text-primary); }
+
+        .deals-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .deal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 18px 20px;
+            transition: border-color .15s;
+        }
+        .deal-card:hover { border-color: rgba(84,199,159,.3); }
+
+        .deal-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .deal-card-title { font-size: 14.5px; font-weight: 700; color: var(--text-primary-alt); margin-bottom: 6px; }
+        .deal-card-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+        .deal-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .deal-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+        .deal-status.active  { background: rgba(84,199,159,.12); border: 1px solid rgba(84,199,159,.25); color: var(--accent-bright); }
+        .deal-status.done    { background: rgba(148,163,184,.1); border: 1px solid rgba(148,163,184,.2); color: var(--text-secondary); }
+
+        .deal-info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px 20px;
+            padding: 14px 0;
+            border-top: 1px solid var(--inner-border);
+            border-bottom: 1px solid var(--inner-border);
+            margin-bottom: 14px;
+        }
+        @media (max-width: 700px) { .deal-info-grid { grid-template-columns: 1fr 1fr; } }
+
+        .deal-info-label { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 3px; }
+        .deal-info-value { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+        .deal-info-value a { color: var(--accent-bright); text-decoration: none; }
+        .deal-info-value a:hover { text-decoration: underline; }
+
+        .deal-card-actions { display: flex; gap: 8px; align-items: center; }
+
+        .btn-deal-chat {
+            display: inline-flex; align-items: center; gap: 6px;
+            height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 600;
+            border-radius: var(--radius-btn); text-decoration: none;
+            background: transparent; border: 1px solid var(--secondary-btn-border);
+            color: var(--secondary-btn-text); cursor: pointer;
+            transition: border-color .15s, color .15s;
+        }
+        .btn-deal-chat:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+
+        .btn-complete {
+            height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 600;
+            border-radius: var(--radius-btn); cursor: pointer;
+            background: transparent; border: 1px solid rgba(84,199,159,.4);
+            color: var(--accent-bright);
+            transition: background .15s, border-color .15s;
+        }
+        .btn-complete:hover { background: rgba(84,199,159,.1); border-color: var(--accent-bright); }
+
+        .deals-empty {
+            text-align: center; padding: 80px 20px;
+            color: var(--text-secondary); font-size: 14px; line-height: 1.7;
+        }
+        .deals-empty-icon { font-size: 36px; opacity: .3; margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2 id="pageTitle">Заказы</h2>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+        </div>
+
+        <div class="kpi-strip">
+            <div class="kpi-tile">
+                <div class="kpi-tile-label">Всего сделок</div>
+                <div class="kpi-tile-value" id="kpiTotal">—</div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-label">В работе</div>
+                <div class="kpi-tile-value accent" id="kpiActive">—</div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-label">Выполнено</div>
+                <div class="kpi-tile-value" id="kpiCompleted">—</div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-label" id="kpiAmountLabel">Сумма</div>
+                <div class="kpi-tile-value sm" id="kpiAmount">—</div>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all"       onclick="setFilter('all')">Все</button>
+            <button class="filter-tab"         data-filter="active"    onclick="setFilter('active')">В работе</button>
+            <button class="filter-tab"         data-filter="completed" onclick="setFilter('completed')">Выполнены</button>
+        </div>
+
+        <div class="deals-list" id="dealsList">
+            <div class="deals-empty"><div class="deals-empty-icon">📋</div>Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width:440px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        const userRole  = localStorage.getItem('userRole');
+        const myCompany = localStorage.getItem('userCompany');
+        const token     = localStorage.getItem('authToken');
+        let allDeals    = [];
+        let currentFilter = 'all';
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            const navProposals = document.getElementById('navProposals');
+            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            document.getElementById('pageTitle').textContent =
+                userRole === 'customer' ? 'Мои заказы' : 'Выигранные сделки';
+            document.getElementById('kpiAmountLabel').textContent =
+                userRole === 'customer' ? 'Сумма закупок' : 'Сумма выручки';
+
+            try {
+                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) {
+                    const companies = await r.json();
+                    const mine = companies.find(c => c.company === myCompany && c.role === userRole);
+                    if (mine) {
+                        const spl = document.getElementById('sidebarProfileLink');
+                        if (spl) { spl.href = `company-profile.html?id=${mine.id}`; spl.style.display = ''; }
+                    }
+                }
+            } catch {}
+
+            await loadDeals();
+            initNotifications();
+            initSidebarBadges();
+        });
+
+        async function loadDeals() {
+            try {
+                const r = await fetch(`${SERVER_URL}/deals`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!r.ok) throw new Error();
+                allDeals = await r.json();
+                updateKPI();
+                renderDeals();
+            } catch {
+                document.getElementById('dealsList').innerHTML =
+                    '<div class="deals-empty"><div class="deals-empty-icon">⚠️</div>Не удалось загрузить данные</div>';
+            }
+        }
+
+        function updateKPI() {
+            const active    = allDeals.filter(d => d.completionStatus === 'active').length;
+            const completed = allDeals.filter(d => d.completionStatus === 'completed').length;
+            const total     = allDeals.reduce((s, d) => s + (d.price || 0) * (d.quantity || 1), 0);
+
+            document.getElementById('kpiTotal').textContent     = allDeals.length;
+            document.getElementById('kpiActive').textContent    = active;
+            document.getElementById('kpiCompleted').textContent = completed;
+            document.getElementById('kpiAmount').textContent    = total > 0
+                ? total.toLocaleString('ru-RU') + ' ₽' : '—';
+        }
+
+        function setFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('.filter-tab').forEach(t =>
+                t.classList.toggle('active', t.dataset.filter === f));
+            renderDeals();
+        }
+
+        function renderDeals() {
+            const list = currentFilter === 'all' ? allDeals
+                : allDeals.filter(d =>
+                    currentFilter === 'active'    ? d.completionStatus === 'active'
+                    : currentFilter === 'completed' ? d.completionStatus === 'completed'
+                    : true);
+
+            const container = document.getElementById('dealsList');
+            if (list.length === 0) {
+                const msg = currentFilter === 'active'    ? 'Нет активных сделок'
+                          : currentFilter === 'completed' ? 'Нет завершённых сделок'
+                          : userRole === 'customer'       ? 'Вы ещё не приняли ни одного предложения'
+                          :                                 'Ваши предложения пока не были приняты';
+                const hint = currentFilter === 'all'
+                    ? (userRole === 'customer'
+                        ? '<br><a href="index.html" style="color:var(--accent-bright);text-decoration:underline;">Перейти к закупкам →</a>'
+                        : '<br><a href="proposals.html" style="color:var(--accent-bright);text-decoration:underline;">Мои отклики →</a>')
+                    : '';
+                container.innerHTML = `<div class="deals-empty"><div class="deals-empty-icon">📋</div>${escapeHtml(msg)}${hint}</div>`;
+                return;
+            }
+            container.innerHTML = '';
+            list.forEach(d => container.appendChild(buildDealCard(d)));
+        }
+
+        function buildDealCard(d) {
+            const card = document.createElement('div');
+            card.className = 'deal-card';
+
+            const isActive = d.completionStatus === 'active';
+            const statusHtml = isActive
+                ? '<span class="deal-status active">В работе</span>'
+                : '<span class="deal-status done">Выполнен</span>';
+
+            const date = d.dealDate
+                ? new Date(d.dealDate).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : '—';
+
+            const counterpartyHtml = d.counterpartyProfileId
+                ? `<a href="company-profile.html?id=${d.counterpartyProfileId}">${escapeHtml(d.counterparty || '—')}</a>`
+                : escapeHtml(d.counterparty || '—');
+
+            const chatCompany = userRole === 'customer' ? d.counterparty : myCompany;
+            const chatHref = `messages.html?orderId=${d.orderId}&company=${encodeURIComponent(chatCompany || '')}`;
+
+            const completeBtn = (userRole === 'customer' && isActive)
+                ? `<button class="btn-complete" onclick="completeDeal(${d.proposalId})">Завершить сделку</button>`
+                : '';
+
+            const catBadge = d.category
+                ? `<span class="badge-category" style="font-size:11.5px;padding:3px 8px;border-radius:8px;background:rgba(84,199,159,.1);border:1px solid rgba(84,199,159,.2);color:var(--accent-bright);">${escapeHtml(d.category)}</span>`
+                : '';
+
+            card.innerHTML = `
+                <div class="deal-card-top">
+                    <div>
+                        <div class="deal-card-title">${escapeHtml(d.title)}</div>
+                        <div class="deal-card-meta">
+                            ${catBadge}
+                            ${d.quantity ? `<span style="font-size:12px;color:var(--text-secondary)">${d.quantity}${d.unit ? ' ' + escapeHtml(d.unit) : ''}</span>` : ''}
+                        </div>
+                    </div>
+                    ${statusHtml}
+                </div>
+                <div class="deal-info-grid">
+                    <div>
+                        <div class="deal-info-label">${userRole === 'customer' ? 'Исполнитель' : 'Заказчик'}</div>
+                        <div class="deal-info-value">${counterpartyHtml}</div>
+                    </div>
+                    <div>
+                        <div class="deal-info-label">Цена</div>
+                        <div class="deal-info-value">${d.price ? d.price.toLocaleString('ru-RU') + ' ₽' + (d.unit ? '/' + escapeHtml(d.unit) : '') : '—'}</div>
+                    </div>
+                    <div>
+                        <div class="deal-info-label">Срок поставки</div>
+                        <div class="deal-info-value">${d.days ? d.days + ' дней' : '—'}</div>
+                    </div>
+                    <div>
+                        <div class="deal-info-label">Дата сделки</div>
+                        <div class="deal-info-value">${date}</div>
+                    </div>
+                </div>
+                <div class="deal-card-actions">
+                    <a href="${chatHref}" class="btn-deal-chat">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Написать
+                    </a>
+                    ${completeBtn}
+                </div>`;
+            return card;
+        }
+
+        async function completeDeal(proposalId) {
+            if (!confirm('Подтвердить выполнение сделки?\nИсполнитель получит уведомление. Действие нельзя отменить.')) return;
+            try {
+                const r = await fetch(`${SERVER_URL}/deals/${proposalId}/complete`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    await loadDeals();
+                } else {
+                    alert(data.error || 'Ошибка');
+                }
+            } catch {
+                alert('Сервер недоступен');
+            }
+        }
+    </script>
+</body>
+</html>

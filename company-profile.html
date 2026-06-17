@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -33,16 +33,23 @@
         .equipment-tag-edit { display: flex; align-items: center; gap: 6px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; }
         .equipment-tag-edit button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
         .equipment-tag-edit button:hover { color: var(--error); }
+        #editProfileModal .modal-content { max-height: 85vh; overflow-y: auto; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
-        <a href="#" id="mainCabinetLink"><img class="nav-icon" src="assets/icons_svg/home.svg" alt="">Актуальные закупки</a>
-        <a href="proposals.html" id="navProposals"><img class="nav-icon" src="assets/icons_svg/reply.svg" alt="">Мои отклики</a>
-        <a href="partners.html"><img class="nav-icon" src="assets/icons_svg/users.svg" alt="">Контрагенты</a>
-        <a href="analytics.html"><img class="nav-icon" src="assets/icons_svg/chart.svg" alt="">Аналитика</a>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки</a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
 
         <div class="sidebar-bottom">
             <div class="theme-toggle-row">
@@ -80,34 +87,111 @@
                 <label>Специализация</label>
                 <input type="text" id="editSpecialization" placeholder="Например, Резинотехнические изделия (РТИ)">
             </div>
-            <div class="form-group">
-                <label>Город</label>
-                <input type="text" id="editCity" placeholder="Например, г. Ярославль">
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>Город</label>
+                    <input type="text" id="editCity" placeholder="Например, г. Ярославль">
+                </div>
+                <div class="form-group">
+                    <label>Опыт работы, лет</label>
+                    <input type="number" id="editYears" min="0" placeholder="Например, 12">
+                </div>
             </div>
-            <div class="form-group">
-                <label>Телефон</label>
-                <input type="tel" id="editPhone" placeholder="+7 (999) 123-45-67">
-            </div>
-            <div class="form-group">
-                <label>Сайт</label>
-                <input type="url" id="editWebsite" placeholder="https://example.ru">
-            </div>
-            <div class="form-group">
-                <label>Опыт работы, лет</label>
-                <input type="number" id="editYears" min="0" placeholder="Например, 12">
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="tel" id="editPhone" placeholder="+7 (999) 123-45-67">
+                </div>
+                <div class="form-group">
+                    <label>Сайт</label>
+                    <input type="url" id="editWebsite" placeholder="https://example.ru">
+                </div>
             </div>
             <div class="form-group">
                 <label>О компании</label>
                 <textarea id="editAbout" placeholder="Короткое описание компании и специализации"></textarea>
             </div>
             <div class="form-group">
-                <label>Оборудование (для производителя)</label>
+                <label>Оборудование</label>
                 <div class="equipment-input-row">
                     <input type="text" id="editEquipmentInput" placeholder="Например, Прессы вулканизации" onkeypress="if(event.key==='Enter'){event.preventDefault();addEquipmentTag();}">
                     <button type="button" class="btn-secondary" onclick="addEquipmentTag()">+ Добавить</button>
                 </div>
                 <div class="equipment-tags-edit" id="editEquipmentTags"></div>
             </div>
+
+            <div class="form-section-title">Реквизиты</div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>ОГРН</label>
+                    <input type="text" id="editOgrn" placeholder="1234567890123">
+                </div>
+                <div class="form-group">
+                    <label>Директор</label>
+                    <input type="text" id="editDirector" placeholder="Иванов Иван Иванович">
+                </div>
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>Год основания</label>
+                    <input type="number" id="editFoundingYear" min="1900" max="2030" placeholder="2005">
+                </div>
+                <div class="form-group">
+                    <label>Уставной капитал</label>
+                    <input type="text" id="editAuthorizedCapital" placeholder="10 000 руб.">
+                </div>
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label>Сотрудников</label>
+                    <input type="number" id="editEmployees" min="1" placeholder="50">
+                </div>
+                <div class="form-group">
+                    <label>Выручка</label>
+                    <input type="text" id="editRevenue" placeholder="50 млн ₽">
+                </div>
+            </div>
+
+            <div id="producerEditFields">
+                <div class="form-section-title">Производственные характеристики</div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Кол-во станков</label>
+                        <input type="number" id="editMachinesCount" min="0" placeholder="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Площадь производства, м²</label>
+                        <input type="number" id="editProductionArea" min="0" placeholder="1500">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Загрузка производства — <span id="editLoadValue">50%</span></label>
+                    <input type="range" id="editProductionLoad" class="load-range" min="0" max="100" value="50" oninput="document.getElementById('editLoadValue').textContent=this.value+'%'">
+                </div>
+
+                <div class="form-section-title">Мощности (отметьте имеющиеся)</div>
+                <div class="capabilities-edit-grid" id="editCapabilities"></div>
+
+                <div class="form-section-title" style="margin-top:16px;">Сертификаты ISO</div>
+                <div class="equipment-input-row">
+                    <input type="text" id="editIsoCertInput" placeholder="Например, ISO 9001:2015" onkeypress="if(event.key==='Enter'){event.preventDefault();addIsoCert();}">
+                    <button type="button" class="btn-secondary" onclick="addIsoCert()">+ Добавить</button>
+                </div>
+                <div class="equipment-tags-edit" id="editIsoCertTags"></div>
+
+                <div class="form-section-title" style="margin-top:12px;">Сертификаты качества</div>
+                <div class="equipment-input-row">
+                    <input type="text" id="editQualCertInput" placeholder="Например, ГОСТ Р ISO 9001" onkeypress="if(event.key==='Enter'){event.preventDefault();addQualCert();}">
+                    <button type="button" class="btn-secondary" onclick="addQualCert()">+ Добавить</button>
+                </div>
+                <div class="equipment-tags-edit" id="editQualCertTags"></div>
+
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Видео о производстве (YouTube / Vimeo)</label>
+                    <input type="url" id="editVideoUrl" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeEditProfile()">Отмена</button>
                 <button class="btn-modal-submit" onclick="saveProfile()">Сохранить</button>
@@ -135,7 +219,21 @@
         const myCompany = localStorage.getItem('userCompany');
         const companyId = new URLSearchParams(window.location.search).get('id');
         let currentData = null;
+        let verificationStatus = null;
         let editEquipment = [];
+        let editIsoCerts = [];
+        let editQualCerts = [];
+
+        const CAPABILITIES = [
+            { key: 'lathe',  label: 'Токарные',  icon: '⚙' },
+            { key: 'mill',   label: 'Фрезерные', icon: '◈' },
+            { key: 'laser',  label: 'Лазерные',  icon: '✦' },
+            { key: 'rti',    label: 'РТИ',       icon: '◉' },
+            { key: 'cast',   label: 'Литьё',     icon: '◐' },
+            { key: 'stamp',  label: 'Штамповка', icon: '▪' },
+            { key: 'paint',  label: 'Покраска',  icon: '◊' },
+            { key: 'weld',   label: 'Сварка',    icon: '∿' },
+        ];
 
         window.addEventListener('DOMContentLoaded', () => {
             const mainLink = document.getElementById('mainCabinetLink');
@@ -147,19 +245,24 @@
             }
             loadProfile();
             initNotifications();
+            initSidebarBadges();
         });
 
         async function loadProfile() {
             try {
-                const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
-                if (!response.ok) {
+                const token = localStorage.getItem('authToken');
+                const [profileResp, vsResp] = await Promise.all([
+                    fetch(`${SERVER_URL}/companies/${companyId}`, { headers: { 'Authorization': 'Bearer ' + token } }),
+                    fetch(`${SERVER_URL}/verification/status`, { headers: { 'Authorization': 'Bearer ' + token } }),
+                ]);
+                if (!profileResp.ok) {
                     document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не найдена</div>';
                     return;
                 }
-                currentData = await response.json();
+                currentData = await profileResp.json();
+                verificationStatus = vsResp.ok ? await vsResp.json() : { status: 'none' };
                 renderProfile(currentData);
+                renderPhotoGallery(currentData.photos);
             } catch (error) {
                 document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Не удалось загрузить профиль</div>';
             }
@@ -199,6 +302,90 @@
                 ? c.equipment.map(e => `<span class="equipment-chip">${wrenchIcon} ${escapeHtml(e)}</span>`).join(' ')
                 : '<span class="empty-hint">Оборудование не указано</span>';
 
+            // Trust block
+            const trustFields = [
+                ['ИНН', c.inn],
+                ['ОГРН', c.ogrn],
+                ['Директор', c.director],
+                ['Год основания', c.foundingYear],
+                ['Уставной капитал', c.authorizedCapital],
+                ['Сотрудников', c.employees ? c.employees + ' чел.' : null],
+                ['Выручка', c.revenue],
+                ...(c.role === 'producer' ? [
+                    ['Кол-во станков', c.machinesCount ? c.machinesCount + ' ед.' : null],
+                    ['Площадь производства', c.productionArea ? c.productionArea + ' м²' : null],
+                ] : []),
+            ];
+            const trustHtml = trustFields
+                .filter(([, v]) => v != null && v !== '')
+                .map(([l, v]) => `<div class="trust-item"><div class="trust-label">${escapeHtml(l)}</div><div class="trust-value">${escapeHtml(String(v))}</div></div>`)
+                .join('');
+
+            const verifiedBadge = c.verifiedByPlatform
+                ? `<span class="platform-verified-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg>Верифицирован платформой</span>`
+                : '';
+
+            // Producer-only sections
+            let producerSections = '';
+            if (c.role === 'producer') {
+                const caps = c.capabilities || [];
+                const capCardsHtml = CAPABILITIES.map(cap => {
+                    const active = caps.includes(cap.key);
+                    return `<div class="capability-card${active ? ' active' : ''}">
+                        <div class="cap-icon">${cap.icon}</div>
+                        <div class="cap-label">${cap.label}</div>
+                        <div class="cap-check">${active ? '✓' : ''}</div>
+                    </div>`;
+                }).join('');
+
+                let loadSection = '';
+                if (c.productionLoad != null) {
+                    const pct = Math.min(100, Math.max(0, c.productionLoad));
+                    const col = pct < 50 ? '#4ade80' : pct < 80 ? '#facc15' : '#f87171';
+                    loadSection = `
+                    <div class="section">
+                        <h3>Загрузка производства</h3>
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <div class="load-bar-track" style="flex:1;"><div class="load-bar-fill" style="width:${pct}%; background:${col};"></div></div>
+                            <span style="font-size:15px; font-weight:700; color:${col}; min-width:44px;">${pct}%</span>
+                        </div>
+                    </div>`;
+                }
+
+                const isoCerts = c.isoCertificates || [];
+                const qualCerts = c.qualityCertificates || [];
+                let certsSection = '';
+                if (isoCerts.length || qualCerts.length) {
+                    certsSection = `
+                    <div class="section">
+                        <h3>Сертификаты качества</h3>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                            ${isoCerts.map(cert => `<span class="cert-tag iso">${escapeHtml(cert)}</span>`).join('')}
+                            ${qualCerts.map(cert => `<span class="cert-tag quality">${escapeHtml(cert)}</span>`).join('')}
+                        </div>
+                    </div>`;
+                }
+
+                let videoSection = '';
+                if (c.videoUrl) {
+                    const embedUrl = getVideoEmbedUrl(c.videoUrl);
+                    if (embedUrl) {
+                        videoSection = `
+                        <div class="section">
+                            <h3>Видео о производстве</h3>
+                            <div class="video-container"><iframe src="${embedUrl}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>
+                        </div>`;
+                    }
+                }
+
+                producerSections = `
+                <div class="section">
+                    <h3>Производственные мощности</h3>
+                    <div class="capabilities-grid">${capCardsHtml}</div>
+                </div>
+                ${loadSection}${certsSection}${videoSection}`;
+            }
+
             document.getElementById('profileContent').innerHTML = `
                 <div class="section">
                     <div class="profile-header">
@@ -217,9 +404,10 @@
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
-                        <div style="display:flex; gap:10px; flex-shrink:0;">
+                        <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
                             ${!isOwn ? `<button class="btn-secondary ${c.isFavorite ? 'active' : ''}" id="favoriteToggleBtn" onclick="toggleFavorite()">${c.isFavorite ? '★ В избранном' : '☆ В избранное'}</button>` : ''}
                             ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
+                            ${isOwn && !c.verifiedByPlatform ? renderVerifyBtn() : ''}
                         </div>
                     </div>
                 </div>
@@ -235,6 +423,30 @@
                     <h3>Специализация и оборудование</h3>
                     <div style="margin-bottom: 10px; font-size: 13px; color: var(--text-tertiary);">${escapeHtml(c.specialization || 'Не указана')}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${equipmentHtml}</div>
+                </div>
+
+                ${(trustHtml || verifiedBadge) ? `
+                <div class="section">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <h3 style="margin:0;">Реквизиты</h3>
+                        ${verifiedBadge}
+                    </div>
+                    <div class="trust-grid">${trustHtml}</div>
+                </div>` : ''}
+
+                ${producerSections}
+
+                <div class="section" id="photoSection">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                        <h3 style="margin:0;">Фотографии</h3>
+                        ${isOwn ? `<label class="btn-secondary" style="cursor:pointer; padding:7px 14px; font-size:12.5px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Загрузить фото
+                            <input type="file" id="photoUploadInput" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadPhoto(this)">
+                        </label>` : ''}
+                    </div>
+                    <div id="photoGallery" class="photo-gallery"></div>
+                    ${(!c.photos || c.photos.length === 0) ? `<p class="empty-hint" id="photoEmptyHint">Фотографии не добавлены</p>` : ''}
                 </div>
             `;
         }
@@ -264,12 +476,37 @@
 
         function openEditProfile() {
             editEquipment = currentData.equipment ? [...currentData.equipment] : [];
+            editIsoCerts = currentData.isoCertificates ? [...currentData.isoCertificates] : [];
+            editQualCerts = currentData.qualityCertificates ? [...currentData.qualityCertificates] : [];
+
             document.getElementById('editSpecialization').value = currentData.specialization || '';
             document.getElementById('editCity').value = currentData.city || '';
             document.getElementById('editPhone').value = currentData.phone || '';
             document.getElementById('editWebsite').value = currentData.website || '';
             document.getElementById('editYears').value = currentData.yearsExperience || '';
             document.getElementById('editAbout').value = currentData.about || '';
+            document.getElementById('editOgrn').value = currentData.ogrn || '';
+            document.getElementById('editDirector').value = currentData.director || '';
+            document.getElementById('editFoundingYear').value = currentData.foundingYear || '';
+            document.getElementById('editAuthorizedCapital').value = currentData.authorizedCapital || '';
+            document.getElementById('editEmployees').value = currentData.employees || '';
+            document.getElementById('editRevenue').value = currentData.revenue || '';
+
+            const producerFields = document.getElementById('producerEditFields');
+            if (producerFields) producerFields.style.display = userRole === 'producer' ? '' : 'none';
+
+            if (userRole === 'producer') {
+                document.getElementById('editMachinesCount').value = currentData.machinesCount || '';
+                document.getElementById('editProductionArea').value = currentData.productionArea || '';
+                const load = currentData.productionLoad != null ? currentData.productionLoad : 50;
+                document.getElementById('editProductionLoad').value = load;
+                document.getElementById('editLoadValue').textContent = load + '%';
+                document.getElementById('editVideoUrl').value = currentData.videoUrl || '';
+                renderCapabilitiesEdit(currentData.capabilities || []);
+                renderCertTagsEdit(editIsoCerts, 'editIsoCertTags', removeIsoCert);
+                renderCertTagsEdit(editQualCerts, 'editQualCertTags', removeQualCert);
+            }
+
             renderEquipmentTagsEdit();
             document.getElementById('editProfileModal').style.display = 'flex';
         }
@@ -297,25 +534,221 @@
             renderEquipmentTagsEdit();
         }
 
+        function getVideoEmbedUrl(url) {
+            if (!url) return null;
+            try {
+                const u = new URL(url);
+                if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+                    let videoId = u.searchParams.get('v');
+                    if (!videoId && u.hostname === 'youtu.be') videoId = u.pathname.slice(1);
+                    if (videoId) return 'https://www.youtube.com/embed/' + videoId;
+                }
+                if (u.hostname.includes('vimeo.com')) {
+                    const id = u.pathname.split('/').filter(Boolean).pop();
+                    if (id) return 'https://player.vimeo.com/video/' + id;
+                }
+            } catch { }
+            return null;
+        }
+
+        function addIsoCert() {
+            const input = document.getElementById('editIsoCertInput');
+            const val = input.value.trim();
+            if (!val) return;
+            editIsoCerts.push(val);
+            input.value = '';
+            renderCertTagsEdit(editIsoCerts, 'editIsoCertTags', removeIsoCert);
+        }
+
+        function removeIsoCert(idx) {
+            editIsoCerts.splice(idx, 1);
+            renderCertTagsEdit(editIsoCerts, 'editIsoCertTags', removeIsoCert);
+        }
+
+        function addQualCert() {
+            const input = document.getElementById('editQualCertInput');
+            const val = input.value.trim();
+            if (!val) return;
+            editQualCerts.push(val);
+            input.value = '';
+            renderCertTagsEdit(editQualCerts, 'editQualCertTags', removeQualCert);
+        }
+
+        function removeQualCert(idx) {
+            editQualCerts.splice(idx, 1);
+            renderCertTagsEdit(editQualCerts, 'editQualCertTags', removeQualCert);
+        }
+
+        function renderCertTagsEdit(arr, containerId, removeFn) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = arr.map((cert, i) =>
+                `<span class="equipment-tag-edit">${escapeHtml(cert)}<button type="button" onclick="${removeFn.name}(${i})">✕</button></span>`
+            ).join('');
+        }
+
+        function renderVerifyBtn() {
+            if (!verificationStatus) return '';
+            const vs = verificationStatus.status;
+            if (vs === 'approved') return '';
+            if (vs === 'pending') return `<span class="badge" style="background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.3); padding:7px 12px;">⏱ Заявка на рассмотрении</span>`;
+            if (vs === 'rejected') return `
+                <div style="text-align:right;">
+                    <span class="badge" style="background:rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.3); padding:7px 12px; display:block; margin-bottom:6px;">✗ Отклонено${verificationStatus.comment ? ': ' + escapeHtml(verificationStatus.comment) : ''}</span>
+                    <button class="btn-secondary" onclick="requestVerification(true)">↺ Подать заявку повторно</button>
+                </div>`;
+            return `<button class="btn-secondary" onclick="requestVerification(false)" style="border-color:var(--accent-bright); color:var(--accent-bright);">✓ Запросить верификацию</button>`;
+        }
+
+        async function requestVerification(isRetry) {
+            if (!confirm(isRetry ? 'Подать повторную заявку на верификацию?' : 'Запросить верификацию компании на платформе?')) return;
+            try {
+                const r = await fetch(`${SERVER_URL}/verification/request`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const data = await r.json();
+                if (!r.ok) return alert(data.error || 'Ошибка');
+                verificationStatus = { status: 'pending' };
+                renderProfile(currentData);
+                renderPhotoGallery(currentData.photos);
+            } catch { alert('Сервер недоступен'); }
+        }
+
+        function renderCapabilitiesEdit(selectedCaps) {
+            const container = document.getElementById('editCapabilities');
+            if (!container) return;
+            container.innerHTML = CAPABILITIES.map(cap => `
+                <label class="cap-checkbox-label">
+                    <input type="checkbox" value="${cap.key}" ${selectedCaps.includes(cap.key) ? 'checked' : ''}>
+                    <span>${cap.icon} ${cap.label}</span>
+                </label>
+            `).join('');
+        }
+
+        function renderPhotoGallery(photos) {
+            const gallery = document.getElementById('photoGallery');
+            const hint = document.getElementById('photoEmptyHint');
+            if (!gallery) return;
+            gallery.innerHTML = '';
+            if (!photos || photos.length === 0) {
+                if (hint) hint.style.display = '';
+                return;
+            }
+            if (hint) hint.style.display = 'none';
+            const isOwn = currentData && currentData.company === myCompany;
+            photos.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'photo-gallery-item';
+                item.innerHTML = `
+                    <img src="/company-photos/${escapeHtml(p.stored_name)}" alt="${escapeHtml(p.original_name)}" loading="lazy" onclick="openLightbox('/company-photos/${escapeHtml(p.stored_name)}')">
+                    ${isOwn ? `<button class="photo-delete-btn" onclick="deletePhoto(event,${p.id})" title="Удалить">✕</button>` : ''}
+                `;
+                gallery.appendChild(item);
+            });
+        }
+
+        function openLightbox(src) {
+            let lb = document.getElementById('photoLightbox');
+            if (!lb) {
+                lb = document.createElement('div');
+                lb.id = 'photoLightbox';
+                lb.className = 'photo-lightbox';
+                lb.onclick = () => lb.style.display = 'none';
+                lb.innerHTML = '<img id="lightboxImg" src="" alt="">';
+                document.body.appendChild(lb);
+            }
+            document.getElementById('lightboxImg').src = src;
+            lb.style.display = 'flex';
+        }
+
+        async function uploadPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+            const formData = new FormData();
+            formData.append('photo', input.files[0]);
+            input.value = '';
+            try {
+                const r = await fetch(`${SERVER_URL}/companies/${companyId}/photos`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                    body: formData
+                });
+                const data = await r.json();
+                if (!r.ok) return alert(data.error || 'Ошибка загрузки');
+                if (!currentData.photos) currentData.photos = [];
+                currentData.photos.push(data);
+                renderPhotoGallery(currentData.photos);
+            } catch { alert('Сервер недоступен'); }
+        }
+
+        async function deletePhoto(e, photoId) {
+            e.stopPropagation();
+            if (!confirm('Удалить фотографию?')) return;
+            try {
+                const r = await fetch(`${SERVER_URL}/companies/${companyId}/photos/${photoId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) return;
+                currentData.photos = currentData.photos.filter(p => p.id !== photoId);
+                renderPhotoGallery(currentData.photos);
+            } catch { alert('Сервер недоступен'); }
+        }
+
         async function saveProfile() {
             const specialization = document.getElementById('editSpecialization').value.trim();
             const city = document.getElementById('editCity').value.trim();
             const yearsExperience = document.getElementById('editYears').value.trim();
             const about = document.getElementById('editAbout').value.trim();
-
             const phone = document.getElementById('editPhone').value.trim();
             const website = document.getElementById('editWebsite').value.trim();
+            const ogrn = document.getElementById('editOgrn').value.trim();
+            const director = document.getElementById('editDirector').value.trim();
+            const foundingYear = document.getElementById('editFoundingYear').value.trim();
+            const authorizedCapital = document.getElementById('editAuthorizedCapital').value.trim();
+            const employees = document.getElementById('editEmployees').value.trim();
+            const revenue = document.getElementById('editRevenue').value.trim();
+
+            const body = {
+                specialization, city, phone, website, about, equipment: editEquipment,
+                yearsExperience: yearsExperience ? Number(yearsExperience) : null,
+                ogrn, director,
+                foundingYear: foundingYear ? Number(foundingYear) : null,
+                authorizedCapital,
+                employees: employees ? Number(employees) : null,
+                revenue,
+            };
+
+            if (userRole === 'producer') {
+                const machinesCount = document.getElementById('editMachinesCount').value.trim();
+                const productionArea = document.getElementById('editProductionArea').value.trim();
+                const productionLoad = document.getElementById('editProductionLoad').value;
+                const videoUrl = document.getElementById('editVideoUrl').value.trim();
+                const capabilities = CAPABILITIES
+                    .filter(cap => document.querySelector(`#editCapabilities input[value="${cap.key}"]`)?.checked)
+                    .map(cap => cap.key);
+                Object.assign(body, {
+                    machinesCount: machinesCount ? Number(machinesCount) : null,
+                    productionArea: productionArea ? Number(productionArea) : null,
+                    productionLoad: productionLoad !== '' ? Number(productionLoad) : null,
+                    videoUrl,
+                    capabilities,
+                    isoCertificates: editIsoCerts,
+                    qualityCertificates: editQualCerts,
+                });
+            }
 
             try {
                 const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
-                    body: JSON.stringify({ specialization, city, phone, website, yearsExperience: yearsExperience || null, about, equipment: editEquipment })
+                    body: JSON.stringify(body)
                 });
                 if (response.ok) {
                     currentData = await response.json();
                     closeEditProfile();
                     renderProfile(currentData);
+                    renderPhotoGallery(currentData.photos);
                 } else {
                     const err = await response.json();
                     alert(err.error || 'Не удалось сохранить профиль');

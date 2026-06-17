@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Настройки</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        .settings-layout {
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Hero card */
+        .settings-hero {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 28px 28px 24px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+        .settings-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+            letter-spacing: 0;
+        }
+        .settings-hero-info { flex: 1; min-width: 0; }
+        .settings-hero-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .settings-hero-email {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+        .settings-hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: rgba(126, 178, 232, 0.12);
+            border: 1px solid rgba(126, 178, 232, 0.25);
+            color: #7eb2e8;
+        }
+        .profile-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: transparent;
+            border: 1px solid var(--inner-border);
+            color: var(--accent-bright);
+            text-decoration: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .profile-link-btn:hover {
+            background: rgba(84, 199, 159, 0.08);
+            border-color: var(--accent-bright);
+        }
+
+        /* Settings cards */
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+        }
+        .settings-card-header {
+            padding: 18px 24px 16px;
+            border-bottom: 1px solid var(--inner-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .settings-card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: var(--inner-bg);
+            border: 1px solid var(--inner-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .settings-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .settings-card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+        .settings-card-body {
+            padding: 22px 24px;
+        }
+
+        .settings-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+        }
+        .settings-form-grid .form-group { margin: 0; }
+        .settings-form-grid .span-2 { grid-column: span 2; }
+
+        .form-row-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 18px;
+            gap: 10px;
+        }
+
+        .alert-inline {
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            display: none;
+        }
+        .alert-inline.success {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+            color: #4ade80;
+        }
+        .alert-inline.error {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            color: #f87171;
+        }
+
+        .btn-settings-save {
+            padding: 9px 22px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--accent-gradient);
+            color: var(--accent-on-button);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-settings-save:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-settings-save:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+        @media (max-width: 600px) {
+            .settings-form-grid { grid-template-columns: 1fr; }
+            .settings-form-grid .span-2 { grid-column: span 1; }
+            .settings-hero { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .form-row-actions { flex-direction: column; align-items: stretch; }
+            .btn-settings-save { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
+        <a href="settings.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Настройки</h2>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+        </div>
+
+        <div class="settings-layout">
+
+            <!-- Hero -->
+            <div class="settings-hero">
+                <div class="settings-avatar" id="heroAvatar">—</div>
+                <div class="settings-hero-info">
+                    <div class="settings-hero-name" id="heroName">—</div>
+                    <div class="settings-hero-email" id="heroEmail">—</div>
+                    <div class="settings-hero-meta">
+                        <span class="role-badge" id="heroBadge">—</span>
+                        <a href="#" id="profileLink" class="profile-link-btn" style="display:none;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Профиль компании
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Адрес электронной почты</div>
+                        <div class="settings-card-subtitle">Используется для входа в систему</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-form-grid">
+                        <div class="form-group">
+                            <label>Новый email</label>
+                            <input type="email" id="newEmail" placeholder="example@company.ru" autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Подтверждение паролем</label>
+                            <input type="password" id="emailPassword" placeholder="Введите текущий пароль" autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="form-row-actions">
+                        <button class="btn-settings-save" id="saveEmailBtn" onclick="changeEmail()">Сохранить email</button>
+                        <div class="alert-inline" id="emailAlert"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Смена пароля</div>
+                        <div class="settings-card-subtitle">Минимум 6 символов</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-form-grid">
+                        <div class="form-group span-2">
+                            <label>Текущий пароль</label>
+                            <input type="password" id="currentPassword" placeholder="Введите текущий пароль" autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label>Новый пароль</label>
+                            <input type="password" id="newPassword" placeholder="Минимум 6 символов" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label>Повторите пароль</label>
+                            <input type="password" id="confirmPassword" placeholder="Повторите новый пароль" autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="form-row-actions">
+                        <button class="btn-settings-save" id="savePasswordBtn" onclick="changePassword()">Сохранить пароль</button>
+                        <div class="alert-inline" id="passwordAlert"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width: 440px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content: space-between;">
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        const userRole  = localStorage.getItem('userRole');
+        const myCompany = localStorage.getItem('userCompany');
+        const token     = localStorage.getItem('authToken');
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            const navProposals = document.getElementById('navProposals');
+            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            let userEmail = '';
+
+            try {
+                const r = await fetch(`${SERVER_URL}/auth/me`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) {
+                    const data = await r.json();
+                    userEmail = data.email || '';
+                }
+            } catch { }
+
+            const roleLabel = userRole === 'producer' ? 'Производитель' : userRole === 'customer' ? 'Заказчик' : userRole || '—';
+            const initials  = getInitials(myCompany || userEmail);
+
+            document.getElementById('heroAvatar').textContent = initials;
+            document.getElementById('heroName').textContent   = myCompany || userEmail || '—';
+            document.getElementById('heroEmail').textContent  = userEmail || '—';
+            document.getElementById('heroBadge').textContent  = roleLabel;
+
+            try {
+                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) {
+                    const companies = await r.json();
+                    const mine = companies.find(c => c.company === myCompany && c.role === userRole);
+                    if (mine) {
+                        const pl  = document.getElementById('profileLink');
+                        const spl = document.getElementById('sidebarProfileLink');
+                        pl.href = `company-profile.html?id=${mine.id}`;
+                        pl.style.display = '';
+                        if (spl) { spl.href = pl.href; spl.style.display = ''; }
+                    }
+                }
+            } catch { }
+
+            initNotifications();
+            initSidebarBadges();
+        });
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const words = name.replace(/[«»""]/g, '').trim().split(/\s+/);
+            if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+            return name.slice(0, 2).toUpperCase();
+        }
+
+        function showAlert(id, type, text) {
+            const el = document.getElementById(id);
+            clearTimeout(el._fadeTimer);
+            clearTimeout(el._hideTimer);
+            el.className = 'alert-inline ' + type;
+            el.textContent = text;
+            el.style.opacity = '1';
+            el.style.display = 'inline-block';
+            el._fadeTimer = setTimeout(() => {
+                el.style.opacity = '0';
+                el._hideTimer = setTimeout(() => { el.style.display = 'none'; }, 500);
+            }, 5000);
+        }
+
+        async function changeEmail() {
+            const newEmail      = document.getElementById('newEmail').value.trim();
+            const emailPassword = document.getElementById('emailPassword').value;
+
+            if (!newEmail || !emailPassword) {
+                showAlert('emailAlert', 'error', 'Заполните оба поля'); return;
+            }
+
+            const btn = document.getElementById('saveEmailBtn');
+            btn.disabled = true;
+            try {
+                const r = await fetch(`${SERVER_URL}/auth/email`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ newEmail, password: emailPassword })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    showAlert('emailAlert', 'success', data.message || 'Email успешно изменён');
+                    document.getElementById('heroEmail').textContent = newEmail;
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('emailPassword').value = '';
+                } else {
+                    showAlert('emailAlert', 'error', data.error || 'Ошибка');
+                }
+            } catch {
+                showAlert('emailAlert', 'error', 'Сервер недоступен');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword     = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showAlert('passwordAlert', 'error', 'Заполните все поля'); return;
+            }
+            if (newPassword !== confirmPassword) {
+                showAlert('passwordAlert', 'error', 'Новые пароли не совпадают'); return;
+            }
+            if (newPassword.length < 6) {
+                showAlert('passwordAlert', 'error', 'Новый пароль — минимум 6 символов'); return;
+            }
+
+            const btn = document.getElementById('savePasswordBtn');
+            btn.disabled = true;
+            try {
+                const r = await fetch(`${SERVER_URL}/auth/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    showAlert('passwordAlert', 'success', data.message || 'Пароль успешно изменён');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    showAlert('passwordAlert', 'error', data.error || 'Ошибка');
+                }
+            } catch {
+                showAlert('passwordAlert', 'error', 'Сервер недоступен');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

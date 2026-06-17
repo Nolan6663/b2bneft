@@ -2,6 +2,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const db = new DatabaseSync(path.join(__dirname, 'data.db'));
 
@@ -77,6 +78,21 @@ CREATE TABLE IF NOT EXISTS favorites (
     created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     UNIQUE(owner_company, company_id)
 );
+CREATE TABLE IF NOT EXISTS company_photos (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id    INTEGER NOT NULL,
+    stored_name   TEXT    NOT NULL,
+    original_name TEXT    NOT NULL,
+    created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+CREATE TABLE IF NOT EXISTS verification_requests (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    company_id    INTEGER NOT NULL,
+    status        TEXT    NOT NULL DEFAULT 'pending',
+    admin_comment TEXT    NOT NULL DEFAULT '',
+    requested_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    reviewed_at   TEXT
+);
 `);
 
 // Разовый импорт из JSON-файлов (запускается только если таблица users пуста)
@@ -138,6 +154,37 @@ if (db.prepare('SELECT COUNT(*) AS n FROM orders').get().n === 0) {
         .run('Манжета резиновая армированная', 'РТИ', 'Активный', 0, '25.05.2026', now);
     db.prepare("INSERT INTO orders (title,category,status,responses,deadline,created_at) VALUES (?,?,?,?,?,?)")
         .run('Фланец стальной ГОСТ', 'Металл', 'Активный', 0, '28.05.2026', now);
+}
+
+// Миграция: добавляем расширенные поля профиля (для существующих БД)
+[
+    "ALTER TABLE companies ADD COLUMN ogrn TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE companies ADD COLUMN director TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE companies ADD COLUMN founding_year INTEGER",
+    "ALTER TABLE companies ADD COLUMN authorized_capital TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE companies ADD COLUMN employees INTEGER",
+    "ALTER TABLE companies ADD COLUMN revenue TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE companies ADD COLUMN machines_count INTEGER",
+    "ALTER TABLE companies ADD COLUMN production_area INTEGER",
+    "ALTER TABLE companies ADD COLUMN video_url TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE companies ADD COLUMN iso_certificates TEXT NOT NULL DEFAULT '[]'",
+    "ALTER TABLE companies ADD COLUMN quality_certificates TEXT NOT NULL DEFAULT '[]'",
+    "ALTER TABLE companies ADD COLUMN capabilities TEXT NOT NULL DEFAULT '[]'",
+    "ALTER TABLE companies ADD COLUMN production_load INTEGER",
+    "ALTER TABLE companies ADD COLUMN verified_by_platform INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE messages ADD COLUMN read INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE proposals ADD COLUMN completion_status TEXT NOT NULL DEFAULT 'active'",
+].forEach(sql => { try { db.exec(sql); } catch {} });
+
+// Создать администратора при первом запуске
+if (!db.prepare("SELECT 1 FROM users WHERE role = 'admin'").get()) {
+    const ADMIN_EMAIL = 'admin@platform.ru';
+    const ADMIN_PASS  = 'Admin2025';
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.scryptSync(ADMIN_PASS, salt, 64).toString('hex');
+    db.prepare("INSERT INTO users (email,password,role,company,inn) VALUES (?,?,?,?,?)")
+        .run(ADMIN_EMAIL, `${salt}:${hash}`, 'admin', '', '');
+    console.log(`✓ Создан аккаунт администратора: ${ADMIN_EMAIL} / ${ADMIN_PASS}`);
 }
 
 module.exports = db;

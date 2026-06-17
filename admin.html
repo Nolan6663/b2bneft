@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Администратор</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+        .admin-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px; height: 60px; background: var(--card-bg);
+            border-bottom: 1px solid var(--inner-border); flex-shrink: 0;
+        }
+        .admin-topbar-title { font-size: 15px; font-weight: 700; color: var(--text-primary-alt); display: flex; align-items: center; gap: 10px; }
+        .admin-topbar-title img { width: 28px; height: 28px; }
+        .admin-topbar-actions { display: flex; align-items: center; gap: 14px; }
+        .admin-main { flex: 1; padding: 28px 32px; max-width: 960px; width: 100%; margin: 0 auto; }
+        .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--inner-bg); border-radius: 10px; padding: 4px; width: fit-content; }
+        .admin-tab { padding: 8px 20px; border-radius: 8px; border: none; background: none; cursor: pointer; font-size: 13.5px; color: var(--text-secondary); font-weight: 500; transition: all .15s; }
+        .admin-tab.active { background: var(--card-bg); color: var(--text-primary-alt); font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+        .admin-tab:hover:not(.active) { color: var(--text-primary); }
+
+        .request-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; }
+        .request-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+        .request-company-name { font-size: 16px; font-weight: 800; color: var(--text-primary-alt); }
+        .request-meta { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .request-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .request-status.pending  { background: rgba(250,204,21,.15); color: #facc15; border: 1px solid rgba(250,204,21,.3); }
+        .request-status.approved { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+        .request-status.rejected { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.3); }
+
+        .request-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .request-detail { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; padding: 10px 12px; }
+        .request-detail-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .5px; }
+        .request-detail-value { font-size: 13px; color: var(--text-primary-alt); font-weight: 600; word-break: break-word; }
+
+        .request-caps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .cap-badge { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text-tertiary); }
+
+        .request-actions { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+        .reject-form { display: none; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
+        .reject-form textarea { min-height: 60px; resize: vertical; }
+        .reject-form-btns { display: flex; gap: 8px; }
+
+        .admin-empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 14px; }
+        .admin-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--accent-bright); color: #fff; font-size: 11px; font-weight: 700; padding: 0 5px; margin-left: 6px; }
+
+        .comment-block { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-tertiary); margin-bottom: 12px; }
+        .comment-block strong { color: #f87171; }
+        .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-export { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; background: transparent; border: 1px solid var(--inner-border); color: var(--text-secondary); cursor: pointer; transition: border-color .15s, color .15s; }
+        .btn-export:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+    </style>
+</head>
+<body>
+
+    <div class="admin-topbar">
+        <div class="admin-topbar-title">
+            <img src="assets/icons_svg/logo_hex.svg" alt="">
+            B2B НЕФТЕСЕРВИС &nbsp;/&nbsp; Панель администратора
+        </div>
+        <div class="admin-topbar-actions">
+            <div class="theme-toggle-row" style="gap:10px;">
+                <span id="themeLabel" class="theme-label" style="font-size:13px;">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <button class="btn-secondary" onclick="adminLogout()" style="font-size:13px;">Выйти</button>
+        </div>
+    </div>
+
+    <div class="admin-main">
+        <div class="admin-toolbar">
+            <div class="admin-tabs" style="margin-bottom:0;">
+                <button class="admin-tab active" id="tabPending" onclick="loadRequests('pending')">
+                    Ожидают проверки<span class="admin-badge" id="pendingCount" style="display:none;"></span>
+                </button>
+                <button class="admin-tab" id="tabAll" onclick="loadRequests('all')">Все заявки</button>
+            </div>
+            <button class="btn-export" onclick="exportCsv()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Экспорт CSV
+            </button>
+        </div>
+
+        <div id="requestsList">
+            <div class="admin-empty">Загрузка...</div>
+        </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+        if (localStorage.getItem('userRole') !== 'admin') window.location.href = 'login.html';
+
+        const CAPS_LABEL = {
+            lathe: 'Токарные', mill: 'Фрезерные', laser: 'Лазерные', rti: 'РТИ',
+            cast: 'Литьё', stamp: 'Штамповка', paint: 'Покраска', weld: 'Сварка',
+        };
+
+        let currentFilter = 'pending';
+        let rejectTargetId = null;
+
+        async function loadRequests(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(filter === 'pending' ? 'tabPending' : 'tabAll').classList.add('active');
+
+            const list = document.getElementById('requestsList');
+            list.innerHTML = '<div class="admin-empty">Загрузка...</div>';
+
+            try {
+                const r = await fetch(`${SERVER_URL}/verification/requests?filter=${filter}`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) { list.innerHTML = '<div class="admin-empty">Ошибка загрузки</div>'; return; }
+                const items = await r.json();
+                renderRequests(items);
+
+                if (filter === 'pending') {
+                    const badge = document.getElementById('pendingCount');
+                    badge.textContent = items.length;
+                    badge.style.display = items.length ? 'inline-flex' : 'none';
+                }
+            } catch { list.innerHTML = '<div class="admin-empty">Сервер недоступен</div>'; }
+        }
+
+        function renderRequests(items) {
+            const list = document.getElementById('requestsList');
+            if (!items.length) {
+                list.innerHTML = '<div class="admin-empty">Заявок нет</div>';
+                return;
+            }
+            list.innerHTML = items.map(item => renderRequestCard(item)).join('');
+        }
+
+        function renderRequestCard(r) {
+            const statusLabel = { pending: 'Ожидает', approved: 'Одобрено', rejected: 'Отклонено' }[r.status] || r.status;
+            const roleText = r.companyRole === 'producer' ? 'Производитель' : 'Заказчик';
+
+            const details = [
+                ['ИНН', r.inn], ['ОГРН', r.ogrn], ['Директор', r.director],
+                ['Год основания', r.foundingYear], ['Уставной капитал', r.authorizedCapital],
+                ['Сотрудников', r.employees ? r.employees + ' чел.' : ''],
+                ['Выручка', r.revenue], ['Станков', r.machinesCount ? r.machinesCount + ' ед.' : ''],
+                ['Площадь', r.productionArea ? r.productionArea + ' м²' : ''],
+                ['Специализация', r.specialization], ['Город', r.city],
+            ].filter(([, v]) => v);
+
+            const capsHtml = r.capabilities.length
+                ? `<div style="margin-bottom:12px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Производственные мощности:</div>
+                   <div class="request-caps">${r.capabilities.map(k => `<span class="cap-badge">${escapeHtml(CAPS_LABEL[k] || k)}</span>`).join('')}</div></div>`
+                : '';
+
+            const certsHtml = (r.isoCertificates.length || r.qualityCertificates.length)
+                ? `<div style="margin-bottom:12px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Сертификаты:</div>
+                   <div class="request-caps">
+                       ${r.isoCertificates.map(c => `<span class="cert-tag iso">${escapeHtml(c)}</span>`).join('')}
+                       ${r.qualityCertificates.map(c => `<span class="cert-tag quality">${escapeHtml(c)}</span>`).join('')}
+                   </div></div>`
+                : '';
+
+            const commentHtml = r.status === 'rejected' && r.adminComment
+                ? `<div class="comment-block"><strong>Причина отклонения:</strong> ${escapeHtml(r.adminComment)}</div>`
+                : '';
+
+            const actionsHtml = r.status === 'pending' ? `
+                <div class="request-actions" id="actions-${r.id}">
+                    <button class="btn-modal-submit" onclick="approve(${r.id})" style="background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);">✓ Одобрить</button>
+                    <button class="btn-secondary" onclick="showRejectForm(${r.id})" style="color:#f87171;border-color:rgba(248,113,113,.4);">✗ Отклонить</button>
+                    <div class="reject-form" id="rejectForm-${r.id}">
+                        <textarea id="rejectComment-${r.id}" placeholder="Причина отклонения (необязательно)..." class="form-group" style="width:100%; box-sizing:border-box;"></textarea>
+                        <div class="reject-form-btns">
+                            <button class="btn-modal-submit" onclick="confirmReject(${r.id})" style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3);">Подтвердить отклонение</button>
+                            <button class="btn-modal-cancel" onclick="hideRejectForm(${r.id})">Отмена</button>
+                        </div>
+                    </div>
+                </div>` : '';
+
+            const dateStr = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+            const reviewStr = r.reviewedAt ? new Date(r.reviewedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+            return `
+            <div class="request-card" id="card-${r.id}">
+                <div class="request-card-header">
+                    <div>
+                        <div class="request-company-name">${escapeHtml(r.company)}</div>
+                        <div class="request-meta">
+                            ${roleText} &nbsp;·&nbsp; Заявка от: ${dateStr}
+                            ${reviewStr ? ' &nbsp;·&nbsp; Рассмотрена: ' + reviewStr : ''}
+                        </div>
+                    </div>
+                    <span class="request-status ${r.status}">${statusLabel}</span>
+                </div>
+
+                <div class="request-details">
+                    ${details.map(([l, v]) => `
+                        <div class="request-detail">
+                            <div class="request-detail-label">${escapeHtml(l)}</div>
+                            <div class="request-detail-value">${escapeHtml(String(v))}</div>
+                        </div>`).join('')}
+                </div>
+
+                ${capsHtml}
+                ${certsHtml}
+                ${commentHtml}
+                ${actionsHtml}
+            </div>`;
+        }
+
+        async function approve(id) {
+            if (!confirm('Верифицировать компанию?')) return;
+            try {
+                const r = await fetch(`${SERVER_URL}/verification/${id}/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) { const d = await r.json(); return alert(d.error); }
+                loadRequests(currentFilter);
+            } catch { alert('Сервер недоступен'); }
+        }
+
+        function showRejectForm(id) {
+            document.getElementById('rejectForm-' + id).style.display = 'flex';
+        }
+
+        function hideRejectForm(id) {
+            document.getElementById('rejectForm-' + id).style.display = 'none';
+        }
+
+        async function confirmReject(id) {
+            const comment = document.getElementById('rejectComment-' + id).value.trim();
+            try {
+                const r = await fetch(`${SERVER_URL}/verification/${id}/reject`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken'), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comment })
+                });
+                if (!r.ok) { const d = await r.json(); return alert(d.error); }
+                loadRequests(currentFilter);
+            } catch { alert('Сервер недоступен'); }
+        }
+
+        async function exportCsv() {
+            try {
+                const r = await fetch(`${SERVER_URL}/verification/requests?filter=all`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) { alert('Ошибка загрузки данных'); return; }
+                const items = await r.json();
+                if (!items.length) { alert('Нет данных для экспорта'); return; }
+
+                const headers = ['ID','Компания','Роль','ИНН','ОГРН','Директор','Город','Статус','Дата заявки','Дата рассмотрения','Комментарий'];
+                const rows = items.map(i => [
+                    i.id,
+                    i.company,
+                    i.companyRole === 'producer' ? 'Производитель' : 'Заказчик',
+                    i.inn || '',
+                    i.ogrn || '',
+                    i.director || '',
+                    i.city || '',
+                    { pending: 'Ожидает', approved: 'Одобрено', rejected: 'Отклонено' }[i.status] || i.status,
+                    i.requestedAt ? new Date(i.requestedAt).toLocaleDateString('ru-RU') : '',
+                    i.reviewedAt ? new Date(i.reviewedAt).toLocaleDateString('ru-RU') : '',
+                    i.adminComment || ''
+                ].map(v => `"${String(v).replace(/"/g, '""')}"`));
+
+                const csv = '﻿' + [headers.map(h => `"${h}"`), ...rows].map(r => r.join(',')).join('\r\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `verifications_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch { alert('Сервер недоступен'); }
+        }
+
+        function adminLogout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userCompany');
+            window.location.href = 'login.html';
+        }
+
+        loadRequests('pending');
+    </script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Сообщения</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        body { overflow: hidden; }
+        .main-content { padding: 0 !important; display: flex; flex-direction: column; overflow: hidden; }
+
+        .msg-header { padding: 20px 28px 0; flex-shrink: 0; }
+        .msg-header h2 { font-size: 18px; font-weight: 800; color: var(--text-primary-alt); }
+
+        .messages-layout { display: flex; flex: 1; min-height: 0; margin-top: 16px; border-top: 1px solid var(--inner-border); }
+
+        /* ---- Conversations list ---- */
+        .conv-panel { width: 300px; flex-shrink: 0; border-right: 1px solid var(--inner-border); display: flex; flex-direction: column; overflow: hidden; }
+        .conv-search { padding: 12px 14px; border-bottom: 1px solid var(--inner-border); }
+        .conv-search input { width: 100%; box-sizing: border-box; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; padding: 9px 12px; color: var(--text-primary); font-size: 13px; outline: none; }
+        .conv-search input:focus { border-color: var(--accent-bright); }
+        .conv-list { flex: 1; overflow-y: auto; }
+        .conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 13px 14px; cursor: pointer; border-bottom: 1px solid var(--inner-border); transition: background .12s; }
+        .conv-item:hover { background: var(--inner-bg); }
+        .conv-item.active { background: rgba(79,140,255,.08); border-left: 3px solid var(--accent-bright); padding-left: 11px; }
+        .conv-item.unread .conv-title { color: var(--text-primary-alt); font-weight: 700; }
+        .conv-avatar { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #fff; }
+        .conv-body { flex: 1; min-width: 0; }
+        .conv-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+        .conv-title { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .conv-time { font-size: 11px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+        .conv-preview { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .conv-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright); margin-top: 4px; flex-shrink: 0; }
+        .conv-empty { padding: 40px 20px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+
+        /* ---- Chat area ---- */
+        .chat-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+        .chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-secondary); }
+        .chat-empty-state svg { opacity: .3; }
+        .chat-empty-state p { font-size: 14px; margin: 0; }
+
+        .chat-conv-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--inner-border); flex-shrink: 0; }
+        .chat-conv-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+        .chat-conv-info { flex: 1; }
+        .chat-conv-name { font-size: 14px; font-weight: 700; color: var(--text-primary-alt); }
+        .chat-conv-order { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg-row { display: flex; flex-direction: column; max-width: 70%; }
+        .msg-row.mine { align-self: flex-end; align-items: flex-end; }
+        .msg-row.theirs { align-self: flex-start; align-items: flex-start; }
+        .msg-bubble { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; word-break: break-word; }
+        .msg-row.mine .msg-bubble { background: var(--accent-bright); color: #fff; border-bottom-right-radius: 4px; }
+        .msg-row.theirs .msg-bubble { background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-primary); border-bottom-left-radius: 4px; }
+        .msg-time { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+        .chat-input-area { padding: 14px 20px; border-top: 1px solid var(--inner-border); flex-shrink: 0; }
+        .chat-input-row { display: flex; gap: 10px; align-items: flex-end; }
+        .chat-input-row textarea { flex: 1; resize: none; min-height: 44px; max-height: 120px; padding: 10px 14px; font-size: 13.5px; line-height: 1.5; border-radius: 12px; background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-primary); outline: none; font-family: inherit; transition: border-color .15s; overflow-y: auto; }
+        .chat-input-row textarea:focus { border-color: var(--accent-bright); }
+        .send-btn { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; background: var(--accent-bright); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity .15s; }
+        .send-btn:hover { opacity: .85; }
+        .send-btn:disabled { opacity: .4; cursor: default; }
+        .send-btn svg { color: #fff; }
+
+        .chat-date-sep { text-align: center; font-size: 11.5px; color: var(--text-secondary); margin: 4px 0; position: relative; }
+        .chat-date-sep::before, .chat-date-sep::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: var(--inner-border); }
+        .chat-date-sep::before { left: 0; }
+        .chat-date-sep::after { right: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="msg-header">
+            <h2>Сообщения</h2>
+        </div>
+
+        <div class="messages-layout">
+            <!-- Conversations panel -->
+            <div class="conv-panel">
+                <div class="conv-search">
+                    <input type="text" id="convSearch" placeholder="Поиск по заявкам..." oninput="filterConversations(this.value)">
+                </div>
+                <div class="conv-list" id="convList">
+                    <div class="conv-empty">Загрузка переписок...</div>
+                </div>
+            </div>
+
+            <!-- Chat panel -->
+            <div class="chat-panel" id="chatPanel">
+                <div class="chat-empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <p>Выберите переписку</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        const userRole     = localStorage.getItem('userRole');
+        const myCompany    = localStorage.getItem('userCompany');
+        const token        = localStorage.getItem('authToken');
+
+        let allConversations = [];
+        let activeConv       = null;
+        let chatSocket       = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            const navProposals = document.getElementById('navProposals');
+            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            initNotifications();
+            initSidebarBadges();
+            loadConversations();
+        });
+
+        // ── Conversations list ──────────────────────────────────────────
+
+        async function loadConversations() {
+            try {
+                const r = await fetch(`${SERVER_URL}/messages/conversations`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                allConversations = r.ok ? await r.json() : [];
+                renderConversationList(allConversations);
+
+                // open conv from URL param if present
+                const params = new URLSearchParams(window.location.search);
+                const orderId = params.get('orderId');
+                const company = params.get('company');
+                if (orderId && company) {
+                    const target = allConversations.find(c => String(c.orderId) === orderId && c.company === company);
+                    if (target) openConversation(target);
+                }
+            } catch {
+                document.getElementById('convList').innerHTML = '<div class="conv-empty">Не удалось загрузить переписки</div>';
+            }
+        }
+
+        function renderConversationList(items) {
+            const list = document.getElementById('convList');
+            if (!items.length) {
+                list.innerHTML = '<div class="conv-empty">Переписок пока нет</div>';
+                return;
+            }
+            list.innerHTML = items.map(c => convItemHtml(c)).join('');
+        }
+
+        function convItemHtml(c) {
+            const isActive = activeConv && activeConv.orderId === c.orderId && activeConv.company === c.company;
+            const letter   = (c.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
+            const color    = userRole === 'producer' ? 'var(--avatar-green)' : 'var(--avatar-blue)';
+            const timeStr  = c.lastAt ? relTime(c.lastAt) : '';
+            const preview  = c.lastMessage
+                ? (c.lastSender === userRole ? 'Вы: ' : '') + escapeHtml(c.lastMessage.slice(0, 50))
+                : '<i style="font-style:italic;">Нет сообщений</i>';
+
+            return `<div class="conv-item${isActive ? ' active' : ''}${c.unreadCount ? ' unread' : ''}"
+                        onclick="openConversation(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                <div class="conv-avatar" style="background:${color};">${escapeHtml(letter)}</div>
+                <div class="conv-body">
+                    <div class="conv-top">
+                        <span class="conv-title">${escapeHtml(c.orderTitle)}</span>
+                        <span class="conv-time">${timeStr}</span>
+                    </div>
+                    <div class="conv-preview">${preview}</div>
+                    ${c.companyName ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${escapeHtml(c.company)}</div>` : ''}
+                </div>
+                ${c.unreadCount ? `<div class="conv-unread-dot"></div>` : ''}
+            </div>`;
+        }
+
+        function filterConversations(q) {
+            const filtered = q.trim()
+                ? allConversations.filter(c =>
+                    c.orderTitle.toLowerCase().includes(q.toLowerCase()) ||
+                    c.company.toLowerCase().includes(q.toLowerCase()))
+                : allConversations;
+            renderConversationList(filtered);
+        }
+
+        function relTime(isoStr) {
+            const d = new Date(isoStr);
+            const now = new Date();
+            const diff = (now - d) / 1000;
+            if (diff < 60) return 'только что';
+            if (diff < 3600) return Math.floor(diff / 60) + ' мин';
+            if (diff < 86400) return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        }
+
+        // ── Open conversation ───────────────────────────────────────────
+
+        async function openConversation(conv) {
+            activeConv = conv;
+
+            // Update list active state
+            renderConversationList(allConversations);
+
+            // Render chat skeleton
+            const panel = document.getElementById('chatPanel');
+            const letter = (conv.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
+            const color  = userRole === 'producer' ? 'var(--avatar-green)' : 'var(--avatar-blue)';
+            const otherName = userRole === 'producer'
+                ? (getOrderCustomer(conv.orderId) || 'Заказчик')
+                : conv.company;
+
+            panel.innerHTML = `
+                <div class="chat-conv-header">
+                    <div class="chat-conv-avatar" style="background:${color};">${escapeHtml(letter)}</div>
+                    <div class="chat-conv-info">
+                        <div class="chat-conv-name">${escapeHtml(conv.orderTitle)}</div>
+                        <div class="chat-conv-order">${escapeHtml(conv.company)}</div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages"><div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">Загрузка...</div></div>
+                <div class="chat-input-area">
+                    <div class="chat-input-row">
+                        <textarea id="chatInput" placeholder="Написать сообщение..." rows="1"
+                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
+                            oninput="autoResize(this)"></textarea>
+                        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </div>
+                </div>`;
+
+            // Join socket room
+            if (chatSocket) chatSocket.off('message');
+            if (typeof io !== 'undefined') {
+                if (!chatSocket) chatSocket = io();
+                chatSocket.emit('joinChat', { orderId: conv.orderId, company: conv.company });
+                chatSocket.on('message', (msg) => {
+                    if (msg.orderId === activeConv?.orderId && msg.company === activeConv?.company) {
+                        appendMessage(msg);
+                        markRead(conv);
+                        scrollToBottom();
+                    }
+                    updateConvPreview(msg);
+                });
+            }
+
+            // Load messages
+            await fetchMessages(conv);
+            markRead(conv);
+            scrollToBottom();
+        }
+
+        async function fetchMessages(conv) {
+            try {
+                const r = await fetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const msgs = r.ok ? await r.json() : [];
+                renderMessages(msgs);
+            } catch {
+                document.getElementById('chatMessages').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">Не удалось загрузить сообщения</div>';
+            }
+        }
+
+        function renderMessages(msgs) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            if (!msgs.length) {
+                container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:13px;">Нет сообщений. Напишите первым!</div>';
+                return;
+            }
+            let html = '';
+            let lastDate = '';
+            msgs.forEach(msg => {
+                const d = new Date(msg.createdAt);
+                const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                if (dateStr !== lastDate) {
+                    html += `<div class="chat-date-sep">${dateStr}</div>`;
+                    lastDate = dateStr;
+                }
+                html += messageBubbleHtml(msg);
+            });
+            container.innerHTML = html;
+        }
+
+        function messageBubbleHtml(msg) {
+            const isMine = msg.sender === userRole;
+            const time   = new Date(msg.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            return `<div class="msg-row ${isMine ? 'mine' : 'theirs'}">
+                <div class="msg-bubble">${escapeHtml(msg.text)}</div>
+                <div class="msg-time">${time}${isMine && msg.read ? ' ✓✓' : isMine ? ' ✓' : ''}</div>
+            </div>`;
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            // Remove "no messages" placeholder if present
+            if (container.children.length === 1 && container.children[0].tagName !== 'DIV'.split('').reverse().join('')) {
+                const first = container.firstChild;
+                if (first && first.style && first.textContent.includes('Нет сообщений')) container.innerHTML = '';
+            }
+            const d = document.createElement('div');
+            d.innerHTML = messageBubbleHtml(msg);
+            while (d.firstChild) container.appendChild(d.firstChild);
+        }
+
+        function scrollToBottom() {
+            const c = document.getElementById('chatMessages');
+            if (c) c.scrollTop = c.scrollHeight;
+        }
+
+        // ── Send message ────────────────────────────────────────────────
+
+        async function sendMessage() {
+            if (!activeConv) return;
+            const input = document.getElementById('chatInput');
+            const text  = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.style.height = '';
+            document.getElementById('sendBtn').disabled = true;
+
+            try {
+                const r = await fetch(`${SERVER_URL}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ orderId: activeConv.orderId, company: activeConv.company, text })
+                });
+                const msg = await r.json();
+                if (r.ok) {
+                    appendMessage(msg);
+                    scrollToBottom();
+                    updateConvPreview(msg);
+                } else {
+                    input.value = text;
+                    alert(msg.error || 'Не удалось отправить');
+                }
+            } catch {
+                input.value = text;
+                alert('Сервер недоступен');
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        // ── Mark read ───────────────────────────────────────────────────
+
+        async function markRead(conv) {
+            try {
+                await fetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}/read`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const c = allConversations.find(x => x.orderId === conv.orderId && x.company === conv.company);
+                if (c) { c.unreadCount = 0; }
+                _setBadge('navBadgeMessages', allConversations.reduce((s, x) => s + (x.unreadCount || 0), 0));
+            } catch { }
+        }
+
+        // ── Update preview after new message ────────────────────────────
+
+        function updateConvPreview(msg) {
+            const c = allConversations.find(x => x.orderId === msg.orderId && x.company === msg.company);
+            if (c) {
+                c.lastMessage = msg.text;
+                c.lastSender  = msg.sender;
+                c.lastAt      = msg.createdAt;
+                if (msg.sender !== userRole && !(activeConv?.orderId === msg.orderId && activeConv?.company === msg.company)) {
+                    c.unreadCount = (c.unreadCount || 0) + 1;
+                }
+                // Move to top
+                allConversations = [c, ...allConversations.filter(x => x !== c)];
+                renderConversationList(allConversations);
+                _setBadge('navBadgeMessages', allConversations.reduce((s, x) => s + (x.unreadCount || 0), 0));
+            }
+        }
+
+        function getOrderCustomer(orderId) { return null; }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+    </script>
+</body>
+</html>

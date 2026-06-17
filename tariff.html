@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Тариф и оплата</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
+    <style>
+        .current-plan-banner {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .current-plan-info { display: flex; align-items: center; gap: 14px; }
+        .current-plan-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: rgba(84, 199, 159, 0.12); border: 1px solid rgba(84, 199, 159, 0.25);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .current-plan-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
+        .current-plan-name { font-size: 15px; font-weight: 700; color: var(--text-primary-alt); }
+        .plan-active-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+            background: rgba(84, 199, 159, 0.12); border: 1px solid rgba(84, 199, 159, 0.25);
+            color: var(--accent-bright);
+        }
+        .plan-active-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) { .plans-grid { grid-template-columns: 1fr; max-width: 420px; } }
+
+        .plan-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: border-color .15s, transform .15s;
+        }
+        .plan-card:hover { transform: translateY(-2px); }
+        .plan-card.plan-current { border-color: rgba(84,199,159,.5); }
+        .plan-card.plan-featured { border-color: rgba(126,178,232,.4); }
+
+        .plan-pin {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            padding: 3px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+        }
+        .plan-pin.current { background: var(--accent-gradient); color: var(--accent-on-button); }
+        .plan-pin.popular  { background: linear-gradient(135deg, #3a7bd5, #00d2ff); color: #fff; }
+
+        .plan-name  { font-size: 14px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+        .plan-price { font-size: 32px; font-weight: 900; color: var(--text-primary-alt); line-height: 1; margin-bottom: 4px; }
+        .plan-price sub { font-size: 14px; font-weight: 400; color: var(--text-secondary); vertical-align: baseline; }
+        .plan-cycle { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--inner-border); }
+
+        .plan-features { list-style: none; padding: 0; margin: 0 0 20px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .plan-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-primary); line-height: 1.4; }
+        .plan-features li .fi { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+        .plan-features li.yes .fi { color: var(--accent-bright); }
+        .plan-features li.no  { color: var(--text-secondary); }
+        .plan-features li.no .fi { color: var(--text-secondary); }
+
+        .plan-cta {
+            width: 100%; height: 40px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; border: none; transition: opacity .15s, transform .15s;
+        }
+        .plan-cta:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+        .plan-cta.cta-current  { background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-secondary); cursor: default; }
+        .plan-cta.cta-current:hover { opacity: 1; transform: none; }
+        .plan-cta.cta-upgrade  { background: var(--accent-gradient); color: var(--accent-on-button); }
+        .plan-cta.cta-enterprise { background: transparent; border: 1px solid rgba(126,178,232,.4); color: #7eb2e8; }
+
+        .billing-note {
+            background: var(--inner-bg);
+            border: 1px solid var(--inner-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+        }
+        .billing-note svg { flex-shrink: 0; margin-top: 1px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;">
+            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            Мой профиль
+        </a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Тариф и оплата</h2>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
+        </div>
+
+        <!-- Текущий план -->
+        <div class="current-plan-banner">
+            <div class="current-plan-info">
+                <div class="current-plan-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+                <div>
+                    <div class="current-plan-label">Текущий тариф</div>
+                    <div class="current-plan-name">Базовый — Бесплатно</div>
+                </div>
+            </div>
+            <span class="plan-active-badge">Активен</span>
+        </div>
+
+        <!-- Планы -->
+        <div class="plans-grid">
+
+            <!-- Базовый -->
+            <div class="plan-card plan-current">
+                <div class="plan-pin current">Ваш тариф</div>
+                <div class="plan-name">Базовый</div>
+                <div class="plan-price">0 <sub>₽</sub></div>
+                <div class="plan-cycle">Бесплатно · навсегда</div>
+                <ul class="plan-features">
+                    <li class="yes"><span class="fi">✓</span>До 5 активных закупок</li>
+                    <li class="yes"><span class="fi">✓</span>Профиль компании</li>
+                    <li class="yes"><span class="fi">✓</span>Реестр контрагентов</li>
+                    <li class="yes"><span class="fi">✓</span>Сообщения</li>
+                    <li class="yes"><span class="fi">✓</span>Базовая аналитика</li>
+                    <li class="no"><span class="fi">—</span>Верификация (приоритет)</li>
+                    <li class="no"><span class="fi">—</span>Выгрузка данных</li>
+                    <li class="no"><span class="fi">—</span>Поддержка 24/7</li>
+                </ul>
+                <button class="plan-cta cta-current" disabled>Активный тариф</button>
+            </div>
+
+            <!-- Профессиональный -->
+            <div class="plan-card plan-featured">
+                <div class="plan-pin popular">Популярный</div>
+                <div class="plan-name">Профессиональный</div>
+                <div class="plan-price">4 990 <sub>₽</sub></div>
+                <div class="plan-cycle">в месяц · при оплате за год</div>
+                <ul class="plan-features">
+                    <li class="yes"><span class="fi">✓</span>Неограниченные закупки</li>
+                    <li class="yes"><span class="fi">✓</span>Расширенный профиль + фото</li>
+                    <li class="yes"><span class="fi">✓</span>Верификация (приоритет)</li>
+                    <li class="yes"><span class="fi">✓</span>Экспорт данных (CSV, Excel)</li>
+                    <li class="yes"><span class="fi">✓</span>Расширенная аналитика</li>
+                    <li class="yes"><span class="fi">✓</span>Все возможности Базового</li>
+                    <li class="yes"><span class="fi">✓</span>Поддержка 8/5</li>
+                    <li class="no"><span class="fi">—</span>API-интеграция</li>
+                </ul>
+                <button class="plan-cta cta-upgrade" onclick="showUpgradeDialog('pro')">Перейти на Профи</button>
+            </div>
+
+            <!-- Корпоративный -->
+            <div class="plan-card">
+                <div class="plan-name">Корпоративный</div>
+                <div class="plan-price" style="font-size:22px;margin-top:6px;">По запросу</div>
+                <div class="plan-cycle">индивидуальные условия</div>
+                <ul class="plan-features">
+                    <li class="yes"><span class="fi">✓</span>Всё из Профессионального</li>
+                    <li class="yes"><span class="fi">✓</span>API-интеграция с ERP/1C</li>
+                    <li class="yes"><span class="fi">✓</span>Персональный менеджер</li>
+                    <li class="yes"><span class="fi">✓</span>SLA 99.9%</li>
+                    <li class="yes"><span class="fi">✓</span>Мультиаккаунт</li>
+                    <li class="yes"><span class="fi">✓</span>Кастомный брендинг</li>
+                    <li class="yes"><span class="fi">✓</span>Поддержка 24/7</li>
+                    <li class="yes"><span class="fi">✓</span>Обучение сотрудников</li>
+                </ul>
+                <button class="plan-cta cta-enterprise" onclick="showUpgradeDialog('enterprise')">Связаться с нами</button>
+            </div>
+        </div>
+
+        <!-- Заметка -->
+        <div class="billing-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Оплата тарифов в настоящее время находится в разработке. Для ранних партнёров платформы действуют специальные условия — напишите нам на <strong>billing@b2b-neft.ru</strong></span>
+        </div>
+    </div>
+
+    <div class="modal" id="upgradeModal">
+        <div class="modal-content" style="width:420px; text-align:center;">
+            <div style="font-size:32px; margin-bottom:12px;">🚀</div>
+            <h3 id="upgradeTitle">Переход на тариф</h3>
+            <p style="font-size:13.5px; color:var(--text-secondary); margin:10px 0 20px; line-height:1.6;" id="upgradeBody"></p>
+            <div class="modal-actions" style="justify-content:center;">
+                <button class="btn-modal-cancel" onclick="document.getElementById('upgradeModal').style.display='none'">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width:440px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+
+        const userRole  = localStorage.getItem('userRole');
+        const myCompany = localStorage.getItem('userCompany');
+        const token     = localStorage.getItem('authToken');
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            const navProposals = document.getElementById('navProposals');
+            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            try {
+                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) {
+                    const companies = await r.json();
+                    const mine = companies.find(c => c.company === myCompany && c.role === userRole);
+                    if (mine) {
+                        const spl = document.getElementById('sidebarProfileLink');
+                        if (spl) { spl.href = `company-profile.html?id=${mine.id}`; spl.style.display = ''; }
+                    }
+                }
+            } catch {}
+
+            initNotifications();
+            initSidebarBadges();
+        });
+
+        function showUpgradeDialog(plan) {
+            const titles = { pro: 'Профессиональный тариф', enterprise: 'Корпоративный тариф' };
+            const bodies = {
+                pro: 'Онлайн-оплата тарифов скоро станет доступна. Для раннего доступа напишите нам на <strong>billing@b2b-neft.ru</strong> — ответим в течение 1 рабочего дня.',
+                enterprise: 'Для корпоративных клиентов условия рассчитываются индивидуально. Свяжитесь с нами: <strong>enterprise@b2b-neft.ru</strong> или по телефону <strong>+7 (800) 555-01-23</strong>.'
+            };
+            document.getElementById('upgradeTitle').textContent = titles[plan];
+            document.getElementById('upgradeBody').innerHTML = bodies[plan];
+            document.getElementById('upgradeModal').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

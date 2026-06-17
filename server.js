@@ -54,7 +54,19 @@ function rowToCompany(r) {
         specialization: r.specialization, status: r.status, city: r.city,
         yearsExperience: r.years_experience, about: r.about,
         equipment: JSON.parse(r.equipment || '[]'),
-        phone: r.phone, website: r.website
+        phone: r.phone, website: r.website,
+        ogrn: r.ogrn || '', director: r.director || '',
+        foundingYear: r.founding_year || null,
+        authorizedCapital: r.authorized_capital || '',
+        employees: r.employees || null, revenue: r.revenue || '',
+        machinesCount: r.machines_count || null,
+        productionArea: r.production_area || null,
+        videoUrl: r.video_url || '',
+        isoCertificates: JSON.parse(r.iso_certificates || '[]'),
+        qualityCertificates: JSON.parse(r.quality_certificates || '[]'),
+        capabilities: JSON.parse(r.capabilities || '[]'),
+        productionLoad: r.production_load ?? null,
+        verifiedByPlatform: r.verified_by_platform === 1
     };
 }
 
@@ -62,7 +74,8 @@ function rowToMessage(r) {
     if (!r) return null;
     return {
         id: r.id, orderId: r.order_id, company: r.company,
-        sender: r.sender, text: r.text, createdAt: r.created_at
+        sender: r.sender, text: r.text, createdAt: r.created_at,
+        read: r.read === 1,
     };
 }
 
@@ -101,9 +114,12 @@ if (io) {
 // ===================== ЗАГРУЗКА ФАЙЛОВ =====================
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+const PHOTOS_DIR = path.join(UPLOADS_DIR, 'photos');
+if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR);
 
 const ALLOWED_DRAWING_EXT = ['.pdf', '.png', '.jpg', '.jpeg', '.dxf', '.dwg', '.step', '.stp'];
 const KP_ALLOWED_EXT = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
+const PHOTO_ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp'];
 
 const drawingStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -153,6 +169,30 @@ function handleKPUpload(req, res, next) {
     });
 }
 
+const photoStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, PHOTOS_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, 'photo-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
+    }
+});
+const uploadPhoto = multer({
+    storage: photoStorage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!PHOTO_ALLOWED_EXT.includes(ext)) return cb(new Error('Разрешены только изображения: jpg, jpeg, png, webp'));
+        cb(null, true);
+    }
+}).single('photo');
+
+function handlePhotoUpload(req, res, next) {
+    uploadPhoto(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить фото' });
+        next();
+    });
+}
+
 function deleteDrawingFile(drawing) {
     if (!drawing || !drawing.storedName) return;
     fs.unlink(path.join(UPLOADS_DIR, drawing.storedName), () => {});
@@ -160,7 +200,12 @@ function deleteDrawingFile(drawing) {
 
 // ===================== СТАТИКА =====================
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-const PUBLIC_PAGES = ['login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html', 'analytics.html', 'company-profile.html'];
+app.use('/company-photos', express.static(PHOTOS_DIR));
+const PUBLIC_PAGES = [
+    'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
+    'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
+    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html',
+];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/login.html'));
 
@@ -287,6 +332,7 @@ function enrichCompany(c, ownerCompany) {
     } else {
         enriched.isFavorite = false;
     }
+    enriched.photos = db.prepare('SELECT id, stored_name, original_name FROM company_photos WHERE company_id = ? ORDER BY created_at ASC').all(c.id);
     return enriched;
 }
 
@@ -520,21 +566,86 @@ app.put('/api/companies/:id', requireAuth, (req, res) => {
     if (!row) return res.status(404).json({ error: 'Компания не найдена' });
     if (row.company !== req.user.company) return res.status(403).json({ error: 'Можно редактировать только профиль своей компании' });
 
-    const { city, yearsExperience, about, equipment, specialization, phone, website } = req.body;
+    const { city, yearsExperience, about, equipment, specialization, phone, website,
+            ogrn, director, foundingYear, authorizedCapital, employees, revenue,
+            machinesCount, productionArea, videoUrl,
+            isoCertificates, qualityCertificates, capabilities, productionLoad } = req.body;
     const cols = [], vals = [];
-    if (city !== undefined)             { cols.push('city = ?');             vals.push(String(city).slice(0, 100)); }
-    if (yearsExperience !== undefined)  { const n = Number(yearsExperience); cols.push('years_experience = ?'); vals.push(Number.isFinite(n) && n >= 0 ? n : null); }
-    if (about !== undefined)            { cols.push('about = ?');            vals.push(String(about).slice(0, 1000)); }
-    if (specialization !== undefined)   { cols.push('specialization = ?');   vals.push(String(specialization).slice(0, 200)); }
-    if (phone !== undefined)            { cols.push('phone = ?');            vals.push(String(phone).slice(0, 30)); }
-    if (website !== undefined)          { cols.push('website = ?');          vals.push(String(website).slice(0, 200)); }
-    if (equipment !== undefined && Array.isArray(equipment)) {
-        cols.push('equipment = ?');
-        vals.push(JSON.stringify(equipment.map(e => String(e).slice(0, 60)).slice(0, 20)));
-    }
+    const str  = (v, max) => String(v).slice(0, max);
+    const num  = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : null; };
+    if (city !== undefined)               { cols.push('city = ?');                vals.push(str(city, 100)); }
+    if (yearsExperience !== undefined)    { cols.push('years_experience = ?');    vals.push(num(yearsExperience)); }
+    if (about !== undefined)              { cols.push('about = ?');               vals.push(str(about, 1000)); }
+    if (specialization !== undefined)     { cols.push('specialization = ?');      vals.push(str(specialization, 200)); }
+    if (phone !== undefined)              { cols.push('phone = ?');               vals.push(str(phone, 30)); }
+    if (website !== undefined)            { cols.push('website = ?');             vals.push(str(website, 200)); }
+    if (ogrn !== undefined)               { cols.push('ogrn = ?');               vals.push(str(ogrn, 20)); }
+    if (director !== undefined)           { cols.push('director = ?');            vals.push(str(director, 150)); }
+    if (foundingYear !== undefined)       { cols.push('founding_year = ?');       vals.push(num(foundingYear)); }
+    if (authorizedCapital !== undefined)  { cols.push('authorized_capital = ?');  vals.push(str(authorizedCapital, 50)); }
+    if (employees !== undefined)          { cols.push('employees = ?');           vals.push(num(employees)); }
+    if (revenue !== undefined)            { cols.push('revenue = ?');             vals.push(str(revenue, 50)); }
+    if (machinesCount !== undefined)      { cols.push('machines_count = ?');      vals.push(num(machinesCount)); }
+    if (productionArea !== undefined)     { cols.push('production_area = ?');     vals.push(num(productionArea)); }
+    if (videoUrl !== undefined)           { cols.push('video_url = ?');           vals.push(str(videoUrl, 300)); }
+    if (productionLoad !== undefined)     { const n = Number(productionLoad); cols.push('production_load = ?'); vals.push(Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null); }
+    if (Array.isArray(equipment))         { cols.push('equipment = ?');           vals.push(JSON.stringify(equipment.map(e => str(e, 60)).slice(0, 20))); }
+    if (Array.isArray(isoCertificates))   { cols.push('iso_certificates = ?');    vals.push(JSON.stringify(isoCertificates.map(e => str(e, 80)).slice(0, 20))); }
+    if (Array.isArray(qualityCertificates)) { cols.push('quality_certificates = ?'); vals.push(JSON.stringify(qualityCertificates.map(e => str(e, 80)).slice(0, 20))); }
+    if (Array.isArray(capabilities))      { cols.push('capabilities = ?');        vals.push(JSON.stringify(capabilities.slice(0, 20))); }
     if (cols.length) db.prepare(`UPDATE companies SET ${cols.join(', ')} WHERE id = ?`).run(...vals, id);
 
     res.json(enrichCompany(rowToCompany(db.prepare('SELECT * FROM companies WHERE id = ?').get(id)), req.user.company));
+});
+
+// ===================== ФОТО КОМПАНИИ =====================
+
+app.post('/api/companies/:id/photos', requireAuth, handlePhotoUpload, (req, res) => {
+    const id = Number(req.params.id);
+    const row = db.prepare('SELECT company FROM companies WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Компания не найдена' });
+    if (row.company !== req.user.company) return res.status(403).json({ error: 'Можно загружать фото только своей компании' });
+    if (!req.file) return res.status(400).json({ error: 'Файл не передан' });
+
+    const count = db.prepare('SELECT COUNT(*) AS n FROM company_photos WHERE company_id = ?').get(id).n;
+    if (count >= 10) return res.status(400).json({ error: 'Максимум 10 фотографий' });
+
+    const result = db.prepare('INSERT INTO company_photos (company_id, stored_name, original_name) VALUES (?, ?, ?)')
+        .run(id, req.file.filename, req.file.originalname);
+
+    res.status(201).json({ id: Number(result.lastInsertRowid), storedName: req.file.filename, originalName: req.file.originalname });
+});
+
+app.delete('/api/companies/:id/photos/:photoId', requireAuth, (req, res) => {
+    const id = Number(req.params.id);
+    const photoId = Number(req.params.photoId);
+    const row = db.prepare('SELECT company FROM companies WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Компания не найдена' });
+    if (row.company !== req.user.company) return res.status(403).json({ error: 'Нет прав' });
+
+    const photo = db.prepare('SELECT stored_name FROM company_photos WHERE id = ? AND company_id = ?').get(photoId, id);
+    if (!photo) return res.status(404).json({ error: 'Фото не найдено' });
+
+    db.prepare('DELETE FROM company_photos WHERE id = ?').run(photoId);
+    fs.unlink(path.join(PHOTOS_DIR, photo.stored_name), () => {});
+    res.json({ message: 'Удалено' });
+});
+
+// ===================== DASHBOARD COUNTS =====================
+
+app.get('/api/dashboard/counts', requireAuth, (req, res) => {
+    const company = req.user.company;
+    if (req.user.role === 'producer') {
+        const activeOrders = db.prepare("SELECT COUNT(*) AS n FROM orders WHERE status = 'Активный'").get().n;
+        const pendingProposals = db.prepare("SELECT COUNT(*) AS n FROM proposals WHERE company = ? AND status = 'Ожидает ответа'").get(company).n;
+        const unreadMessages = db.prepare("SELECT COUNT(*) AS n FROM messages WHERE company = ? AND sender = 'customer' AND read = 0").get(company).n;
+        res.json({ activeOrders, pendingProposals, unreadMessages });
+    } else {
+        const myActiveOrders = db.prepare("SELECT COUNT(*) AS n FROM orders WHERE company = ? AND status = 'Активный'").get(company).n;
+        const newResponses = db.prepare("SELECT COUNT(*) AS n FROM proposals p JOIN orders o ON p.order_id = o.id WHERE o.company = ? AND p.status = 'Ожидает ответа'").get(company).n;
+        const unreadMessages = db.prepare("SELECT COUNT(*) AS n FROM messages m JOIN orders o ON o.id = m.order_id WHERE o.company = ? AND m.sender = 'producer' AND m.read = 0").get(company).n;
+        res.json({ myActiveOrders, newResponses, unreadMessages });
+    }
 });
 
 // ===================== ИЗБРАННЫЕ =====================
@@ -600,6 +711,53 @@ app.post('/api/auth/login', (req, res) => {
 
 // ===================== СООБЩЕНИЯ =====================
 
+app.get('/api/messages/conversations', requireAuth, (req, res) => {
+    const { role, company } = req.user;
+    const otherSender = role === 'producer' ? 'customer' : 'producer';
+    let rows;
+    if (role === 'producer') {
+        rows = db.prepare(`
+            SELECT m.order_id, o.title AS order_title, m.company,
+                MAX(m.created_at) AS last_at,
+                COUNT(CASE WHEN m.sender = 'customer' AND m.read = 0 THEN 1 END) AS unread_count
+            FROM messages m JOIN orders o ON o.id = m.order_id
+            WHERE m.company = ?
+            GROUP BY m.order_id ORDER BY last_at DESC
+        `).all(company);
+    } else {
+        rows = db.prepare(`
+            SELECT m.order_id, o.title AS order_title, m.company,
+                MAX(m.created_at) AS last_at,
+                COUNT(CASE WHEN m.sender = 'producer' AND m.read = 0 THEN 1 END) AS unread_count
+            FROM messages m JOIN orders o ON o.id = m.order_id
+            WHERE o.company = ?
+            GROUP BY m.order_id, m.company ORDER BY last_at DESC
+        `).all(company);
+    }
+    res.json(rows.map(r => {
+        const last = db.prepare('SELECT * FROM messages WHERE order_id = ? AND company = ? ORDER BY created_at DESC LIMIT 1')
+            .get(r.order_id, r.company);
+        return {
+            orderId: r.order_id,
+            orderTitle: r.order_title || `Заявка #${r.order_id}`,
+            company: r.company,
+            lastMessage: last ? last.text : '',
+            lastSender: last ? last.sender : '',
+            lastAt: r.last_at,
+            unreadCount: r.unread_count || 0,
+        };
+    }));
+});
+
+app.post('/api/messages/:orderId/:company/read', requireAuth, (req, res) => {
+    const orderId = Number(req.params.orderId);
+    const company = req.params.company;
+    const otherSender = req.user.role === 'producer' ? 'customer' : 'producer';
+    db.prepare('UPDATE messages SET read = 1 WHERE order_id = ? AND company = ? AND sender = ? AND read = 0')
+        .run(orderId, company, otherSender);
+    res.json({ ok: true });
+});
+
 app.get('/api/messages/:orderId/:company', (req, res) => {
     res.json(
         db.prepare('SELECT * FROM messages WHERE order_id = ? AND company = ? ORDER BY created_at ASC')
@@ -640,6 +798,201 @@ app.delete('/api/notifications/:company', requireAuth, (req, res) => {
     db.prepare('DELETE FROM notifications WHERE company = ?').run(req.user.company);
     res.json({ message: 'ok' });
 });
+
+// ===================== НАСТРОЙКИ =====================
+
+app.post('/api/auth/forgot-password', (req, res) => {
+    // No email system — just acknowledge silently (don't reveal whether email exists)
+    res.json({ message: 'ok' });
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+    res.json({ email: req.user.email, role: req.user.role, company: req.user.company });
+});
+
+app.put('/api/auth/password', requireAuth, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Заполните все поля' });
+    if (newPassword.length < 6) return res.status(400).json({ error: 'Новый пароль — минимум 6 символов' });
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!verifyPassword(currentPassword, user.password)) return res.status(400).json({ error: 'Неверный текущий пароль' });
+
+    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashPassword(newPassword), req.user.id);
+    res.json({ message: 'Пароль успешно изменён' });
+});
+
+app.put('/api/auth/email', requireAuth, (req, res) => {
+    const { newEmail, password } = req.body;
+    if (!newEmail || !password) return res.status(400).json({ error: 'Заполните все поля' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return res.status(400).json({ error: 'Некорректный формат email' });
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!verifyPassword(password, user.password)) return res.status(400).json({ error: 'Неверный пароль' });
+
+    const taken = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(newEmail, req.user.id);
+    if (taken) return res.status(400).json({ error: 'Этот email уже используется' });
+
+    db.prepare('UPDATE users SET email = ? WHERE id = ?').run(newEmail, req.user.id);
+    res.json({ message: 'Email успешно изменён' });
+});
+
+// ===================== ЗАКАЗЫ (СДЕЛКИ) =====================
+
+app.get('/api/deals', requireAuth, (req, res) => {
+    const { role, company } = req.user;
+    let rows;
+
+    if (role === 'customer') {
+        rows = db.prepare(`
+            SELECT o.id AS order_id, o.title, o.quantity, o.unit, o.category,
+                   p.id AS proposal_id, p.company AS counterparty,
+                   p.price, p.days, p.created_at AS deal_date, p.completion_status,
+                   c.id AS counterparty_profile_id
+            FROM orders o
+            JOIN proposals p ON p.order_id = o.id AND p.status = 'Выигран'
+            LEFT JOIN companies c ON c.company = p.company AND c.role = 'producer'
+            WHERE o.company = ?
+            ORDER BY p.created_at DESC
+        `).all(company);
+    } else if (role === 'producer') {
+        rows = db.prepare(`
+            SELECT o.id AS order_id, o.title, o.quantity, o.unit, o.category,
+                   p.id AS proposal_id, o.company AS counterparty,
+                   p.price, p.days, p.created_at AS deal_date, p.completion_status,
+                   c.id AS counterparty_profile_id
+            FROM proposals p
+            JOIN orders o ON o.id = p.order_id
+            LEFT JOIN companies c ON c.company = o.company AND c.role = 'customer'
+            WHERE p.company = ? AND p.status = 'Выигран'
+            ORDER BY p.created_at DESC
+        `).all(company);
+    } else {
+        return res.json([]);
+    }
+
+    res.json(rows.map(r => ({
+        orderId:               r.order_id,
+        proposalId:            r.proposal_id,
+        title:                 r.title,
+        quantity:              r.quantity,
+        unit:                  r.unit,
+        category:              r.category,
+        counterparty:          r.counterparty,
+        counterpartyProfileId: r.counterparty_profile_id || null,
+        price:                 r.price,
+        days:                  r.days,
+        dealDate:              r.deal_date,
+        completionStatus:      r.completion_status || 'active',
+    })));
+});
+
+app.put('/api/deals/:proposalId/complete', requireAuth, requireRole('customer'), (req, res) => {
+    const proposalId = Number(req.params.proposalId);
+    const row = db.prepare(`
+        SELECT p.*, o.company AS customer_company, o.title AS order_title
+        FROM proposals p JOIN orders o ON o.id = p.order_id
+        WHERE p.id = ?
+    `).get(proposalId);
+
+    if (!row) return res.status(404).json({ error: 'Сделка не найдена' });
+    if (row.status !== 'Выигран') return res.status(400).json({ error: 'Это не активная сделка' });
+    if (row.customer_company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
+    if (row.completion_status === 'completed') return res.status(400).json({ error: 'Сделка уже завершена' });
+
+    db.prepare("UPDATE proposals SET completion_status = 'completed' WHERE id = ?").run(proposalId);
+    addNotification(row.company, `Заказчик подтвердил выполнение заказа «${plainTitle(row.order_title)}».`);
+    res.json({ message: 'Сделка завершена' });
+});
+
+// ===================== ВЕРИФИКАЦИЯ =====================
+
+app.post('/api/verification/request', requireAuth, (req, res) => {
+    if (req.user.role === 'admin') return res.status(403).json({ error: 'Недоступно для администраторов' });
+
+    const company = db.prepare('SELECT * FROM companies WHERE company = ? AND role = ?').get(req.user.company, req.user.role);
+    if (!company) return res.status(404).json({ error: 'Профиль компании не найден' });
+    if (company.verified_by_platform) return res.status(400).json({ error: 'Компания уже верифицирована' });
+
+    const existing = db.prepare('SELECT * FROM verification_requests WHERE company_id = ?').get(company.id);
+    if (existing && existing.status === 'pending') return res.status(400).json({ error: 'Заявка уже отправлена и ожидает рассмотрения' });
+
+    if (existing) db.prepare('DELETE FROM verification_requests WHERE company_id = ?').run(company.id);
+
+    db.prepare("INSERT INTO verification_requests (company_id, status, requested_at) VALUES (?, 'pending', ?)")
+        .run(company.id, new Date().toISOString());
+
+    res.json({ message: 'Заявка на верификацию отправлена' });
+});
+
+app.get('/api/verification/status', requireAuth, (req, res) => {
+    if (req.user.role === 'admin') return res.json({ status: 'none' });
+
+    const company = db.prepare('SELECT * FROM companies WHERE company = ? AND role = ?').get(req.user.company, req.user.role);
+    if (!company) return res.json({ status: 'none' });
+    if (company.verified_by_platform) return res.json({ status: 'approved' });
+
+    const vr = db.prepare('SELECT * FROM verification_requests WHERE company_id = ?').get(company.id);
+    if (!vr) return res.json({ status: 'none' });
+
+    res.json({ status: vr.status, comment: vr.admin_comment || '', requestedAt: vr.requested_at });
+});
+
+app.get('/api/verification/requests', requireAuth, requireRole('admin'), (req, res) => {
+    const filter = req.query.filter === 'all' ? 'all' : 'pending';
+    const sql = `SELECT vr.*, c.company, c.inn, c.ogrn, c.director, c.founding_year,
+        c.authorized_capital, c.employees, c.revenue, c.machines_count, c.production_area,
+        c.capabilities, c.iso_certificates, c.quality_certificates, c.specialization, c.city,
+        c.role AS company_role
+        FROM verification_requests vr JOIN companies c ON c.id = vr.company_id
+        ${filter === 'pending' ? "WHERE vr.status = 'pending'" : ''}
+        ORDER BY vr.requested_at DESC`;
+    const rows = db.prepare(sql).all();
+    res.json(rows.map(r => ({
+        id: r.id, companyId: r.company_id, status: r.status,
+        adminComment: r.admin_comment, requestedAt: r.requested_at, reviewedAt: r.reviewed_at,
+        company: r.company, inn: r.inn, ogrn: r.ogrn || '', director: r.director || '',
+        foundingYear: r.founding_year, authorizedCapital: r.authorized_capital || '',
+        employees: r.employees, revenue: r.revenue || '',
+        machinesCount: r.machines_count, productionArea: r.production_area,
+        capabilities: JSON.parse(r.capabilities || '[]'),
+        isoCertificates: JSON.parse(r.iso_certificates || '[]'),
+        qualityCertificates: JSON.parse(r.quality_certificates || '[]'),
+        specialization: r.specialization || '', city: r.city || '', companyRole: r.company_role,
+    })));
+});
+
+app.post('/api/verification/:id/approve', requireAuth, requireRole('admin'), (req, res) => {
+    const id = Number(req.params.id);
+    const vr = db.prepare('SELECT * FROM verification_requests WHERE id = ?').get(id);
+    if (!vr) return res.status(404).json({ error: 'Заявка не найдена' });
+
+    db.exec('BEGIN');
+    try {
+        db.prepare("UPDATE verification_requests SET status='approved', reviewed_at=? WHERE id=?")
+            .run(new Date().toISOString(), id);
+        db.prepare("UPDATE companies SET verified_by_platform=1, status='Верифицирован' WHERE id=?")
+            .run(vr.company_id);
+        db.exec('COMMIT');
+    } catch (e) { db.exec('ROLLBACK'); throw e; }
+
+    res.json({ message: 'Компания верифицирована' });
+});
+
+app.post('/api/verification/:id/reject', requireAuth, requireRole('admin'), (req, res) => {
+    const id = Number(req.params.id);
+    const comment = String(req.body.comment || '').slice(0, 500);
+    const vr = db.prepare('SELECT * FROM verification_requests WHERE id = ?').get(id);
+    if (!vr) return res.status(404).json({ error: 'Заявка не найдена' });
+
+    db.prepare("UPDATE verification_requests SET status='rejected', admin_comment=?, reviewed_at=? WHERE id=?")
+        .run(comment, new Date().toISOString(), id);
+
+    res.json({ message: 'Заявка отклонена' });
+});
+
+app.use('/api', (req, res) => res.status(404).json({ error: 'Эндпоинт не найден' }));
+app.use((req, res) => res.status(404).sendFile(path.join(__dirname, '404.html')));
 
 httpServer.listen(PORT, () => {
     console.log(`Бэкенд-сервер успешно запущен на порту ${PORT}`);
