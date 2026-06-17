@@ -82,11 +82,13 @@
                     <button class="btn-primary" onclick="openModal()">+ Создать закупку</button>
                 </div>
             </div>
-            <div class="tabs" style="margin-bottom:16px;">
-                <button class="tab active" id="tabFilterAll" onclick="setStatusFilter('all')">Все&nbsp;(<span id="countAll">0</span>)</button>
-                <button class="tab" id="tabFilterActive" onclick="setStatusFilter('Активный')">Активные&nbsp;(<span id="countActive">0</span>)</button>
-                <button class="tab" id="tabFilterClosed" onclick="setStatusFilter('Закрыта')">Закрытые&nbsp;(<span id="countClosed">0</span>)</button>
-                <button class="tab" id="tabFilterCancelled" onclick="setStatusFilter('Отменена')">Отменённые&nbsp;(<span id="countCancelled">0</span>)</button>
+            <div class="tab-strip" style="margin-bottom:16px;">
+                <div class="tabs">
+                    <button class="tab active" id="tabFilterAll" onclick="setStatusFilter('all')">Все&nbsp;(<span id="countAll">0</span>)</button>
+                    <button class="tab" id="tabFilterActive" onclick="setStatusFilter('Активный')">Активные&nbsp;(<span id="countActive">0</span>)</button>
+                    <button class="tab" id="tabFilterClosed" onclick="setStatusFilter('Закрыта')">Закрытые&nbsp;(<span id="countClosed">0</span>)</button>
+                    <button class="tab" id="tabFilterCancelled" onclick="setStatusFilter('Отменена')">Отменённые&nbsp;(<span id="countCancelled">0</span>)</button>
+                </div>
             </div>
             <table>
                 <thead>
