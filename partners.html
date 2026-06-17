@@ -26,6 +26,16 @@
         .company-detail-row:last-child { border-bottom: none; }
         .company-detail-row span:first-child { color: var(--text-secondary); }
         .company-detail-row span:last-child { color: var(--text-primary); font-weight: 600; text-align: right; }
+
+        .cap-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 18px 20px; }
+        .cap-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary-alt); margin-bottom: 4px; }
+        .cap-card-meta { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px; }
+        .cap-bar-row { margin-bottom: 10px; }
+        .cap-bar-label { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 4px; }
+        .cap-bar-label span:last-child { font-weight: 700; color: var(--accent-bright); }
+        .cap-bar-track { height: 6px; background: var(--inner-bg); border-radius: 4px; overflow: hidden; }
+        .cap-bar-fill { height: 100%; border-radius: 4px; background: var(--accent-gradient); transition: width .4s ease; }
+        .cap-card-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--accent-bright); }
     </style>
 </head>
 <body>
@@ -83,6 +93,14 @@
             </button>
         </div>
 
+        <div class="tab-strip" style="margin-bottom:16px;">
+            <div class="tabs">
+                <button class="tab active" id="tabDirBtn" onclick="switchPartnersTab('dir')">Контрагенты</button>
+                <button class="tab" id="tabCapBtn" onclick="switchPartnersTab('cap')">Биржа мощностей</button>
+            </div>
+        </div>
+
+        <div id="panelDir">
         <div class="filter-section">
             <div class="filters-row">
                 <div>
@@ -165,6 +183,14 @@
                         </select>
                     </div>
                 </div>
+            </div>
+        </div>
+        </div><!-- /panelDir -->
+
+        <div id="panelCap" style="display:none;">
+            <div id="capacityGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px;"></div>
+            <div id="capacityEmpty" style="display:none; color:var(--text-secondary); font-size:13px; padding:24px 0;">
+                Пока ни один производитель не разместил свои мощности.
             </div>
         </div>
     </div>
@@ -453,6 +479,51 @@
                 rows.push(`${c.company};${c.inn};${c.role === 'customer' ? 'Заказчик' : 'Производитель'};${c.specialization || ''};${c.status}`);
             });
             downloadMockFile('reestr_kontragentov.csv', rows.join('\n'));
+        }
+
+        // ===================== БИРЖА МОЩНОСТЕЙ =====================
+
+        function switchPartnersTab(tab) {
+            const isDir = tab === 'dir';
+            document.getElementById('panelDir').style.display = isDir ? '' : 'none';
+            document.getElementById('panelCap').style.display = isDir ? 'none' : '';
+            document.getElementById('tabDirBtn').classList.toggle('active', isDir);
+            document.getElementById('tabCapBtn').classList.toggle('active', !isDir);
+            if (!isDir) loadCapacityExchange();
+        }
+
+        let _capLoaded = false;
+        async function loadCapacityExchange() {
+            if (_capLoaded) return;
+            _capLoaded = true;
+            const grid = document.getElementById('capacityGrid');
+            const empty = document.getElementById('capacityEmpty');
+            grid.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:8px 0;">Загрузка...</div>';
+            try {
+                const token = localStorage.getItem('authToken');
+                const r = await fetch(`${SERVER_URL}/capacity`, { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
+                const list = await r.json();
+                grid.innerHTML = '';
+                if (!list.length) { empty.style.display = ''; return; }
+                list.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'cap-card';
+                    const verBadge = c.verifiedByPlatform
+                        ? `<span class="cap-card-verified"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
+                        : '';
+                    const bars = (c.freeCapacity || []).map(cap => `
+                        <div class="cap-bar-row">
+                            <div class="cap-bar-label"><span>${escapeHtml(cap.name)}</span><span>${cap.percent}%</span></div>
+                            <div class="cap-bar-track"><div class="cap-bar-fill" style="width:${cap.percent}%"></div></div>
+                        </div>`).join('');
+                    card.innerHTML = `
+                        <div class="cap-card-name">${escapeHtml(c.company)}</div>
+                        <div class="cap-card-meta">${escapeHtml(c.city || '')}${c.city && c.specialization ? ' · ' : ''}${escapeHtml(c.specialization || '')} ${verBadge}</div>
+                        ${bars}
+                        <a href="company-profile.html?id=${c.id}" class="btn-secondary" style="display:inline-block;margin-top:12px;text-decoration:none;font-size:12px;">Профиль компании →</a>`;
+                    grid.appendChild(card);
+                });
+            } catch { grid.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">Не удалось загрузить данные.</div>'; }
         }
     </script>
 </body>

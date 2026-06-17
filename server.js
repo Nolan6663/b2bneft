@@ -91,7 +91,8 @@ function rowToCompany(r) {
         qualityCertificates: JSON.parse(r.quality_certificates || '[]'),
         capabilities: JSON.parse(r.capabilities || '[]'),
         productionLoad: r.production_load ?? null,
-        verifiedByPlatform: Boolean(r.verified_by_platform)
+        verifiedByPlatform: Boolean(r.verified_by_platform),
+        freeCapacity: JSON.parse(r.free_capacity || '[]'),
     };
 }
 
@@ -267,6 +268,12 @@ function computeMatchScore(order, producer) {
     score += Math.min(keywords.filter(k => text.includes(k)).length, 3) * 20;
     const titleWords = plainTitle(order.title || '').toLowerCase().split(/[^a-zа-яё0-9]+/).filter(w => w.length > 3);
     score += Math.min(titleWords.filter(w => text.includes(stem(w))).length, 2) * 15;
+    // Бонус за свободные мощности: есть ресурсы — выше в рекомендациях
+    const cap = producer.freeCapacity || [];
+    if (cap.length > 0) {
+        const avgFree = cap.reduce((s, c) => s + (c.percent || 0), 0) / cap.length;
+        if (avgFree >= 30) score += 10;
+    }
     return Math.min(100, score);
 }
 
@@ -758,6 +765,14 @@ app.put('/api/companies/:id', requireAuth, async (req, res, next) => {
         if (Array.isArray(isoCertificates))     f('iso_certificates', JSON.stringify(isoCertificates.map(e => str(e, 80)).slice(0, 20)));
         if (Array.isArray(qualityCertificates)) f('quality_certificates', JSON.stringify(qualityCertificates.map(e => str(e, 80)).slice(0, 20)));
         if (Array.isArray(capabilities))        f('capabilities', JSON.stringify(capabilities.slice(0, 20)));
+        if (req.body.freeCapacity !== undefined) {
+            const cap = Array.isArray(req.body.freeCapacity) ? req.body.freeCapacity : [];
+            const valid = cap
+                .filter(c => c && typeof c.name === 'string' && c.name.trim())
+                .map(c => ({ name: String(c.name).slice(0, 80), percent: Math.min(100, Math.max(0, Number(c.percent) || 0)) }))
+                .slice(0, 15);
+            f('free_capacity', JSON.stringify(valid));
+        }
 
         if (sets.length) {
             vals.push(id);
@@ -827,6 +842,26 @@ app.get('/api/dashboard/counts', requireAuth, async (req, res, next) => {
             ]);
             res.json({ myActiveOrders, newResponses, unreadMessages });
         }
+    } catch (e) { next(e); }
+});
+
+// ===================== БИРЖА МОЩНОСТЕЙ =====================
+
+app.get('/api/capacity', optionalAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT * FROM companies
+            WHERE role = 'producer'
+              AND free_capacity != '[]'
+              AND free_capacity != 'null'
+            ORDER BY company ASC
+        `);
+        const list = rows.map(rowToCompany).map(c => ({
+            id: c.id, company: c.company, city: c.city, specialization: c.specialization,
+            status: c.status, verifiedByPlatform: c.verifiedByPlatform,
+            freeCapacity: c.freeCapacity,
+        }));
+        res.json(list);
     } catch (e) { next(e); }
 });
 

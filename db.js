@@ -130,6 +130,10 @@ async function initDb() {
         );
     `);
 
+    await pool.query(`
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS free_capacity TEXT NOT NULL DEFAULT '[]';
+    `);
+
     const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
     if (!adminRow) {
         const salt = crypto.randomBytes(16).toString('hex');
