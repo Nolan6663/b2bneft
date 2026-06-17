@@ -93,6 +93,8 @@ function rowToCompany(r) {
         productionLoad: r.production_load ?? null,
         verifiedByPlatform: Boolean(r.verified_by_platform),
         freeCapacity: JSON.parse(r.free_capacity || '[]'),
+        lat: r.lat ?? null,
+        lng: r.lng ?? null,
     };
 }
 
@@ -240,7 +242,7 @@ app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
-    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html',
+    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html',
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
@@ -293,6 +295,48 @@ function computeMatchScore(order, producer) {
     }
 
     return Math.min(100, score);
+}
+
+// ===================== ГЕОКОДИРОВАНИЕ =====================
+
+async function geocodeCity(city) {
+    if (!city || !city.trim()) return null;
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city.trim() + ', Россия')}&format=json&limit=1&countrycodes=ru`;
+        const res = await fetch(url, {
+            headers: { 'User-Agent': 'B2BNeft/1.0 (b2bneft)' },
+            signal: AbortSignal.timeout(8000),
+        });
+        const data = await res.json();
+        if (data && data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    } catch {}
+    return null;
+}
+
+function getProducerCategories(producer) {
+    const text = [
+        producer.specialization || '',
+        (producer.equipment || []).join(' '),
+        (producer.capabilities || []).join(' '),
+        producer.about || '',
+    ].join(' ').toLowerCase();
+    return Object.keys(CATEGORY_KEYWORDS).filter(cat => {
+        const kw = CATEGORY_KEYWORDS[cat];
+        return kw.length > 0 && kw.some(k => text.includes(k));
+    });
+}
+
+async function geocodeExisting() {
+    try {
+        const { rows } = await pool.query(
+            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 50"
+        );
+        for (const r of rows) {
+            const coords = await geocodeCity(r.city);
+            if (coords) await pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, r.id]);
+            await new Promise(resolve => setTimeout(resolve, 1200));
+        }
+    } catch {}
 }
 
 async function matchedProducers(order, minScore = 0) {
@@ -760,7 +804,16 @@ app.put('/api/companies/:id', requireAuth, async (req, res, next) => {
         const sets = [], vals = [];
         const f = (col, val) => { sets.push(`${col} = $${sets.length + 1}`); vals.push(val); };
 
-        if (city !== undefined)               f('city', str(city, 100));
+        if (city !== undefined) {
+            const cityVal = str(city, 100);
+            f('city', cityVal);
+            if (cityVal !== row.city) {
+                geocodeCity(cityVal).then(coords => {
+                    if (coords) pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, id]);
+                    else pool.query('UPDATE companies SET lat=NULL,lng=NULL WHERE id=$1', [id]);
+                });
+            }
+        }
         if (yearsExperience !== undefined)    f('years_experience', num(yearsExperience));
         if (about !== undefined)              f('about', str(about, 1000));
         if (specialization !== undefined)     f('specialization', str(specialization, 200));
@@ -879,6 +932,38 @@ app.get('/api/public/stats', async (req, res, next) => {
             pool.query('SELECT COUNT(*) AS n FROM proposals'),
         ]);
         res.json({ producers, customers, orders, proposals });
+    } catch (e) { next(e); }
+});
+
+// ===================== КАРТА ЗАВОДОВ =====================
+
+app.get('/api/map', async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT id, company, city, specialization, status, verified_by_platform,
+                   lat, lng, capabilities, equipment, about
+            FROM companies WHERE role = 'producer' AND lat IS NOT NULL AND lng IS NOT NULL
+        `);
+        res.json(rows.map(r => {
+            const producer = {
+                specialization: r.specialization || '',
+                equipment: JSON.parse(r.equipment || '[]'),
+                capabilities: JSON.parse(r.capabilities || '[]'),
+                about: r.about || '',
+            };
+            return {
+                id: r.id,
+                company: r.company,
+                city: r.city,
+                specialization: r.specialization,
+                capabilities: JSON.parse(r.capabilities || '[]'),
+                status: r.status,
+                verified: Boolean(r.verified_by_platform),
+                lat: r.lat,
+                lng: r.lng,
+                categories: getProducerCategories(producer),
+            };
+        }));
     } catch (e) { next(e); }
 });
 
@@ -1498,6 +1583,7 @@ initDb()
         httpServer.listen(PORT, () => {
             console.log(`Сервер запущен на порту ${PORT}`);
         });
+        setTimeout(geocodeExisting, 5000);
     })
     .catch(err => {
         console.error('Ошибка инициализации БД:', err);

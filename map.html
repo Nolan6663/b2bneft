@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Карта заводов</title>
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
+    <link rel="stylesheet" href="assets/theme.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { overflow: hidden; }
+        .main-content {
+            padding: 0 !important;
+            position: relative;
+            overflow: hidden;
+            height: 100vh;
+        }
+        @media (max-width: 768px) {
+            .main-content { height: calc(100dvh - 62px); }
+        }
+
+        #map { width: 100%; height: 100%; z-index: 0; }
+
+        /* Leaflet dark/light overrides */
+        html:not(.light-mode) .leaflet-layer,
+        html:not(.light-mode) .leaflet-control-zoom,
+        html:not(.light-mode) .leaflet-control-attribution { filter: invert(1) hue-rotate(180deg); }
+        html:not(.light-mode) .map-popup-wrap { filter: none; }
+
+        /* Floating control panel */
+        .map-panel {
+            position: absolute;
+            top: 14px; left: 14px;
+            z-index: 1000;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 14px 16px;
+            width: 300px;
+            box-shadow: 0 6px 24px rgba(0,0,0,.35);
+        }
+        @media (max-width: 768px) {
+            .map-panel { width: calc(100vw - 28px); top: 10px; left: 14px; right: 14px; padding: 10px 12px; }
+        }
+
+        .map-search {
+            width: 100%; box-sizing: border-box;
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            border-radius: var(--radius-input); color: var(--text-primary);
+            padding: 8px 12px; font-size: 13px; outline: none;
+            transition: border-color .2s;
+        }
+        .map-search:focus { border-color: var(--accent-bright); }
+
+        .map-chips {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+        }
+        .map-chip {
+            padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+            cursor: pointer; border: 1px solid var(--card-border);
+            background: var(--inner-bg); color: var(--text-secondary);
+            transition: all .15s; white-space: nowrap;
+        }
+        .map-chip.active {
+            background: var(--accent-bright); color: #fff; border-color: var(--accent-bright);
+        }
+        .map-chip:hover:not(.active) { border-color: var(--accent-bright); color: var(--accent-bright); }
+
+        .map-counter {
+            margin-top: 10px; font-size: 11.5px; color: var(--text-secondary);
+        }
+        .map-counter b { color: var(--accent-bright); }
+
+        /* Custom marker */
+        .map-marker {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: #fff;
+            cursor: pointer;
+        }
+        .map-marker.verified { background: #41bd97; }
+        .map-marker.regular  { background: #4a90d9; }
+
+        /* Popup */
+        .leaflet-popup-content-wrapper {
+            background: var(--card-bg) !important;
+            border: 1px solid var(--card-border) !important;
+            border-radius: var(--radius-card) !important;
+            box-shadow: 0 8px 28px rgba(0,0,0,.4) !important;
+            color: var(--text-primary) !important;
+            padding: 0 !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; width: 240px !important; }
+        .leaflet-popup-tip { background: var(--card-bg) !important; }
+        .leaflet-popup-close-button { color: var(--text-secondary) !important; top: 8px !important; right: 10px !important; font-size: 18px !important; }
+
+        .popup-body { padding: 14px 16px; }
+        .popup-header { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+        .popup-avatar {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .popup-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+        .popup-city { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+        .popup-verified {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 10.5px; font-weight: 600; color: var(--accent-bright);
+            background: rgba(65,189,151,.12); border-radius: 20px;
+            padding: 2px 7px; margin-top: 6px;
+        }
+        .popup-spec { font-size: 12px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+        .popup-caps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+        .popup-cap-tag {
+            font-size: 10.5px; padding: 2px 8px; border-radius: 20px;
+            background: var(--inner-bg); border: 1px solid var(--inner-border);
+            color: var(--text-secondary);
+        }
+        .popup-btn {
+            display: block; text-align: center; margin-top: 12px;
+            padding: 8px 0; border-radius: var(--radius-btn);
+            background: var(--accent-bright); color: #fff;
+            font-size: 12.5px; font-weight: 600; text-decoration: none;
+            transition: opacity .15s;
+        }
+        .popup-btn:hover { opacity: .85; }
+
+        /* No data message */
+        .map-no-data {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 999; text-align: center; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>B2B Нефтесервис</span>
+        </div>
+
+        <a href="#" id="mainLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Главная</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
+        <a href="map.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+
+        <div class="sidebar-bottom">
+            <div id="sidebarProfileLink" style="display:none"></div>
+            <div class="theme-toggle-row">
+                <span class="theme-label">Тема</span>
+                <label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label>
+            </div>
+            <a href="settings.html" class="switch-link" title="Настройки">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="map-panel">
+            <input class="map-search" id="mapSearch" type="text" placeholder="Поиск по городу или названию...">
+            <div class="map-chips">
+                <button class="map-chip active" data-cat="all">Все</button>
+                <button class="map-chip" data-cat="РТИ">РТИ</button>
+                <button class="map-chip" data-cat="Металл">Металл</button>
+                <button class="map-chip" data-cat="Трубопроводная арматура">Арматура</button>
+                <button class="map-chip" data-cat="Электрооборудование">Электро</button>
+                <button class="map-chip" data-cat="verified">✓ Верифицированные</button>
+            </div>
+            <div class="map-counter" id="mapCounter">Загрузка...</div>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const session = authGuard(null);
+        const userRole = session.role;
+
+        const mainLink = document.getElementById('mainLink');
+        if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+
+        initNotifications();
+        initSidebarBadges();
+
+        // ── Map init ──────────────────────────────────────────────────────
+        const map = L.map('map', { zoomControl: true }).setView([61.5, 90], 4);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18,
+        }).addTo(map);
+
+        // ── State ─────────────────────────────────────────────────────────
+        let allProducers = [];
+        let markers = [];
+        let activeFilter = 'all';
+        let searchQuery = '';
+
+        // ── Marker creation ───────────────────────────────────────────────
+        const AVATAR_COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71'];
+
+        function makeIcon(producer) {
+            const color = producer.verified ? '#41bd97' : AVATAR_COLORS[producer.id % AVATAR_COLORS.length];
+            const letter = (producer.company || '?').replace(/[«»"ООО АОИПи ]/g,'').charAt(0).toUpperCase() || '?';
+            return L.divIcon({
+                className: '',
+                html: `<div class="map-marker${producer.verified ? ' verified' : ' regular'}" style="background:${color}">${letter}</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
+                popupAnchor: [0, -16],
+            });
+        }
+
+        function popupHtml(p) {
+            const color = p.verified ? '#41bd97' : AVATAR_COLORS[p.id % AVATAR_COLORS.length];
+            const letter = (p.company || '?').replace(/[«»"ООО АОИПи ]/g,'').charAt(0).toUpperCase() || '?';
+            const caps = (p.capabilities || []).slice(0, 4)
+                .map(c => `<span class="popup-cap-tag">${escapeHtml(c)}</span>`).join('');
+            const verified = p.verified
+                ? `<span class="popup-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
+                : '';
+            return `<div class="popup-body">
+                <div class="popup-header">
+                    <div class="popup-avatar" style="background:${color}">${letter}</div>
+                    <div>
+                        <div class="popup-name">${escapeHtml(p.company)}</div>
+                        <div class="popup-city">📍 ${escapeHtml(p.city || '—')}</div>
+                    </div>
+                </div>
+                ${verified}
+                ${p.specialization ? `<div class="popup-spec">${escapeHtml(p.specialization)}</div>` : ''}
+                ${caps ? `<div class="popup-caps">${caps}</div>` : ''}
+                <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль →</a>
+            </div>`;
+        }
+
+        // ── Filtering & rendering ─────────────────────────────────────────
+        function applyFilters() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const q = searchQuery.toLowerCase();
+            const filtered = allProducers.filter(p => {
+                if (activeFilter === 'verified') return p.verified;
+                if (activeFilter !== 'all' && !p.categories.includes(activeFilter)) return false;
+                if (q && !p.company.toLowerCase().includes(q) && !(p.city || '').toLowerCase().includes(q) &&
+                    !(p.specialization || '').toLowerCase().includes(q)) return false;
+                return true;
+            });
+
+            filtered.forEach(p => {
+                const m = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
+                    .bindPopup(popupHtml(p), { maxWidth: 260, className: 'map-popup-wrap' });
+                m.addTo(map);
+                markers.push(m);
+            });
+
+            document.getElementById('mapCounter').innerHTML =
+                `Показано заводов: <b>${filtered.length}</b> из ${allProducers.length}`;
+        }
+
+        // ── Load data ─────────────────────────────────────────────────────
+        async function loadMap() {
+            try {
+                const r = await fetch(`${SERVER_URL}/map`);
+                if (!r.ok) throw new Error();
+                allProducers = await r.json();
+                applyFilters();
+
+                if (allProducers.length === 0) {
+                    document.getElementById('mapCounter').innerHTML =
+                        'Заводы ещё не добавлены на карту. Производителям нужно указать город в профиле.';
+                }
+            } catch {
+                document.getElementById('mapCounter').innerHTML = 'Не удалось загрузить данные';
+            }
+        }
+
+        // ── Event listeners ───────────────────────────────────────────────
+        document.querySelectorAll('.map-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.map-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFilter = btn.dataset.cat;
+                applyFilters();
+            });
+        });
+
+        document.getElementById('mapSearch').addEventListener('input', e => {
+            searchQuery = e.target.value;
+            applyFilters();
+        });
+
+        loadMap();
+    </script>
+</body>
+</html>

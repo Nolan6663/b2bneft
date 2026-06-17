@@ -132,6 +132,8 @@ async function initDb() {
 
     await pool.query(`
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS free_capacity TEXT NOT NULL DEFAULT '[]';
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS lat FLOAT;
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS lng FLOAT;
     `);
 
     const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
