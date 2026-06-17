@@ -271,6 +271,7 @@
                     const data = await response.json();
                     if (response.ok) {
                         localStorage.setItem('authToken', data.token);
+                        localStorage.setItem('refreshToken', data.refreshToken || '');
                         localStorage.setItem('userRole', data.role);
                         localStorage.setItem('userCompany', data.company || '');
                         if (data.role === 'admin') { window.location.href = 'admin.html'; return; }

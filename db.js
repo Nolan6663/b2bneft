@@ -114,6 +114,13 @@ async function initDb() {
             requested_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             reviewed_at   TIMESTAMPTZ
         );
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+            id         SERIAL      PRIMARY KEY,
+            user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token      TEXT        NOT NULL UNIQUE,
+            expires_at TIMESTAMPTZ NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");

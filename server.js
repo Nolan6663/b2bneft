@@ -7,7 +7,17 @@ const path = require('path');
 const multer = require('multer');
 const http = require('http');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const { pool, initDb } = require('./db');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production';
+
+function generateTokens(user) {
+    const payload = { userId: user.id, role: user.role, company: user.company };
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    const refreshToken = crypto.randomBytes(48).toString('hex');
+    return { accessToken, refreshToken };
+}
 
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
@@ -246,11 +256,14 @@ async function matchedProducers(order, minScore = 0) {
 
 async function requireAuth(req, res, next) {
     try {
-        const match = (req.headers['authorization'] || '').match(/^Bearer\s+token-(\d+)$/);
+        const match = (req.headers['authorization'] || '').match(/^Bearer\s+(.+)$/);
         if (!match) return res.status(401).json({ error: 'Требуется авторизация' });
-        const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [Number(match[1])]);
-        if (!rows[0]) return res.status(401).json({ error: 'Неверный или истёкший токен' });
-        req.user = rows[0];
+        let payload;
+        try { payload = jwt.verify(match[1], JWT_SECRET); }
+        catch { return res.status(401).json({ error: 'Неверный или истёкший токен' }); }
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
+        if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
+        req.user = user;
         next();
     } catch (e) { next(e); }
 }
@@ -264,10 +277,13 @@ function requireRole(role) {
 
 async function optionalAuth(req, res, next) {
     try {
-        const match = (req.headers['authorization'] || '').match(/^Bearer\s+token-(\d+)$/);
+        const match = (req.headers['authorization'] || '').match(/^Bearer\s+(.+)$/);
         if (match) {
-            const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [Number(match[1])]);
-            if (rows[0]) req.user = rows[0];
+            try {
+                const payload = jwt.verify(match[1], JWT_SECRET);
+                const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
+                if (user) req.user = user;
+            } catch { /* invalid token — continue as guest */ }
         }
         next();
     } catch (e) { next(e); }
@@ -806,7 +822,12 @@ app.post('/api/auth/register', async (req, res, next) => {
             return u;
         });
 
-        res.status(201).json({ token: 'token-' + newUser.id, role, company });
+        const { accessToken, refreshToken } = generateTokens(newUser);
+        await pool.query(
+            "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
+            [newUser.id, refreshToken]
+        );
+        res.status(201).json({ token: accessToken, refreshToken, role, company });
     } catch (e) { next(e); }
 });
 
@@ -822,7 +843,12 @@ app.post('/api/auth/login', async (req, res, next) => {
             await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashPassword(password), user.id]);
         }
 
-        res.json({ token: 'token-' + user.id, role: user.role, company: user.company });
+        const { accessToken, refreshToken } = generateTokens(user);
+        await pool.query(
+            "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
+            [user.id, refreshToken]
+        );
+        res.json({ token: accessToken, refreshToken, role: user.role, company: user.company });
     } catch (e) { next(e); }
 });
 
@@ -941,6 +967,33 @@ app.delete('/api/notifications/:company', requireAuth, async (req, res, next) =>
 
 app.post('/api/auth/forgot-password', (req, res) => {
     res.json({ message: 'ok' });
+});
+
+app.post('/api/auth/refresh', async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) return res.status(401).json({ error: 'Refresh token не указан' });
+        const { rows: [tokenRow] } = await pool.query(
+            'SELECT * FROM refresh_tokens WHERE token = $1 AND expires_at > NOW()',
+            [refreshToken]
+        );
+        if (!tokenRow) return res.status(401).json({ error: 'Недействительный или истёкший refresh token' });
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [tokenRow.user_id]);
+        if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
+        const payload = { userId: user.id, role: user.role, company: user.company };
+        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token: accessToken });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/auth/logout', async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        if (refreshToken) {
+            await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
+        }
+        res.json({ message: 'Выход выполнен' });
+    } catch (e) { next(e); }
 });
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
