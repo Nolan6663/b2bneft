@@ -261,37 +261,19 @@
             const password = document.getElementById('authPassword').value;
 
             if (currentMode === 'login') {
-                try {
-                    const response = await fetch(`${SERVER_URL}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        localStorage.setItem('authToken', data.token);
-                        localStorage.setItem('refreshToken', data.refreshToken || '');
-                        localStorage.setItem('userRole', data.role);
-                        localStorage.setItem('userCompany', data.company || '');
-                        if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
-                        window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
-                        return;
-                    }
-
-                    alert(data.error || 'Неверный логин или пароль');
-                    return;
-                } catch (error) {
-                    console.warn('Backend недоступен, включаю локальную MVP-имитацию входа:', error);
-                    const savedRole = localStorage.getItem('mockRole');
-                    const isProducer = savedRole ? (savedRole === 'producer') : (email.includes('prod') || email.includes('zavod'));
-                    localStorage.setItem('authToken', 'mock-valid-token');
-                    localStorage.setItem('userRole', isProducer ? 'producer' : 'customer');
-                    if (!localStorage.getItem('userCompany')) {
-                        localStorage.setItem('userCompany', isProducer ? 'ООО «УралПолимер»' : 'АО «ГазНефтьЗаказ»');
-                    }
-                    window.location.href = isProducer ? 'producer.html' : 'index.html';
-                }
+                const response = await fetch(`${SERVER_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (!response.ok) { alert(data.error || 'Неверный логин или пароль'); return; }
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('refreshToken', data.refreshToken || '');
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('userCompany', data.company || '');
+                if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
+                window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
 
             } else {
                 const company = document.getElementById('regCompany').value.trim();
@@ -304,29 +286,15 @@
                     return;
                 }
 
-                try {
-                    const response = await fetch(`${SERVER_URL}/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password, company, inn, role })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        switchTab('login');
-                        document.getElementById('authEmail').value = email;
-                        return;
-                    }
-
-                    alert(data.error || 'Ошибка при регистрации');
-                    return;
-                } catch (error) {
-                    console.warn('Backend недоступен, сохраняю регистрацию локально (MVP-имитация):', error);
-                    localStorage.setItem('userCompany', company);
-                    localStorage.setItem('mockRole', role);
-                    switchTab('login');
-                    document.getElementById('authEmail').value = email;
-                }
+                const response = await fetch(`${SERVER_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, company, inn, role })
+                });
+                const data = await response.json();
+                if (!response.ok) { alert(data.error || 'Ошибка при регистрации'); return; }
+                switchTab('login');
+                document.getElementById('authEmail').value = email;
             }
         }
     </script>
