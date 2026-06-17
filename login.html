@@ -206,6 +206,12 @@
     <script>
         let currentMode = 'login';
 
+        // Если пришли с лендинга по кнопке "Зарегистрироваться"
+        if (localStorage.getItem('landingRegister')) {
+            localStorage.removeItem('landingRegister');
+            document.addEventListener('DOMContentLoaded', () => switchTab('register'));
+        }
+
         // Если в URL есть ?reset=TOKEN — показываем форму нового пароля
         const _resetToken = new URLSearchParams(window.location.search).get('reset');
         if (_resetToken) {

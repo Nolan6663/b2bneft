@@ -238,12 +238,12 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
-    'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
+    'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html',
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
-app.get('/', (req, res) => res.redirect('/login.html'));
+app.get('/', (req, res) => res.redirect('/landing.html'));
 
 // ===================== УМНЫЙ МАТЧИНГ =====================
 const CATEGORY_KEYWORDS = {
@@ -842,6 +842,25 @@ app.get('/api/dashboard/counts', requireAuth, async (req, res, next) => {
             ]);
             res.json({ myActiveOrders, newResponses, unreadMessages });
         }
+    } catch (e) { next(e); }
+});
+
+// ===================== ПУБЛИЧНАЯ СТАТИСТИКА =====================
+
+app.get('/api/public/stats', async (req, res, next) => {
+    try {
+        const [
+            { rows: [{ n: producers }] },
+            { rows: [{ n: customers }] },
+            { rows: [{ n: orders }] },
+            { rows: [{ n: proposals }] },
+        ] = await Promise.all([
+            pool.query("SELECT COUNT(*) AS n FROM companies WHERE role = 'producer'"),
+            pool.query("SELECT COUNT(*) AS n FROM companies WHERE role = 'customer'"),
+            pool.query('SELECT COUNT(*) AS n FROM orders'),
+            pool.query('SELECT COUNT(*) AS n FROM proposals'),
+        ]);
+        res.json({ producers, customers, orders, proposals });
     } catch (e) { next(e); }
 });
 

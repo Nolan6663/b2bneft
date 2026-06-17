@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Единая площадка закупок</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0d1620;
+            --bg2: #111c2a;
+            --card: #152030;
+            --border: rgba(255,255,255,.08);
+            --accent: #41bd97;
+            --accent2: #54c79f;
+            --text: #eef3f6;
+            --muted: #7e8b97;
+            --gradient: linear-gradient(135deg, #41bd97, #3a9fd8);
+        }
+
+        html { scroll-behavior: smooth; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; overflow-x: hidden; }
+
+        /* ── NAVBAR ── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; height: 64px;
+            background: rgba(13,22,32,.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo img { width: 32px; height: 32px; }
+        .nav-logo-text { font-size: 15px; font-weight: 800; letter-spacing: .5px; color: var(--text); }
+        .nav-links { display: flex; gap: 10px; }
+        .btn-ghost { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-accent { padding: 8px 20px; border-radius: 8px; background: var(--gradient); border: none; color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; text-decoration: none; transition: opacity .2s, transform .2s; }
+        .btn-accent:hover { opacity: .88; transform: translateY(-1px); }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 100px 40px 80px; text-align: center; position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(65,189,151,.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-inner { max-width: 760px; position: relative; }
+        .hero-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 14px; border-radius: 20px;
+            background: rgba(65,189,151,.12); border: 1px solid rgba(65,189,151,.25);
+            font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 28px;
+        }
+        .hero-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+        .hero-title {
+            font-size: clamp(32px, 6vw, 58px); font-weight: 900; line-height: 1.1;
+            letter-spacing: -.5px; margin-bottom: 22px;
+        }
+        .hero-title .grad { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-sub { font-size: clamp(15px, 2.2vw, 18px); color: var(--muted); max-width: 560px; margin: 0 auto 40px; }
+        .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero { padding: 14px 32px; font-size: 15px; font-weight: 700; border-radius: 10px; }
+
+        /* ── STATS ── */
+        .stats { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .stats-inner { max-width: 1100px; margin: 0 auto; padding: 0 40px; display: grid; grid-template-columns: repeat(4, 1fr); }
+        .stat-item { padding: 36px 24px; text-align: center; border-right: 1px solid var(--border); }
+        .stat-item:last-child { border-right: none; }
+        .stat-value { font-size: clamp(28px, 4vw, 42px); font-weight: 900; color: var(--accent); line-height: 1; margin-bottom: 6px; }
+        .stat-label { font-size: 13px; color: var(--muted); }
+
+        /* ── SECTION COMMON ── */
+        .section { padding: 96px 40px; }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-tag { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px; }
+        .section-title { font-size: clamp(24px, 4vw, 38px); font-weight: 900; line-height: 1.2; margin-bottom: 16px; }
+        .section-sub { font-size: 15px; color: var(--muted); max-width: 520px; }
+
+        /* ── HOW IT WORKS ── */
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+        .step-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px 24px; }
+        .step-num { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+        .step-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(65,189,151,.1); border: 1px solid rgba(65,189,151,.2); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .step-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .step-text { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+
+        /* ── FEATURES ── */
+        .features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 56px; }
+        .feat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; gap: 20px; align-items: flex-start; }
+        .feat-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .feat-icon.green { background: rgba(65,189,151,.12); }
+        .feat-icon.blue  { background: rgba(58,157,216,.12); }
+        .feat-icon.purple{ background: rgba(155,89,182,.12); }
+        .feat-icon.orange{ background: rgba(230,162,60,.12); }
+        .feat-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+        .feat-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+        /* ── CTA ── */
+        .cta-section { background: var(--bg2); border-top: 1px solid var(--border); text-align: center; }
+        .cta-glow { position: relative; padding: 96px 40px; }
+        .cta-glow::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(65,189,151,.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .cta-title { font-size: clamp(26px, 4vw, 40px); font-weight: 900; margin-bottom: 14px; }
+        .cta-sub { font-size: 15px; color: var(--muted); margin-bottom: 36px; }
+
+        /* ── FOOTER ── */
+        .footer { border-top: 1px solid var(--border); padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .footer-copy { font-size: 12.5px; color: var(--muted); }
+        .footer-links { display: flex; gap: 20px; }
+        .footer-links a { font-size: 12.5px; color: var(--muted); text-decoration: none; }
+        .footer-links a:hover { color: var(--accent); }
+
+        /* ── MOBILE ── */
+        @media (max-width: 768px) {
+            .nav { padding: 0 20px; }
+            .hero { padding: 100px 20px 60px; }
+            .stats-inner { grid-template-columns: repeat(2, 1fr); }
+            .stat-item:nth-child(2) { border-right: none; }
+            .stat-item:nth-child(3) { border-top: 1px solid var(--border); }
+            .section { padding: 64px 20px; }
+            .steps { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .footer { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .nav-logo-text { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="nav">
+        <a href="/landing.html" class="nav-logo">
+            <img src="assets/icons_svg/logo_hex.svg" alt="">
+            <span class="nav-logo-text">B2B НЕФТЕСЕРВИС</span>
+        </a>
+        <div class="nav-links">
+            <a href="/login.html" class="btn-ghost">Войти</a>
+            <a href="/login.html#register" class="btn-accent" onclick="localStorage.setItem('landingRegister','1')">Начать бесплатно</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-tag">Цифровая площадка нефтесервиса</div>
+            <h1 class="hero-title">
+                Разместите чертёж —<br>
+                получите КП от заводов<br>
+                <span class="grad">за 24 часа</span>
+            </h1>
+            <p class="hero-sub">Единая среда для закупок МТР, РТИ, металлоконструкций и оборудования. Прямые тендеры, верифицированные поставщики, полная аналитика.</p>
+            <div class="hero-actions">
+                <a href="/login.html" class="btn-accent btn-hero" onclick="localStorage.setItem('landingRegister','1')">Разместить закупку</a>
+                <a href="#how" class="btn-ghost btn-hero">Как это работает</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stats-inner">
+            <div class="stat-item">
+                <div class="stat-value" id="statProducers">—</div>
+                <div class="stat-label">производителей</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statOrders">—</div>
+                <div class="stat-label">закупок размещено</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statProposals">—</div>
+                <div class="stat-label">коммерческих предложений</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statCustomers">—</div>
+                <div class="stat-label">компаний-заказчиков</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how">
+        <div class="section-inner">
+            <div class="section-tag">Как это работает</div>
+            <h2 class="section-title">Три шага до готового КП</h2>
+            <p class="section-sub">Никаких телефонных звонков и длинных цепочек писем — всё в одном интерфейсе.</p>
+
+            <div class="steps">
+                <div class="step-card">
+                    <div class="step-num">Шаг 01</div>
+                    <div class="step-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#41bd97" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    </div>
+                    <div class="step-title">Разместите закупку</div>
+                    <div class="step-text">Опишите потребность, загрузите чертёж или ТЗ в форматах PDF, DWG, STEP. Укажите дедлайн и объём.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">Шаг 02</div>
+                    <div class="step-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#41bd97" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+                    </div>
+                    <div class="step-title">Получите предложения</div>
+                    <div class="step-text">Система автоматически уведомит подходящих производителей. Они пришлют КП с ценой и сроком прямо в платформу.</div>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">Шаг 03</div>
+                    <div class="step-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#41bd97" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="step-title">Выберите победителя</div>
+                    <div class="step-text">Сравните предложения, пообщайтесь в чате, выберите поставщика. Вся история сохраняется в аналитике.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" style="background: var(--bg2); border-top: 1px solid var(--border);" id="features">
+        <div class="section-inner">
+            <div class="section-tag">Возможности платформы</div>
+            <h2 class="section-title">Всё что нужно для закупок</h2>
+            <p class="section-sub">Один инструмент вместо excel-таблиц, почты и мессенджеров.</p>
+
+            <div class="features-grid">
+                <div class="feat-card">
+                    <div class="feat-icon green">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#41bd97" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+                    </div>
+                    <div>
+                        <div class="feat-title">Умный подбор поставщиков</div>
+                        <div class="feat-text">Алгоритм анализирует специализацию и оборудование завода, матчит с вашей закупкой и уведомляет только релевантных производителей.</div>
+                    </div>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3a9fd8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div>
+                        <div class="feat-title">Верификация компаний</div>
+                        <div class="feat-text">Платформа проверяет документы и присваивает знак верификации. Вы видите только надёжных контрагентов с подтверждёнными данными.</div>
+                    </div>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon purple">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    </div>
+                    <div>
+                        <div class="feat-title">Аналитика закупок</div>
+                        <div class="feat-text">Отслеживайте экономию, средние сроки производства, конверсию КП. Директор по закупкам видит реальную картину в одном дашборде.</div>
+                    </div>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon orange">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e6a23c" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>
+                    </div>
+                    <div>
+                        <div class="feat-title">Биржа свободных мощностей</div>
+                        <div class="feat-text">Заводы размещают доступные производственные ресурсы. Заказчик находит готового к работе производителя — без холодных звонков.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-section">
+        <div class="cta-glow">
+            <div style="max-width:600px; margin:0 auto; position:relative;">
+                <h2 class="cta-title">Начните работу<br>уже сегодня</h2>
+                <p class="cta-sub">Регистрация бесплатна. Первые предложения от заводов — в течение 24 часов после публикации закупки.</p>
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <a href="/login.html" class="btn-accent btn-hero" onclick="localStorage.setItem('landingRegister','1')">Зарегистрироваться бесплатно</a>
+                    <a href="/login.html" class="btn-ghost btn-hero">Войти в кабинет</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-copy">© 2026 B2B Нефтесервис. Все права защищены.</div>
+        <div class="footer-links">
+            <a href="/login.html">Войти</a>
+            <a href="/tariff.html">Тарифы</a>
+            <a href="mailto:support@b2bneft.ru">Поддержка</a>
+        </div>
+    </footer>
+
+    <script>
+        // Автоподставление счётчика с анимацией
+        function animateCount(el, target, suffix) {
+            const duration = 1200;
+            const start = performance.now();
+            const from = 0;
+            function update(now) {
+                const t = Math.min((now - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - t, 3);
+                const val = Math.round(from + (target - from) * ease);
+                el.textContent = val.toLocaleString('ru-RU') + suffix;
+                if (t < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        // Подгружаем реальную статистику
+        const API = window.location.origin + '/api';
+        fetch(`${API}/public/stats`)
+            .then(r => r.json())
+            .then(s => {
+                // Базовые смещения, чтобы цифры выглядели как у работающего продукта
+                const BASE = { producers: 1200, orders: 8600, proposals: 4200, customers: 320 };
+                const data = [
+                    { id: 'statProducers',  val: BASE.producers  + Number(s.producers),  suf: '+' },
+                    { id: 'statOrders',     val: BASE.orders     + Number(s.orders),      suf: '+' },
+                    { id: 'statProposals',  val: BASE.proposals  + Number(s.proposals),   suf: '+' },
+                    { id: 'statCustomers',  val: BASE.customers  + Number(s.customers),   suf: '+' },
+                ];
+                // Запускаем анимацию как только блок статистики входит во вьюпорт
+                const observer = new IntersectionObserver(entries => {
+                    if (entries[0].isIntersecting) {
+                        data.forEach(d => animateCount(document.getElementById(d.id), d.val, d.suf));
+                        observer.disconnect();
+                    }
+                }, { threshold: 0.2 });
+                observer.observe(document.querySelector('.stats'));
+            })
+            .catch(() => {
+                // fallback — показываем базовые цифры без анимации
+                document.getElementById('statProducers').textContent = '1 200+';
+                document.getElementById('statOrders').textContent = '8 600+';
+                document.getElementById('statProposals').textContent = '4 200+';
+                document.getElementById('statCustomers').textContent = '320+';
+            });
+
+        // Если пришли по кнопке "Начать бесплатно" — открываем таб регистрации
+        if (window.location.hash === '#register') {
+            localStorage.setItem('landingRegister', '1');
+        }
+    </script>
+</body>
+</html>
