@@ -745,57 +745,152 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
    Адаптивность
    --------------------------------------------------------------------- */
 @media (max-width: 768px) {
+  html, body { overflow-x: hidden; }
+
   body { flex-direction: column; }
 
-  /* сайдбар -> горизонтальная прокручиваемая панель навигации */
+  /* Сайдбар → фиксированная нижняя навигация */
   .sidebar {
-    width: 100%; flex-direction: row; flex-wrap: nowrap; align-items: center;
-    padding: 10px 14px; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    width: 100%;
+    height: 62px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    padding: 0;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-right: none;
+    border-top: 1px solid var(--sidebar-border);
+    z-index: 500;
   }
-  .sidebar-logo { margin-bottom: 0; margin-right: 10px; flex-shrink: 0; }
-  .sidebar-logo span { font-size: 13px; }
-  .sidebar a { padding: 8px 12px; font-size: 12.5px; flex-shrink: 0; white-space: nowrap; }
-  .sidebar a .nav-icon { margin-right: 6px; }
-  .sidebar-bottom { margin-top: 0; padding-top: 0; border-top: none; margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
-  .sidebar-bottom .switch-link { padding: 8px 14px; font-size: 12px; white-space: nowrap; margin-top: 0; }
+
+  .sidebar::-webkit-scrollbar { display: none; }
+
+  .sidebar-logo { display: none; }
+
+  .sidebar a {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 10px 4px;
+    font-size: 9.5px;
+    font-weight: 600;
+    gap: 3px;
+    flex-shrink: 0;
+    min-width: 58px;
+    text-align: center;
+    border-radius: 0;
+    white-space: nowrap;
+    height: 62px;
+    position: relative;
+    line-height: 1.1;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .sidebar a.active {
+    background: rgba(65, 189, 151, 0.07);
+    color: var(--accent-bright);
+    border-bottom-color: var(--accent-bright);
+  }
+
+  .sidebar a .nav-icon {
+    margin-right: 0;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .sidebar .nav-badge {
+    margin-left: 0;
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 9px;
+    padding: 1px 4px;
+    min-width: 14px;
+  }
+
+  /* Блок "выход + тема" — правый конец нижней панели */
+  .sidebar-bottom {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    gap: 10px;
+    height: 62px;
+    border-left: 1px solid var(--sidebar-border);
+  }
+
   .theme-toggle-row { padding: 0; }
   .theme-toggle-row .theme-label { display: none; }
 
-  .main-content { padding: 20px 16px; gap: 18px; }
+  /* Кнопка "Выйти" — только иконка */
+  .sidebar .switch-link {
+    padding: 0;
+    font-size: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0;
+    flex-shrink: 0;
+    border: 1px solid var(--sidebar-border);
+  }
+
+  /* Основной контент — нижний отступ для фиксированного nav-бара */
+  .main-content { padding: 20px 14px 82px; gap: 16px; overflow-x: hidden; }
 
   .header { flex-wrap: wrap; row-gap: 10px; }
+  .header h2 { font-size: 15px; }
 
-  .filter-section { padding: 14px 16px; }
-  .filters-row { width: 100%; }
-  .custom-select-wrapper { max-width: 100%; }
+  .filter-section { padding: 12px 14px; flex-direction: column; align-items: stretch; }
+  .filters-row { width: 100%; flex-direction: column; }
+  .custom-select-wrapper { max-width: 100%; width: 100%; }
 
   .info-row { flex-direction: column; }
   .info-box { min-width: 0; }
 
-  .tab-strip { flex-wrap: wrap; gap: 10px; align-items: flex-start; }
-  .tab-strip .tabs { gap: 16px; flex-wrap: wrap; }
+  .tab-strip { flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+  .tab-strip .tabs { gap: 14px; flex-wrap: wrap; }
 
   .order-item { flex-direction: column; align-items: flex-start; }
   .order-actions { width: 100%; justify-content: flex-end; }
 
   .kpi-grid { grid-template-columns: 1fr 1fr; }
 
-  /* таблицы скроллятся горизонтально внутри своей карточки, не ломая страницу */
+  /* Таблицы — горизонтальный скролл (если страница не переопределяет) */
   .section { overflow-x: auto; }
 
-  .table-footer { flex-direction: column; align-items: flex-start; }
+  .table-footer { flex-direction: column; align-items: flex-start; gap: 10px; }
 
   .modal-content { padding: 20px; width: 94vw; }
   .modal-content h3 { font-size: 15.5px; }
 
-  #chatModal .modal-content { width: 100%; height: 100%; max-height: 100vh; border-radius: 0; }
-  #chatModal .chat-container { height: calc(100vh - 200px); }
+  #chatModal .modal-content { width: 100%; height: 100%; max-height: 100dvh; border-radius: 0; }
+  #chatModal .chat-container { height: calc(100dvh - 200px); }
+
+  /* Уведомления — на всю ширину */
+  .notif-dropdown { width: calc(100vw - 28px); left: 14px; right: 14px; }
 }
 
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
   .modal-actions { flex-wrap: wrap; }
   .modal-actions button { flex: 1; }
+  .section, .card { padding: 18px 16px; }
+  .order-item { padding: 16px; }
 }
 
 /* ---------------------------------------------------------------------

@@ -36,6 +36,10 @@
         .equipment-tag-edit button:hover { color: var(--error); }
         #editProfileModal .modal-content { max-height: 85vh; overflow-y: auto; }
         .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 480px) {
+            .form-row-2 { grid-template-columns: 1fr; }
+            .equipment-input-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
