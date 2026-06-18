@@ -172,6 +172,23 @@
         .insights-icon.rec   { background: #EFF9FB; color: #0891B2; }
         .insights-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 
+        /* ─── Period presets + date inputs ─── */
+        .period-preset-btn {
+            padding: 8px 10px; border: 1px solid var(--card-border); border-radius: 8px;
+            background: var(--inner-bg); color: var(--text-secondary); font-size: 12.5px;
+            cursor: pointer; font-family: inherit; transition: all .15s; text-align: left;
+        }
+        .period-preset-btn:hover, .period-preset-btn.active { border-color: var(--accent-bright); color: var(--accent-bright); background: var(--inner-bg); }
+        .an-date-input {
+            height: 38px; padding: 0 10px; border: 1px solid var(--card-border);
+            border-radius: 8px; background: var(--inner-bg); color: var(--text-primary);
+            font-size: 13px; font-family: inherit; box-sizing: border-box;
+        }
+        /* ─── More menu hover ─── */
+        #moreMenu button:hover { background: var(--inner-bg); }
+        /* ─── Filter active badge ─── */
+        .filter-active-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); margin-left: 4px; vertical-align: middle; }
+
         /* ─── Responsive ─── */
         @media (max-width: 1300px) { .an-row { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 900px)  { .an-kpi-row { grid-template-columns: 1fr 1fr; } .an-body { flex-direction: column; } .an-insights-panel { width: 100%; } }
@@ -218,7 +235,7 @@
         <!-- Filter bar -->
         <div class="an-filters">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-bright);flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <button class="an-period-btn" id="periodBtn">
+            <button class="an-period-btn" id="periodBtn" onclick="openPeriodPicker()">
                 <span id="periodLabel">01.01.2025 – 31.05.2025</span>
                 <button class="an-period-clear" onclick="resetPeriod(event)">×</button>
             </button>
@@ -274,7 +291,7 @@
                                     <button class="period-tab" onclick="setDynPeriod('quarter',this)">Квартал</button>
                                     <button class="period-tab" onclick="setDynPeriod('year',this)">Год</button>
                                 </div>
-                                <button class="more-btn">⋮</button>
+                                <button class="more-btn" id="moreBtn" onclick="toggleMoreMenu(event)">⋮</button>
                             </div>
                         </div>
                         <div class="chart-legend">
@@ -304,7 +321,7 @@
                             <thead><tr><th>Поставщик</th><th>Выиграно, млн ₽</th><th>Доля</th></tr></thead>
                             <tbody id="suppliersBody"></tbody>
                         </table>
-                        <button class="an-link">Смотреть весь рейтинг →</button>
+                        <button class="an-link" onclick="openRatingsModal()">Смотреть весь рейтинг →</button>
                     </div>
 
                     <div class="an-card">
@@ -386,7 +403,7 @@
                             <thead><tr><th>#</th><th style="text-align:left;">Поставщик</th><th>Откл. (ч)</th><th>Конв.</th><th>Оценка</th></tr></thead>
                             <tbody id="ratingsBody"></tbody>
                         </table>
-                        <button class="an-link" style="margin-top:10px;">Смотреть полный рейтинг →</button>
+                        <button class="an-link" style="margin-top:10px;" onclick="openRatingsModal()">Смотреть полный рейтинг →</button>
                     </div>
 
                     <div class="an-card">
@@ -415,10 +432,10 @@
                             </div>
                             <div style="flex:1;">
                                 <div class="export-label">Сохранённые отчёты</div>
-                                <button class="export-open">Открыть →</button>
+                                <button class="export-open" onclick="openSavedReportsModal()">Открыть →</button>
                             </div>
                         </div>
-                        <button class="btn-secondary" style="width:100%;margin-top:12px;font-size:12.5px;" onclick="showExportToast()">
+                        <button class="btn-secondary" style="width:100%;margin-top:12px;font-size:12.5px;" onclick="openReportBuilderModal()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                             Настроить новый отчёт
                         </button>
@@ -454,6 +471,159 @@
 
     </div><!-- /main-content -->
 
+    <!-- ⋮ More menu dropdown -->
+    <div id="moreMenu" style="display:none;position:fixed;z-index:2000;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;">
+        <button onclick="downloadChartPNG()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Скачать PNG
+        </button>
+        <button onclick="downloadDynamicsCSV()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Скачать CSV
+        </button>
+        <div style="height:1px;background:var(--inner-border);margin:4px 6px;"></div>
+        <button onclick="fullscreenChart()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            Развернуть
+        </button>
+    </div>
+
+    <!-- Period picker modal -->
+    <div class="modal" id="periodModal" onclick="if(event.target===this)closePeriodPicker()" style="display:none;">
+        <div class="modal-content" style="width:400px;">
+            <h3 style="margin-bottom:16px;">Выбор периода</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:18px;">
+                <button class="period-preset-btn" onclick="setPeriodPreset('week')">Эта неделя</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('month')">Этот месяц</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('lastmonth')">Прошлый месяц</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('q1')">Q1 2025 (Янв–Мар)</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('q2')">Q2 2025 (Апр–Июн)</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('h1')">I полугодие 2025</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('year')">2025 год</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('custom')">Произвольный</button>
+            </div>
+            <div id="customDateRow" style="display:none;gap:10px;align-items:center;margin-bottom:16px;">
+                <div style="flex:1;">
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">С</div>
+                    <input type="date" id="periodFrom" class="an-date-input">
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">По</div>
+                    <input type="date" id="periodTo" class="an-date-input">
+                </div>
+            </div>
+            <div id="periodPreviewLine" style="font-size:12px;color:var(--accent-bright);font-weight:600;margin-bottom:16px;min-height:18px;"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closePeriodPicker()">Отмена</button>
+                <button class="btn-primary" onclick="applyPeriod()">Применить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen chart modal -->
+    <div class="modal" id="fullscreenModal" onclick="if(event.target===this)closeFullscreen()" style="display:none;">
+        <div class="modal-content" style="width:90vw;max-width:1100px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3>Динамика закупок и экономии</h3>
+                <button class="btn-modal-cancel" onclick="closeFullscreen()">Закрыть</button>
+            </div>
+            <div class="chart-legend" style="margin-bottom:12px;">
+                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#0891B2;"></div>Объём закупок, млн ₽</div>
+                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Экономия, млн ₽</div>
+            </div>
+            <div style="position:relative;height:400px;"><canvas id="dynamicsChartFull"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Ratings detail modal -->
+    <div class="modal" id="ratingsModal" onclick="if(event.target===this)closeRatingsModal()" style="display:none;">
+        <div class="modal-content" style="width:680px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                <h3>Рейтинг поставщиков</h3>
+                <div style="display:flex;gap:8px;">
+                    <select id="ratingsSort" onchange="renderRatingsModal()" style="height:32px;padding:0 24px 0 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:12px;font-family:inherit;appearance:none;cursor:pointer;">
+                        <option value="score">По оценке</option>
+                        <option value="conv">По конверсии</option>
+                        <option value="rt">По времени отклика</option>
+                    </select>
+                </div>
+            </div>
+            <table class="rat-tbl" style="width:100%;">
+                <thead><tr>
+                    <th style="text-align:left;">#</th>
+                    <th style="text-align:left;">Поставщик</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('rt')">Откл. (ч) ↕</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('conv')">Конверсия ↕</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('score')">Оценка ↕</th>
+                    <th>Действие</th>
+                </tr></thead>
+                <tbody id="ratingsModalBody"></tbody>
+            </table>
+            <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
+                <button class="btn-modal-cancel" onclick="closeRatingsModal()">Закрыть</button>
+                <button class="btn-primary" onclick="exportRatingsCSV()">Скачать CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved reports modal -->
+    <div class="modal" id="savedReportsModal" onclick="if(event.target===this)closeSavedReportsModal()" style="display:none;">
+        <div class="modal-content" style="width:520px;">
+            <h3 style="margin-bottom:18px;">Сохранённые отчёты</h3>
+            <div id="savedReportsList"></div>
+            <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
+                <button class="btn-modal-cancel" onclick="closeSavedReportsModal()">Закрыть</button>
+                <button class="btn-primary" onclick="closeSavedReportsModal();openReportBuilderModal()">+ Новый отчёт</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report builder modal -->
+    <div class="modal" id="reportBuilderModal" onclick="if(event.target===this)closeReportBuilderModal()" style="display:none;">
+        <div class="modal-content" style="width:480px;">
+            <h3 style="margin-bottom:18px;">Настроить отчёт</h3>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Название отчёта</label>
+                    <input type="text" id="reportName" placeholder="Например: Ежемесячный отчёт по закупкам" style="width:100%;height:38px;padding:0 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Период с</label>
+                        <input type="date" id="reportFrom" class="an-date-input" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">По</label>
+                        <input type="date" id="reportTo" class="an-date-input" style="width:100%;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Разделы отчёта</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rKPI" checked> KPI показатели</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rDyn" checked> Динамика</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rSuppliers" checked> Топ поставщиков</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rFunnel"> Воронка закупок</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRegions"> Региональная карта</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRatings"> Рейтинг поставщиков</label>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Формат</label>
+                    <div style="display:flex;gap:8px;">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:7px;"><input type="radio" name="reportFormat" value="pdf" checked> PDF</label>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:7px;"><input type="radio" name="reportFormat" value="excel"> Excel</label>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:7px;"><input type="radio" name="reportFormat" value="csv"> CSV</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn-modal-cancel" onclick="closeReportBuilderModal()">Отмена</button>
+                <button class="btn-primary" onclick="submitReportBuilder()">Сформировать отчёт</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification modal -->
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width:440px;">
@@ -470,76 +640,454 @@
     <script src="assets/app.js"></script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
-        const role = localStorage.getItem('userRole') || 'customer';
 
-        /* ─── Mock data ─── */
+        /* ══ MOCK DATA ══ */
         const MOCK = {
             kpi: [
-                { label: 'Объём закупок за период', value: '8,45 млн ₽', delta: 18, unit: '', color: '#0891B2', bg: '#EFF9FB', spark: [5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45], iconPath: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-4H9l3-3 3 3h-2v4z" fill="currentColor"/>' },
-                { label: 'Экономия за период',       value: '1,37 млн ₽', delta: 21, unit: '', color: '#12A866', bg: '#EAFBF4', spark: [0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
-                { label: 'Среднее время отклика',    value: '4,7 часа',   delta: 12, unit: '', color: '#F59E0B', bg: '#FFF8E8', spark: [6.5,6.2,5.9,5.5,5.2,5.0,4.9,4.8,4.7,4.7] },
-                { label: 'Конверсия в договоры',     value: '28,6%',      delta: 4,  unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE', spark: [22,23,24,25,25,26,27,27.5,28,28.6] },
+                { label:'Объём закупок за период', value:'8,45 млн ₽', baseNum:8.45, delta:18, unit:'', color:'#0891B2', bg:'#EFF9FB', spark:[5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45] },
+                { label:'Экономия за период',       value:'1,37 млн ₽', baseNum:1.37, delta:21, unit:'', color:'#12A866', bg:'#EAFBF4', spark:[0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
+                { label:'Среднее время отклика',    value:'4,7 часа',   baseNum:4.7,  delta:12, unit:'часа', color:'#F59E0B', bg:'#FFF8E8', spark:[6.5,6.2,5.9,5.5,5.2,5.0,4.9,4.8,4.7,4.7] },
+                { label:'Конверсия в договоры',     value:'28,6%',      baseNum:28.6, delta:4,  unit:'п.п.', color:'#7C3AED', bg:'#F3F0FE', spark:[22,23,24,25,25,26,27,27.5,28,28.6] },
             ],
             dynamics: {
                 month:   { labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], volumes:[4,5.5,7,6,8.45], economy:[0.7,1.0,1.5,1.2,2.2] },
-                quarter: { labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025'],                 volumes:[16.5,20,18,22], economy:[3.2,4.0,3.5,5.0] },
-                year:    { labels:['2022','2023','2024','2025'],                              volumes:[52,68,85,74],  economy:[10,14,18,16] }
+                quarter: { labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025'],                 volumes:[16.5,20,18,22],  economy:[3.2,4.0,3.5,5.0] },
+                year:    { labels:['2022','2023','2024','2025'],                              volumes:[52,68,85,74],   economy:[10,14,18,16] },
             },
             funnel: [
-                { label: 'Опубликовано', count: 176, pct: 100, color: '#1E3A5F' },
-                { label: 'Отклики',      count: 98,  pct: 56,  color: '#2563EB' },
-                { label: 'Квалификация', count: 61,  pct: 35,  color: '#F59E0B' },
-                { label: 'Переговоры',   count: 34,  pct: 19,  color: '#10B981' },
-                { label: 'Договоры',     count: 25,  pct: 14,  color: '#7C3AED' },
+                { label:'Опубликовано', count:176, pct:100, color:'#1E3A5F' },
+                { label:'Отклики',      count:98,  pct:56,  color:'#2563EB' },
+                { label:'Квалификация', count:61,  pct:35,  color:'#F59E0B' },
+                { label:'Переговоры',   count:34,  pct:19,  color:'#10B981' },
+                { label:'Договоры',     count:25,  pct:14,  color:'#7C3AED' },
             ],
             categories: {
-                labels: ['Трубопроводная арматура','РТИ и уплотнения','Металлопрокат','Электрооборудование','Прочее'],
-                data:   [32, 21, 16, 14, 17],
-                colors: ['#0891B2','#12A866','#F59E0B','#7C3AED','#94A3B8']
+                labels:['Трубопроводная арматура','РТИ и уплотнения','Металлопрокат','Электрооборудование','Прочее'],
+                data:[32,21,16,14,17],
+                colors:['#0891B2','#12A866','#F59E0B','#7C3AED','#94A3B8']
             },
             suppliers: [
-                { name:'ООО «Арматурный Завод»',  amount:1.25, share:14.8 },
-                { name:'ООО «ТехКомплект»',        amount:1.13, share:13.3 },
-                { name:'ООО «ПромНефть»',           amount:0.92, share:10.9 },
-                { name:'ООО «ЭнергоСнаб»',         amount:0.78, share:9.2 },
-                { name:'ООО «Индустрия Сервис»',   amount:0.64, share:7.6 },
+                { name:'ООО «Арматурный Завод»', amount:1.25, share:14.8 },
+                { name:'ООО «ТехКомплект»',       amount:1.13, share:13.3 },
+                { name:'ООО «ПромНефть»',          amount:0.92, share:10.9 },
+                { name:'ООО «ЭнергоСнаб»',        amount:0.78, share:9.2 },
+                { name:'ООО «Индустрия Сервис»',  amount:0.64, share:7.6 },
             ],
             ratings: [
-                { name:'ООО «Арматурный Завод»',  rt:2.1, conv:38, score:4.6 },
-                { name:'ООО «ТехКомплект»',        rt:2.6, conv:32, score:4.3 },
-                { name:'ООО «ПромНефть»',           rt:3.4, conv:28, score:4.1 },
-                { name:'ООО «ЭнергоСнаб»',         rt:3.8, conv:25, score:3.9 },
-                { name:'ООО «Индустрия Сервис»',   rt:4.2, conv:22, score:3.6 },
+                { name:'ООО «Арматурный Завод»', rt:2.1, conv:38, score:4.6 },
+                { name:'ООО «ТехКомплект»',       rt:2.6, conv:32, score:4.3 },
+                { name:'ООО «ПромНефть»',          rt:3.4, conv:28, score:4.1 },
+                { name:'ООО «ЭнергоСнаб»',        rt:3.8, conv:25, score:3.9 },
+                { name:'ООО «Индустрия Сервис»',  rt:4.2, conv:22, score:3.6 },
             ],
         };
 
-        let dynPeriod = 'month';
-        let chartDynamics = null, chartCategories = null, chartCycle = null;
+        const FILTER_SCALES = {
+            category: { 'Трубопроводная арматура':0.32, 'РТИ и уплотнения':0.21, 'Металлопрокат':0.16, 'Электрооборудование':0.14, 'Насосное оборудование':0.11 },
+            region:   { 'Западная Сибирь':0.51, 'Поволжье':0.26, 'ХМАО-Югра':0.22, 'Урал':0.13, 'Татарстан':0.10 },
+            stype:    { 'Производитель':0.62, 'Дистрибьютор':0.28, 'Трейдер':0.10 },
+        };
 
+        const CAT_SUPPLIERS = {
+            'Трубопроводная арматура': [0,2,4],
+            'РТИ и уплотнения':        [1,3],
+            'Металлопрокат':            [2,0],
+            'Электрооборудование':      [3,1],
+            'Насосное оборудование':    [4,2],
+        };
+
+        const SAVED_REPORTS = [
+            { name:'Ежемесячный отчёт — Май 2025', date:'31.05.2025', size:'1.2 МБ', fmt:'PDF' },
+            { name:'Квартальный отчёт Q1 2025',    date:'31.03.2025', size:'3.4 МБ', fmt:'Excel' },
+            { name:'Годовой отчёт 2024',            date:'01.01.2025', size:'8.1 МБ', fmt:'PDF' },
+        ];
+
+        /* ══ STATE ══ */
+        let dynPeriod = 'month';
+        let chartDynamics = null, chartCategories = null, chartCycle = null, chartDynamicsFull = null;
+        let starred = false;
+        let selectedPeriodPreset = null;
+        let ratSortKey = 'score';
+
+        /* ══ HELPERS ══ */
         function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-        /* ─── Sparkline SVG ─── */
+        function showToast(msg, type) {
+            const bg = type === 'error' ? '#EF4444' : type === 'warn' ? '#F59E0B' : 'var(--accent-bright)';
+            const t = document.createElement('div');
+            t.textContent = msg;
+            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:bg, color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s', maxWidth:'360px' });
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        function fmt2(n) { return n.toFixed(2).replace('.', ','); }
+
         function sparkSVG(values, color) {
-            const w=80,h=32,pad=3;
+            const w=80, h=32, pad=3;
             const max=Math.max(...values,1), min=Math.min(...values,0), range=(max-min)||1;
             const step=(w-pad*2)/(values.length-1);
             const pts=values.map((v,i)=>`${(pad+i*step).toFixed(1)},${(h-pad-((v-min)/range)*(h-pad*2)).toFixed(1)}`).join(' ');
-            const [lx,ly]=pts.split(' ').pop().split(',');
-            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32">
-                <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="${lx}" cy="${ly}" r="2" fill="${color}"/>
-            </svg>`;
+            const last=pts.split(' ').pop().split(',');
+            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${color}"/></svg>`;
         }
 
-        /* ─── KPI cards ─── */
+        /* ══ FILTER LOGIC ══ */
+        function getFilterScale() {
+            const cat   = document.getElementById('filterCategory').value;
+            const reg   = document.getElementById('filterRegion').value;
+            const stype = document.getElementById('filterSupplierType').value;
+            let s = 1;
+            if (cat)   s *= FILTER_SCALES.category[cat]   || 1;
+            if (reg)   s *= FILTER_SCALES.region[reg]     || 1;
+            if (stype) s *= FILTER_SCALES.stype[stype]    || 1;
+            return { scale: s, cat, reg, stype, anyActive: !!(cat || reg || stype) };
+        }
+
+        function computeFilteredMock() {
+            const { scale, cat, anyActive } = getFilterScale();
+            if (!anyActive) return MOCK;
+
+            const scaledKpi = MOCK.kpi.map((k, i) => {
+                let num;
+                if (i === 0) num = parseFloat((k.baseNum * scale).toFixed(2));
+                else if (i === 1) num = parseFloat((k.baseNum * scale).toFixed(2));
+                else if (i === 2) num = parseFloat((k.baseNum * (1 + 0.3 * (1 - scale))).toFixed(1));
+                else num = parseFloat((k.baseNum * (0.85 + 0.15 * scale)).toFixed(1));
+
+                let valStr;
+                if (i === 0 || i === 1) valStr = fmt2(num) + ' млн ₽';
+                else if (i === 2) valStr = String(num).replace('.', ',') + ' часа';
+                else valStr = String(num).replace('.', ',') + '%';
+
+                return { ...k, value: valStr };
+            });
+
+            const scaledDynamics = {};
+            for (const [p, d] of Object.entries(MOCK.dynamics)) {
+                scaledDynamics[p] = {
+                    labels: d.labels,
+                    volumes: d.volumes.map(v => parseFloat((v * scale).toFixed(2))),
+                    economy: d.economy.map(v => parseFloat((v * scale).toFixed(2))),
+                };
+            }
+
+            const funnelBase = MOCK.funnel[0].count;
+            const scaledFunnel = MOCK.funnel.map(f => ({
+                ...f,
+                count: Math.max(1, Math.round(f.count * scale)),
+            }));
+
+            let scaledSuppliers;
+            if (cat && CAT_SUPPLIERS[cat]) {
+                const idxs = CAT_SUPPLIERS[cat];
+                scaledSuppliers = idxs.map(i => ({
+                    ...MOCK.suppliers[i],
+                    amount: parseFloat((MOCK.suppliers[i].amount * scale).toFixed(2)),
+                    share: parseFloat((MOCK.suppliers[i].share * 1.4).toFixed(1)),
+                }));
+                const total = scaledSuppliers.reduce((a,s) => a + s.share, 0);
+                scaledSuppliers = scaledSuppliers.map(s => ({ ...s, share: parseFloat((s.share/total*100).toFixed(1)) }));
+            } else {
+                scaledSuppliers = MOCK.suppliers.map(s => ({
+                    ...s, amount: parseFloat((s.amount * scale).toFixed(2)),
+                }));
+            }
+
+            return { ...MOCK, kpi: scaledKpi, dynamics: scaledDynamics, funnel: scaledFunnel, suppliers: scaledSuppliers };
+        }
+
+        function applyFilters() {
+            const data = computeFilteredMock();
+            renderKPI(data);
+            renderDynamics(data);
+            renderFunnel(data);
+            renderSuppliers(data);
+            updateFilterBadge();
+        }
+
+        function updateFilterBadge() {
+            const { anyActive } = getFilterScale();
+            const resetBtn = document.querySelector('.an-filter-reset');
+            const existing = resetBtn.querySelector('.filter-active-dot');
+            if (anyActive && !existing) resetBtn.insertAdjacentHTML('beforeend', '<span class="filter-active-dot"></span>');
+            if (!anyActive && existing) existing.remove();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterRegion').value = '';
+            document.getElementById('filterSupplierType').value = '';
+            document.getElementById('periodLabel').textContent = '01.01.2025 – 31.05.2025';
+            renderKPI(MOCK);
+            renderDynamics(MOCK);
+            renderFunnel(MOCK);
+            renderSuppliers(MOCK);
+            updateFilterBadge();
+        }
+
+        function resetPeriod(e) {
+            e.stopPropagation();
+            document.getElementById('periodLabel').textContent = 'Выбрать период';
+        }
+
+        /* ══ PERIOD PICKER ══ */
+        const PERIOD_LABELS = {
+            week:      'Эта неделя',
+            month:     'Июн 2025',
+            lastmonth: 'Май 2025',
+            q1:        '01.01.2025 – 31.03.2025',
+            q2:        '01.04.2025 – 30.06.2025',
+            h1:        '01.01.2025 – 30.06.2025',
+            year:      '01.01.2025 – 31.12.2025',
+        };
+
+        function openPeriodPicker() {
+            document.getElementById('periodModal').style.display = 'flex';
+            document.querySelectorAll('.period-preset-btn').forEach(b => b.classList.remove('active'));
+        }
+
+        function closePeriodPicker() {
+            document.getElementById('periodModal').style.display = 'none';
+        }
+
+        function setPeriodPreset(preset) {
+            selectedPeriodPreset = preset;
+            document.querySelectorAll('.period-preset-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            const customRow = document.getElementById('customDateRow');
+            const preview = document.getElementById('periodPreviewLine');
+            if (preset === 'custom') {
+                customRow.style.display = 'flex';
+                preview.textContent = '';
+            } else {
+                customRow.style.display = 'none';
+                preview.textContent = PERIOD_LABELS[preset] || '';
+            }
+        }
+
+        function applyPeriod() {
+            let label = '';
+            if (selectedPeriodPreset === 'custom') {
+                const from = document.getElementById('periodFrom').value;
+                const to   = document.getElementById('periodTo').value;
+                if (!from || !to) { showToast('Укажите начало и конец периода', 'warn'); return; }
+                const fmt = d => d.split('-').reverse().join('.');
+                label = `${fmt(from)} – ${fmt(to)}`;
+            } else if (selectedPeriodPreset) {
+                label = PERIOD_LABELS[selectedPeriodPreset];
+            } else {
+                showToast('Выберите период', 'warn'); return;
+            }
+            document.getElementById('periodLabel').textContent = label;
+            closePeriodPicker();
+        }
+
+        /* ══ MORE MENU ══ */
+        function toggleMoreMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('moreMenu');
+            if (menu.style.display === 'none') {
+                const btn = document.getElementById('moreBtn');
+                const r = btn.getBoundingClientRect();
+                menu.style.display = 'block';
+                menu.style.top = (r.bottom + 6) + 'px';
+                menu.style.left = Math.max(8, r.right - 180) + 'px';
+                setTimeout(() => document.addEventListener('click', closeMoreMenu, { once: true }), 0);
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        function closeMoreMenu() {
+            document.getElementById('moreMenu').style.display = 'none';
+        }
+
+        function downloadChartPNG() {
+            closeMoreMenu();
+            const canvas = document.getElementById('dynamicsChart');
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'dynamics_chart.png';
+            a.click();
+        }
+
+        function downloadDynamicsCSV() {
+            closeMoreMenu();
+            const d = MOCK.dynamics[dynPeriod];
+            const rows = [['Период','Объём закупок (млн ₽)','Экономия (млн ₽)']];
+            d.labels.forEach((l,i) => rows.push([l, d.volumes[i], d.economy[i]]));
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.download = `dynamics_${dynPeriod}.csv`;
+            a.click();
+        }
+
+        let chartDynamicsFullInstance = null;
+        function fullscreenChart() {
+            closeMoreMenu();
+            document.getElementById('fullscreenModal').style.display = 'flex';
+            setTimeout(() => {
+                const d = MOCK.dynamics[dynPeriod];
+                const txt = cssVar('--text-secondary'), grid = cssVar('--border-subtle');
+                if (chartDynamicsFullInstance) chartDynamicsFullInstance.destroy();
+                chartDynamicsFullInstance = new Chart(document.getElementById('dynamicsChartFull').getContext('2d'), {
+                    type:'bar',
+                    data:{ labels:d.labels, datasets:[
+                        { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#0891B2', borderRadius:5, maxBarThickness:40, yAxisID:'y' },
+                        { label:'Экономия, млн ₽', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:5, borderWidth:2, yAxisID:'y2' },
+                    ]},
+                    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'right'} } }
+                });
+            }, 50);
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenModal').style.display = 'none';
+            if (chartDynamicsFullInstance) { chartDynamicsFullInstance.destroy(); chartDynamicsFullInstance = null; }
+        }
+
+        /* ══ EXPORT ══ */
+        function exportAnalytics() {
+            const rows = [
+                ['Показатель','Значение','Изменение'],
+                ...MOCK.kpi.map(k => [k.label, k.value, '+' + k.delta + (k.unit ? ' ' + k.unit : '%')]),
+                [],
+                ['Топ поставщиков'],
+                ['Поставщик','Выиграно (млн ₽)','Доля (%)'],
+                ...MOCK.suppliers.map(s => [s.name, s.amount, s.share]),
+                [],
+                ['Воронка закупок'],
+                ['Этап','Кол-во','%'],
+                ...MOCK.funnel.map(f => [f.label, f.count, f.pct]),
+            ];
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.download = 'analytics_report.csv';
+            a.click();
+            showToast('Отчёт скачан в формате CSV');
+        }
+
+        function exportDetailed() {
+            const d = MOCK.dynamics[dynPeriod];
+            const rows = [
+                ['Период','Объём закупок (млн ₽)','Экономия (млн ₽)'],
+                ...d.labels.map((l,i) => [l, d.volumes[i], d.economy[i]]),
+            ];
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.download = 'detailed_report.csv';
+            a.click();
+            showToast('Детальный отчёт скачан');
+        }
+
+        /* ══ RATINGS MODAL ══ */
+        function openRatingsModal() {
+            renderRatingsModal();
+            document.getElementById('ratingsModal').style.display = 'flex';
+        }
+
+        function closeRatingsModal() {
+            document.getElementById('ratingsModal').style.display = 'none';
+        }
+
+        function sortRatings(key) {
+            ratSortKey = key;
+            document.getElementById('ratingsSort').value = key;
+            renderRatingsModal();
+        }
+
+        function renderRatingsModal() {
+            ratSortKey = document.getElementById('ratingsSort').value;
+            const sorted = [...MOCK.ratings].sort((a,b) => {
+                if (ratSortKey === 'rt') return a.rt - b.rt;
+                if (ratSortKey === 'conv') return b.conv - a.conv;
+                return b.score - a.score;
+            });
+            document.getElementById('ratingsModalBody').innerHTML = sorted.map((r,i) => `
+                <tr>
+                    <td><span class="rat-num">${i+1}</span></td>
+                    <td style="text-align:left;font-size:12.5px;color:var(--text-primary);">${r.name}</td>
+                    <td style="${ratSortKey==='rt'?'color:var(--accent-bright);font-weight:700;':''}">${r.rt} ч</td>
+                    <td style="${ratSortKey==='conv'?'color:var(--accent-bright);font-weight:700;':''}">${r.conv}%</td>
+                    <td style="${ratSortKey==='score'?'color:#F59E0B;font-weight:700;':''}"><span class="rat-star">★</span> ${r.score}</td>
+                    <td><button class="an-link" style="margin:0;" onclick="showToast('Переход в профиль поставщика')">Открыть →</button></td>
+                </tr>`).join('');
+        }
+
+        function exportRatingsCSV() {
+            const rows = [['#','Поставщик','Время отклика (ч)','Конверсия (%)','Оценка']];
+            MOCK.ratings.forEach((r,i) => rows.push([i+1, r.name, r.rt, r.conv, r.score]));
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.download = 'ratings.csv';
+            a.click();
+        }
+
+        /* ══ SAVED REPORTS MODAL ══ */
+        function openSavedReportsModal() {
+            const list = document.getElementById('savedReportsList');
+            list.innerHTML = SAVED_REPORTS.map(r => `
+                <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--inner-border);">
+                    <div style="width:36px;height:36px;border-radius:9px;background:var(--inner-bg);display:flex;align-items:center;justify-content:center;color:var(--accent-bright);flex-shrink:0;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${r.name}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${r.fmt} · ${r.size} · ${r.date}</div>
+                    </div>
+                    <button class="an-link" style="margin:0;" onclick="showToast('Файл скачивается...');this.textContent='Готово';">Скачать</button>
+                </div>`).join('');
+            document.getElementById('savedReportsModal').style.display = 'flex';
+        }
+
+        function closeSavedReportsModal() {
+            document.getElementById('savedReportsModal').style.display = 'none';
+        }
+
+        /* ══ REPORT BUILDER MODAL ══ */
+        function openReportBuilderModal() {
+            const today = new Date().toISOString().split('T')[0];
+            const monthAgo = new Date(Date.now() - 30*864e5).toISOString().split('T')[0];
+            document.getElementById('reportFrom').value = monthAgo;
+            document.getElementById('reportTo').value = today;
+            document.getElementById('reportName').value = '';
+            document.getElementById('reportBuilderModal').style.display = 'flex';
+        }
+
+        function closeReportBuilderModal() {
+            document.getElementById('reportBuilderModal').style.display = 'none';
+        }
+
+        function submitReportBuilder() {
+            const name = document.getElementById('reportName').value.trim() || 'Без названия';
+            const fmt = document.querySelector('input[name="reportFormat"]:checked').value.toUpperCase();
+            closeReportBuilderModal();
+            showToast(`Отчёт «${name}» поставлен в очередь — ${fmt}`);
+        }
+
+        /* ══ STAR ══ */
+        function toggleStar() {
+            starred = !starred;
+            document.getElementById('starBtn').textContent = starred ? '★' : '☆';
+            document.getElementById('starBtn').style.color = starred ? '#F59E0B' : '';
+            showToast(starred ? 'Страница добавлена в избранное' : 'Удалено из избранного');
+        }
+
+        /* ══ RENDER FUNCTIONS ══ */
         const KPI_ICONS = [
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 13 12 16 15 13"/></svg>`,
         ];
-        function renderKPI() {
-            document.getElementById('kpiRow').innerHTML = MOCK.kpi.map((k,i) => `
+
+        function renderKPI(data = MOCK) {
+            document.getElementById('kpiRow').innerHTML = data.kpi.map((k,i) => `
                 <div class="an-kpi-card">
                     <div class="an-kpi-top">
                         <span class="an-kpi-label">${k.label}</span>
@@ -556,39 +1104,22 @@
                 </div>`).join('');
         }
 
-        /* ─── Dynamics chart ─── */
-        function renderDynamics() {
-            const d = MOCK.dynamics[dynPeriod];
+        function renderDynamics(data = MOCK) {
+            const d = data.dynamics[dynPeriod];
             const txt = cssVar('--text-secondary'), grid = cssVar('--border-subtle');
             if (chartDynamics) chartDynamics.destroy();
             chartDynamics = new Chart(document.getElementById('dynamicsChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: d.labels,
-                    datasets: [
-                        { label: 'Объём закупок, млн ₽', data: d.volumes, backgroundColor: '#0891B2', borderRadius: 5, maxBarThickness: 32, yAxisID: 'y' },
-                        { label: 'Экономия, млн ₽', data: d.economy, type: 'line', borderColor: '#12A866', backgroundColor: 'rgba(18,168,102,.1)', fill: true, tension: 0.4, pointBackgroundColor: '#12A866', pointRadius: 4, borderWidth: 2, yAxisID: 'y2' },
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    interaction: { mode:'index', intersect:false },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: cssVar('--card-bg'), titleColor: cssVar('--text-primary'), bodyColor: txt, borderColor: cssVar('--card-border'), borderWidth:1, padding:10, cornerRadius:8 }
-                    },
-                    scales: {
-                        x:  { grid:{ color:grid }, ticks:{ color:txt, font:{family:'Inter',size:11} } },
-                        y:  { grid:{ color:grid }, ticks:{ color:txt, font:{family:'Inter',size:11}, callback: v => v + ' млн' }, position:'left' },
-                        y2: { grid:{ drawOnChartArea:false }, ticks:{ color:'#12A866', font:{family:'Inter',size:11}, callback: v => v + ' млн' }, position:'right' }
-                    }
-                }
+                type:'bar',
+                data:{ labels:d.labels, datasets:[
+                    { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#0891B2', borderRadius:5, maxBarThickness:32, yAxisID:'y' },
+                    { label:'Экономия, млн ₽', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:4, borderWidth:2, yAxisID:'y2' },
+                ]},
+                options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{backgroundColor:cssVar('--card-bg'),titleColor:cssVar('--text-primary'),bodyColor:txt,borderColor:cssVar('--card-border'),borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'right'} } }
             });
         }
 
-        /* ─── Funnel ─── */
-        function renderFunnel() {
-            document.getElementById('funnelWrap').innerHTML = MOCK.funnel.map(s => `
+        function renderFunnel(data = MOCK) {
+            document.getElementById('funnelWrap').innerHTML = data.funnel.map(s => `
                 <div class="funnel-step">
                     <span class="funnel-lbl">${s.label}</span>
                     <div class="funnel-bar-outer"><div class="funnel-bar-inner" style="width:${s.pct}%;background:${s.color};">${s.pct}%</div></div>
@@ -596,17 +1127,13 @@
                 </div>`).join('');
         }
 
-        /* ─── Categories donut ─── */
-        function renderCategories() {
-            const c = MOCK.categories;
+        function renderCategories(data = MOCK) {
+            const c = data.categories;
             if (chartCategories) chartCategories.destroy();
             chartCategories = new Chart(document.getElementById('categoriesChart').getContext('2d'), {
-                type: 'doughnut',
-                data: { labels: c.labels, datasets: [{ data: c.data, backgroundColor: c.colors, borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 4 }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '65%',
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } } }
-                }
+                type:'doughnut',
+                data:{ labels:c.labels, datasets:[{ data:c.data, backgroundColor:c.colors, borderColor:cssVar('--card-bg'), borderWidth:3, hoverOffset:4 }] },
+                options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}} } }
             });
             document.getElementById('donutLegend').innerHTML = c.labels.map((l,i) => `
                 <div class="donut-legend-item">
@@ -616,42 +1143,33 @@
                 </div>`).join('');
         }
 
-        /* ─── Suppliers table ─── */
-        function renderSuppliers() {
-            document.getElementById('suppliersBody').innerHTML = MOCK.suppliers.map((s,i) => `
-                <tr>
+        function renderSuppliers(data = MOCK) {
+            const maxShare = Math.max(...data.suppliers.map(s=>s.share));
+            document.getElementById('suppliersBody').innerHTML = data.suppliers.map((s,i) => `
+                <tr style="cursor:pointer;" onclick="showToast('${s.name} — переход в профиль')" title="Открыть профиль">
                     <td><span class="sup-num">${i+1}</span>${s.name}</td>
-                    <td style="font-weight:700;">${s.amount.toFixed(2).replace('.',',')} млн</td>
+                    <td style="font-weight:700;">${fmt2(s.amount)} млн</td>
                     <td>
                         <div class="share-wrap">
                             <span style="font-weight:700;">${s.share}%</span>
-                            <div class="share-bar-outer"><div class="share-bar-inner" style="width:${(s.share/15*100).toFixed(0)}%;"></div></div>
+                            <div class="share-bar-outer"><div class="share-bar-inner" style="width:${(s.share/maxShare*100).toFixed(0)}%;"></div></div>
                         </div>
                     </td>
                 </tr>`).join('');
         }
 
-        /* ─── Cycle chart ─── */
         function renderCycle() {
             if (chartCycle) chartCycle.destroy();
             chartCycle = new Chart(document.getElementById('cycleChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'],
-                    datasets: [{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#0891B2', backgroundColor:'rgba(8,145,178,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#0891B2', borderWidth:2 }]
-                },
-                options: {
-                    responsive:true, maintainAspectRatio:false,
-                    plugins:{ legend:{display:false} },
-                    scales:{ x:{ display:true, ticks:{ color:cssVar('--text-muted'), font:{family:'Inter',size:10} }, grid:{display:false} }, y:{ display:false, min:3, max:8 } }
-                }
+                type:'line',
+                data:{ labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], datasets:[{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#0891B2', backgroundColor:'rgba(8,145,178,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#0891B2', borderWidth:2 }] },
+                options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{display:true,ticks:{color:cssVar('--text-muted'),font:{family:'Inter',size:10}},grid:{display:false}}, y:{display:false,min:3,max:8} } }
             });
         }
 
-        /* ─── Ratings table ─── */
-        function renderRatings() {
-            document.getElementById('ratingsBody').innerHTML = MOCK.ratings.map((r,i) => `
-                <tr>
+        function renderRatings(data = MOCK) {
+            document.getElementById('ratingsBody').innerHTML = data.ratings.map((r,i) => `
+                <tr style="cursor:pointer;" onclick="showToast('${r.name} — переход в профиль')">
                     <td><span class="rat-num">${i+1}</span></td>
                     <td style="text-align:left;font-size:12px;color:var(--text-secondary);">${r.name}</td>
                     <td>${r.rt}</td>
@@ -660,47 +1178,16 @@
                 </tr>`).join('');
         }
 
-        /* ─── Interactions ─── */
+        /* ══ PERIOD TABS ══ */
         function setDynPeriod(p, btn) {
             dynPeriod = p;
             document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderDynamics();
+            const data = computeFilteredMock();
+            renderDynamics(data);
         }
 
-        let starred = false;
-        function toggleStar() {
-            starred = !starred;
-            document.getElementById('starBtn').textContent = starred ? '★' : '☆';
-            document.getElementById('starBtn').style.color = starred ? '#F59E0B' : '';
-        }
-
-        function resetPeriod(e) { e.stopPropagation(); document.getElementById('periodLabel').textContent = 'Выбрать период'; }
-        function applyFilters() { /* Filters applied — in real app would re-fetch data */ }
-        function resetAllFilters() {
-            document.getElementById('filterCategory').value = '';
-            document.getElementById('filterRegion').value = '';
-            document.getElementById('filterSupplierType').value = '';
-            document.getElementById('periodLabel').textContent = '01.01.2025 – 31.05.2025';
-        }
-
-        function exportAnalytics() {
-            const rows = [['Поставщик','Выиграно (млн ₽)','Доля (%)']];
-            MOCK.suppliers.forEach(s => rows.push([s.name, s.amount, s.share]));
-            const csv = rows.map(r => r.join(';')).join('\n');
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
-            a.download = 'analytics_export.csv'; a.click();
-        }
-        function exportDetailed() { exportAnalytics(); }
-        function showExportToast() {
-            const t = document.createElement('div');
-            t.textContent = 'Настройка отчётов будет доступна в следующем обновлении';
-            Object.assign(t.style,{position:'fixed',bottom:'24px',right:'24px',background:'var(--accent-bright)',color:'#fff',padding:'10px 18px',borderRadius:'8px',fontSize:'13px',fontWeight:'600',zIndex:'9999',boxShadow:'0 4px 16px rgba(0,0,0,.2)',transition:'opacity .3s'});
-            document.body.appendChild(t);
-            setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000);
-        }
-
+        /* ══ THEME ══ */
         function toggleTheme() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
@@ -708,26 +1195,26 @@
             const cb=document.getElementById('themeCheckbox'), lbl=document.getElementById('themeLabel');
             if(cb) cb.checked=!isDark;
             if(lbl) lbl.textContent=isDark?'☀ Светлая тема':'🌙 Тёмная тема';
-            if(chartDynamics) renderDynamics();
-            if(chartCategories) renderCategories();
-            if(chartCycle) renderCycle();
+            const data = computeFilteredMock();
+            renderDynamics(data);
+            renderCategories(data);
+            renderCycle();
         }
-        document.addEventListener('DOMContentLoaded', () => {
+
+        /* ══ INIT ══ */
+        window.addEventListener('DOMContentLoaded', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const cb=document.getElementById('themeCheckbox'), lbl=document.getElementById('themeLabel');
             if(cb) cb.checked=isDark;
             if(lbl) lbl.textContent=isDark?'🌙 Тёмная тема':'☀ Светлая тема';
-        });
 
-        /* ─── Init ─── */
-        window.addEventListener('DOMContentLoaded', () => {
-            renderKPI();
-            renderDynamics();
-            renderFunnel();
-            renderCategories();
-            renderSuppliers();
+            renderKPI(MOCK);
+            renderDynamics(MOCK);
+            renderFunnel(MOCK);
+            renderCategories(MOCK);
+            renderSuppliers(MOCK);
             renderCycle();
-            renderRatings();
+            renderRatings(MOCK);
         });
     </script>
 </body>
