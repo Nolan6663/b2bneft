@@ -356,22 +356,28 @@
         }
 
         function createList() {
-            const name = prompt('Название нового списка:');
-            if (!name || !name.trim()) return;
+            const modal = document.getElementById('createListModal');
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('newListName').focus(), 50);
+        }
+
+        function closeCreateListModal() {
+            document.getElementById('createListModal').style.display = 'none';
+            document.getElementById('newListName').value = '';
+        }
+
+        function confirmCreateList() {
+            const name = document.getElementById('newListName').value.trim();
+            if (!name) { document.getElementById('newListName').focus(); return; }
+            closeCreateListModal();
             const container = document.querySelector('#tabLists');
             if (!container) return;
             const today = new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
             const card = document.createElement('div');
             card.className = 'fav-list-card';
-            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name.trim())}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
-            const btn = container.querySelector('button');
-            if (btn) btn.insertAdjacentElement('afterend', card);
-            showFavToast(`Список «${name.trim()}» создан`);
-            const countEl = container.querySelector('span');
-            if (countEl) {
-                const current = parseInt(countEl.textContent) || 0;
-                countEl.textContent = `${current + 1} сохранённых списка`;
-            }
+            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name)}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
+            container.insertBefore(card, container.firstChild);
+            showFavToast(`Список «${name}» создан`);
         }
 
         function setFavTab(tab, btn) {
@@ -438,8 +444,22 @@
                 });
                 if (r.ok) loadFavorites();
                 else { /* just re-render without this item */ }
-            } catch { alert('Сервер недоступен'); }
+            } catch { showFavToast('Сервер недоступен', 'error'); }
         }
     </script>
+
+    <div id="createListModal" onclick="if(event.target===this)closeCreateListModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Новый список</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">Введите название для нового списка избранных</div>
+            <input id="newListName" type="text" placeholder="Например: Поставщики РТИ" maxlength="60"
+                style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
+                onkeydown="if(event.key==='Enter')confirmCreateList();if(event.key==='Escape')closeCreateListModal();">
+            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+                <button onclick="closeCreateListModal()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;">Отмена</button>
+                <button onclick="confirmCreateList()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Создать</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

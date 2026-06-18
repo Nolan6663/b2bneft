@@ -584,14 +584,15 @@
 
         // ── Load ──────────────────────────────────────────────────────
         async function loadMap() {
+            allProducers = MOCK;
+            applyFilters();
             try {
                 const r = await fetch(`${SERVER_URL}/map`);
-                if (!r.ok) throw new Error();
-                allProducers = await r.json();
-            } catch {
-                allProducers = MOCK;
-            }
-            applyFilters();
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data.length) { allProducers = data; applyFilters(); }
+                }
+            } catch {}
         }
 
         document.getElementById('mapSearch').addEventListener('input', () => applyFilters());
