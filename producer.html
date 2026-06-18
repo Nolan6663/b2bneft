@@ -427,16 +427,20 @@ function renderCompanyStatus(status) {
                     actionBtn = `<button class="btn-primary" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
                 }
 
-                const drawingBlock = isGuest
-                    ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
-                    : (order.drawing
-                        ? `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(order.drawing.originalName)}</a></div>`
-                        : `<div class="meta">📁 Чертеж: отсутствует</div>`);
+                let drawingBlock = '';
+                if (!isGuest) {
+                    if (order.drawing) {
+                        const rawName = order.drawing.originalName || '';
+                        const isPrintable = /^[\x20-\x7EЀ-ӿ\s._\-()]+$/.test(rawName);
+                        const displayName = isPrintable ? rawName : 'Вложение';
+                        drawingBlock = `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color:var(--accent-bright);text-decoration:underline;">${escapeHtml(displayName)}</a></div>`;
+                    }
+                }
 
                 let matchBadge = '';
-                if (order.matchScore != null) {
+                if (order.matchScore != null && order.matchScore > 0) {
                     const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
-                    matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🧩 ${order.matchScore}% совпадение</span>`;
+                    matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией">🧩 ${order.matchScore}% совпадение</span>`;
                 }
 
                 const createdStr = order.createdAt
