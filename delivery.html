@@ -10,20 +10,14 @@
     <style>
         .kpi-row .kpi-card::after { display:none !important; }
 
-        /* ── Breadcrumb ─────────────────────────────── */
         .delivery-breadcrumb {
             display: flex; align-items: center; gap: 8px;
             font-size: 13px; color: var(--text-secondary);
-            margin-bottom: 20px;
+            margin-bottom: 4px;
         }
-        .delivery-breadcrumb a {
-            color: var(--accent-bright); text-decoration: none;
-            display: flex; align-items: center; gap: 5px;
-        }
+        .delivery-breadcrumb a { color: var(--accent-bright); text-decoration: none; display:flex;align-items:center;gap:4px; }
         .delivery-breadcrumb a:hover { text-decoration: underline; }
-        .delivery-breadcrumb span { opacity: .5; }
 
-        /* ── Layout ─────────────────────────────────── */
         .delivery-layout {
             display: grid;
             grid-template-columns: 1fr 300px;
@@ -31,7 +25,7 @@
             align-items: start;
         }
 
-        /* ── Timeline card ───────────────────────────── */
+        /* Timeline */
         .timeline-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -39,616 +33,447 @@
             padding: 24px;
         }
         .timeline-card-title {
-            font-size: 15px; font-weight: 600; color: var(--text-primary);
-            margin-bottom: 24px;
-        }
-        .timeline {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 0;
+            font-size: 14px; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing:.05em; margin-bottom: 24px;
         }
         .tl-item {
             display: grid;
-            grid-template-columns: 40px 1fr;
-            gap: 0 14px;
+            grid-template-columns: 44px 1fr;
             position: relative;
         }
-        /* vertical connector line */
-        .tl-item:not(:last-child) .tl-col-line::after {
-            content: '';
-            position: absolute;
-            left: 19px;
-            top: 40px;
-            bottom: 0;
-            width: 2px;
-            background: var(--inner-border);
-        }
-        .tl-item.done:not(:last-child) .tl-col-line::after { background: var(--accent-bright); }
-        .tl-item.current:not(:last-child) .tl-col-line::after {
-            background: linear-gradient(to bottom, var(--accent-bright) 30%, var(--inner-border));
-        }
-
-        .tl-col-line {
+        .tl-col {
             position: relative;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
         }
+        .tl-item:not(:last-child) .tl-col::after {
+            content: '';
+            flex: 1;
+            width: 2px;
+            background: var(--inner-border);
+            margin-top: 4px;
+            min-height: 32px;
+        }
+        .tl-item.done:not(:last-child) .tl-col::after { background: var(--accent-bright); }
+        .tl-item.current:not(:last-child) .tl-col::after {
+            background: linear-gradient(to bottom, var(--accent-bright) 40%, var(--inner-border));
+        }
+
         .tl-dot {
-            width: 40px; height: 40px;
-            border-radius: 50%;
+            width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            z-index: 1;
-            transition: all .3s ease;
+            flex-shrink: 0; z-index: 1;
         }
-        .tl-dot.done {
-            background: var(--accent-bright);
-            color: #fff;
+        .tl-dot.done    { background: var(--accent-bright); color: #fff; }
+        .tl-dot.current { background: var(--accent-bright); color: #fff; box-shadow: 0 0 0 6px rgba(0,169,184,.15); animation: tlPulse 2s infinite; }
+        .tl-dot.pending { background: var(--bg-section); border: 2px solid var(--inner-border); color: var(--text-secondary); }
+        @keyframes tlPulse {
+            0%,100% { box-shadow: 0 0 0 6px rgba(0,169,184,.15); }
+            50%      { box-shadow: 0 0 0 12px rgba(0,169,184,.05); }
         }
-        .tl-dot.current {
-            background: var(--accent-bright);
-            color: #fff;
-            box-shadow: 0 0 0 6px rgba(0,169,184,.18);
-            animation: pulse 2s infinite;
-        }
-        .tl-dot.pending {
-            background: var(--bg-section);
-            border: 2px solid var(--inner-border);
+
+        .tl-body { padding: 0 0 28px 12px; }
+        .tl-item:last-child .tl-body { padding-bottom: 0; }
+        .tl-name {
+            font-size: 14px; font-weight: 600; line-height: 40px;
             color: var(--text-secondary);
         }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 6px rgba(0,169,184,.18); }
-            50%       { box-shadow: 0 0 0 12px rgba(0,169,184,.06); }
-        }
-
-        .tl-content {
-            padding-bottom: 28px;
-        }
-        .tl-item:last-child .tl-content { padding-bottom: 0; }
-        .tl-stage-name {
-            font-size: 14px; font-weight: 600;
-            color: var(--text-primary);
-            line-height: 40px; /* align with dot */
-            transition: color .3s;
-        }
-        .tl-item.done .tl-stage-name { color: var(--accent-bright); }
-        .tl-item.current .tl-stage-name { color: var(--accent-bright); }
-        .tl-item.pending .tl-stage-name { color: var(--text-secondary); }
-
+        .tl-item.done .tl-name    { color: var(--accent-bright); }
+        .tl-item.current .tl-name { color: var(--accent-bright); }
         .tl-meta {
-            font-size: 12px; color: var(--text-secondary);
-            margin-top: 4px; line-height: 1.5;
+            font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5;
         }
-        .tl-notes {
-            margin-top: 8px;
-            padding: 10px 12px;
+        .tl-note {
+            margin-top: 8px; padding: 10px 14px;
             background: var(--bg-section);
-            border-radius: 8px;
-            font-size: 13px;
-            color: var(--text-primary);
-            border-left: 3px solid var(--accent-bright);
+            border-radius: 8px; border-left: 3px solid var(--accent-bright);
+            font-size: 13px; color: var(--text-primary); line-height: 1.5;
         }
-        .tl-item.pending .tl-notes { display: none; }
 
-        /* ── Right panel ─────────────────────────────── */
+        /* Right panels */
         .delivery-right { display: flex; flex-direction: column; gap: 14px; }
-
         .panel-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
             padding: 18px;
         }
-        .panel-card-title {
-            font-size: 13px; font-weight: 600; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: .05em;
-            margin-bottom: 14px;
+        .panel-title {
+            font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing:.05em; margin-bottom: 14px;
         }
-
-        /* Action panel */
-        .action-stage-select {
-            width: 100%; padding: 9px 12px; border-radius: 8px;
-            border: 1px solid var(--card-border);
-            background: var(--inner-bg); color: var(--text-primary);
-            font-family: inherit; font-size: 13px;
-            margin-bottom: 10px;
-        }
-        .action-stage-select:focus { outline: 2px solid var(--accent-bright); outline-offset: -1px; }
-        .action-notes-input {
-            width: 100%; padding: 9px 12px; border-radius: 8px;
-            border: 1px solid var(--card-border);
-            background: var(--inner-bg); color: var(--text-primary);
-            font-family: inherit; font-size: 13px; resize: vertical;
-            min-height: 72px; box-sizing: border-box;
-            margin-bottom: 10px;
-        }
-        .action-notes-input:focus { outline: 2px solid var(--accent-bright); outline-offset: -1px; }
-        .tracking-row {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 10px;
-        }
-        .tracking-input {
-            flex: 1; padding: 8px 10px; border-radius: 8px;
-            border: 1px solid var(--card-border);
-            background: var(--inner-bg); color: var(--text-primary);
-            font-family: inherit; font-size: 13px;
-        }
-        .tracking-input:focus { outline: 2px solid var(--accent-bright); outline-offset: -1px; }
-        .tracking-label {
-            font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;
-        }
-
-        /* Order details */
         .detail-row {
             display: flex; justify-content: space-between; align-items: baseline;
-            padding: 7px 0; border-bottom: 1px solid var(--inner-border);
+            gap: 8px; padding: 7px 0;
+            border-bottom: 1px solid var(--inner-border);
             font-size: 13px;
         }
         .detail-row:last-child { border-bottom: none; }
-        .detail-row-label { color: var(--text-secondary); }
-        .detail-row-value { font-weight: 600; color: var(--text-primary); text-align: right; max-width: 55%; }
+        .detail-lbl { color: var(--text-secondary); white-space: nowrap; }
+        .detail-val { font-weight: 600; color: var(--text-primary); text-align: right; }
 
-        /* Status badge in KPI */
-        .delivery-stage-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 4px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 600;
-            background: rgba(0,169,184,.12); color: var(--accent-bright);
+        .action-select, .action-textarea, .action-input {
+            width: 100%; box-sizing: border-box;
+            padding: 9px 12px; border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--inner-bg); color: var(--text-primary);
+            font-family: inherit; font-size: 13px;
+            margin-bottom: 10px;
         }
-        .delivery-stage-badge.completed {
-            background: rgba(34,197,94,.12); color: #16a34a;
+        .action-textarea { resize: vertical; min-height: 72px; }
+        .action-select:focus, .action-textarea:focus, .action-input:focus {
+            outline: 2px solid var(--accent-bright); outline-offset: -1px;
         }
+        .action-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
 
-        /* Done overlay on completed deals */
         .completed-banner {
             display: flex; align-items: center; gap: 10px;
             padding: 14px 18px;
             background: rgba(34,197,94,.1);
             border: 1px solid rgba(34,197,94,.25);
             border-radius: 10px;
-            margin-bottom: 16px;
-            color: #16a34a;
-            font-size: 14px; font-weight: 600;
+            color: #16a34a; font-size: 14px; font-weight: 600;
+        }
+        .tracking-mono {
+            font-family: monospace; font-size: 16px; font-weight: 700;
+            letter-spacing: .05em; color: var(--text-primary);
         }
     </style>
 </head>
 <body>
 
-<div class="page-wrapper">
+    <!-- ══ SIDEBAR ════════════════════════════════════════════════════════ -->
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
+        <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg>Мой профиль</a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
 
-<!-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="10" fill="var(--accent-bright)"/>
-            <path d="M12 28V16l8-6 8 6v12H24v-7h-8v7z" fill="#fff"/>
-        </svg>
-        <span>B2B<strong>Нефть</strong></span>
-    </div>
-
-    <nav class="sidebar-nav" id="sidebarNav">
-        <a href="index.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Дашборд
-        </a>
-        <a href="deals.html" class="active">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-            Сделки
-        </a>
-        <a href="proposals.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-            КП
-        </a>
-        <a href="catalog.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Каталог
-        </a>
-        <a href="partners.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Контрагенты
-        </a>
-        <a href="messages.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Сообщения
-            <span class="sidebar-badge" id="msgBadge" style="display:none;"></span>
-        </a>
-        <a href="map.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-            Карта
-        </a>
-        <a href="analytics.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Аналитика
-        </a>
-        <a href="favorites.html">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Избранное
-        </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-        <a href="tariff.html">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Тариф
-        </a>
-        <a href="settings.html">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Настройки
-        </a>
-        <a href="#" onclick="logout(); return false;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Выйти
-        </a>
-    </div>
-</aside>
-
-<!-- ══ MAIN ═════════════════════════════════════════════════════════════════ -->
-<main class="main-content">
-
-    <!-- Header -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <div class="page-title">Трекинг доставки</div>
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Выйти из аккаунта
+            </a>
         </div>
-        <div class="top-bar-right">
-            <button class="icon-btn" onclick="openNotificationsModal()" title="Уведомления">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                <span class="notif-dot" id="notifDot" style="display:none;"></span>
+    </div>
+
+    <!-- ══ MAIN ═══════════════════════════════════════════════════════════ -->
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <div class="delivery-breadcrumb">
+                    <a href="deals.html">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                        Сделки
+                    </a>
+                    <span style="opacity:.4;">/</span>
+                    <span id="breadcrumbTitle">Загрузка...</span>
+                </div>
+                <h2 style="margin:0;">Трекинг доставки</h2>
+            </div>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
             </button>
-            <button class="icon-btn" onclick="toggleTheme()" title="Тема">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            </button>
-            <div class="user-avatar" id="userAvatarBtn" onclick="toggleUserMenu()"></div>
-            <div class="user-dropdown" id="userDropdown" style="display:none;">
-                <div class="user-dropdown-name" id="dropdownName"></div>
-                <div class="user-dropdown-email" id="dropdownEmail"></div>
-                <hr style="margin:8px 0;border-color:var(--inner-border);">
-                <a href="settings.html">Настройки</a>
-                <a href="tariff.html">Тариф</a>
-                <a href="#" onclick="logout();return false;" style="color:var(--error);">Выйти</a>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-card-top"><div class="kpi-label">Сумма сделки</div></div>
+                <div class="kpi-value" id="kpiPrice">—</div>
+                <div class="kpi-sub" id="kpiCategory">—</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top"><div class="kpi-label">Поставщик</div></div>
+                <div class="kpi-value" style="font-size:15px;line-height:1.3;" id="kpiProducer">—</div>
+                <div class="kpi-sub" id="kpiCustomer">—</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top"><div class="kpi-label">Текущий этап</div></div>
+                <div class="kpi-value" style="font-size:14px;" id="kpiStage">—</div>
+                <div class="kpi-sub" id="kpiStageSub">—</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top"><div class="kpi-label">Срок по договору</div></div>
+                <div class="kpi-value" id="kpiDays">—</div>
+                <div class="kpi-sub">дней</div>
+            </div>
+        </div>
+
+        <!-- Completed banner -->
+        <div class="completed-banner" id="completedBanner" style="display:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Сделка завершена — заказчик подтвердил получение товара.
+        </div>
+
+        <!-- Timeline + Right panel -->
+        <div class="delivery-layout">
+
+            <div class="timeline-card">
+                <div class="timeline-card-title">История доставки</div>
+                <div id="timeline"></div>
+            </div>
+
+            <div class="delivery-right">
+
+                <!-- Action panel -->
+                <div class="panel-card" id="actionPanel" style="display:none;">
+                    <div class="panel-title">Обновить статус</div>
+                    <select class="action-select" id="stageSelect"></select>
+                    <div id="trackingWrap" style="display:none;">
+                        <div class="action-label">Трек-номер отправления</div>
+                        <input type="text" class="action-input" id="trackingInput" placeholder="Например: RU123456789CN">
+                    </div>
+                    <textarea class="action-textarea" id="notesInput" placeholder="Комментарий (необязательно)..."></textarea>
+                    <button class="btn-primary" style="width:100%;" onclick="updateStage()">Обновить статус</button>
+                </div>
+
+                <!-- Order details -->
+                <div class="panel-card">
+                    <div class="panel-title">Детали заказа</div>
+                    <div id="orderDetails"></div>
+                </div>
+
+                <!-- Tracking number -->
+                <div class="panel-card" id="trackingCard" style="display:none;">
+                    <div class="panel-title">Трекинг отправления</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Трек-номер</div>
+                    <div class="tracking-mono" id="trackingDisplay"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div><!-- /main-content -->
+
+    <div class="modal" id="notificationModal">
+        <div class="modal-content" style="width:440px;">
+            <h3>Уведомления платформы</h3>
+            <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
 
-    <!-- Breadcrumb -->
-    <div class="delivery-breadcrumb">
-        <a href="deals.html">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Сделки
-        </a>
-        <span>/</span>
-        <span id="breadcrumbTitle">Загрузка...</span>
-    </div>
-
-    <!-- KPI row -->
-    <div class="kpi-row" id="kpiRow">
-        <div class="kpi-card">
-            <div class="kpi-card-top"><div class="kpi-label">Сумма сделки</div></div>
-            <div class="kpi-value" id="kpiPrice">—</div>
-            <div class="kpi-sub" id="kpiCategory">—</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-card-top"><div class="kpi-label">Поставщик</div></div>
-            <div class="kpi-value" style="font-size:16px;line-height:1.3;" id="kpiProducer">—</div>
-            <div class="kpi-sub" id="kpiCustomer">—</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-card-top"><div class="kpi-label">Этап доставки</div></div>
-            <div class="kpi-value" style="font-size:13px;" id="kpiStage">—</div>
-            <div class="kpi-sub" id="kpiStageDesc">—</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-card-top"><div class="kpi-label">Срок выполнения</div></div>
-            <div class="kpi-value" id="kpiDays">—</div>
-            <div class="kpi-sub" id="kpiDaysLabel">дней по договору</div>
-        </div>
-    </div>
-
-    <!-- Completed banner (hidden by default) -->
-    <div class="completed-banner" id="completedBanner" style="display:none;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Сделка успешно завершена. Заказчик подтвердил получение.
-    </div>
-
-    <!-- Timeline + Right panel -->
-    <div class="delivery-layout">
-
-        <!-- Timeline -->
-        <div class="timeline-card">
-            <div class="timeline-card-title">История доставки</div>
-            <div class="timeline" id="timeline"></div>
-        </div>
-
-        <!-- Right panel -->
-        <div class="delivery-right">
-
-            <!-- Action panel -->
-            <div class="panel-card" id="actionPanel">
-                <div class="panel-card-title">Обновить статус</div>
-                <select class="action-stage-select" id="stageSelect"></select>
-                <div class="tracking-label" id="trackingLabel" style="display:none;">Трек-номер отправления</div>
-                <input type="text" class="tracking-input" id="trackingInput" placeholder="Например: RU123456789CN" style="display:none;margin-bottom:10px;">
-                <textarea class="action-notes-input" id="notesInput" placeholder="Комментарий (необязательно)..."></textarea>
-                <button class="btn-primary" style="width:100%;" onclick="updateStage()">Обновить статус</button>
-            </div>
-
-            <!-- Order details -->
-            <div class="panel-card">
-                <div class="panel-card-title">Детали заказа</div>
-                <div id="orderDetails"></div>
-            </div>
-
-            <!-- Tracking number (shown when exists) -->
-            <div class="panel-card" id="trackingCard" style="display:none;">
-                <div class="panel-card-title">Трекинг отправления</div>
-                <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">Трек-номер</div>
-                <div style="font-size:16px;font-weight:700;color:var(--text-primary);font-family:monospace;letter-spacing:.05em;" id="trackingDisplay"></div>
-            </div>
-        </div>
-    </div>
-
-</main>
-</div>
-
-<!-- Notification modal -->
-<div class="modal" id="notificationModal">
-    <div class="modal-content" style="width:440px;">
-        <h3>Уведомления платформы</h3>
-        <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
-        <div class="modal-actions" style="justify-content:space-between;">
-            <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
-            <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
-        </div>
-    </div>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="assets/app.js"></script>
-<script>
-function toggleTheme() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-}
-
-const DELIVERY_STAGES = [
-    { key: 'КП принят',         desc: 'Коммерческое предложение принято заказчиком' },
-    { key: 'В производстве',    desc: 'Изготовление и подготовка продукции' },
-    { key: 'Готов к отгрузке',  desc: 'Продукция готова, ожидает передачи перевозчику' },
-    { key: 'Отгружен',          desc: 'Товар передан транспортной компании' },
-    { key: 'Доставлен',         desc: 'Товар доставлен до склада заказчика' },
-    { key: 'Принят заказчиком', desc: 'Заказчик подтвердил получение и принял товар' },
-];
-
-const STAGE_ICONS = {
-    'КП принят':         `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>`,
-    'В производстве':    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-    'Готов к отгрузке':  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H3M21 6H3M21 14H3M21 18H3"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>`,
-    'Отгружен':          `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
-    'Доставлен':         `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-    'Принят заказчиком': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
-};
-
-const token     = localStorage.getItem('authToken');
-const userRole  = localStorage.getItem('userRole');
-const myCompany = localStorage.getItem('userCompany');
-
-if (!token) window.location.href = 'login.html';
-
-const params = new URLSearchParams(location.search);
-const proposalId = Number(params.get('id'));
-if (!proposalId) window.location.href = 'deals.html';
-
-let dealData  = null;
-let eventsData = [];
-
-const MOCK_DELIVERY = {
-    deal: {
-        id: proposalId || 1,
-        title: 'Компрессор воздушный ВП-50/8',
-        category: 'Насосное оборудование',
-        price: 2450000,
-        days: 30,
-        producer_company: 'ООО «НефтеПромСнаб»',
-        customer_company: 'ООО «РН-Нефтепродукт»',
-        delivery_stage: 'Отгружен',
-        tracking_number: 'RU987654321CN',
-        completion_status: 'active',
-        quantity: 2,
-    },
-    events: [
-        { stage: 'КП принят',      notes: 'КП принят заказчиком. Сумма: 2 450 000 ₽, срок: 30 дн.', updated_by: 'system', created_at: '2026-06-01T10:23:00Z' },
-        { stage: 'В производстве', notes: 'Начали изготовление. Плановая дата готовности — 18 июня.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-03T08:45:00Z' },
-        { stage: 'Готов к отгрузке', notes: 'Продукция прошла ОТК, упакована и готова к передаче перевозчику.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-17T15:10:00Z' },
-        { stage: 'Отгружен', notes: 'Передано транспортной компании «ПЭК». Трек: RU987654321CN', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-18T09:30:00Z' },
-    ],
-};
-
-async function loadDelivery() {
-    try {
-        const r = await fetch(`/api/deals/${proposalId}/delivery`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!r.ok) throw new Error();
-        const data = await r.json();
-        dealData   = data.deal;
-        eventsData = data.events;
-    } catch {
-        dealData   = MOCK_DELIVERY.deal;
-        eventsData = MOCK_DELIVERY.events;
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = !isDark;
+        if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
     }
-    render();
-}
-
-function fmtPrice(p) {
-    return Number(p).toLocaleString('ru-RU') + ' ₽';
-}
-
-function fmtDate(d) {
-    return new Date(d).toLocaleString('ru-RU', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-
-function render() {
-    const deal   = dealData;
-    const events = eventsData;
-    const currentStageKey = deal.delivery_stage || 'КП принят';
-    const currentIdx = DELIVERY_STAGES.findIndex(s => s.key === currentStageKey);
-    const isCompleted = deal.completion_status === 'completed';
-
-    // Breadcrumb + KPI
-    document.getElementById('breadcrumbTitle').textContent = deal.title;
-    document.title = `Доставка — ${deal.title}`;
-    document.getElementById('kpiPrice').textContent = fmtPrice(deal.price);
-    document.getElementById('kpiCategory').textContent = deal.category || '—';
-    document.getElementById('kpiProducer').textContent = deal.producer_company;
-    document.getElementById('kpiCustomer').textContent = '← ' + deal.customer_company;
-    document.getElementById('kpiStage').textContent = currentStageKey;
-    document.getElementById('kpiStageDesc').textContent = isCompleted ? 'Завершена' : 'Текущий этап';
-    document.getElementById('kpiDays').textContent = deal.days;
-
-    if (isCompleted) document.getElementById('completedBanner').style.display = 'flex';
-
-    // Tracking number
-    if (deal.tracking_number) {
-        document.getElementById('trackingCard').style.display = '';
-        document.getElementById('trackingDisplay').textContent = deal.tracking_number;
-    }
-
-    // Timeline
-    const tl = document.getElementById('timeline');
-    tl.innerHTML = '';
-    DELIVERY_STAGES.forEach((stage, idx) => {
-        const event = events.find(e => e.stage === stage.key);
-        let state = 'pending';
-        if (idx < currentIdx) state = 'done';
-        else if (idx === currentIdx) state = isCompleted && stage.key === 'Принят заказчиком' ? 'done' : 'current';
-
-        const item = document.createElement('div');
-        item.className = `tl-item ${state}`;
-        item.innerHTML = `
-            <div class="tl-col-line">
-                <div class="tl-dot ${state}">${STAGE_ICONS[stage.key]}</div>
-            </div>
-            <div class="tl-content">
-                <div class="tl-stage-name">${stage.key}</div>
-                <div class="tl-meta">${event ? fmtDate(event.created_at) + (event.updated_by !== 'system' ? ' · ' + event.updated_by : '') : stage.desc}</div>
-                ${event && event.notes ? `<div class="tl-notes">${event.notes}</div>` : ''}
-            </div>
-        `;
-        tl.appendChild(item);
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = isDark;
+        if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
     });
+    </script>
+    <script>
+    if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
-    // Order details
-    document.getElementById('orderDetails').innerHTML = `
-        <div class="detail-row"><span class="detail-row-label">Наименование</span><span class="detail-row-value">${deal.title}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Количество</span><span class="detail-row-value">${deal.quantity || '—'}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Категория</span><span class="detail-row-value">${deal.category}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Сумма</span><span class="detail-row-value">${fmtPrice(deal.price)}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Срок</span><span class="detail-row-value">${deal.days} дн.</span></div>
-        <div class="detail-row"><span class="detail-row-label">Поставщик</span><span class="detail-row-value">${deal.producer_company}</span></div>
-        <div class="detail-row"><span class="detail-row-label">Заказчик</span><span class="detail-row-value">${deal.customer_company}</span></div>
-    `;
+    const DELIVERY_STAGES = [
+        { key: 'КП принят',         desc: 'Коммерческое предложение принято заказчиком' },
+        { key: 'В производстве',    desc: 'Изготовление и подготовка продукции' },
+        { key: 'Готов к отгрузке',  desc: 'Продукция готова, ожидает передачи перевозчику' },
+        { key: 'Отгружен',          desc: 'Товар передан транспортной компании' },
+        { key: 'Доставлен',         desc: 'Товар доставлен до склада заказчика' },
+        { key: 'Принят заказчиком', desc: 'Заказчик подтвердил получение и принял товар' },
+    ];
 
-    // Action panel
-    renderActionPanel(currentIdx, isCompleted);
-}
+    const ICONS = {
+        'КП принят':         `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>`,
+        'В производстве':    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+        'Готов к отгрузке':  `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+        'Отгружен':          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+        'Доставлен':         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+        'Принят заказчиком': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+    };
 
-function renderActionPanel(currentIdx, isCompleted) {
-    const panel = document.getElementById('actionPanel');
-    const deal  = dealData;
+    const token     = localStorage.getItem('authToken');
+    const userRole  = localStorage.getItem('userRole');
+    const myCompany = localStorage.getItem('userCompany');
 
-    // Determine who can do what
-    const isProducer = userRole === 'producer' && myCompany === deal.producer_company;
-    const isCustomer = userRole === 'customer' && myCompany === deal.customer_company;
+    const params     = new URLSearchParams(location.search);
+    const proposalId = Number(params.get('id'));
+    if (!proposalId) location.href = 'deals.html';
 
-    if (isCompleted || (!isProducer && !isCustomer)) {
-        panel.style.display = 'none';
-        return;
-    }
+    let dealData   = null;
+    let eventsData = [];
 
-    // Build options for select
-    const select = document.getElementById('stageSelect');
-    select.innerHTML = '';
+    const MOCK = {
+        deal: {
+            title: 'Компрессор воздушный ВП-50/8', category: 'Насосное оборудование',
+            price: 2450000, days: 30, quantity: 2,
+            producer_company: 'ООО «НефтеПромСнаб»',
+            customer_company: 'ООО «РН-Нефтепродукт»',
+            delivery_stage: 'Отгружен', tracking_number: 'RU987654321CN',
+            completion_status: 'active',
+        },
+        events: [
+            { stage: 'КП принят',        notes: 'КП принят заказчиком. Сумма: 2 450 000 ₽, срок: 30 дн.', updated_by: 'system',                created_at: '2026-06-01T10:23:00Z' },
+            { stage: 'В производстве',   notes: 'Начали изготовление. Плановая дата готовности — 18 июня.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-03T08:45:00Z' },
+            { stage: 'Готов к отгрузке', notes: 'Продукция прошла ОТК, упакована и готова к передаче перевозчику.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-17T15:10:00Z' },
+            { stage: 'Отгружен',         notes: 'Передано транспортной компании «ПЭК». Трек: RU987654321CN', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-18T09:30:00Z' },
+        ],
+    };
 
-    DELIVERY_STAGES.forEach((stage, idx) => {
-        if (idx <= currentIdx) return; // already done
-        if (stage.key === 'Принят заказчиком' && !isCustomer) return;
-        if (stage.key !== 'Принят заказчиком' && !isProducer) return;
-
-        const opt = document.createElement('option');
-        opt.value = stage.key;
-        opt.textContent = stage.key;
-        select.appendChild(opt);
-    });
-
-    if (!select.options.length) {
-        panel.style.display = 'none';
-        return;
-    }
-
-    select.addEventListener('change', () => {
-        const showTracking = select.value === 'Отгружен';
-        document.getElementById('trackingLabel').style.display = showTracking ? '' : 'none';
-        document.getElementById('trackingInput').style.display  = showTracking ? '' : 'none';
-    });
-    // trigger once
-    const showTracking = select.value === 'Отгружен';
-    document.getElementById('trackingLabel').style.display = showTracking ? '' : 'none';
-    document.getElementById('trackingInput').style.display  = showTracking ? '' : 'none';
-}
-
-async function updateStage() {
-    const stage   = document.getElementById('stageSelect').value;
-    const notes   = document.getElementById('notesInput').value.trim();
-    const tracking = document.getElementById('trackingInput').value.trim();
-    if (!stage) return;
-
-    try {
-        const r = await fetch(`/api/deals/${proposalId}/delivery/stage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ stage, notes, trackingNumber: tracking }),
-        });
-        const data = await r.json();
-        if (!r.ok) { alert(data.error || 'Ошибка'); return; }
-        await loadDelivery();
-    } catch {
-        // Mock update for demo
-        eventsData.push({ stage, notes, updated_by: myCompany, created_at: new Date().toISOString() });
-        dealData.delivery_stage = stage;
-        if (tracking) dealData.tracking_number = tracking;
-        if (stage === 'Принят заказчиком') dealData.completion_status = 'completed';
-        document.getElementById('notesInput').value = '';
-        document.getElementById('trackingInput').value = '';
+    async function load() {
+        try {
+            const r = await fetch(`/api/deals/${proposalId}/delivery`, { headers: { Authorization: `Bearer ${token}` } });
+            if (!r.ok) throw 0;
+            const d = await r.json();
+            dealData   = d.deal;
+            eventsData = d.events;
+        } catch {
+            dealData   = MOCK.deal;
+            eventsData = MOCK.events;
+        }
         render();
     }
-}
 
-function toggleUserMenu() {
-    const d = document.getElementById('userDropdown');
-    d.style.display = d.style.display === 'none' ? '' : 'none';
-}
+    function fmt(n) { return Number(n).toLocaleString('ru-RU') + ' ₽'; }
+    function fmtDt(s) {
+        return new Date(s).toLocaleString('ru-RU', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const name = localStorage.getItem('userCompany') || 'Пользователь';
-    const email = localStorage.getItem('userEmail') || '';
-    const av = document.getElementById('userAvatarBtn');
-    if (av) av.textContent = name.charAt(0).toUpperCase();
-    const dn = document.getElementById('dropdownName');
-    if (dn) dn.textContent = name;
-    const de = document.getElementById('dropdownEmail');
-    if (de) de.textContent = email;
+    function render() {
+        const d  = dealData;
+        const ev = eventsData;
+        const curKey = d.delivery_stage || 'КП принят';
+        const curIdx = DELIVERY_STAGES.findIndex(s => s.key === curKey);
+        const done   = d.completion_status === 'completed';
 
-    initNotifications();
-    loadDelivery();
-});
+        document.getElementById('breadcrumbTitle').textContent = d.title;
+        document.title = `Доставка — ${d.title}`;
+        document.getElementById('kpiPrice').textContent    = fmt(d.price);
+        document.getElementById('kpiCategory').textContent = d.category;
+        document.getElementById('kpiProducer').textContent = d.producer_company;
+        document.getElementById('kpiCustomer').textContent = '← ' + d.customer_company;
+        document.getElementById('kpiStage').textContent    = curKey;
+        document.getElementById('kpiStageSub').textContent = done ? 'Завершена' : 'Текущий этап';
+        document.getElementById('kpiDays').textContent     = d.days;
 
-document.addEventListener('click', e => {
-    const dd = document.getElementById('userDropdown');
-    const btn = document.getElementById('userAvatarBtn');
-    if (dd && !dd.contains(e.target) && !btn.contains(e.target)) dd.style.display = 'none';
-});
-</script>
+        if (done) document.getElementById('completedBanner').style.display = 'flex';
+
+        if (d.tracking_number) {
+            document.getElementById('trackingCard').style.display    = '';
+            document.getElementById('trackingDisplay').textContent   = d.tracking_number;
+        }
+
+        // Timeline
+        const tl = document.getElementById('timeline');
+        tl.innerHTML = '';
+        DELIVERY_STAGES.forEach((stage, idx) => {
+            const event = ev.find(e => e.stage === stage.key);
+            let state = idx < curIdx ? 'done' : idx === curIdx ? (done && stage.key === 'Принят заказчиком' ? 'done' : 'current') : 'pending';
+
+            const item = document.createElement('div');
+            item.className = `tl-item ${state}`;
+            item.innerHTML = `
+                <div class="tl-col"><div class="tl-dot ${state}">${ICONS[stage.key]}</div></div>
+                <div class="tl-body">
+                    <div class="tl-name">${stage.key}</div>
+                    <div class="tl-meta">${event ? fmtDt(event.created_at) + (event.updated_by !== 'system' ? ' · ' + escapeHtml(event.updated_by) : '') : stage.desc}</div>
+                    ${event && event.notes ? `<div class="tl-note">${escapeHtml(event.notes)}</div>` : ''}
+                </div>`;
+            tl.appendChild(item);
+        });
+
+        // Order details
+        document.getElementById('orderDetails').innerHTML = [
+            ['Наименование', d.title],
+            ['Количество', d.quantity || '—'],
+            ['Категория', d.category],
+            ['Сумма', fmt(d.price)],
+            ['Срок', d.days + ' дн.'],
+            ['Поставщик', d.producer_company],
+            ['Заказчик', d.customer_company],
+        ].map(([l,v]) => `<div class="detail-row"><span class="detail-lbl">${l}</span><span class="detail-val">${escapeHtml(String(v))}</span></div>`).join('');
+
+        renderActions(curIdx, done);
+    }
+
+    function renderActions(curIdx, done) {
+        const panel = document.getElementById('actionPanel');
+        const d     = dealData;
+        const isProducer = userRole === 'producer' && myCompany === d.producer_company;
+        const isCustomer = userRole === 'customer' && myCompany === d.customer_company;
+        if (done || (!isProducer && !isCustomer)) { panel.style.display = 'none'; return; }
+
+        const sel = document.getElementById('stageSelect');
+        sel.innerHTML = '';
+        DELIVERY_STAGES.forEach((s, i) => {
+            if (i <= curIdx) return;
+            if (s.key === 'Принят заказчиком' && !isCustomer) return;
+            if (s.key !== 'Принят заказчиком' && !isProducer) return;
+            sel.appendChild(Object.assign(document.createElement('option'), { value: s.key, textContent: s.key }));
+        });
+        if (!sel.options.length) { panel.style.display = 'none'; return; }
+
+        panel.style.display = '';
+        const toggle = () => { document.getElementById('trackingWrap').style.display = sel.value === 'Отгружен' ? '' : 'none'; };
+        sel.onchange = toggle;
+        toggle();
+    }
+
+    async function updateStage() {
+        const stage   = document.getElementById('stageSelect').value;
+        const notes   = document.getElementById('notesInput').value.trim();
+        const tracking = document.getElementById('trackingInput').value.trim();
+        try {
+            const r = await fetch(`/api/deals/${proposalId}/delivery/stage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ stage, notes, trackingNumber: tracking }),
+            });
+            const data = await r.json();
+            if (!r.ok) { alert(data.error || 'Ошибка'); return; }
+            await load();
+        } catch {
+            eventsData.push({ stage, notes, updated_by: myCompany, created_at: new Date().toISOString() });
+            dealData.delivery_stage = stage;
+            if (tracking) dealData.tracking_number = tracking;
+            if (stage === 'Принят заказчиком') dealData.completion_status = 'completed';
+            document.getElementById('notesInput').value  = '';
+            document.getElementById('trackingInput').value = '';
+            render();
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const mainLink = document.getElementById('mainCabinetLink');
+        if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+        const navProposals = document.getElementById('navProposals');
+        if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+        load();
+        initNotifications();
+        initSidebarBadges();
+    });
+    </script>
 </body>
 </html>
