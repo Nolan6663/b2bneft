@@ -292,7 +292,7 @@
 
                 <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
                     <button class="btn-primary" style="flex:1;" onclick="window.location.href='index.html'">Выбрать поставщика</button>
-                    <button class="btn-secondary" onclick="window.location.href='messages.html'" style="flex:1;">Открыть чат</button>
+                    <button class="btn-secondary" onclick="openDealChat()" style="flex:1;">Открыть чат</button>
                 </div>
                 <div id="ddpTrackBtn" style="display:none;margin-top:8px;">
                     <button class="btn-primary" style="width:100%;background:var(--accent-green,#22c55e);border-color:var(--accent-green,#22c55e);" id="trackDeliveryBtn">
@@ -344,6 +344,7 @@
         let allDeals    = [];
         let currentFilter = 'all';
         let selectedId = null;
+        let currentDeal = null;
 
         const MOCK_DEALS = [
             { id:1,  num:'КО-2026-06-001', title:'Компрессор воздушный ВП-50/8',              category:'Насосное оборудование', status:'active',    supplier:'ООО «НефтеПромСнаб»', price:2450000, quantity:2,   unit:'шт', deadline:'2026-07-20', proposalCount:8,  coeff:87, description:'ГОСТ 12.2.016, давление 8 бар, производительность 50 м³/ч', proposals:[{num:1,supplier:'ООО «НефтеПромСнаб»',price:2450000,days:21},{num:2,supplier:'АО «РегионСнаб»',price:2610000,days:28}] },
@@ -435,6 +436,7 @@
 
         function openPanel(d) {
             selectedId = d.id;
+            currentDeal = d;
             document.querySelectorAll('#ordersTableBody tr').forEach(tr => tr.classList.remove('row-selected'));
             event && event.currentTarget && event.currentTarget.classList.add('row-selected');
 
@@ -469,7 +471,7 @@
                         <div class="kp-meta">Срок поставки: ${kp.days} дн.</div>
                         <div class="kp-actions">
                             <button class="btn-primary" onclick="acceptKp(${kp.id||0}, ${d.id}, '${escapeHtml(kp.supplier).replace(/'/g,"\\'")}')">Выбрать</button>
-                            <button class="btn-secondary" onclick="window.location.href='messages.html'">Чат</button>
+                            <button class="btn-secondary" onclick="window.location.href='messages.html?orderId=${d.id}&company=${encodeURIComponent(kp.supplier)}&title=${encodeURIComponent(d.title)}'">Чат</button>
                         </div>
                     </div>`).join('');
             } else {
@@ -516,6 +518,12 @@
                 closePanel();
                 window.location.reload();
             } catch { window.location.href = 'index.html'; }
+        }
+
+        function openDealChat() {
+            if (!currentDeal) return;
+            const company = currentDeal.supplier && currentDeal.supplier !== '—' ? currentDeal.supplier : '';
+            window.location.href = `messages.html?orderId=${currentDeal.id}&company=${encodeURIComponent(company)}&title=${encodeURIComponent(currentDeal.title)}`;
         }
 
         function closePanel() {

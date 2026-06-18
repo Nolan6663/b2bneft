@@ -467,12 +467,25 @@ async function sendGlobalChatMessage() {
   const text = input.value.trim();
   input.value = '';
   try {
-    await apiFetch(`${SERVER_URL}/messages`, {
+    const r = await apiFetch(`${SERVER_URL}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId: activeChatOrderId, company: activeChatCompany, text })
     });
-  } catch (error) { /* ignore, отрисуем то, что есть */ }
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      input.value = text;
+      const msg = r.status === 403
+        ? 'Чтобы начать чат — сначала отправьте предложение на эту закупку'
+        : (err.error || 'Не удалось отправить сообщение');
+      showToast(msg);
+      return;
+    }
+  } catch (error) {
+    input.value = text;
+    showToast('Сервер недоступен');
+    return;
+  }
   renderChatHistory();
 }
 

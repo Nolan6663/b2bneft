@@ -263,24 +263,55 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
 
         async function loadConversations() {
+            const params = new URLSearchParams(window.location.search);
+            const urlOrderId = params.get('orderId');
+            const urlCompany = params.get('company');
+            const urlTitle   = params.get('title') || (urlOrderId ? `Заявка #${urlOrderId}` : '');
+
             try {
                 const r = await fetch(`${SERVER_URL}/messages/conversations`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                allConversations = r.ok ? await r.json() : MOCK_CONVERSATIONS;
-                renderConversationList(allConversations);
-
-                // open conv from URL param if present
-                const params = new URLSearchParams(window.location.search);
-                const orderId = params.get('orderId');
-                const company = params.get('company');
-                if (orderId && company) {
-                    const target = allConversations.find(c => String(c.orderId) === orderId && c.company === company);
-                    if (target) openConversation(target);
-                }
+                const data = r.ok ? await r.json() : [];
+                allConversations = data.length ? data : MOCK_CONVERSATIONS;
             } catch {
                 allConversations = MOCK_CONVERSATIONS;
-                renderConversationList(allConversations);
+            }
+
+            // If URL has orderId+company, ensure that conversation exists in list
+            if (urlOrderId && urlCompany) {
+                const exists = allConversations.find(c => String(c.orderId) === urlOrderId && c.company === urlCompany);
+                if (!exists) {
+                    const newConv = {
+                        orderId: Number(urlOrderId),
+                        orderTitle: urlTitle,
+                        company: urlCompany,
+                        customerCompany: myCompany,
+                        lastMessage: '',
+                        lastSender: '',
+                        lastAt: new Date().toISOString(),
+                        unreadCount: 0
+                    };
+                    allConversations.unshift(newConv);
+                }
+            }
+
+            // If only company is set (from partners page), pre-fill search to filter by company
+            if (urlCompany && !urlOrderId) {
+                const searchEl = document.getElementById('convSearch');
+                if (searchEl) searchEl.value = urlCompany;
+                const filtered = allConversations.filter(c => c.company === urlCompany || c.customerCompany === urlCompany);
+                renderConversationList(filtered.length ? filtered : allConversations);
+                if (filtered.length === 1) openConversation(filtered[0]);
+                return;
+            }
+
+            renderConversationList(allConversations);
+
+            // Auto-open conversation from URL params
+            if (urlOrderId && urlCompany) {
+                const target = allConversations.find(c => String(c.orderId) === urlOrderId && c.company === urlCompany);
+                if (target) openConversation(target);
             }
         }
 

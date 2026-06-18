@@ -1031,7 +1031,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const err = await response.json();
                     showToast(err.error || (isEdit ? 'Не удалось сохранить изменения' : 'Не удалось создать закупку'), 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error(error);
+                showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
+            }
         }
 
         async function acceptProposal(proposalId) {

@@ -207,7 +207,8 @@
                 const response = await fetch(`${SERVER_URL}/proposals`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-                myProposals = await response.json();
+                const data = response.ok ? await response.json() : null;
+                if (Array.isArray(data)) myProposals = data;
             } catch { /* use mock */ }
             window._myProposalsCache = myProposals;
 

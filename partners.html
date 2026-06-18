@@ -274,7 +274,7 @@
                         <div id="detDeals"></div>
 
                         <div class="ct-det-actions">
-                            <button class="btn-primary" onclick="window.location.href='messages.html'">Написать</button>
+                            <button class="btn-primary" onclick="if(currentDetailCompany) window.location.href='messages.html?company='+encodeURIComponent(currentDetailCompany)+'&title='+encodeURIComponent(currentDetailCompany)">Написать</button>
                             <button class="btn-secondary" id="detProfileBtn" onclick="">Профиль →</button>
                         </div>
                     </div>
@@ -399,8 +399,10 @@
         }
 
         let currentDetailId = null;
+        let currentDetailCompany = null;
         function openDetail(c, cardEl) {
             currentDetailId = c.id;
+            currentDetailCompany = c.company;
             document.querySelectorAll('.ct-card').forEach(el => el.classList.remove('selected'));
             if (cardEl) cardEl.classList.add('selected');
 

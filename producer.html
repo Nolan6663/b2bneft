@@ -500,7 +500,8 @@ function renderCompanyStatus(status) {
         async function loadMyProposals() {
             try {
                 const response = await fetch(`${SERVER_URL}/proposals`, { headers: { 'Authorization': 'Bearer ' + token } });
-                const proposals = await response.json();
+                const data = response.ok ? await response.json() : null;
+                const proposals = Array.isArray(data) ? data : [];
                 document.getElementById('tabProposalsCount').innerText = proposals.length;
 
                 const tableBody = document.getElementById('myResponsesTable');
@@ -556,7 +557,10 @@ function renderCompanyStatus(status) {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось отправить предложение', 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error(error);
+                showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
+            }
         }
     </script>
 </body>
