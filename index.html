@@ -26,6 +26,7 @@
             .proc-grid-cols > :nth-child(5), .proc-grid-cols > :nth-child(6) { display: none; } }
         @media (max-width: 600px) { .proc-grid-cols { grid-template-columns: 1fr 0.8fr; }
             .proc-grid-cols > :nth-child(n+3) { display: none; } }
+        .kpi-row .kpi-card::after { display: none !important; }
     </style>
 </head>
 <body>
@@ -70,43 +71,35 @@
         <div class="kpi-row" id="analyticsRow">
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Закупок за месяц</div>
-                    <div class="kpi-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-                    </div>
+                    <div class="kpi-label">Размещённых закупок</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="k1g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient></defs><polyline points="0,25 13,20 26,22 40,14 53,16 66,8 80,10" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,25 13,20 26,22 40,14 53,16 66,8 80,10 80,30 0,30" fill="url(#k1g)"/></svg>
                 </div>
                 <div class="kpi-value" id="anaMonth">—</div>
-                <div class="kpi-sub">в этом месяце</div>
+                <div class="kpi-sub kpi-delta positive">↑ 8% к прошлому месяцу</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
                     <div class="kpi-label">Активных</div>
-                    <div class="kpi-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    </div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="k2g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs><polyline points="0,22 13,18 26,20 40,12 53,14 66,7 80,9" stroke="var(--accent-blue)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,22 13,18 26,20 40,12 53,14 66,7 80,9 80,30 0,30" fill="url(#k2g)"/></svg>
                 </div>
                 <div class="kpi-value" id="anaActive">—</div>
                 <div class="kpi-sub">ждут предложений</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Средний срок</div>
-                    <div class="kpi-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
+                    <div class="kpi-label">Среднее время отклика</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="k3g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient></defs><polyline points="0,20 13,22 26,17 40,18 53,12 66,14 80,10" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,20 13,22 26,17 40,18 53,12 66,14 80,10 80,30 0,30" fill="url(#k3g)"/></svg>
                 </div>
                 <div class="kpi-value" id="anaDays">—</div>
-                <div class="kpi-sub">дней производства</div>
+                <div class="kpi-sub">дней</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Экономия</div>
-                    <div class="kpi-icon" style="color:var(--accent-green);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                    </div>
+                    <div class="kpi-label">Экономия за период</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="k4g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-green)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0"/></linearGradient></defs><polyline points="0,24 13,20 26,16 40,15 53,12 66,9 80,7" stroke="var(--accent-green)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,24 13,20 26,16 40,15 53,12 66,9 80,7 80,30 0,30" fill="url(#k4g)"/></svg>
                 </div>
                 <div class="kpi-value" id="anaSavings" style="color:var(--accent-green);">—</div>
-                <div class="kpi-sub">vs среднее по рынку</div>
+                <div class="kpi-sub kpi-delta positive">↑ vs рынок</div>
             </div>
         </div>
 

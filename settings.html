@@ -297,31 +297,166 @@
                 </div>
             </div>
 
-            <!-- Email -->
+            <!-- Company details -->
             <div class="settings-card">
                 <div class="settings-card-header">
                     <div class="settings-card-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                     </div>
                     <div>
-                        <div class="settings-card-title">Адрес электронной почты</div>
-                        <div class="settings-card-subtitle">Используется для входа в систему</div>
+                        <div class="settings-card-title">Реквизиты компании</div>
+                        <div class="settings-card-subtitle">Юридические данные организации</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-form-grid">
+                        <div class="form-group span-2">
+                            <label>Полное наименование</label>
+                            <input type="text" id="companyFullName" placeholder="ООО «Название организации»" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>ИНН</label>
+                            <input type="text" id="companyInn" placeholder="0000000000" maxlength="12">
+                        </div>
+                        <div class="form-group">
+                            <label>ОГРН</label>
+                            <input type="text" id="companyOgrn" placeholder="0000000000000" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label>КПП</label>
+                            <input type="text" id="companyKpp" placeholder="000000000" maxlength="9">
+                        </div>
+                        <div class="form-group">
+                            <label>ОКПО</label>
+                            <input type="text" id="companyOkpo" placeholder="00000000" maxlength="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Дата регистрации</label>
+                            <input type="date" id="companyRegDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Основной вид деятельности (ОКВЭД)</label>
+                            <input type="text" id="companyOkved" placeholder="46.69.9">
+                        </div>
+                    </div>
+                    <div class="form-row-actions">
+                        <div class="alert-inline success" id="companyAlert">Данные сохранены</div>
+                        <button class="btn-settings-save" onclick="saveCompanyDetails()">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Адреса</div>
+                        <div class="settings-card-subtitle">Юридический и фактический адреса</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-form-grid">
+                        <div class="form-group span-2">
+                            <label>Юридический адрес</label>
+                            <input type="text" id="addrLegal" placeholder="625000, г. Тюмень, ул. Республики, д. 42, оф. 10">
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Фактический адрес</label>
+                            <input type="text" id="addrActual" placeholder="Совпадает с юридическим">
+                        </div>
+                        <div class="form-group">
+                            <label>Регион</label>
+                            <input type="text" id="addrRegion" placeholder="Тюменская область">
+                        </div>
+                        <div class="form-group">
+                            <label>Почтовый индекс</label>
+                            <input type="text" id="addrPostal" placeholder="625000" maxlength="6">
+                        </div>
+                    </div>
+                    <div class="form-row-actions">
+                        <div class="alert-inline success" id="addrAlert">Адреса сохранены</div>
+                        <button class="btn-settings-save" onclick="showAlert('addrAlert')">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank details -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Банковские реквизиты</div>
+                        <div class="settings-card-subtitle">Для формирования договоров и счетов</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-form-grid">
+                        <div class="form-group span-2">
+                            <label>Наименование банка</label>
+                            <input type="text" id="bankName" placeholder="ПАО «Сбербанк России» в г. Тюмень">
+                        </div>
+                        <div class="form-group">
+                            <label>БИК</label>
+                            <input type="text" id="bankBik" placeholder="047144651" maxlength="9">
+                        </div>
+                        <div class="form-group">
+                            <label>Корреспондентский счёт</label>
+                            <input type="text" id="bankKs" placeholder="30101810800000000651" maxlength="20">
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Расчётный счёт</label>
+                            <input type="text" id="bankRs" placeholder="40702810500000012345" maxlength="20">
+                        </div>
+                    </div>
+                    <div class="form-row-actions">
+                        <div class="alert-inline success" id="bankAlert">Реквизиты сохранены</div>
+                        <button class="btn-settings-save" onclick="showAlert('bankAlert')">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="settings-card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <div>
+                        <div class="settings-card-title">Контактные данные</div>
+                        <div class="settings-card-subtitle">Публичные контакты для поставщиков и заказчиков</div>
                     </div>
                 </div>
                 <div class="settings-card-body">
                     <div class="settings-form-grid">
                         <div class="form-group">
-                            <label>Новый email</label>
-                            <input type="email" id="newEmail" placeholder="example@company.ru" autocomplete="email">
+                            <label>Телефон</label>
+                            <input type="tel" id="contactPhone" placeholder="+7 (000) 000-00-00">
                         </div>
                         <div class="form-group">
-                            <label>Подтверждение паролем</label>
-                            <input type="password" id="emailPassword" placeholder="Введите текущий пароль" autocomplete="current-password">
+                            <label>Email компании</label>
+                            <input type="email" id="contactEmail" placeholder="info@company.ru">
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Сайт</label>
+                            <input type="url" id="contactSite" placeholder="https://company.ru">
+                        </div>
+                        <div class="form-group">
+                            <label>Контактное лицо</label>
+                            <input type="text" id="contactPerson" placeholder="Иванов Иван Иванович">
+                        </div>
+                        <div class="form-group">
+                            <label>Должность</label>
+                            <input type="text" id="contactPosition" placeholder="Директор по закупкам">
                         </div>
                     </div>
                     <div class="form-row-actions">
-                        <button class="btn-settings-save" id="saveEmailBtn" onclick="changeEmail()">Сохранить email</button>
-                        <div class="alert-inline" id="emailAlert"></div>
+                        <div class="alert-inline success" id="contactAlert">Контакты сохранены</div>
+                        <button class="btn-settings-save" onclick="showAlert('contactAlert')">Сохранить</button>
                     </div>
                 </div>
             </div>
@@ -353,8 +488,8 @@
                         </div>
                     </div>
                     <div class="form-row-actions">
-                        <button class="btn-settings-save" id="savePasswordBtn" onclick="changePassword()">Сохранить пароль</button>
                         <div class="alert-inline" id="passwordAlert"></div>
+                        <button class="btn-settings-save" id="savePasswordBtn" onclick="changePassword()">Сохранить пароль</button>
                     </div>
                 </div>
             </div>
@@ -662,6 +797,18 @@
             const pane = document.getElementById('pane-' + tab);
             if (pane) pane.classList.add('active');
             if (btn) btn.classList.add('active');
+        }
+
+        function showAlert(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'block';
+            el.classList.add('success');
+            setTimeout(() => { el.style.display = 'none'; }, 2500);
+        }
+
+        function saveCompanyDetails() {
+            showAlert('companyAlert');
         }
 
         function saveNotifPref(checkbox) {

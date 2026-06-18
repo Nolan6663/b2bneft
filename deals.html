@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -8,95 +8,146 @@
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-
-        .filter-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-        .filter-tab {
-            padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
-            cursor: pointer; border: 1px solid var(--inner-border);
-            background: transparent; color: var(--text-secondary);
-            transition: border-color .15s, color .15s, background .15s;
+        /* ── Table layout ─────────────────────────────────────────────── */
+        .orders-wrap {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 16px;
+            align-items: start;
         }
-        .filter-tab.active { background: var(--accent-gradient); color: var(--accent-on-button); border-color: transparent; }
-        .filter-tab:hover:not(.active) { border-color: var(--text-secondary); color: var(--text-primary); }
-
-        .deals-list { display: flex; flex-direction: column; gap: 12px; }
-
-        .deal-card {
+        .orders-table-section {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
-            padding: 18px 20px;
-            transition: border-color .15s;
+            overflow: hidden;
         }
-        .deal-card:hover { border-color: rgba(8,145,178,.3); }
-        .deal-card.row-selected { border-color: var(--accent-cyan) !important; background: var(--bg-section) !important; }
-
-        .deal-card-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
+        .orders-controls {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; padding: 14px 16px 0;
+            flex-wrap: wrap;
         }
-        .deal-card-title { font-size: 14.5px; font-weight: 700; color: var(--text-primary-alt); margin-bottom: 6px; }
-        .deal-card-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .orders-filter-tabs {
+            display: flex; gap: 2px;
+        }
+        .orders-filter-tab {
+            padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+            cursor: pointer; border: none; background: transparent;
+            color: var(--text-secondary); font-family: inherit;
+            transition: background .15s, color .15s;
+        }
+        .orders-filter-tab.active {
+            background: var(--accent-bright); color: #fff;
+        }
+        .orders-filter-tab:hover:not(.active) { background: var(--bg-section); color: var(--text-primary); }
+        .orders-actions { display: flex; gap: 8px; }
 
-        .deal-status {
+        /* Table */
+        .orders-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .orders-table thead tr {
+            border-bottom: 1px solid var(--card-border);
+        }
+        .orders-table th {
+            padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600;
+            color: var(--text-secondary); white-space: nowrap;
+            cursor: pointer; user-select: none;
+        }
+        .orders-table th:hover { color: var(--text-primary); }
+        .orders-table td {
+            padding: 11px 12px; border-bottom: 1px solid var(--inner-border);
+            vertical-align: middle; color: var(--text-primary);
+        }
+        .orders-table tbody tr { cursor: pointer; transition: background .1s; }
+        .orders-table tbody tr:hover { background: var(--bg-section); }
+        .orders-table tbody tr.row-selected { background: rgba(8,145,178,.06); }
+        .orders-table tbody tr.row-selected td { border-bottom-color: rgba(8,145,178,.15); }
+        .orders-table tbody tr:last-child td { border-bottom: none; }
+
+        /* Table columns */
+        .col-num { font-size: 11px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+        .col-title { font-weight: 600; color: var(--text-primary); max-width: 200px; }
+        .col-title .col-desc { font-size: 11.5px; color: var(--text-secondary); font-weight: 400; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .col-amount { font-weight: 600; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+        .col-supplier { color: var(--accent-bright); font-size: 12px; max-width: 130px; }
+        .col-proposals { font-size: 12px; color: var(--text-secondary); text-align: center; }
+        .col-date { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+        /* Status pills */
+        .st-pill {
             display: inline-flex; align-items: center; gap: 5px;
-            padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
-            white-space: nowrap; flex-shrink: 0;
+            padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+            white-space: nowrap;
         }
-        .deal-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-        .deal-status.active  { background: rgba(8,145,178,.12); border: 1px solid rgba(8,145,178,.25); color: var(--accent-bright); }
-        .deal-status.done    { background: rgba(148,163,184,.1); border: 1px solid rgba(148,163,184,.2); color: var(--text-secondary); }
+        .st-pill::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+        .st-active   { background: rgba(8,145,178,.1);   color: var(--accent-cyan);  border: 1px solid rgba(8,145,178,.2); }
+        .st-inwork   { background: rgba(251,191,36,.1);  color: #b45309;              border: 1px solid rgba(251,191,36,.25); }
+        .st-done     { background: rgba(16,185,129,.1);  color: var(--accent-green); border: 1px solid rgba(16,185,129,.2); }
+        .st-cancel   { background: rgba(107,114,128,.08); color: var(--text-secondary); border: 1px solid var(--inner-border); }
 
-        .deal-info-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px 20px;
-            padding: 14px 0;
-            border-top: 1px solid var(--inner-border);
-            border-bottom: 1px solid var(--inner-border);
-            margin-bottom: 14px;
+        /* Coefficient bar */
+        .coeff-cell { min-width: 80px; }
+        .coeff-bar-wrap { height: 5px; background: var(--inner-border); border-radius: 3px; margin-top: 4px; }
+        .coeff-bar-fill { height: 100%; border-radius: 3px; background: var(--accent-bright); transition: width .3s; }
+        .coeff-val { font-size: 11px; color: var(--text-secondary); }
+
+        /* Table footer */
+        .orders-table-footer {
+            padding: 12px 16px; text-align: center;
+            font-size: 13px; color: var(--accent-bright); font-weight: 600;
+            cursor: pointer; border-top: 1px solid var(--inner-border);
         }
-        @media (max-width: 700px) { .deal-info-grid { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 480px) {
-            .deal-card-top { flex-wrap: wrap; }
-            .kpi-strip { grid-template-columns: 1fr 1fr; }
-            .deal-card { padding: 14px 16px; }
+        .orders-table-footer:hover { background: var(--bg-section); }
+
+        /* ── Detail panel ─────────────────────────────────────────────── */
+        .deal-detail-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 18px;
+            position: sticky; top: 16px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
         }
+        .ddp-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px; }
+        .ddp-title { font-size:14px; font-weight:700; line-height:1.35; flex:1; color:var(--text-primary); }
+        .ddp-close { background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:16px; padding:0; flex-shrink:0; }
 
-        .deal-info-label { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 3px; }
-        .deal-info-value { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
-        .deal-info-value a { color: var(--accent-bright); text-decoration: none; }
-        .deal-info-value a:hover { text-decoration: underline; }
+        .ddp-meta-table { width:100%; font-size:12.5px; border-collapse:collapse; margin-bottom:16px; }
+        .ddp-meta-table tr td { padding: 5px 0; }
+        .ddp-meta-table tr td:first-child { color: var(--text-secondary); width: 45%; }
+        .ddp-meta-table tr td:last-child { font-weight: 600; color: var(--text-primary); }
+        .ddp-meta-table tr { border-bottom: 1px solid var(--inner-border); }
+        .ddp-meta-table tr:last-child { border-bottom: none; }
 
-        .deal-card-actions { display: flex; gap: 8px; align-items: center; }
+        .ddp-section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 8px; }
 
-        .btn-deal-chat {
-            display: inline-flex; align-items: center; gap: 6px;
-            height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 600;
-            border-radius: var(--radius-btn); text-decoration: none;
-            background: transparent; border: 1px solid var(--secondary-btn-border);
-            color: var(--secondary-btn-text); cursor: pointer;
-            transition: border-color .15s, color .15s;
+        .kp-card {
+            background: var(--inner-bg); border: 1px solid var(--inner-border);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
         }
-        .btn-deal-chat:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+        .kp-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+        .kp-num { font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; }
+        .kp-price { font-size:15px; font-weight:800; color:var(--accent-bright); font-family:'JetBrains Mono',monospace; }
+        .kp-supplier { font-size:12px; color:var(--text-primary); font-weight:600; margin-bottom:4px; }
+        .kp-meta { font-size:11.5px; color:var(--text-secondary); }
+        .kp-actions { display:flex; gap:6px; margin-top:10px; }
+        .kp-actions .btn-primary, .kp-actions .btn-secondary { height:30px; font-size:12px; padding:0 12px; flex:1; }
 
-        .btn-complete {
-            height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 600;
-            border-radius: var(--radius-btn); cursor: pointer;
-            background: transparent; border: 1px solid rgba(8,145,178,.4);
-            color: var(--accent-bright);
-            transition: background .15s, border-color .15s;
-        }
-        .btn-complete:hover { background: rgba(8,145,178,.1); border-color: var(--accent-bright); }
+        .ddp-analytics { background: var(--inner-bg); border:1px solid var(--inner-border); border-radius:10px; padding:12px 14px; margin-top:14px; }
+        .ddp-analytics-title { font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:10px; }
+        .ddp-mini-bars { display:flex; align-items:flex-end; gap:3px; height:40px; }
+        .ddp-mini-bar { flex:1; border-radius:2px 2px 0 0; background:var(--accent-bright); opacity:.7; min-height:4px; }
 
-        .deals-empty {
-            text-align: center; padding: 80px 20px;
-            color: var(--text-secondary); font-size: 14px; line-height: 1.7;
-        }
-        .deals-empty-icon { font-size: 36px; opacity: .3; margin-bottom: 14px; }
+        .ddp-supplier-list { display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+        .ddp-supplier-row { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+        .ddp-supplier-name { color:var(--text-primary); font-weight:500; }
+        .ddp-supplier-score { font-weight:700; color:var(--accent-bright); }
+
+        /* hidden state */
+        .deal-detail-panel.hidden { display: none; }
+
+        /* ── KPI with sparkline ────────────────────────────────────────── */
+        .kpi-sparkline { width:80px; height:30px; flex-shrink:0; }
+        .kpi-card::after { display: none !important; }
     </style>
 </head>
 <body>
@@ -110,12 +161,9 @@
         <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
         <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
         <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
-        <a href="#" id="sidebarProfileLink" style="display:none;">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
-            Мой профиль
-        </a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
+        <a href="#" id="sidebarProfileLink" style="display:none;"><svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>Мой профиль</a>
         <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
         <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
 
@@ -143,64 +191,114 @@
             </button>
         </div>
 
+        <!-- KPI Row -->
         <div class="kpi-row">
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Всего сделок</div>
-                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg></div>
+                <div class="kpi-card-top"><div class="kpi-label">Заявок</div>
+                    <svg class="kpi-sparkline" viewBox="0 0 80 30" fill="none"><polyline points="0,25 13,20 26,22 40,14 53,16 66,8 80,10" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient><polygon points="0,25 13,20 26,22 40,14 53,16 66,8 80,10 80,30 0,30" fill="url(#sg1)"/></svg>
                 </div>
-                <div class="kpi-value" id="kpiTotal">—</div>
+                <div class="kpi-value" id="kpiTotal">42</div>
+                <div class="kpi-sub kpi-delta positive">↑ 8% к прошлому периоду</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">В работе</div>
-                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <div class="kpi-card-top"><div class="kpi-label">Активных</div>
+                    <svg class="kpi-sparkline" viewBox="0 0 80 30" fill="none"><polyline points="0,22 13,18 26,20 40,12 53,14 66,7 80,9" stroke="var(--accent-blue)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient><polygon points="0,22 13,18 26,20 40,12 53,14 66,7 80,9 80,30 0,30" fill="url(#sg2)"/></svg>
                 </div>
-                <div class="kpi-value" id="kpiActive" style="color:var(--accent-cyan);">—</div>
+                <div class="kpi-value" id="kpiActive" style="color:var(--accent-blue);">17</div>
+                <div class="kpi-sub kpi-delta positive">↑ 12% к прошлому периоду</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Выполнено</div>
-                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="kpi-card-top"><div class="kpi-label">В производстве</div>
+                    <svg class="kpi-sparkline" viewBox="0 0 80 30" fill="none"><polyline points="0,20 13,22 26,17 40,18 53,12 66,14 80,10" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-linejoin="round"/><linearGradient id="sg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient><polygon points="0,20 13,22 26,17 40,18 53,12 66,14 80,10 80,30 0,30" fill="url(#sg3)"/></svg>
                 </div>
-                <div class="kpi-value" id="kpiCompleted" style="color:var(--accent-green);">—</div>
+                <div class="kpi-value" id="kpiInWork" style="color:#b45309;">8</div>
+                <div class="kpi-sub">в обработке</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label" id="kpiAmountLabel">Сумма</div>
-                    <div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <div class="kpi-card-top"><div class="kpi-label">Завершённых</div>
+                    <svg class="kpi-sparkline" viewBox="0 0 80 30" fill="none"><polyline points="0,24 13,20 26,16 40,15 53,12 66,9 80,7" stroke="var(--accent-green)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><linearGradient id="sg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-green)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0"/></linearGradient><polygon points="0,24 13,20 26,16 40,15 53,12 66,9 80,7 80,30 0,30" fill="url(#sg4)"/></svg>
                 </div>
-                <div class="kpi-value" id="kpiAmount" style="font-size:20px;">—</div>
+                <div class="kpi-value" id="kpiCompleted" style="color:var(--accent-green);">56</div>
+                <div class="kpi-sub kpi-delta positive">↑ 23% к прошлому периоду</div>
             </div>
         </div>
 
-        <div class="proc-layout">
-        <div style="display:flex;flex-direction:column;gap:14px;min-width:0;">
-        <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all"       onclick="setFilter('all')">Все</button>
-            <button class="filter-tab"         data-filter="active"    onclick="setFilter('active')">В работе</button>
-            <button class="filter-tab"         data-filter="completed" onclick="setFilter('completed')">Выполнены</button>
-        </div>
+        <!-- Table + Panel -->
+        <div class="orders-wrap">
 
-        <div class="deals-list" id="dealsList">
-            <div class="deals-empty"><div class="deals-empty-icon">📋</div>Загрузка...</div>
-        </div>
-        </div>
+            <!-- Table Section -->
+            <div class="orders-table-section">
+                <div class="orders-controls">
+                    <div class="orders-filter-tabs">
+                        <button class="orders-filter-tab active" onclick="setFilter('all',this)">Все <span id="tabCountAll" style="opacity:.6;font-size:11px;"></span></button>
+                        <button class="orders-filter-tab" onclick="setFilter('active',this)">Активные</button>
+                        <button class="orders-filter-tab" onclick="setFilter('inwork',this)">В производстве</button>
+                        <button class="orders-filter-tab" onclick="setFilter('completed',this)">Завершённые</button>
+                        <button class="orders-filter-tab" onclick="setFilter('all',this)">Вся история</button>
+                    </div>
+                    <div class="orders-actions">
+                        <button class="btn-secondary" onclick="exportCSV()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                            Экспорт
+                        </button>
+                        <button class="btn-primary" onclick="alert('Создание заказа доступно из Кабинета заказчика')">＋ Создать заказ</button>
+                    </div>
+                </div>
 
-        <!-- STICKY DEAL DETAIL PANEL -->
-        <div class="proc-detail-panel" id="dealDetailPanel" style="display:none;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
-                <div style="font-size:15px;font-weight:700;line-height:1.3;flex:1;" id="dealPanelTitle">—</div>
-                <button onclick="document.getElementById('dealDetailPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;padding:0 0 0 8px;flex:none;">✕</button>
+                <div style="overflow-x:auto;">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"><input type="checkbox" style="width:13px;height:13px;" onclick="toggleSelectAll(this)"></th>
+                            <th onclick="sortTable('num')">№ ↕</th>
+                            <th onclick="sortTable('title')">Наименование ↕</th>
+                            <th onclick="sortTable('deadline')">Срок исп. ↕</th>
+                            <th onclick="sortTable('amount')">Сумма ↕</th>
+                            <th onclick="sortTable('supplier')">Поставщик ↕</th>
+                            <th style="text-align:center;">КП</th>
+                            <th onclick="sortTable('status')">Статус ↕</th>
+                            <th onclick="sortTable('coeff')">Коэффициент ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+                </div>
+                <div class="orders-table-footer" onclick="showAllOrders()">Показать все <span id="totalOrdersCount">28</span> заказов ↓</div>
             </div>
-            <div style="margin-bottom:16px;" id="dealPanelStatus"></div>
-            <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);margin-bottom:16px;" id="dealPanelMeta"></div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Этапы и прогресс</div>
-            <div id="dealPanelStages"></div>
-            <div style="display:flex;gap:8px;margin-top:16px;" id="dealPanelActions"></div>
-        </div>
-        </div><!-- /.proc-layout -->
-    </div>
+
+            <!-- Detail Panel -->
+            <div class="deal-detail-panel hidden" id="dealDetailPanel">
+                <div class="ddp-header">
+                    <div class="ddp-title" id="ddpTitle">Выберите заказ</div>
+                    <button class="ddp-close" onclick="closePanel()">✕</button>
+                </div>
+                <div id="ddpStatus" style="margin-bottom:12px;"></div>
+
+                <table class="ddp-meta-table" id="ddpMeta"></table>
+
+                <div class="ddp-section-title">Поступившие коммерческие предложения</div>
+                <div id="ddpKPList"></div>
+
+                <div id="ddpAnalytics" class="ddp-analytics" style="display:none;">
+                    <div class="ddp-analytics-title">Аналитика по заказу</div>
+                    <div class="ddp-mini-bars" id="ddpBars"></div>
+                    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);margin-top:4px;"><span>Янв</span><span>Фев</span><span>Мар</span><span>Апр</span><span>Май</span><span>Июн</span></div>
+                </div>
+
+                <div id="ddpSuppliers" style="display:none;">
+                    <div class="ddp-section-title" style="margin-top:14px;">Топ поставщиков</div>
+                    <div class="ddp-supplier-list" id="ddpSupplierList"></div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <button class="btn-primary" style="flex:1;" onclick="alert('Выбор поставщика: перейдите в предложение')">Выбрать поставщика</button>
+                    <button class="btn-secondary" onclick="window.location.href='messages.html'" style="flex:1;">Открыть чат</button>
+                </div>
+            </div>
+
+        </div><!-- /orders-wrap -->
+
+    </div><!-- /main-content -->
 
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width:440px;">
@@ -215,26 +313,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
-<script>
-function toggleTheme() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = !isDark;
-    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
-    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = isDark;
-    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
-    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-});
-</script>
+    <script>
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = !isDark;
+        if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = isDark;
+        if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    });
+    </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
@@ -243,241 +337,209 @@ document.addEventListener('DOMContentLoaded', () => {
         const token     = localStorage.getItem('authToken');
         let allDeals    = [];
         let currentFilter = 'all';
+        let selectedId = null;
 
         const MOCK_DEALS = [
-            { id:1, title:'Компрессор воздушный ВП-50/8', category:'Насосное оборудование', completionStatus:'active', counterparty:'ООО «НефтеПромСнаб»', counterpartyProfileId:1, price:2450000, quantity:2, unit:'шт', days:21, dealDate:'2026-05-15', orderId:1, proposalId:1, description:'Поставка компрессорного оборудования согласно ТЗ' },
-            { id:2, title:'Манжета резиновая армированная 60×90×10', category:'РТИ', completionStatus:'active', counterparty:'ООО «АктивСнаб»', counterpartyProfileId:2, price:187000, quantity:500, unit:'шт', days:14, dealDate:'2026-05-20', orderId:2, proposalId:2, description:'ГОСТ 12.2.016, стойкость к нефти' },
-            { id:3, title:'Фланец стальной Ду100 Ру16', category:'Металлоконструкции', completionStatus:'completed', counterparty:'АО «РегионСнаб»', counterpartyProfileId:3, price:980000, quantity:120, unit:'шт', days:30, dealDate:'2026-04-10', orderId:3, proposalId:3, description:'Сталь 09Г2С, поставлено в срок' },
-            { id:4, title:'Труба НКТ 73×5.5 ГОСТ 633', category:'Трубопровод', completionStatus:'completed', counterparty:'ООО «ПромМаш»', counterpartyProfileId:4, price:1340000, quantity:300, unit:'м', days:45, dealDate:'2026-03-22', orderId:4, proposalId:4, description:'Группа прочности Д, приёмка выполнена' },
-            { id:5, title:'Насос ЦНС 38-132 в сборе', category:'Насосное оборудование', completionStatus:'active', counterparty:'ООО «ТехноПром»', counterpartyProfileId:5, price:810000, quantity:1, unit:'шт', days:60, dealDate:'2026-06-01', orderId:5, proposalId:5, description:'Насос для перекачки нефти' },
-            { id:6, title:'Запорная арматура DN50 PN40', category:'Трубопровод', completionStatus:'active', counterparty:'ООО «НефтеПромСнаб»', counterpartyProfileId:1, price:560000, quantity:24, unit:'шт', days:18, dealDate:'2026-06-05', orderId:6, proposalId:6, description:'Нержавеющая сталь' },
-            { id:7, title:'Кабель ВВГнг 4×16', category:'Электрооборудование', completionStatus:'completed', counterparty:'АО «РегионСнаб»', counterpartyProfileId:3, price:320000, quantity:1000, unit:'м', days:10, dealDate:'2026-02-14', orderId:7, proposalId:7, description:'ГОСТ 16442' },
-            { id:8, title:'Задвижка клиновая 30с941нж', category:'Трубопровод', completionStatus:'completed', counterparty:'ООО «АктивСнаб»', counterpartyProfileId:2, price:670000, quantity:8, unit:'шт', days:25, dealDate:'2026-01-30', orderId:8, proposalId:8, description:'Сталь 20' },
+            { id:1,  num:'КО-2026-06-001', title:'Компрессор воздушный ВП-50/8',              category:'Насосное оборудование', status:'active',    supplier:'ООО «НефтеПромСнаб»', price:2450000, quantity:2,   unit:'шт', deadline:'2026-07-20', proposalCount:8,  coeff:87, description:'ГОСТ 12.2.016, давление 8 бар, производительность 50 м³/ч', proposals:[{num:1,supplier:'ООО «НефтеПромСнаб»',price:2450000,days:21},{num:2,supplier:'АО «РегионСнаб»',price:2610000,days:28}] },
+            { id:2,  num:'КО-2026-06-002', title:'Манжета резиновая армированная 60×90×10',   category:'РТИ',                   status:'active',    supplier:'ООО «АктивСнаб»',     price:187000,  quantity:500, unit:'шт', deadline:'2026-07-05', proposalCount:14, coeff:72, description:'ГОСТ 12.2.016, стойкость к нефти и нефтепродуктам', proposals:[{num:1,supplier:'ООО «АктивСнаб»',price:187000,days:14},{num:2,supplier:'ПАО «Завод РТИ»',price:174000,days:18}] },
+            { id:3,  num:'КО-2026-05-003', title:'Фланец стальной Ду100 Ру16',                category:'Металлоконструкции',    status:'inwork',    supplier:'АО «РегионСнаб»',     price:980000,  quantity:120, unit:'шт', deadline:'2026-07-15', proposalCount:6,  coeff:94, description:'Сталь 09Г2С, PN16, DN100', proposals:[{num:1,supplier:'АО «РегионСнаб»',price:980000,days:30}] },
+            { id:4,  num:'КО-2026-04-004', title:'Труба НКТ 73×5.5 ГОСТ 633',                category:'Трубопровод',           status:'completed', supplier:'ООО «ПромМаш»',       price:1340000, quantity:300, unit:'м',  deadline:'2026-05-30', proposalCount:9,  coeff:100, description:'Группа прочности Д, длина 10 м', proposals:[{num:1,supplier:'ООО «ПромМаш»',price:1340000,days:45}] },
+            { id:5,  num:'КО-2026-06-005', title:'Насос ЦНС 38-132 в сборе',                 category:'Насосное оборудование', status:'active',    supplier:'ООО «ТехноПром»',     price:810000,  quantity:1,   unit:'шт', deadline:'2026-07-25', proposalCount:3,  coeff:61, description:'Центробежный насос для перекачки нефти, Q=38 м³/ч, H=132 м', proposals:[{num:1,supplier:'ООО «ТехноПром»',price:810000,days:60},{num:2,supplier:'ООО «ПромМаш»',price:850000,days:45}] },
+            { id:6,  num:'КО-2026-06-006', title:'Запорная арматура DN50 PN40',               category:'Трубопровод',           status:'inwork',    supplier:'ООО «НефтеПромСнаб»', price:560000,  quantity:24,  unit:'шт', deadline:'2026-07-08', proposalCount:5,  coeff:78, description:'Нержавеющая сталь, задвижки клиновые ГОСТ 9698', proposals:[{num:1,supplier:'ООО «НефтеПромСнаб»',price:560000,days:18}] },
+            { id:7,  num:'КО-2026-03-007', title:'Кабель ВВГнг 4×16',                        category:'Электрооборудование',   status:'completed', supplier:'АО «РегионСнаб»',     price:320000,  quantity:1000,unit:'м',  deadline:'2026-04-20', proposalCount:11, coeff:100, description:'ГОСТ 16442, для стационарной прокладки', proposals:[{num:1,supplier:'АО «РегионСнаб»',price:320000,days:10}] },
+            { id:8,  num:'КО-2026-02-008', title:'Задвижка клиновая 30с941нж',                category:'Трубопровод',           status:'completed', supplier:'ООО «АктивСнаб»',     price:670000,  quantity:8,   unit:'шт', deadline:'2026-03-15', proposalCount:7,  coeff:96, description:'Сталь 20, Ду150 Ру40, ГОСТ 9698', proposals:[{num:1,supplier:'ООО «АктивСнаб»',price:670000,days:25}] },
+            { id:9,  num:'КО-2026-06-009', title:'Уплотнение торцевое М56',                   category:'РТИ',                   status:'active',    supplier:'—',                   price:0,       quantity:50,  unit:'шт', deadline:'2026-07-30', proposalCount:2,  coeff:38, description:'Стойкость к температуре до +150°C, рабочее давление 25 бар', proposals:[] },
+            { id:10, num:'КО-2026-05-010', title:'Электродвигатель АИР 90L2 3кВт',            category:'Электрооборудование',   status:'inwork',    supplier:'ООО «ТехноПром»',     price:245000,  quantity:4,   unit:'шт', deadline:'2026-07-01', proposalCount:6,  coeff:83, description:'Частота вращения 3000 об/мин, IP54, климатическое исполнение УХЛ', proposals:[{num:1,supplier:'ООО «ТехноПром»',price:245000,days:20}] },
         ];
+
+        const STATUS_MAP = {
+            active:    { label:'Активный',      cls:'st-active' },
+            inwork:    { label:'В производстве', cls:'st-inwork' },
+            completed: { label:'Завершён',       cls:'st-done'   },
+            cancelled: { label:'Отменён',        cls:'st-cancel' },
+        };
+
+        function fmtPrice(p) {
+            if (!p) return '—';
+            return p >= 1000000
+                ? (p/1000000).toFixed(2).replace('.',',') + ' млн ₽'
+                : p.toLocaleString('ru-RU') + ' ₽';
+        }
+        function fmtDate(d) {
+            if (!d) return '—';
+            const dt = new Date(d);
+            return dt.toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+
+        function setFilter(f, btn) {
+            currentFilter = f;
+            document.querySelectorAll('.orders-filter-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderTable();
+        }
+
+        function renderTable() {
+            const filtered = currentFilter === 'all' ? allDeals
+                : allDeals.filter(d => d.status === currentFilter);
+
+            document.getElementById('totalOrdersCount').textContent = filtered.length;
+            document.getElementById('tabCountAll').textContent = allDeals.length;
+
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            filtered.forEach(d => {
+                const st = STATUS_MAP[d.status] || { label: d.status, cls: 'st-cancel' };
+                const tr = document.createElement('tr');
+                if (d.id === selectedId) tr.classList.add('row-selected');
+                tr.innerHTML = `
+                    <td><input type="checkbox" style="width:13px;height:13px;"></td>
+                    <td class="col-num">${escapeHtml(d.num)}</td>
+                    <td>
+                        <div class="col-title">${escapeHtml(d.title)}</div>
+                        <div class="col-title"><div class="col-desc">${escapeHtml(d.description || '')}</div></div>
+                    </td>
+                    <td class="col-date">${fmtDate(d.deadline)}</td>
+                    <td class="col-amount">${fmtPrice(d.price)}</td>
+                    <td class="col-supplier">${escapeHtml(d.supplier || '—')}</td>
+                    <td class="col-proposals" style="text-align:center;">
+                        ${d.proposalCount > 0 ? `<span style="background:rgba(8,145,178,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;">КП ${d.proposalCount}</span>` : `<span style="color:var(--text-secondary);font-size:11.5px;">—</span>`}
+                    </td>
+                    <td><span class="st-pill ${st.cls}">${st.label}</span></td>
+                    <td class="coeff-cell">
+                        <div class="coeff-val">${d.coeff}%</div>
+                        <div class="coeff-bar-wrap"><div class="coeff-bar-fill" style="width:${d.coeff}%;background:${d.coeff>=80?'var(--accent-green)':d.coeff>=50?'var(--accent-cyan)':'#f59e0b'};"></div></div>
+                    </td>`;
+                tr.onclick = () => openPanel(d);
+                tbody.appendChild(tr);
+            });
+
+            updateKPI();
+        }
+
+        function updateKPI() {
+            const active    = allDeals.filter(d => d.status === 'active').length;
+            const inwork    = allDeals.filter(d => d.status === 'inwork').length;
+            const completed = allDeals.filter(d => d.status === 'completed').length;
+            document.getElementById('kpiTotal').textContent     = allDeals.length;
+            document.getElementById('kpiActive').textContent    = active;
+            document.getElementById('kpiInWork').textContent    = inwork;
+            document.getElementById('kpiCompleted').textContent = completed;
+        }
+
+        function openPanel(d) {
+            selectedId = d.id;
+            document.querySelectorAll('#ordersTableBody tr').forEach(tr => tr.classList.remove('row-selected'));
+            event && event.currentTarget && event.currentTarget.classList.add('row-selected');
+
+            const panel = document.getElementById('dealDetailPanel');
+            panel.classList.remove('hidden');
+
+            document.getElementById('ddpTitle').textContent = d.title;
+
+            const st = STATUS_MAP[d.status] || { label: d.status, cls: 'st-active' };
+            document.getElementById('ddpStatus').innerHTML = `<span class="st-pill ${st.cls}">${st.label}</span> <span style="font-size:11px;color:var(--text-secondary);margin-left:8px;font-family:monospace;">${d.num}</span>`;
+
+            const meta = [
+                ['Категория', d.category],
+                ['Количество', `${d.quantity} ${d.unit}`],
+                ['Срок исполнения', fmtDate(d.deadline)],
+                ['Поставщик', d.supplier !== '—' ? d.supplier : 'Не выбран'],
+                ['Сумма договора', fmtPrice(d.price)],
+                ['Описание', d.description],
+            ];
+            document.getElementById('ddpMeta').innerHTML = meta.map(([k,v]) =>
+                `<tr><td>${k}</td><td>${escapeHtml(String(v||'—'))}</td></tr>`).join('');
+
+            const kpList = document.getElementById('ddpKPList');
+            if (d.proposals && d.proposals.length) {
+                kpList.innerHTML = d.proposals.map((kp,i) => `
+                    <div class="kp-card">
+                        <div class="kp-card-top">
+                            <span class="kp-num">КП №${kp.num}</span>
+                            <span class="kp-price">${fmtPrice(kp.price)}</span>
+                        </div>
+                        <div class="kp-supplier">${escapeHtml(kp.supplier)}</div>
+                        <div class="kp-meta">Срок поставки: ${kp.days} дн.</div>
+                        <div class="kp-actions">
+                            <button class="btn-primary" onclick="alert('Поставщик выбран: ${escapeHtml(kp.supplier)}')">Выбрать</button>
+                            <button class="btn-secondary" onclick="window.location.href='messages.html'">Чат</button>
+                        </div>
+                    </div>`).join('');
+            } else {
+                kpList.innerHTML = `<div style="font-size:13px;color:var(--text-secondary);padding:16px 0;text-align:center;">Предложений пока нет</div>`;
+            }
+
+            // mini bar chart
+            const bars = [40,55,48,62,70,58];
+            document.getElementById('ddpBars').innerHTML = bars.map(h =>
+                `<div class="ddp-mini-bar" style="height:${h}%;"></div>`).join('');
+            document.getElementById('ddpAnalytics').style.display = '';
+
+            // top suppliers
+            document.getElementById('ddpSupplierList').innerHTML = [
+                ['ООО «НефтеПромСнаб»','87%'],
+                ['ООО «АктивСнаб»','72%'],
+                ['АО «РегионСнаб»','94%'],
+            ].map(([name,score]) => `<div class="ddp-supplier-row"><span class="ddp-supplier-name">${name}</span><span class="ddp-supplier-score">${score}</span></div>`).join('');
+            document.getElementById('ddpSuppliers').style.display = '';
+
+            renderTable();
+        }
+
+        function closePanel() {
+            selectedId = null;
+            document.getElementById('dealDetailPanel').classList.add('hidden');
+            renderTable();
+        }
+
+        function toggleSelectAll(cb) {
+            document.querySelectorAll('#ordersTableBody input[type=checkbox]').forEach(c => c.checked = cb.checked);
+        }
+
+        function sortTable(col) { /* stub — data is mock */ }
+
+        function showAllOrders() {
+            setFilter('all', document.querySelector('.orders-filter-tab'));
+        }
+
+        function exportCSV() {
+            const rows = [['№','Наименование','Срок','Сумма','Поставщик','Статус']];
+            allDeals.forEach(d => rows.push([d.num, d.title, fmtDate(d.deadline), fmtPrice(d.price), d.supplier, STATUS_MAP[d.status]?.label || d.status]));
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿'+csv);
+            a.download = 'orders.csv';
+            a.click();
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
             const navProposals = document.getElementById('navProposals');
             if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+            document.getElementById('pageTitle').textContent = userRole === 'customer' ? 'Заказы' : 'Выигранные сделки';
 
-            document.getElementById('pageTitle').textContent =
-                userRole === 'customer' ? 'Мои заказы' : 'Выигранные сделки';
-            document.getElementById('kpiAmountLabel').textContent =
-                userRole === 'customer' ? 'Сумма закупок' : 'Сумма выручки';
-
-            /* Show mock data immediately */
             allDeals = MOCK_DEALS;
-            updateKPI();
-            renderDeals();
+            renderTable();
 
             try {
                 const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
                 if (r.ok) {
                     const companies = await r.json();
                     const mine = companies.find(c => c.company === myCompany && c.role === userRole);
-                    if (mine) {
-                        const spl = document.getElementById('sidebarProfileLink');
-                        if (spl) { spl.href = `company-profile.html?id=${mine.id}`; spl.style.display = ''; }
-                    }
+                    if (mine) { const spl = document.getElementById('sidebarProfileLink'); if (spl) { spl.href = `company-profile.html?id=${mine.id}`; spl.style.display = ''; } }
                 }
             } catch {}
 
-            await loadDeals();
+            try {
+                const r = await fetch(`${SERVER_URL}/deals`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) { allDeals = await r.json(); renderTable(); }
+            } catch {}
+
             initNotifications();
             initSidebarBadges();
         });
-
-        async function loadDeals() {
-            try {
-                const r = await fetch(`${SERVER_URL}/deals`, { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!r.ok) throw new Error();
-                allDeals = await r.json();
-                updateKPI();
-                renderDeals();
-            } catch {
-                /* keep mock data already shown */
-            }
-        }
-
-        function updateKPI() {
-            const active    = allDeals.filter(d => d.completionStatus === 'active').length;
-            const completed = allDeals.filter(d => d.completionStatus === 'completed').length;
-            const total     = allDeals.reduce((s, d) => s + (d.price || 0) * (d.quantity || 1), 0);
-
-            document.getElementById('kpiTotal').textContent     = allDeals.length;
-            document.getElementById('kpiActive').textContent    = active;
-            document.getElementById('kpiCompleted').textContent = completed;
-            document.getElementById('kpiAmount').textContent    = total > 0
-                ? total.toLocaleString('ru-RU') + ' ₽' : '—';
-        }
-
-        function setFilter(f) {
-            currentFilter = f;
-            document.querySelectorAll('.filter-tab').forEach(t =>
-                t.classList.toggle('active', t.dataset.filter === f));
-            renderDeals();
-        }
-
-        function renderDeals() {
-            const list = currentFilter === 'all' ? allDeals
-                : allDeals.filter(d =>
-                    currentFilter === 'active'    ? d.completionStatus === 'active'
-                    : currentFilter === 'completed' ? d.completionStatus === 'completed'
-                    : true);
-
-            const container = document.getElementById('dealsList');
-            if (list.length === 0) {
-                const msg = currentFilter === 'active'    ? 'Нет активных сделок'
-                          : currentFilter === 'completed' ? 'Нет завершённых сделок'
-                          : userRole === 'customer'       ? 'Вы ещё не приняли ни одного предложения'
-                          :                                 'Ваши предложения пока не были приняты';
-                const hint = currentFilter === 'all'
-                    ? (userRole === 'customer'
-                        ? '<br><a href="index.html" style="color:var(--accent-bright);text-decoration:underline;">Перейти к закупкам →</a>'
-                        : '<br><a href="proposals.html" style="color:var(--accent-bright);text-decoration:underline;">Мои отклики →</a>')
-                    : '';
-                container.innerHTML = `<div class="deals-empty"><div class="deals-empty-icon">📋</div>${escapeHtml(msg)}${hint}</div>`;
-                return;
-            }
-            container.innerHTML = '';
-            list.forEach(d => container.appendChild(buildDealCard(d)));
-        }
-
-        function showDealPanel(d) {
-            const panel = document.getElementById('dealDetailPanel');
-            if (!panel) return;
-            panel.style.display = 'block';
-
-            document.getElementById('dealPanelTitle').textContent = d.title || '—';
-            const isActive = d.completionStatus === 'active';
-            document.getElementById('dealPanelStatus').innerHTML = isActive
-                ? '<span class="deal-status active">В работе</span>'
-                : '<span class="deal-status done">Выполнен</span>';
-
-            const date = d.dealDate ? new Date(d.dealDate).toLocaleDateString('ru-RU') : '—';
-            const partner = userRole === 'customer' ? d.counterparty : myCompany;
-            const partnerLabel = userRole === 'customer' ? 'Исполнитель' : 'Заказчик';
-
-            document.getElementById('dealPanelMeta').innerHTML = [
-                [partnerLabel, escapeHtml(partner || '—'), ''],
-                d.category ? ['Категория', escapeHtml(d.category), ''] : null,
-                d.price ? ['Цена', d.price.toLocaleString('ru-RU') + ' ₽', 'font-weight:600;font-family:"JetBrains Mono",monospace;'] : null,
-                d.days ? ['Срок', d.days + ' дней', 'font-weight:600;'] : null,
-                ['Дата сделки', date, 'font-family:"JetBrains Mono",monospace;'],
-            ].filter(Boolean).map(([label, val, style]) => `
-                <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:12.5px;">
-                    <span style="color:var(--text-secondary);">${label}</span>
-                    <span style="${style}">${val}</span>
-                </div>`).join('');
-
-            const chatCompany = userRole === 'customer' ? d.counterparty : myCompany;
-            const chatHref = `messages.html?orderId=${d.orderId}&company=${encodeURIComponent(chatCompany || '')}`;
-            const completeBtn = (userRole === 'customer' && isActive)
-                ? `<button class="btn-complete" style="flex:1;" onclick="completeDeal(${d.proposalId})">Завершить сделку</button>`
-                : '';
-            document.getElementById('dealPanelActions').innerHTML = `
-                <a href="${chatHref}" class="btn-deal-chat" style="flex:1;justify-content:center;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Чат
-                </a>
-                ${completeBtn}`;
-
-            document.getElementById('dealPanelStages').innerHTML = d.description
-                ? `<div style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;">${escapeHtml(d.description.slice(0, 200))}${d.description.length > 200 ? '…' : ''}</div>`
-                : '<div style="font-size:12.5px;color:var(--text-secondary);">Нет описания</div>';
-        }
-
-        function buildDealCard(d) {
-            const card = document.createElement('div');
-            card.className = 'deal-card';
-            card.style.cursor = 'pointer';
-
-            const isActive = d.completionStatus === 'active';
-            const statusHtml = isActive
-                ? '<span class="deal-status active">В работе</span>'
-                : '<span class="deal-status done">Выполнен</span>';
-
-            const date = d.dealDate
-                ? new Date(d.dealDate).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                : '—';
-
-            const counterpartyHtml = d.counterpartyProfileId
-                ? `<a href="company-profile.html?id=${d.counterpartyProfileId}">${escapeHtml(d.counterparty || '—')}</a>`
-                : escapeHtml(d.counterparty || '—');
-
-            const chatCompany = userRole === 'customer' ? d.counterparty : myCompany;
-            const chatHref = `messages.html?orderId=${d.orderId}&company=${encodeURIComponent(chatCompany || '')}`;
-
-            const completeBtn = (userRole === 'customer' && isActive)
-                ? `<button class="btn-complete" onclick="event.stopPropagation();completeDeal(${d.proposalId})">Завершить сделку</button>`
-                : '';
-
-            const catBadge = d.category
-                ? `<span class="badge-category" style="font-size:11.5px;padding:3px 8px;border-radius:8px;background:rgba(8,145,178,.1);border:1px solid rgba(8,145,178,.2);color:var(--accent-bright);">${escapeHtml(d.category)}</span>`
-                : '';
-
-            card.innerHTML = `
-                <div class="deal-card-top">
-                    <div>
-                        <div class="deal-card-title">${escapeHtml(d.title)}</div>
-                        <div class="deal-card-meta">
-                            ${catBadge}
-                            ${d.quantity ? `<span style="font-size:12px;color:var(--text-secondary)">${d.quantity}${d.unit ? ' ' + escapeHtml(d.unit) : ''}</span>` : ''}
-                        </div>
-                    </div>
-                    ${statusHtml}
-                </div>
-                <div class="deal-info-grid">
-                    <div>
-                        <div class="deal-info-label">${userRole === 'customer' ? 'Исполнитель' : 'Заказчик'}</div>
-                        <div class="deal-info-value">${counterpartyHtml}</div>
-                    </div>
-                    <div>
-                        <div class="deal-info-label">Цена</div>
-                        <div class="deal-info-value">${d.price ? d.price.toLocaleString('ru-RU') + ' ₽' + (d.unit ? '/' + escapeHtml(d.unit) : '') : '—'}</div>
-                    </div>
-                    <div>
-                        <div class="deal-info-label">Срок поставки</div>
-                        <div class="deal-info-value">${d.days ? d.days + ' дней' : '—'}</div>
-                    </div>
-                    <div>
-                        <div class="deal-info-label">Дата сделки</div>
-                        <div class="deal-info-value">${date}</div>
-                    </div>
-                </div>
-                <div class="deal-card-actions">
-                    <a href="${chatHref}" class="btn-deal-chat" onclick="event.stopPropagation()">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        Написать
-                    </a>
-                    ${completeBtn}
-                </div>`;
-            card.onclick = () => {
-                document.querySelectorAll('.deal-card').forEach(c => c.classList.remove('row-selected'));
-                card.classList.add('row-selected');
-                showDealPanel(d);
-            };
-            return card;
-        }
-
-        async function completeDeal(proposalId) {
-            if (!confirm('Подтвердить выполнение сделки?\nИсполнитель получит уведомление. Действие нельзя отменить.')) return;
-            try {
-                const r = await fetch(`${SERVER_URL}/deals/${proposalId}/complete`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await r.json();
-                if (r.ok) {
-                    await loadDeals();
-                } else {
-                    alert(data.error || 'Ошибка');
-                }
-            } catch {
-                alert('Сервер недоступен');
-            }
-        }
     </script>
 </body>
 </html>

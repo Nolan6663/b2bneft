@@ -1,42 +1,118 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Реестр контрагентов</title>
+    <title>B2B Нефтесервис — Контрагенты</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-        .filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-        .filters-row .custom-select-wrapper { max-width: 220px; }
-        .search-input-wrapper { position: relative; flex: 1; min-width: 240px; }
-        .search-input-wrapper input { padding-left: 38px; }
-        .search-input-wrapper svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); }
-        .btn-reset { white-space: nowrap; }
-        .table-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
-        .per-page-select { height: 30px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; padding: 0 8px; }
-        .actions-cell-link { background: transparent; border: none; color: var(--text-secondary); font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background-color 0.15s ease, color 0.15s ease; }
-        .actions-cell-link:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
-        .star-btn { font-size: 15px; color: var(--text-secondary); }
-        .star-btn.active { color: #f5b942; }
-        .star-btn:hover { color: #f5b942; }
-        #favoritesFilterBtn.active { background: rgba(245, 185, 66, 0.12); border-color: #f5b942; color: #f5b942; }
-        #verifiedFilterBtn.active { background: rgba(84, 199, 159, 0.12); border-color: var(--accent-bright); color: var(--accent-bright); }
-        .company-detail-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
-        .company-detail-row:last-child { border-bottom: none; }
-        .company-detail-row span:first-child { color: var(--text-secondary); }
-        .company-detail-row span:last-child { color: var(--text-primary); font-weight: 600; text-align: right; }
+        /* ── 3-column master layout ─── */
+        .ct-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 320px;
+            gap: 16px;
+            align-items: start;
+        }
 
-        .cap-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 18px 20px; }
-        .cap-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary-alt); margin-bottom: 4px; }
-        .cap-card-meta { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px; }
-        .cap-bar-row { margin-bottom: 10px; }
-        .cap-bar-label { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); margin-bottom: 4px; }
-        .cap-bar-label span:last-child { font-weight: 700; color: var(--accent-bright); }
-        .cap-bar-track { height: 6px; background: var(--inner-bg); border-radius: 4px; overflow: hidden; }
-        .cap-bar-fill { height: 100%; border-radius: 4px; background: var(--accent-gradient); transition: width .4s ease; }
-        .cap-card-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--accent-bright); }
+        /* Filter sidebar */
+        .ct-filters {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            position: sticky; top: 16px;
+        }
+        .ct-filter-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); margin-bottom: 10px; }
+        .ct-filter-section { margin-bottom: 18px; }
+        .ct-filter-section label { font-size: 12px; font-weight: 500; color: var(--text-secondary); display:block; margin-bottom:6px; }
+        .ct-filter-section input[type=text], .ct-filter-section select {
+            width:100%; height:32px; padding:0 10px;
+            background:var(--input-bg); border:1px solid var(--input-border);
+            border-radius:8px; color:var(--text-primary); font-size:12.5px; font-family:inherit;
+            box-sizing:border-box;
+        }
+        .ct-filter-chips { display:flex; flex-direction:column; gap:4px; }
+        .ct-chip { padding:5px 10px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid transparent; color:var(--text-secondary); transition:all .15s; text-align:left; background:transparent; }
+        .ct-chip:hover { background:var(--bg-section); color:var(--text-primary); }
+        .ct-chip.active { background:rgba(8,145,178,.1); color:var(--accent-cyan); border-color:rgba(8,145,178,.2); }
+        .ct-count-badge { float:right; background:var(--bg-section); color:var(--text-secondary); border-radius:20px; font-size:10.5px; padding:1px 7px; }
+
+        /* Card grid */
+        .ct-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .ct-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 16px;
+            cursor: pointer; transition: border-color .15s, box-shadow .15s;
+            position: relative;
+        }
+        .ct-card:hover { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(8,145,178,.06); }
+        .ct-card.selected { border-color: var(--accent-cyan); background: rgba(8,145,178,.03); }
+        .ct-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+        .ct-card-avatar { width:36px; height:36px; border-radius:10px; background:var(--accent-gradient); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
+        .ct-card-info { flex:1; min-width:0; }
+        .ct-card-name { font-size:13px; font-weight:700; color:var(--text-primary); line-height:1.3; margin-bottom:2px; }
+        .ct-card-loc { font-size:11.5px; color:var(--text-secondary); }
+        .ct-card-fav { background:none; border:none; cursor:pointer; font-size:16px; color:var(--text-secondary); padding:0; line-height:1; flex-shrink:0; }
+        .ct-card-fav.active { color:#f5b942; }
+        .ct-card-fav:hover { color:#f5b942; }
+
+        .ct-card-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; color:var(--accent-green); background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2); border-radius:20px; padding:2px 8px; margin-bottom:8px; }
+        .ct-card-spec { font-size:12px; color:var(--text-secondary); margin-bottom:10px; line-height:1.4; }
+        .ct-card-stats { display:flex; gap:14px; margin-bottom:10px; }
+        .ct-stat { font-size:11.5px; color:var(--text-secondary); }
+        .ct-stat strong { color:var(--text-primary); font-weight:700; display:block; font-size:14px; }
+        .ct-card-tags { display:flex; flex-wrap:wrap; gap:4px; }
+        .ct-tag { font-size:10.5px; font-weight:500; padding:2px 8px; border-radius:12px; background:var(--bg-section); color:var(--text-secondary); border:1px solid var(--inner-border); }
+        .ct-card-rating { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#f59e0b; margin-bottom:8px; }
+
+        /* Right detail panel */
+        .ct-detail {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 20px;
+            position: sticky; top: 16px;
+            max-height: calc(100vh - 32px); overflow-y: auto;
+        }
+        .ct-detail.hidden { display:none; }
+        .ct-detail-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; color:var(--text-secondary); font-size:13px; text-align:center; gap:12px; }
+        .ct-detail-placeholder svg { opacity:.3; }
+
+        .ct-det-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:16px; }
+        .ct-det-avatar { width:48px; height:48px; border-radius:14px; background:var(--accent-gradient); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#fff; flex-shrink:0; }
+        .ct-det-info { flex:1; }
+        .ct-det-name { font-size:15px; font-weight:800; color:var(--text-primary); line-height:1.3; margin-bottom:4px; }
+        .ct-det-loc { font-size:12px; color:var(--text-secondary); }
+        .ct-det-close { background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:16px; }
+
+        .ct-det-section { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); margin:14px 0 8px; }
+        .ct-det-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--inner-border); font-size:12.5px; }
+        .ct-det-row:last-child { border-bottom:none; }
+        .ct-det-row span:first-child { color:var(--text-secondary); }
+        .ct-det-row span:last-child { font-weight:600; color:var(--text-primary); }
+
+        .ct-det-deal { background:var(--inner-bg); border:1px solid var(--inner-border); border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+        .ct-det-deal-title { font-size:12.5px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+        .ct-det-deal-meta { font-size:11.5px; color:var(--text-secondary); }
+
+        .ct-det-actions { display:flex; gap:8px; margin-top:14px; }
+        .ct-det-actions .btn-primary, .ct-det-actions .btn-secondary { flex:1; height:34px; font-size:12.5px; }
+
+        /* Controls above grid */
+        .ct-grid-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+        .ct-search-wrap { position:relative; flex:1; min-width:200px; }
+        .ct-search-wrap input { padding-left:36px; height:34px; width:100%; box-sizing:border-box; }
+        .ct-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary); }
+        .ct-sort-select { height:34px; padding:0 10px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:8px; color:var(--text-primary); font-size:12.5px; font-family:inherit; }
+        .ct-results { font-size:12px; color:var(--text-secondary); }
+
+        /* Capacity exchange tab */
+        .cap-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); padding:18px 20px; }
+        .cap-bar-row { margin-bottom:10px; }
+        .cap-bar-label { display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-secondary); margin-bottom:4px; }
+        .cap-bar-label span:last-child { font-weight:700; color:var(--accent-bright); }
+        .cap-bar-track { height:6px; background:var(--inner-bg); border-radius:4px; overflow:hidden; }
+        .cap-bar-fill { height:100%; border-radius:4px; background:var(--accent-gradient); }
     </style>
 </head>
 <body>
@@ -50,10 +126,7 @@
         <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
         <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
         <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
-        <a href="#" id="sidebarProfileLink" style="display:none;">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
-            Мой профиль
-        </a>
+        <a href="#" id="sidebarProfileLink" style="display:none;"><svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>Мой профиль</a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
         <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
@@ -76,53 +149,33 @@
 
     <div class="main-content">
         <div class="header">
-            <h2>Реестр контрагентов</h2>
+            <h2>Контрагенты</h2>
             <button class="bell-btn" onclick="openNotificationsModal()">
                 <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
         </div>
 
-        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+        <!-- KPI row -->
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Всего контрагентов</div>
-                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                </div>
-                <div class="kpi-value" id="kpiPartTotal">—</div>
+                <div class="kpi-card-top"><div class="kpi-label">Контрагентов</div><div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
+                <div class="kpi-value" id="kpiPartTotal">12</div>
                 <div class="kpi-sub">зарегистрированных</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Верифицированных</div>
-                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                </div>
-                <div class="kpi-value" id="kpiPartVerified" style="color:var(--accent-green);">—</div>
+                <div class="kpi-card-top"><div class="kpi-label">Верифицированных</div><div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div>
+                <div class="kpi-value" id="kpiPartVerified" style="color:var(--accent-green);">9</div>
                 <div class="kpi-sub">прошли проверку</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Производителей</div>
-                    <div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
-                </div>
-                <div class="kpi-value" id="kpiPartProducers" style="color:var(--accent-blue);">—</div>
+                <div class="kpi-card-top"><div class="kpi-label">Поставщиков</div><div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div></div>
+                <div class="kpi-value" id="kpiPartProducers" style="color:var(--accent-blue);">8</div>
                 <div class="kpi-sub">активных поставщиков</div>
             </div>
         </div>
 
-        <div class="filter-section">
-            <div class="filters-row" style="flex: 1;">
-                <div class="search-input-wrapper">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c7884" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4"></path></svg>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, ИНН, специализации...">
-                </div>
-            </div>
-            <button class="btn-secondary" onclick="exportRegistry()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
-                Экспорт реестра
-            </button>
-        </div>
-
+        <!-- Tabs -->
         <div class="tab-strip" style="margin-bottom:16px;">
             <div class="tabs">
                 <button class="tab active" id="tabDirBtn" onclick="switchPartnersTab('dir')">Контрагенты</button>
@@ -130,118 +183,120 @@
             </div>
         </div>
 
+        <!-- Directory panel -->
         <div id="panelDir">
-        <div class="filter-section">
-            <div class="filters-row">
-                <div>
-                    <label style="font-size:11.5px;color:var(--text-secondary-alt);display:block;margin-bottom:6px;">Тип организации</label>
-                    <div class="custom-select-wrapper">
-                        <input type="hidden" id="orgTypeFilter" value="all">
-                        <div class="custom-select" id="wrapperOrgTypeFilter">
-                            <div class="custom-select-trigger"><span>Все компании</span></div>
-                            <div class="custom-options">
-                                <div class="custom-option selected" data-value="all">Все компании</div>
-                                <div class="custom-option" data-value="ООО">ООО</div>
-                                <div class="custom-option" data-value="АО">АО</div>
-                                <div class="custom-option" data-value="ПК">ПК</div>
-                                <div class="custom-option" data-value="ИП">ИП</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:11.5px;color:var(--text-secondary-alt);display:block;margin-bottom:6px;">Роль в системе</label>
-                    <div class="custom-select-wrapper">
-                        <input type="hidden" id="roleFilter" value="all">
-                        <div class="custom-select" id="wrapperRoleFilter">
-                            <div class="custom-select-trigger"><span>Все роли</span></div>
-                            <div class="custom-options">
-                                <div class="custom-option selected" data-value="all">Все роли</div>
-                                <div class="custom-option" data-value="customer">Заказчики</div>
-                                <div class="custom-option" data-value="producer">Производители</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:11.5px;color:var(--text-secondary-alt);display:block;margin-bottom:6px;">Статус</label>
-                    <div class="custom-select-wrapper">
-                        <input type="hidden" id="statusFilter" value="all">
-                        <div class="custom-select" id="wrapperStatusFilter">
-                            <div class="custom-select-trigger"><span>Все статусы</span></div>
-                            <div class="custom-options">
-                                <div class="custom-option selected" data-value="all">Все статусы</div>
-                                <div class="custom-option" data-value="Верифицирован">Верифицирован</div>
-                                <div class="custom-option" data-value="На проверке">На проверке</div>
-                                <div class="custom-option" data-value="Отклонен">Отклонен</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn-secondary btn-reset" id="favoritesFilterBtn" onclick="toggleFavoritesFilter()">☆ Только избранное</button>
-                <button class="btn-secondary btn-reset" id="verifiedFilterBtn" onclick="toggleVerifiedFilter()">✓ Верифицированные</button>
-                <button class="btn-secondary btn-reset" onclick="resetFilters()">Сбросить фильтры</button>
-            </div>
-        </div>
+            <div class="ct-layout">
 
-        <div class="results-count" id="resultsCount">Найдено компаний: 0</div>
+                <!-- Filter sidebar -->
+                <div class="ct-filters">
+                    <div class="ct-filter-section">
+                        <div class="ct-filter-title">Поиск</div>
+                        <input type="text" id="searchInput" placeholder="Название, ИНН..." oninput="applyFilters()">
+                    </div>
 
-        <div class="section">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Компания</th>
-                        <th>ИНН</th>
-                        <th>Роль в системе</th>
-                        <th>Специализация</th>
-                        <th>Статус</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="partnersTableBody"></tbody>
-            </table>
-            <div class="table-footer">
-                <div class="per-page-label" id="paginationInfo"></div>
-                <div style="display:flex; align-items:center; gap:14px;">
-                    <div class="pagination" id="pagination"></div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="per-page-label">На странице:</span>
-                        <select class="per-page-select" id="pageSizeSelect" onchange="changePageSize()">
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
+                    <div class="ct-filter-section">
+                        <div class="ct-filter-title">Роль</div>
+                        <div class="ct-filter-chips">
+                            <button class="ct-chip active" data-role="all" onclick="setRoleFilter('all',this)">Все <span class="ct-count-badge" id="countAll">12</span></button>
+                            <button class="ct-chip" data-role="producer" onclick="setRoleFilter('producer',this)">Поставщики <span class="ct-count-badge" id="countProducers">8</span></button>
+                            <button class="ct-chip" data-role="customer" onclick="setRoleFilter('customer',this)">Заказчики <span class="ct-count-badge" id="countCustomers">4</span></button>
+                        </div>
+                    </div>
+
+                    <div class="ct-filter-section">
+                        <div class="ct-filter-title">Статус</div>
+                        <div class="ct-filter-chips">
+                            <button class="ct-chip active" data-status="all" onclick="setStatusFilter('all',this)">Все</button>
+                            <button class="ct-chip" data-status="Верифицирован" onclick="setStatusFilter('Верифицирован',this)">Верифицирован</button>
+                            <button class="ct-chip" data-status="На проверке" onclick="setStatusFilter('На проверке',this)">На проверке</button>
+                        </div>
+                    </div>
+
+                    <div class="ct-filter-section">
+                        <div class="ct-filter-title">Специализация</div>
+                        <select id="specFilter" onchange="applyFilters()" style="height:32px;width:100%;padding:0 8px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:inherit;">
+                            <option value="">Все категории</option>
+                            <option value="РТИ">РТИ</option>
+                            <option value="Металл">Металл</option>
+                            <option value="Насос">Насосное оборудование</option>
+                            <option value="Трубопровод">Трубопровод</option>
+                            <option value="Электро">Электрооборудование</option>
                         </select>
                     </div>
+
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        <button class="btn-secondary" style="width:100%;font-size:12px;height:32px;" onclick="resetFilters()">Сбросить</button>
+                        <button class="btn-secondary" style="width:100%;font-size:12px;height:32px;" onclick="exportRegistry()">↓ Экспорт</button>
+                    </div>
                 </div>
+
+                <!-- Card grid -->
+                <div>
+                    <div class="ct-grid-controls">
+                        <div class="ct-results" id="resultsCount">Найдено: 12 компаний</div>
+                        <div style="display:flex;gap:8px;">
+                            <select class="ct-sort-select" onchange="applyFilters()">
+                                <option>По рейтингу</option>
+                                <option>По названию</option>
+                                <option>По сделкам</option>
+                            </select>
+                            <button class="btn-primary" style="height:34px;font-size:12.5px;" onclick="alert('Добавление контрагента вручную')">＋ Добавить</button>
+                        </div>
+                    </div>
+                    <div class="ct-grid" id="partnersGrid"></div>
+                    <div id="partnersEmpty" style="display:none;text-align:center;color:var(--text-secondary);padding:40px;font-size:13px;">Компании не найдены</div>
+                </div>
+
+                <!-- Right detail panel -->
+                <div class="ct-detail" id="ctDetailPanel">
+                    <div class="ct-detail-placeholder" id="ctPlaceholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <div>Выберите компанию<br>для просмотра деталей</div>
+                    </div>
+                    <div id="ctDetailContent" style="display:none;">
+                        <div class="ct-det-top">
+                            <div class="ct-det-avatar" id="detAvatar">Н</div>
+                            <div class="ct-det-info">
+                                <div class="ct-det-name" id="detName">—</div>
+                                <div class="ct-det-loc" id="detLoc">—</div>
+                            </div>
+                            <button class="ct-det-close" onclick="closeDetail()">✕</button>
+                        </div>
+                        <div id="detBadge" style="margin-bottom:12px;"></div>
+
+                        <div class="ct-det-section">Основные данные</div>
+                        <div id="detMeta"></div>
+
+                        <div class="ct-det-section">Показатели</div>
+                        <div id="detStats"></div>
+
+                        <div class="ct-det-section" id="detDealsSection">Последние сделки</div>
+                        <div id="detDeals"></div>
+
+                        <div class="ct-det-actions">
+                            <button class="btn-primary" onclick="alert('Написать: ' + document.getElementById('detName').textContent)" >Написать</button>
+                            <button class="btn-secondary" id="detProfileBtn" onclick="">Профиль →</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-        </div><!-- /panelDir -->
 
+        <!-- Capacity exchange panel -->
         <div id="panelCap" style="display:none;">
-            <div id="capacityGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px;"></div>
-            <div id="capacityEmpty" style="display:none; color:var(--text-secondary); font-size:13px; padding:24px 0;">
-                Пока ни один производитель не разместил свои мощности.
-            </div>
+            <div id="capacityGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+            <div id="capacityEmpty" style="display:none;color:var(--text-secondary);font-size:13px;padding:24px 0;">Пока ни один производитель не разместил свои мощности.</div>
         </div>
-    </div>
 
-    <div class="modal" id="companyDetailsModal">
-        <div class="modal-content" style="width: 440px;">
-            <h3 id="companyDetailsName">Компания</h3>
-            <div id="companyDetailsBody"></div>
-            <div class="modal-actions">
-                <a id="companyProfileLink" href="#" class="btn-secondary" style="text-decoration:none;">Открыть полный профиль →</a>
-                <button class="btn-modal-cancel" onclick="closeCompanyDetails()">Закрыть</button>
-            </div>
-        </div>
-    </div>
+    </div><!-- /main-content -->
 
     <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px;">
+        <div class="modal-content" style="width:440px;">
             <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
-            <div class="modal-actions" style="justify-content: space-between;">
-                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+            <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
                 <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
@@ -249,296 +304,224 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
-<script>
-function toggleTheme() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = !isDark;
-    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
-    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = isDark;
-    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
-    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-});
-</script>
+    <script>
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = !isDark;
+        if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+        if (cb) cb.checked = isDark;
+        if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    });
+    </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
         const userRole = localStorage.getItem('userRole');
+        const token    = localStorage.getItem('authToken');
         let allCompanies = [];
-        let currentPage = 1;
-        let pageSize = 10;
-        let showOnlyFavorites = false;
-        let showOnlyVerified = false;
+        let roleFilter   = 'all';
+        let statusFilter = 'all';
 
-        const fallbackPartners = [
-            { company: "АО «ГазНефтьЗаказ»", inn: "7701234567", role: "customer", specialization: "Закупка оборудования, МТР", status: "Верифицирован" },
-            { company: "ООО «Завод РТИ-Профи»", inn: "5406987654", role: "producer", specialization: "Резинотехнические изделия (РТИ)", status: "Верифицирован" },
-            { company: "АО «Металл-Сервис»", inn: "6604551122", role: "producer", specialization: "Прокат, металлоконструкции", status: "Верифицирован" },
-            { company: "ПК «УралПолимер»", inn: "7451002344", role: "producer", specialization: "Полимерные уплотнения, РТИ", status: "Верифицирован" },
-            { company: "ООО «РН-Снабжение»", inn: "8602113344", role: "customer", specialization: "Капитальное строительство, МТР", status: "Верифицирован" }
+        const MOCK_PARTNERS = [
+            { id:1, company:'ООО «НефтеПромСнаб»',  inn:'5406123456', role:'producer', city:'Тюмень',       specialization:'Резинотехнические изделия (РТИ), МТР', status:'Верифицирован', rating:4.8, deals:124, years:15, tags:['РТИ','Металл','МТР'],        about:'Ведущий поставщик РТИ для нефтяной отрасли Западной Сибири.', phone:'+7 (3452) 55-01-23', email:'sales@neftpromsnab.ru' },
+            { id:2, company:'ООО «АктивСнаб»',        inn:'7701987654', role:'producer', city:'Екатеринбург', specialization:'Трубопроводная арматура, фланцы',         status:'Верифицирован', rating:4.6, deals:87,  years:10, tags:['Трубопровод','Металл'],     about:'Поставки трубопроводной арматуры и фланцевых соединений.', phone:'+7 (343) 220-45-67', email:'info@aktivsnab.ru' },
+            { id:3, company:'АО «РегионСнаб»',         inn:'6604551122', role:'producer', city:'Новосибирск',  specialization:'Прокат чёрных металлов, металлоконструкции', status:'Верифицирован', rating:4.7, deals:156, years:18, tags:['Металл','Прокат'],          about:'Металлопрокат и металлоконструкции для промышленных объектов.', phone:'+7 (383) 315-22-10', email:'zakaz@regionsnab.ru' },
+            { id:4, company:'ООО «ПромМаш»',            inn:'8602113344', role:'producer', city:'Пермь',         specialization:'Насосное и компрессорное оборудование',     status:'Верифицирован', rating:4.4, deals:63,  years:12, tags:['Насосы','Компрессоры'],    about:'Насосные агрегаты, компрессоры и вспомогательное оборудование.', phone:'+7 (342) 280-15-48', email:'prommash@mail.ru' },
+            { id:5, company:'ООО «ТехноПром»',          inn:'7451882244', role:'producer', city:'Уфа',           specialization:'Электрооборудование, кабельная продукция',  status:'Верифицирован', rating:4.5, deals:98,  years:14, tags:['Электро','Кабель'],        about:'Кабели, трансформаторы и электрощитовое оборудование.', phone:'+7 (347) 240-78-90', email:'sales@technoprom-ufa.ru' },
+            { id:6, company:'ПАО «Завод РТИ»',          inn:'7451002344', role:'producer', city:'Казань',        specialization:'Уплотнения, прокладки, шланги',             status:'Верифицирован', rating:4.9, deals:210, years:25, tags:['РТИ','Уплотнения'],        about:'Один из крупнейших заводов РТИ в России, ГОСТ-сертификаты.', phone:'+7 (843) 512-33-41', email:'order@zavodrty.ru' },
+            { id:7, company:'АО «ГазНефтьЗаказ»',       inn:'7701234567', role:'customer', city:'Москва',        specialization:'Закупки МТР для нефтегазовых объектов',     status:'Верифицирован', rating:4.3, deals:45,  years:8,  tags:['МТР','Закупки'],           about:'Централизованные закупки МТР для дочерних компаний ПАО.', phone:'+7 (495) 960-12-34', email:'tender@gnz.ru' },
+            { id:8, company:'ООО «СибОйл-Сервис»',      inn:'5402998877', role:'customer', city:'Сургут',        specialization:'Обслуживание нефтепромыслового оборудования', status:'Верифицирован', rating:4.1, deals:28,  years:6,  tags:['Сервис','МТР'],            about:'Сервисное обслуживание и ремонт оборудования на месторождениях.', phone:'+7 (3462) 44-15-70', email:'info@siboil.ru' },
+            { id:9, company:'ООО «МегаПоставка»',       inn:'5404671122', role:'producer', city:'Омск',          specialization:'Комплексная поставка МТР',                  status:'На проверке',    rating:3.9, deals:12,  years:3,  tags:['МТР','Логистика'],         about:'Молодая компания, специализирующаяся на комплексных поставках.', phone:'+7 (381) 555-00-12', email:'info@megapostavka.ru' },
+            { id:10, company:'АО «Металл-Сервис»',       inn:'6604551100', role:'producer', city:'Челябинск',    specialization:'Спецстальные изделия, поковки',             status:'Верифицирован', rating:4.2, deals:74,  years:11, tags:['Металл','Поковки'],         about:'Поковки и спецстальные изделия для нефтяного машиностроения.', phone:'+7 (351) 741-00-88', email:'sales@mets.ru' },
+            { id:11, company:'ООО «РН-Снабжение»',       inn:'8602880011', role:'customer', city:'Ханты-Мансийск', specialization:'Закупки для НПЗ и ГПЗ',                 status:'Верифицирован', rating:4.0, deals:34,  years:9,  tags:['НПЗ','МТР'],               about:'Обеспечение НПЗ и ГПЗ материально-техническими ресурсами.', phone:'+7 (3467) 39-55-22', email:'mtsnab@rnsnab.ru' },
+            { id:12, company:'ПК «УралПолимер»',         inn:'7451002000', role:'producer', city:'Пермь',         specialization:'Полимерные изделия, ПНД/ПВД трубы',        status:'На проверке',    rating:3.8, deals:7,   years:4,  tags:['Полимер','Трубы'],         about:'Производство полимерных труб и фасонных изделий для водовода.', phone:'+7 (342) 201-88-33', email:'uralpolymer@bk.ru' },
         ];
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const mainLink = document.getElementById('mainCabinetLink');
-            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
-            const navProposals = document.getElementById('navProposals');
-            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+        const RECENT_DEALS = {
+            1: ['Манжета 60×90×10, 500 шт — 187 000 ₽','Уплотнение торцевое М56 — 45 000 ₽','Шланг напорный DN50 — 28 000 ₽'],
+            2: ['Фланец Ду100 Ру16, 120 шт — 980 000 ₽','Задвижка клиновая DN150 — 670 000 ₽','Клапан обратный КО-50 — 145 000 ₽'],
+            3: ['Труба НКТ 73×5.5, 300 м — 1 340 000 ₽','Балка двутавровая 20Б1 — 520 000 ₽'],
+            4: ['Насос ЦНС 38-132 — 810 000 ₽','Компрессор ВП-50/8 — 2 450 000 ₽'],
+            5: ['Кабель ВВГнг 4×16, 1000 м — 320 000 ₽','Электродвигатель АИР 90L2 — 245 000 ₽'],
+        };
 
-            try {
-                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
-                if (r.ok) {
-                    const companies = await r.json();
-                    const mine = companies.find(c => c.company === localStorage.getItem('userCompany') && c.role === userRole);
-                    if (mine) {
-                        const spl = document.getElementById('sidebarProfileLink');
-                        if (spl) { spl.href = `company-profile.html?id=${mine.id}`; spl.style.display = ''; }
-                    }
-                }
-            } catch {}
+        function getAvatar(name) {
+            const clean = name.replace(/^(ООО|АО|ПАО|ПК|ИП)\s*[«»"']/,'');
+            return (clean.charAt(0) || '?').toUpperCase();
+        }
 
-            loadPartners();
-            initNotifications();
-            initSidebarBadges();
+        function starSVG(n) {
+            return Array.from({length:5}, (_,i) =>
+                `<svg width="12" height="12" viewBox="0 0 24 24" fill="${i<Math.round(n)?'#f59e0b':'none'}" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+            ).join('');
+        }
 
-            initCustomSelect('wrapperOrgTypeFilter', 'orgTypeFilter', applyFilters);
-            initCustomSelect('wrapperRoleFilter', 'roleFilter', applyFilters);
-            initCustomSelect('wrapperStatusFilter', 'statusFilter', applyFilters);
-            document.getElementById('searchInput').addEventListener('input', applyFilters);
-        });
+        function renderGrid(list) {
+            const grid  = document.getElementById('partnersGrid');
+            const empty = document.getElementById('partnersEmpty');
+            grid.innerHTML = '';
+            if (!list.length) { empty.style.display=''; grid.style.display='none'; return; }
+            empty.style.display='none'; grid.style.display='grid';
+            list.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'ct-card';
+                const verBadge = c.status === 'Верифицирован'
+                    ? `<div class="ct-card-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Верифицирован</div>`
+                    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:2px 8px;margin-bottom:8px;">⏱ На проверке</div>`;
+                const roleLabel = c.role === 'producer' ? 'Поставщик' : 'Заказчик';
+                div.innerHTML = `
+                    <div class="ct-card-header">
+                        <div class="ct-card-avatar">${getAvatar(c.company)}</div>
+                        <div class="ct-card-info">
+                            <div class="ct-card-name">${escapeHtml(c.company)}</div>
+                            <div class="ct-card-loc">${escapeHtml(c.city)} · ${roleLabel}</div>
+                        </div>
+                        <button class="ct-card-fav ${c.isFavorite?'active':''}" onclick="event.stopPropagation();toggleFav(${c.id},this)">${c.isFavorite?'★':'☆'}</button>
+                    </div>
+                    ${verBadge}
+                    <div class="ct-card-rating">${starSVG(c.rating)} <span style="color:var(--text-primary);font-size:12px;">${c.rating}</span></div>
+                    <div class="ct-card-spec">${escapeHtml(c.specialization)}</div>
+                    <div class="ct-card-stats">
+                        <div class="ct-stat"><strong>${c.deals}</strong>сделок</div>
+                        <div class="ct-stat"><strong>${c.years}</strong>лет</div>
+                    </div>
+                    <div class="ct-card-tags">${(c.tags||[]).map(t=>`<span class="ct-tag">${escapeHtml(t)}</span>`).join('')}</div>`;
+                div.onclick = () => openDetail(c, div);
+                grid.appendChild(div);
+            });
+        }
 
-        async function loadPartners() {
-            try {
-                const response = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
-                allCompanies = response.ok ? await response.json() : fallbackPartners;
-            } catch (error) { allCompanies = fallbackPartners; }
+        let currentDetailId = null;
+        function openDetail(c, cardEl) {
+            currentDetailId = c.id;
+            document.querySelectorAll('.ct-card').forEach(el => el.classList.remove('selected'));
+            if (cardEl) cardEl.classList.add('selected');
 
-            const currentCompany = localStorage.getItem('userCompany');
-            if (currentCompany && !allCompanies.some(p => p.company === currentCompany)) {
-                allCompanies.unshift({
-                    company: currentCompany,
-                    inn: "540200" + Math.floor(1000 + Math.random() * 9000),
-                    role: userRole,
-                    specialization: userRole === 'customer' ? 'Размещение прямых закупок' : 'Производство продукции',
-                    status: "Верифицирован"
-                });
+            document.getElementById('ctPlaceholder').style.display = 'none';
+            document.getElementById('ctDetailContent').style.display = '';
+
+            document.getElementById('detAvatar').textContent = getAvatar(c.company);
+            document.getElementById('detName').textContent   = c.company;
+            document.getElementById('detLoc').textContent    = c.city + ' · ' + (c.role === 'producer' ? 'Поставщик' : 'Заказчик');
+
+            const verBadge = c.status === 'Верифицирован'
+                ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--accent-green);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:20px;padding:3px 10px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:3px 10px;">⏱ На проверке</span>`;
+            document.getElementById('detBadge').innerHTML = verBadge;
+
+            document.getElementById('detMeta').innerHTML = `
+                <div class="ct-det-row"><span>ИНН</span><span style="font-family:monospace;">${escapeHtml(c.inn)}</span></div>
+                <div class="ct-det-row"><span>Специализация</span><span>${escapeHtml(c.specialization)}</span></div>
+                <div class="ct-det-row"><span>Телефон</span><span>${escapeHtml(c.phone||'—')}</span></div>
+                <div class="ct-det-row"><span>Email</span><span>${escapeHtml(c.email||'—')}</span></div>`;
+
+            document.getElementById('detStats').innerHTML = `
+                <div class="ct-det-row"><span>Рейтинг</span><span>${starSVG(c.rating)} ${c.rating}</span></div>
+                <div class="ct-det-row"><span>Сделок всего</span><span>${c.deals}</span></div>
+                <div class="ct-det-row"><span>Лет на рынке</span><span>${c.years}</span></div>
+                <div class="ct-det-row"><span>Теги</span><span>${(c.tags||[]).map(t=>`<span class="ct-tag" style="margin-left:3px;">${escapeHtml(t)}</span>`).join('')}</span></div>`;
+
+            const deals = RECENT_DEALS[c.id] || [];
+            const dealSection = document.getElementById('detDealsSection');
+            const dealDiv    = document.getElementById('detDeals');
+            if (deals.length) {
+                dealSection.style.display = '';
+                dealDiv.innerHTML = deals.map(d => `<div class="ct-det-deal"><div class="ct-det-deal-title">${escapeHtml(d)}</div></div>`).join('');
+            } else {
+                dealSection.style.display = 'none';
+                dealDiv.innerHTML = '';
             }
-            // KPI strip
-            const total = document.getElementById('kpiPartTotal');
-            const verified = document.getElementById('kpiPartVerified');
-            const producers = document.getElementById('kpiPartProducers');
-            if (total) total.textContent = allCompanies.length;
-            if (verified) verified.textContent = allCompanies.filter(c => c.status === 'Верифицирован').length;
-            if (producers) producers.textContent = allCompanies.filter(c => c.role === 'producer').length;
+
+            document.getElementById('detProfileBtn').onclick = () => {
+                if (c.id) window.location.href = `company-profile.html?id=${c.id}`;
+            };
+        }
+
+        function closeDetail() {
+            currentDetailId = null;
+            document.querySelectorAll('.ct-card').forEach(el => el.classList.remove('selected'));
+            document.getElementById('ctPlaceholder').style.display  = '';
+            document.getElementById('ctDetailContent').style.display = 'none';
+        }
+
+        function toggleFav(id, btn) {
+            const c = allCompanies.find(x => x.id === id);
+            if (!c) return;
+            c.isFavorite = !c.isFavorite;
+            btn.textContent = c.isFavorite ? '★' : '☆';
+            btn.classList.toggle('active', c.isFavorite);
+        }
+
+        function setRoleFilter(val, btn) {
+            roleFilter = val;
+            document.querySelectorAll('[data-role]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             applyFilters();
         }
 
-        function getOrgType(companyName) {
-            if (companyName.startsWith('ООО')) return 'ООО';
-            if (companyName.startsWith('АО')) return 'АО';
-            if (companyName.startsWith('ПК')) return 'ПК';
-            if (companyName.startsWith('ИП')) return 'ИП';
-            return 'Другое';
+        function setStatusFilter(val, btn) {
+            statusFilter = val;
+            document.querySelectorAll('[data-status]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilters();
         }
 
         function applyFilters() {
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
-            const orgType = document.getElementById('orgTypeFilter').value;
-            const role = document.getElementById('roleFilter').value;
-            const status = document.getElementById('statusFilter').value;
+            const spec   = document.getElementById('specFilter').value;
 
             const filtered = allCompanies.filter(c => {
-                if (showOnlyFavorites && !c.isFavorite) return false;
-                if (showOnlyVerified && c.status !== 'Верифицирован') return false;
-                if (orgType !== 'all' && getOrgType(c.company) !== orgType) return false;
-                if (role !== 'all' && c.role !== role) return false;
-                if (status !== 'all' && c.status !== status) return false;
+                if (roleFilter !== 'all' && c.role !== roleFilter) return false;
+                if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+                if (spec && !c.specialization.toLowerCase().includes(spec.toLowerCase()) &&
+                    !(c.tags||[]).some(t => t.toLowerCase().includes(spec.toLowerCase()))) return false;
                 if (search) {
-                    const haystack = `${c.company} ${c.inn} ${c.specialization}`.toLowerCase();
-                    if (!haystack.includes(search)) return false;
+                    const hay = `${c.company} ${c.inn} ${c.specialization} ${c.city}`.toLowerCase();
+                    if (!hay.includes(search)) return false;
                 }
                 return true;
             });
 
-            currentPage = 1;
-            renderPage(filtered);
+            document.getElementById('resultsCount').textContent = `Найдено: ${filtered.length} компаний`;
+            renderGrid(filtered);
+            updateCounts();
+        }
+
+        function updateCounts() {
+            document.getElementById('countAll').textContent       = allCompanies.length;
+            document.getElementById('countProducers').textContent = allCompanies.filter(c=>c.role==='producer').length;
+            document.getElementById('countCustomers').textContent = allCompanies.filter(c=>c.role==='customer').length;
+            document.getElementById('kpiPartTotal').textContent   = allCompanies.length;
+            document.getElementById('kpiPartVerified').textContent = allCompanies.filter(c=>c.status==='Верифицирован').length;
+            document.getElementById('kpiPartProducers').textContent = allCompanies.filter(c=>c.role==='producer').length;
         }
 
         function resetFilters() {
+            roleFilter   = 'all';
+            statusFilter = 'all';
             document.getElementById('searchInput').value = '';
-            showOnlyFavorites = false;
-            showOnlyVerified = false;
-            document.getElementById('favoritesFilterBtn').classList.remove('active');
-            document.getElementById('favoritesFilterBtn').innerText = '☆ Только избранное';
-            document.getElementById('verifiedFilterBtn').classList.remove('active');
-            ['orgTypeFilter', 'roleFilter', 'statusFilter'].forEach(id => document.getElementById(id).value = 'all');
-            document.querySelectorAll('.custom-select').forEach(sel => {
-                sel.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
-                const allOpt = sel.querySelector('.custom-option[data-value="all"]');
-                if (allOpt) allOpt.classList.add('selected');
-                const span = sel.querySelector('.custom-select-trigger span');
-                if (span && allOpt) span.textContent = allOpt.textContent;
-            });
-            applyFilters();
-        }
-
-        let lastFiltered = [];
-        let currentPageItems = [];
-        function renderPage(filtered) {
-            lastFiltered = filtered;
-            document.getElementById('resultsCount').innerText = `Найдено компаний: ${filtered.length}`;
-
-            const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-            if (currentPage > totalPages) currentPage = totalPages;
-            const start = (currentPage - 1) * pageSize;
-            const pageItems = filtered.slice(start, start + pageSize);
-            currentPageItems = pageItems;
-
-            renderTable(pageItems);
-            renderPagination(totalPages, filtered.length, start, pageItems.length);
-        }
-
-        function renderTable(list) {
-            const tbody = document.getElementById('partnersTableBody');
-            tbody.innerHTML = '';
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary); padding: 40px;">Компании не найдены</td></tr>`;
-                return;
-            }
-            list.forEach((partner, idx) => {
-                const row = document.createElement('tr');
-                const roleText = partner.role === 'customer' ? 'Заказчик' : 'Производитель';
-                const roleClass = partner.role === 'customer' ? 'customer' : 'producer';
-                let statusIcon = '⏱', statusCls = 'waiting';
-                if (partner.status === 'Верифицирован') { statusIcon = '✓'; statusCls = 'win'; }
-                else if (partner.status === 'Отклонен') { statusIcon = '✗'; statusCls = 'loose'; }
-                const isOwn = partner.company === localStorage.getItem('userCompany');
-                const starBtn = (!isOwn && partner.id)
-                    ? `<button class="actions-cell-link star-btn ${partner.isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${idx})" title="${partner.isFavorite ? 'Убрать из избранного' : 'В избранное'}">${partner.isFavorite ? '★' : '☆'}</button>`
-                    : '';
-                row.innerHTML = `
-                    <td><strong>${escapeHtml(partner.company)}</strong></td>
-                    <td style="font-family: monospace;">${escapeHtml(partner.inn)}</td>
-                    <td><span class="badge ${roleClass}">${roleText}</span></td>
-                    <td>${escapeHtml(partner.specialization || '—')}</td>
-                    <td><span class="status-icon ${statusCls}">${statusIcon} ${escapeHtml(partner.status)}</span></td>
-                    <td>${starBtn}<button class="actions-cell-link" onclick="openCompanyDetails(${idx})" title="Подробнее">⋯</button></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function renderPagination(totalPages, totalCount, start, shownCount) {
-            document.getElementById('paginationInfo').innerText = totalCount === 0 ? '' : `Показано ${start + 1}–${start + shownCount} из ${totalCount}`;
-            const pager = document.getElementById('pagination');
-            pager.innerHTML = '';
-
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn'; prevBtn.innerText = '‹';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => { currentPage--; renderPage(lastFiltered); };
-            pager.appendChild(prevBtn);
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-                btn.innerText = i;
-                btn.onclick = () => { currentPage = i; renderPage(lastFiltered); };
-                pager.appendChild(btn);
-            }
-
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn'; nextBtn.innerText = '›';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => { currentPage++; renderPage(lastFiltered); };
-            pager.appendChild(nextBtn);
-        }
-
-        function changePageSize() {
-            pageSize = Number(document.getElementById('pageSizeSelect').value);
-            currentPage = 1;
-            renderPage(lastFiltered);
-        }
-
-        function openCompanyDetails(idx) {
-            const c = currentPageItems[idx];
-            if (!c) return;
-            const roleText = c.role === 'customer' ? 'Заказчик' : 'Производитель';
-
-            document.getElementById('companyDetailsName').innerText = c.company;
-            let rows = `
-                <div class="company-detail-row"><span>ИНН</span><span>${escapeHtml(c.inn)}</span></div>
-                <div class="company-detail-row"><span>Роль в системе</span><span>${roleText}</span></div>
-                <div class="company-detail-row"><span>Специализация</span><span>${escapeHtml(c.specialization || '—')}</span></div>
-                <div class="company-detail-row"><span>Статус</span><span>${escapeHtml(c.status)}</span></div>
-            `;
-            if (c.role === 'producer' && c.rating) {
-                rows += `<div class="company-detail-row"><span>Рейтинг надёжности</span><span>${escapeHtml(c.rating)} · ${escapeHtml(c.ratingLabel || '')}</span></div>`;
-            }
-            document.getElementById('companyDetailsBody').innerHTML = rows;
-            const profileLink = document.getElementById('companyProfileLink');
-            if (c.id) { profileLink.style.display = 'inline-flex'; profileLink.href = `company-profile.html?id=${c.id}`; }
-            else { profileLink.style.display = 'none'; }
-            document.getElementById('companyDetailsModal').style.display = 'flex';
-        }
-
-        function closeCompanyDetails() {
-            document.getElementById('companyDetailsModal').style.display = 'none';
-        }
-
-        async function toggleFavorite(idx) {
-            const c = currentPageItems[idx];
-            if (!c || !c.id) return;
-            const nowFavorite = !c.isFavorite;
-            try {
-                const response = nowFavorite
-                    ? await fetch(`${SERVER_URL}/favorites`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
-                        body: JSON.stringify({ companyId: c.id })
-                    })
-                    : await fetch(`${SERVER_URL}/favorites/${c.id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                    });
-                if (response.ok) {
-                    const target = allCompanies.find(x => x.id === c.id);
-                    if (target) target.isFavorite = nowFavorite;
-                    renderPage(lastFiltered);
-                }
-            } catch (error) { console.error(error); }
-        }
-
-        function toggleFavoritesFilter() {
-            showOnlyFavorites = !showOnlyFavorites;
-            document.getElementById('favoritesFilterBtn').classList.toggle('active', showOnlyFavorites);
-            document.getElementById('favoritesFilterBtn').innerText = showOnlyFavorites ? '★ Только избранное' : '☆ Только избранное';
-            applyFilters();
-        }
-
-        function toggleVerifiedFilter() {
-            showOnlyVerified = !showOnlyVerified;
-            document.getElementById('verifiedFilterBtn').classList.toggle('active', showOnlyVerified);
+            document.getElementById('specFilter').value  = '';
+            document.querySelectorAll('[data-role]').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-role="all"]').classList.add('active');
+            document.querySelectorAll('[data-status]').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-status="all"]').classList.add('active');
             applyFilters();
         }
 
         function exportRegistry() {
-            const rows = ['Компания;ИНН;Роль;Специализация;Статус'];
-            lastFiltered.forEach(c => {
-                rows.push(`${c.company};${c.inn};${c.role === 'customer' ? 'Заказчик' : 'Производитель'};${c.specialization || ''};${c.status}`);
-            });
-            downloadMockFile('reestr_kontragentov.csv', rows.join('\n'));
+            const rows = ['Компания;ИНН;Роль;Специализация;Город;Статус;Рейтинг'];
+            allCompanies.forEach(c => rows.push(`${c.company};${c.inn};${c.role==='customer'?'Заказчик':'Поставщик'};${c.specialization};${c.city};${c.status};${c.rating}`));
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿'+rows.join('\n'));
+            a.download = 'kontragenty.csv'; a.click();
         }
-
-        // ===================== БИРЖА МОЩНОСТЕЙ =====================
 
         function switchPartnersTab(tab) {
             const isDir = tab === 'dir';
@@ -551,37 +534,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let _capLoaded = false;
         async function loadCapacityExchange() {
-            if (_capLoaded) return;
-            _capLoaded = true;
+            if (_capLoaded) return; _capLoaded = true;
             const grid = document.getElementById('capacityGrid');
-            const empty = document.getElementById('capacityEmpty');
             grid.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:8px 0;">Загрузка...</div>';
             try {
-                const token = localStorage.getItem('authToken');
                 const r = await fetch(`${SERVER_URL}/capacity`, { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
                 const list = await r.json();
                 grid.innerHTML = '';
-                if (!list.length) { empty.style.display = ''; return; }
+                if (!list.length) { document.getElementById('capacityEmpty').style.display = ''; return; }
                 list.forEach(c => {
                     const card = document.createElement('div');
                     card.className = 'cap-card';
-                    const verBadge = c.verifiedByPlatform
-                        ? `<span class="cap-card-verified"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
-                        : '';
-                    const bars = (c.freeCapacity || []).map(cap => `
-                        <div class="cap-bar-row">
-                            <div class="cap-bar-label"><span>${escapeHtml(cap.name)}</span><span>${cap.percent}%</span></div>
-                            <div class="cap-bar-track"><div class="cap-bar-fill" style="width:${cap.percent}%"></div></div>
-                        </div>`).join('');
-                    card.innerHTML = `
-                        <div class="cap-card-name">${escapeHtml(c.company)}</div>
-                        <div class="cap-card-meta">${escapeHtml(c.city || '')}${c.city && c.specialization ? ' · ' : ''}${escapeHtml(c.specialization || '')} ${verBadge}</div>
-                        ${bars}
-                        <a href="company-profile.html?id=${c.id}" class="btn-secondary" style="display:inline-block;margin-top:12px;text-decoration:none;font-size:12px;">Профиль компании →</a>`;
+                    const bars = (c.freeCapacity||[]).map(cap => `<div class="cap-bar-row"><div class="cap-bar-label"><span>${escapeHtml(cap.name)}</span><span>${cap.percent}%</span></div><div class="cap-bar-track"><div class="cap-bar-fill" style="width:${cap.percent}%"></div></div></div>`).join('');
+                    card.innerHTML = `<div style="font-size:14px;font-weight:700;margin-bottom:4px;">${escapeHtml(c.company)}</div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">${escapeHtml(c.city||'')} · ${escapeHtml(c.specialization||'')}</div>${bars}<a href="company-profile.html?id=${c.id}" class="btn-secondary" style="display:inline-block;margin-top:12px;text-decoration:none;font-size:12px;">Профиль →</a>`;
                     grid.appendChild(card);
                 });
-            } catch { grid.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">Не удалось загрузить данные.</div>'; }
+            } catch { grid.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">Нет данных.</div>'; }
         }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mainLink = document.getElementById('mainCabinetLink');
+            if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
+            const navProposals = document.getElementById('navProposals');
+            if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            allCompanies = MOCK_PARTNERS;
+            renderGrid(allCompanies);
+            updateCounts();
+
+            try {
+                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data.length) { allCompanies = data; renderGrid(allCompanies); updateCounts(); }
+                }
+            } catch {}
+
+            initNotifications();
+            initSidebarBadges();
+        });
     </script>
 </body>
 </html>

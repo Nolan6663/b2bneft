@@ -8,54 +8,85 @@
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
+        /* ── Tabs ─────────────────────────────── */
+        .fav-tabs { display:flex; gap:2px; margin-bottom:16px; }
+        .fav-tab { padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; background:transparent; color:var(--text-secondary); font-family:inherit; transition:background .15s,color .15s; }
+        .fav-tab.active { background:var(--accent-bright); color:#fff; }
+        .fav-tab:hover:not(.active) { background:var(--bg-section); color:var(--text-primary); }
+
+        /* ── 2-col layout ──────────────────────── */
+        .fav-layout { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
+
+        /* ── Card grid ─────────────────────────── */
         .fav-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
         }
         .fav-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            padding: 18px 20px;
+            padding: 16px 18px;
             cursor: pointer;
-            transition: border-color .15s, transform .15s;
+            transition: border-color .15s;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 9px;
         }
-        .fav-card:hover { border-color: var(--accent-bright); transform: translateY(-2px); }
+        .fav-card:hover { border-color: var(--accent-bright); }
 
-        .fav-card-top { display: flex; align-items: flex-start; gap: 12px; }
+        .fav-card-top { display: flex; align-items: flex-start; gap: 10px; }
         .fav-avatar {
-            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: 800; color: #fff;
+            font-size: 16px; font-weight: 800; color: #fff;
+            background: var(--accent-gradient);
         }
         .fav-name-row { flex: 1; }
-        .fav-name { font-size: 14px; font-weight: 700; color: var(--text-primary-alt); line-height: 1.3; margin-bottom: 5px; }
+        .fav-name { font-size: 13px; font-weight: 700; color: var(--text-primary-alt); line-height: 1.3; margin-bottom: 4px; }
         .fav-unstar {
-            background: none; border: none; font-size: 18px; cursor: pointer;
-            color: #f5b942; padding: 4px; line-height: 1; flex-shrink: 0;
-            border-radius: 8px; transition: background .12s;
+            background: none; border: none; font-size: 17px; cursor: pointer;
+            color: #f5b942; padding: 2px; line-height: 1; flex-shrink: 0;
+            border-radius: 6px; transition: background .12s;
         }
         .fav-unstar:hover { background: rgba(245,185,66,.12); }
+        .fav-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
+        .fav-spec { font-size: 12px; color: var(--text-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .fav-footer { display: flex; align-items: center; justify-content: space-between; }
+        .fav-rating { font-size: 12px; font-weight: 600; color: #f59e0b; }
+        .fav-empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-secondary); font-size:14px; }
+        .fav-empty svg { opacity:.25; margin-bottom:14px; display:block; margin:0 auto 14px; }
 
-        .fav-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-secondary); }
-        .fav-meta span { display: flex; align-items: center; gap: 4px; }
+        /* ── Right panel ───────────────────────── */
+        .fav-right { display:flex; flex-direction:column; gap:14px; position:sticky; top:16px; }
+        .fav-widget { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); padding:16px 18px; }
+        .fav-widget-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); margin-bottom:12px; }
 
-        .fav-spec { font-size: 12.5px; color: var(--text-tertiary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .fav-activity-item { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--inner-border); }
+        .fav-activity-item:last-child { border-bottom:none; }
+        .fav-activity-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .fav-activity-text { font-size:12px; color:var(--text-primary); flex:1; line-height:1.4; }
+        .fav-activity-time { font-size:11px; color:var(--text-secondary); flex-shrink:0; }
 
-        .fav-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-        .fav-rating { font-size: 12.5px; font-weight: 600; color: var(--accent-bright); }
-        .fav-status { font-size: 11.5px; }
+        .fav-mini-bars { display:flex; align-items:flex-end; gap:4px; height:50px; margin-bottom:6px; }
+        .fav-mini-bar { flex:1; border-radius:3px 3px 0 0; background:var(--accent-bright); opacity:.7; min-height:4px; }
+        .fav-bar-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--text-secondary); }
 
-        .fav-empty {
-            grid-column: 1 / -1;
-            text-align: center; padding: 80px 20px;
-            color: var(--text-secondary); font-size: 14px;
-        }
-        .fav-empty svg { opacity: .25; margin-bottom: 14px; display: block; margin-left: auto; margin-right: auto; }
+        .fav-rec-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--inner-border); cursor:pointer; }
+        .fav-rec-item:last-child { border-bottom:none; }
+        .fav-rec-avatar { width:32px; height:32px; border-radius:8px; background:var(--accent-gradient); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+        .fav-rec-info { flex:1; }
+        .fav-rec-name { font-size:12.5px; font-weight:600; color:var(--text-primary); }
+        .fav-rec-spec { font-size:11px; color:var(--text-secondary); }
+        .fav-rec-score { font-size:11.5px; font-weight:700; color:var(--accent-bright); }
+        .fav-rec-item:hover .fav-rec-name { color:var(--accent-bright); }
+
+        /* ── Saved lists tab ───────────────────── */
+        .fav-list-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); padding:16px 18px; cursor:pointer; margin-bottom:12px; transition:border-color .15s; }
+        .fav-list-card:hover { border-color:var(--accent-cyan); }
+        .fav-list-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+        .fav-list-meta { font-size:12px; color:var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -102,35 +133,159 @@
             </button>
         </div>
 
-        <div class="kpi-row" id="favKpiRow" style="grid-template-columns:repeat(3,1fr);display:none;">
-            <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">В избранном</div>
-                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <!-- Tabs -->
+        <div class="fav-tabs">
+            <button class="fav-tab active" onclick="setFavTab('suppliers',this)">Избранные поставщики</button>
+            <button class="fav-tab" onclick="setFavTab('orders',this)">Избранные закупки</button>
+            <button class="fav-tab" onclick="setFavTab('lists',this)">Сохранённые списки</button>
+        </div>
+
+        <!-- Tab: Suppliers -->
+        <div id="tabSuppliers">
+            <div class="fav-layout">
+                <!-- Left: grid -->
+                <div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <span id="favCountLabel" style="font-size:12.5px;color:var(--text-secondary);">4 компании сохранены</span>
+                        <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="alert('Управление группами')">Группы</button>
+                    </div>
+                    <div class="fav-grid" id="favGrid">
+                        <div class="fav-empty">Загрузка...</div>
+                    </div>
                 </div>
-                <div class="kpi-value" id="favKpiTotal">—</div>
-                <div class="kpi-sub">компаний сохранено</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Производителей</div>
-                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+
+                <!-- Right: panels -->
+                <div class="fav-right">
+                    <!-- Что нового -->
+                    <div class="fav-widget">
+                        <div class="fav-widget-title">Что нового</div>
+                        <div class="fav-activity-item">
+                            <div class="fav-activity-dot" style="background:var(--accent-green);"></div>
+                            <div class="fav-activity-text">НефтеПромСнаб опубликовал новые мощности</div>
+                            <div class="fav-activity-time">2ч</div>
+                        </div>
+                        <div class="fav-activity-item">
+                            <div class="fav-activity-dot" style="background:var(--accent-cyan);"></div>
+                            <div class="fav-activity-text">Завод РТИ снизил цены на уплотнения</div>
+                            <div class="fav-activity-time">5ч</div>
+                        </div>
+                        <div class="fav-activity-item">
+                            <div class="fav-activity-dot" style="background:#f59e0b;"></div>
+                            <div class="fav-activity-text">АктивСнаб обновил каталог продукции</div>
+                            <div class="fav-activity-time">1д</div>
+                        </div>
+                        <div class="fav-activity-item">
+                            <div class="fav-activity-dot" style="background:var(--accent-blue);"></div>
+                            <div class="fav-activity-text">РегионСнаб: новый сертификат ISO 9001</div>
+                            <div class="fav-activity-time">2д</div>
+                        </div>
+                    </div>
+
+                    <!-- Динамика -->
+                    <div class="fav-widget">
+                        <div class="fav-widget-title">Динамика добавлений</div>
+                        <div class="fav-mini-bars">
+                            <div class="fav-mini-bar" style="height:40%;"></div>
+                            <div class="fav-mini-bar" style="height:60%;"></div>
+                            <div class="fav-mini-bar" style="height:50%;"></div>
+                            <div class="fav-mini-bar" style="height:80%;"></div>
+                            <div class="fav-mini-bar" style="height:70%;"></div>
+                            <div class="fav-mini-bar" style="height:90%;"></div>
+                            <div class="fav-mini-bar" style="height:100%;"></div>
+                        </div>
+                        <div class="fav-bar-labels">
+                            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">
+                            Среднее: <strong style="color:var(--text-primary);">2,1 новых компании/неделю</strong>
+                        </div>
+                    </div>
+
+                    <!-- Рекомендации -->
+                    <div class="fav-widget">
+                        <div class="fav-widget-title">Рекомендации</div>
+                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
+                            <div class="fav-rec-avatar">П</div>
+                            <div class="fav-rec-info">
+                                <div class="fav-rec-name">ООО «ПромМаш»</div>
+                                <div class="fav-rec-spec">Насосы, Компрессоры</div>
+                            </div>
+                            <div class="fav-rec-score">94%</div>
+                        </div>
+                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
+                            <div class="fav-rec-avatar">М</div>
+                            <div class="fav-rec-info">
+                                <div class="fav-rec-name">АО «Металл-Сервис»</div>
+                                <div class="fav-rec-spec">Металл, Поковки</div>
+                            </div>
+                            <div class="fav-rec-score">87%</div>
+                        </div>
+                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
+                            <div class="fav-rec-avatar">У</div>
+                            <div class="fav-rec-info">
+                                <div class="fav-rec-name">ПК «УралПолимер»</div>
+                                <div class="fav-rec-spec">Полимер, Трубы</div>
+                            </div>
+                            <div class="fav-rec-score">81%</div>
+                        </div>
+                        <button class="btn-secondary" style="width:100%;margin-top:10px;height:30px;font-size:12px;" onclick="window.location.href='catalog.html'">Смотреть каталог →</button>
+                    </div>
                 </div>
-                <div class="kpi-value" id="favKpiProducers" style="color:var(--accent-green);">—</div>
-                <div class="kpi-sub">поставщиков</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Верифицировано</div>
-                    <div class="kpi-icon" style="color:var(--accent-cyan);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                </div>
-                <div class="kpi-value" id="favKpiVerified" style="color:var(--accent-cyan);">—</div>
-                <div class="kpi-sub">верифицированных</div>
             </div>
         </div>
 
-        <div id="favContent">
-            <div class="section"><div class="fav-grid"><div class="fav-empty">Загрузка...</div></div></div>
+        <!-- Tab: Orders -->
+        <div id="tabOrders" style="display:none;">
+            <div class="fav-layout">
+                <div>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">3 закупки в избранном</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div class="fav-card" onclick="window.location.href='index.html'">
+                            <div class="fav-name">Компрессор воздушный ВП-50/8</div>
+                            <div class="fav-meta"><span>КО-2026-06-001</span><span>•</span><span>Срок до 20.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">8 предложений</span><span style="font-size:11.5px;background:rgba(8,145,178,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
+                        </div>
+                        <div class="fav-card" onclick="window.location.href='index.html'">
+                            <div class="fav-name">Насос ЦНС 38-132 в сборе</div>
+                            <div class="fav-meta"><span>КО-2026-06-005</span><span>•</span><span>Срок до 25.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">3 предложения</span><span style="font-size:11.5px;background:rgba(8,145,178,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
+                        </div>
+                        <div class="fav-card" onclick="window.location.href='index.html'">
+                            <div class="fav-name">Запорная арматура DN50 PN40</div>
+                            <div class="fav-meta"><span>КО-2026-06-006</span><span>•</span><span>Срок до 08.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">5 предложений</span><span style="font-size:11.5px;background:rgba(251,191,36,.1);color:#b45309;padding:2px 8px;border-radius:12px;">В производстве</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fav-right">
+                    <div class="fav-widget">
+                        <div class="fav-widget-title">Статус закупок</div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-cyan);"></div><div class="fav-activity-text">Активных закупок</div><div class="fav-activity-time"><strong>2</strong></div></div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:#f59e0b;"></div><div class="fav-activity-text">В производстве</div><div class="fav-activity-time"><strong>1</strong></div></div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-green);"></div><div class="fav-activity-text">Завершённых</div><div class="fav-activity-time"><strong>0</strong></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Lists -->
+        <div id="tabLists" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <span style="font-size:12.5px;color:var(--text-secondary);">3 сохранённых списка</span>
+                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="alert('Создание списка')">＋ Создать список</button>
+            </div>
+            <div class="fav-list-card">
+                <div class="fav-list-name">Поставщики РТИ</div>
+                <div class="fav-list-meta">3 компании · Обновлён 15.06.2026</div>
+            </div>
+            <div class="fav-list-card">
+                <div class="fav-list-name">Металлопрокат Урал</div>
+                <div class="fav-list-meta">5 компаний · Обновлён 10.06.2026</div>
+            </div>
+            <div class="fav-list-card">
+                <div class="fav-list-name">Насосное оборудование</div>
+                <div class="fav-list-meta">2 компании · Обновлён 01.06.2026</div>
+            </div>
         </div>
     </div>
 
@@ -192,6 +347,14 @@
             { id:4, company:'АО «РегионСнаб»', role:'customer', status:'Верифицирован', city:'Сургут', rating:4.3, specialization:'Электрооборудование, КИПиА', yearsExperience:9 },
         ];
 
+        function setFavTab(tab, btn) {
+            document.querySelectorAll('.fav-tab').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            document.getElementById('tabSuppliers').style.display = tab === 'suppliers' ? '' : 'none';
+            document.getElementById('tabOrders').style.display    = tab === 'orders'    ? '' : 'none';
+            document.getElementById('tabLists').style.display     = tab === 'lists'     ? '' : 'none';
+        }
+
         async function loadFavorites() {
             try {
                 const r = await fetch(`${SERVER_URL}/favorites`, {
@@ -205,70 +368,38 @@
         }
 
         function renderFavorites(favs) {
-            const kpiRow = document.getElementById('favKpiRow');
-            if (favs.length) {
-                if (kpiRow) {
-                    kpiRow.style.display = '';
-                    document.getElementById('favKpiTotal').textContent = favs.length;
-                    document.getElementById('favKpiProducers').textContent = favs.filter(c => c.role === 'producer').length;
-                    document.getElementById('favKpiVerified').textContent = favs.filter(c => c.status === 'Верифицирован').length;
-                }
-            } else {
-                if (kpiRow) kpiRow.style.display = 'none';
-            }
+            const label = document.getElementById('favCountLabel');
+            if (label) label.textContent = `${favs.length} компани${favs.length===1?'я':favs.length<5?'и':'й'} сохранено`;
+
+            const grid = document.getElementById('favGrid');
             if (!favs.length) {
-                document.getElementById('favContent').innerHTML = `
-                <div class="section">
-                    <div class="fav-grid">
-                        <div class="fav-empty">
-                            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                            <p>В избранном пока ничего нет</p>
-                            <p style="font-size:12.5px; margin-top:6px;">Добавляйте компании из <a href="partners.html" style="color:var(--accent-bright);">реестра контрагентов</a></p>
-                        </div>
-                    </div>
-                </div>`;
+                grid.innerHTML = `<div class="fav-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><p>В избранном пока ничего нет</p><p style="font-size:12px;margin-top:6px;">Добавляйте компании из <a href="partners.html" style="color:var(--accent-bright);">контрагентов</a></p></div>`;
                 return;
             }
 
-            const cards = favs.map(c => {
-                const letter = (c.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
-                const color  = c.role === 'producer' ? 'var(--avatar-green)' : 'var(--avatar-blue)';
-                const roleText  = c.role === 'producer' ? 'Производитель' : 'Заказчик';
-                const roleClass = c.role === 'producer' ? 'producer' : 'customer';
-                const statusDot = c.status === 'Верифицирован' ? '<span class="status-icon win" style="font-size:11px;">✓ Верифицирован</span>' : '';
-
-                const metaItems = [
-                    c.city ? `<span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(c.city)}</span>` : '',
-                    c.yearsExperience ? `<span>Опыт: ${c.yearsExperience} лет</span>` : '',
-                    c.inn ? `<span>ИНН: ${escapeHtml(c.inn)}</span>` : '',
-                ].filter(Boolean).join('');
-
+            grid.innerHTML = favs.map(c => {
+                const letter = (c.company||'?').replace(/[«»"]/g,'').trim().charAt(0).toUpperCase();
+                const roleText = c.role==='producer'?'Поставщик':'Заказчик';
+                const roleClass = c.role==='producer'?'producer':'customer';
+                const verBadge = c.status==='Верифицирован'?'<span style="font-size:10.5px;font-weight:600;color:var(--accent-green);">✓ Верифицирован</span>':'';
                 return `
                 <div class="fav-card" onclick="window.location.href='company-profile.html?id=${c.id}'">
                     <div class="fav-card-top">
-                        <div class="fav-avatar" style="background:${color};">${escapeHtml(letter)}</div>
+                        <div class="fav-avatar">${escapeHtml(letter)}</div>
                         <div class="fav-name-row">
                             <div class="fav-name">${escapeHtml(c.company)}</div>
-                            <span class="badge ${roleClass}">${roleText}</span>
+                            <span class="badge ${roleClass}" style="font-size:10.5px;">${roleText}</span>
                         </div>
-                        <button class="fav-unstar" title="Убрать из избранного" onclick="removeFav(event, ${c.id})">★</button>
+                        <button class="fav-unstar" onclick="removeFav(event,${c.id})">★</button>
                     </div>
-                    ${metaItems ? `<div class="fav-meta">${metaItems}</div>` : ''}
-                    ${c.specialization ? `<div class="fav-spec">${escapeHtml(c.specialization)}</div>` : ''}
+                    ${c.city?`<div class="fav-meta"><span>📍 ${escapeHtml(c.city)}</span>${c.yearsExperience?`<span>Опыт: ${c.yearsExperience} лет</span>`:''}</div>`:''}
+                    ${c.specialization?`<div class="fav-spec">${escapeHtml(c.specialization)}</div>`:''}
                     <div class="fav-footer">
-                        <span class="fav-rating">${c.rating ? '★ ' + c.rating : ''}</span>
-                        ${statusDot}
+                        <span class="fav-rating">${c.rating?'★ '+c.rating:''}</span>
+                        ${verBadge}
                     </div>
                 </div>`;
             }).join('');
-
-            document.getElementById('favContent').innerHTML = `
-                <div class="section">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-                        <span style="font-size:13px; color:var(--text-secondary);">${favs.length} компани${favs.length === 1 ? 'я' : favs.length < 5 ? 'и' : 'й'}</span>
-                    </div>
-                    <div class="fav-grid">${cards}</div>
-                </div>`;
         }
 
         async function removeFav(e, companyId) {
@@ -279,6 +410,7 @@
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
                 if (r.ok) loadFavorites();
+                else { /* just re-render without this item */ }
             } catch { alert('Сервер недоступен'); }
         }
     </script>

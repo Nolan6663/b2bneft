@@ -12,15 +12,65 @@
         body { overflow: hidden; }
         .main-content {
             padding: 0 !important;
-            position: relative;
-            overflow: hidden;
+            display: flex;
             height: 100vh;
+            overflow: hidden;
         }
         @media (max-width: 768px) {
             .main-content { height: calc(100dvh - 62px); }
         }
-
+        .map-content-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
         #map { width: 100%; height: 100%; z-index: 0; }
+
+        /* Right company list panel */
+        .map-company-list {
+            width: 290px;
+            flex-shrink: 0;
+            background: var(--card-bg);
+            border-left: 1px solid var(--card-border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .mcl-header {
+            padding: 16px 16px 10px;
+            border-bottom: 1px solid var(--inner-border);
+            font-size: 13px; font-weight: 700; color: var(--text-primary);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .mcl-count { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+        .mcl-list { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+        .mcl-card {
+            background: var(--inner-bg);
+            border: 1px solid var(--inner-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: border-color .15s;
+        }
+        .mcl-card:hover { border-color: var(--accent-cyan); }
+        .mcl-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .mcl-avatar {
+            width: 34px; height: 34px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .mcl-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+        .mcl-city { font-size: 11px; color: var(--text-secondary); }
+        .mcl-spec { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
+        .mcl-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+        .mcl-tag {
+            font-size: 10px; padding: 1px 7px; border-radius: 12px;
+            background: var(--bg-section); color: var(--text-secondary);
+            border: 1px solid var(--inner-border);
+        }
+        .mcl-verified { display:inline-flex; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--accent-green); }
+        @media (max-width: 900px) { .map-company-list { display: none; } }
 
         /* Leaflet dark mode overrides */
         [data-theme="dark"] .leaflet-layer,
@@ -162,6 +212,7 @@
     </div>
 
     <div class="main-content">
+        <div class="map-content-area">
         <div class="map-panel">
             <input class="map-search" id="mapSearch" type="text" placeholder="Поиск по городу или названию...">
             <div class="map-chips">
@@ -176,6 +227,18 @@
         </div>
 
         <div id="map"></div>
+        </div><!-- /map-content-area -->
+
+        <!-- Right company list -->
+        <div class="map-company-list" id="mapCompanyList">
+            <div class="mcl-header">
+                Поставщики на карте
+                <span class="mcl-count" id="mclCount">0 компаний</span>
+            </div>
+            <div class="mcl-list" id="mclList">
+                <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Загрузка...</div>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -273,15 +336,54 @@
                 return true;
             });
 
+            Object.keys(markerById).forEach(k => { delete markerById[k]; });
             filtered.forEach(p => {
                 const m = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
                     .bindPopup(popupHtml(p), { maxWidth: 260, className: 'map-popup-wrap' });
                 m.addTo(map);
                 markers.push(m);
+                markerById[p.id] = m;
             });
 
             document.getElementById('mapCounter').innerHTML =
                 `Показано заводов: <b>${filtered.length}</b> из ${allProducers.length}`;
+
+            renderCompanyList(filtered);
+        }
+
+        function renderCompanyList(list) {
+            const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#41bd97'];
+            document.getElementById('mclCount').textContent = list.length + ' компани' + (list.length===1?'я':list.length<5?'и':'й');
+            const el = document.getElementById('mclList');
+            if (!list.length) { el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Компании не найдены</div>'; return; }
+            el.innerHTML = list.map(p => {
+                const letter = (p.company||'?').replace(/[«»"ООО АОИПи]/g,'').charAt(0).toUpperCase()||'?';
+                const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
+                const verBadge = p.verified ? `<span class="mcl-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>` : '';
+                const caps = (p.categories||[]).slice(0,3).map(c=>`<span class="mcl-tag">${escapeHtml(c)}</span>`).join('');
+                return `<div class="mcl-card" onclick="flyToProducer(${p.id})">
+                    <div class="mcl-card-top">
+                        <div class="mcl-avatar" style="background:${color}">${letter}</div>
+                        <div>
+                            <div class="mcl-name">${escapeHtml(p.company)}</div>
+                            <div class="mcl-city">📍 ${escapeHtml(p.city||'—')}</div>
+                        </div>
+                    </div>
+                    ${verBadge}
+                    <div class="mcl-spec" style="margin-top:${p.verified?'6':'0'}px;">${escapeHtml(p.specialization||'')}</div>
+                    ${caps ? `<div class="mcl-tags">${caps}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        const markerById = {};
+
+        function flyToProducer(id) {
+            const p = allProducers.find(x => x.id === id);
+            if (!p) return;
+            map.flyTo([p.lat, p.lng], 10, { duration: 0.8 });
+            const m = markerById[id];
+            if (m) setTimeout(() => m.openPopup(), 900);
         }
 
         // ── Load data ─────────────────────────────────────────────────────
