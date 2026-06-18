@@ -241,7 +241,7 @@
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
                             Экспорт
                         </button>
-                        <button class="btn-primary" onclick="alert('Создание заказа доступно из Кабинета заказчика')">＋ Создать заказ</button>
+                        <button class="btn-primary" onclick="window.location.href='index.html'">＋ Создать заказ</button>
                     </div>
                 </div>
 
@@ -291,7 +291,7 @@
                 </div>
 
                 <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
-                    <button class="btn-primary" style="flex:1;" onclick="alert('Выбор поставщика: перейдите в предложение')">Выбрать поставщика</button>
+                    <button class="btn-primary" style="flex:1;" onclick="window.location.href='index.html'">Выбрать поставщика</button>
                     <button class="btn-secondary" onclick="window.location.href='messages.html'" style="flex:1;">Открыть чат</button>
                 </div>
                 <div id="ddpTrackBtn" style="display:none;margin-top:8px;">
@@ -468,7 +468,7 @@
                         <div class="kp-supplier">${escapeHtml(kp.supplier)}</div>
                         <div class="kp-meta">Срок поставки: ${kp.days} дн.</div>
                         <div class="kp-actions">
-                            <button class="btn-primary" onclick="alert('Поставщик выбран: ${escapeHtml(kp.supplier)}')">Выбрать</button>
+                            <button class="btn-primary" onclick="acceptKp(${kp.id||0}, ${d.id}, '${escapeHtml(kp.supplier).replace(/'/g,"\\'")}')">Выбрать</button>
                             <button class="btn-secondary" onclick="window.location.href='messages.html'">Чат</button>
                         </div>
                     </div>`).join('');
@@ -502,6 +502,20 @@
             }
 
             renderTable();
+        }
+
+        async function acceptKp(proposalId, orderId, supplier) {
+            if (!proposalId) { window.location.href = 'index.html'; return; }
+            if (!confirm(`Выбрать поставщика «${supplier}» победителем? Тендер будет закрыт.`)) return;
+            try {
+                const r = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
+                    method: 'POST', headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await r.json();
+                if (!r.ok) { alert(data.error || 'Ошибка'); return; }
+                closePanel();
+                window.location.reload();
+            } catch { window.location.href = 'index.html'; }
         }
 
         function closePanel() {

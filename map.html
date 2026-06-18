@@ -482,7 +482,7 @@
                 ${verBadge}
                 <div class="popup-spec">${escapeHtml(p.specialization)}</div>
                 <div class="popup-caps">${caps}</div>
-                <a href="#" class="popup-btn">Открыть профиль →</a>
+                <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль →</a>
             </div>`;
         }
 
@@ -566,7 +566,7 @@
                     ${verBadge}
                     <div class="mcp-spec">${escapeHtml(p.specialization)}</div>
                     <div class="mcp-tags">${tags}</div>
-                    <button class="mcp-write-btn" onclick="event.stopPropagation();alert('Сообщение: ${escapeHtml(p.company)}')">Написать</button>
+                    <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='messages.html'">Написать</button>
                 </div>`;
             }).join('');
         }

@@ -240,7 +240,7 @@
                                 <option>По названию</option>
                                 <option>По сделкам</option>
                             </select>
-                            <button class="btn-primary" style="height:34px;font-size:12.5px;" onclick="alert('Добавление контрагента вручную')">＋ Добавить</button>
+                            <button class="btn-primary" style="height:34px;font-size:12.5px;" onclick="addCurrentToFavorites()">＋ В избранное</button>
                         </div>
                     </div>
                     <div class="ct-grid" id="partnersGrid"></div>
@@ -274,7 +274,7 @@
                         <div id="detDeals"></div>
 
                         <div class="ct-det-actions">
-                            <button class="btn-primary" onclick="alert('Написать: ' + document.getElementById('detName').textContent)" >Написать</button>
+                            <button class="btn-primary" onclick="window.location.href='messages.html'">Написать</button>
                             <button class="btn-secondary" id="detProfileBtn" onclick="">Профиль →</button>
                         </div>
                     </div>
@@ -451,12 +451,41 @@
             document.getElementById('ctDetailContent').style.display = 'none';
         }
 
-        function toggleFav(id, btn) {
+        async function toggleFav(id, btn) {
             const c = allCompanies.find(x => x.id === id);
             if (!c) return;
-            c.isFavorite = !c.isFavorite;
-            btn.textContent = c.isFavorite ? '★' : '☆';
-            btn.classList.toggle('active', c.isFavorite);
+            const adding = !c.isFavorite;
+            c.isFavorite = adding;
+            btn.textContent = adding ? '★' : '☆';
+            btn.classList.toggle('active', adding);
+            try {
+                if (adding) {
+                    await fetch(`${SERVER_URL}/favorites`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body: JSON.stringify({ companyId: id }) });
+                } else {
+                    await fetch(`${SERVER_URL}/favorites/${id}`, { method:'DELETE', headers:{'Authorization':'Bearer '+token} });
+                }
+            } catch {}
+        }
+
+        async function addCurrentToFavorites() {
+            if (!currentDetailId) return;
+            const c = allCompanies.find(x => x.id === currentDetailId);
+            if (!c) return;
+            const btn = document.querySelector(`.ct-card[data-id="${currentDetailId}"] .fav-btn`);
+            if (btn) { toggleFav(currentDetailId, btn); return; }
+            c.isFavorite = true;
+            try {
+                await fetch(`${SERVER_URL}/favorites`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body: JSON.stringify({ companyId: currentDetailId }) });
+                showToast(`${c.company} добавлена в избранное`);
+            } catch { showToast(`${c.company} добавлена в избранное`); }
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.textContent = msg;
+            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'var(--accent-bright)', color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s' });
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 2500);
         }
 
         function setRoleFilter(val, btn) {

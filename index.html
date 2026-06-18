@@ -371,6 +371,16 @@
         </div>
     </div>
 
+    <div class="modal" id="compareModal">
+        <div class="modal-content" style="width:820px;max-width:94vw;">
+            <h3 id="compareModalTitle">Сравнение КП</h3>
+            <div id="compareTableWrap" style="overflow-x:auto;margin-top:4px;"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="document.getElementById('compareModal').style.display='none'">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
@@ -433,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let sortDir = -1;
         let currentProposalsOrderId = null;
         let currentProposalsOrderTitle = '';
+        let currentProposalsList = [];
 
         function deadlineToSortKey(str) {
             if (!str) return '';
@@ -759,6 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (res.ok) proposals = await res.json();
             } catch { /* use mock */ }
+            currentProposalsList = proposals;
 
             proposals.sort((a, b) => (a.price || 0) - (b.price || 0));
 
@@ -805,9 +817,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function compareKp() {
-            const panel = document.getElementById('procDetailPanel');
-            if (!panel || panel.style.display === 'none') { alert('Выберите закупку для сравнения КП'); return; }
-            viewAllProposals();
+            if (!currentProposalsOrderId || !currentProposalsList.length) {
+                alert('Выберите закупку с предложениями для сравнения');
+                return;
+            }
+            const props = currentProposalsList;
+            const ordTitle = currentProposalsOrderTitle;
+            document.getElementById('compareModalTitle').textContent = `Сравнение КП — ${ordTitle}`;
+
+            const minPrice = Math.min(...props.map(p => p.price || Infinity));
+            const minDays  = Math.min(...props.map(p => p.leadTime || p.days || Infinity));
+
+            const cols = props.map((p, i) => {
+                const name = p.company || p.companyName || '—';
+                const price = p.price || 0;
+                const days  = p.leadTime || p.days || '—';
+                const isBestPrice = price === minPrice;
+                const isBestDays  = days  === minDays;
+                return { name, price, days, isBestPrice, isBestDays, id: p.id || 0, i };
+            });
+
+            const priceFmt = v => v ? new Intl.NumberFormat('ru-RU').format(v) + ' ₽' : '—';
+            const best = `<span style="margin-left:4px;font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">✓ лучший</span>`;
+
+            const thStyle = `padding:12px 14px;text-align:center;font-size:13px;font-weight:700;color:var(--text-primary);border-bottom:2px solid var(--accent-bright);white-space:nowrap;min-width:160px;`;
+            const tdStyle = `padding:11px 14px;text-align:center;font-size:13px;border-bottom:1px solid var(--inner-border);`;
+            const labelStyle = `padding:11px 14px;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--inner-border);background:var(--bg-section);`;
+
+            let html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead><tr>
+                    <th style="${labelStyle}">Критерий</th>
+                    ${cols.map(c => `<th style="${thStyle}">${escapeHtml(c.name)}</th>`).join('')}
+                </tr></thead>
+                <tbody>
+                <tr>
+                    <td style="${labelStyle}">Цена</td>
+                    ${cols.map(c => `<td style="${tdStyle};font-weight:700;font-family:'JetBrains Mono',monospace;">${priceFmt(c.price)}${c.isBestPrice ? best : ''}</td>`).join('')}
+                </tr>
+                <tr>
+                    <td style="${labelStyle}">Срок поставки</td>
+                    ${cols.map(c => `<td style="${tdStyle}">${c.days} дн.${c.isBestDays ? best : ''}</td>`).join('')}
+                </tr>
+                <tr>
+                    <td style="${labelStyle}">Действие</td>
+                    ${cols.map(c => `<td style="${tdStyle}"><button class="btn-primary" style="font-size:12px;padding:7px 14px;" onclick="acceptProposalFromCompare(${c.id}, '${escapeHtml(c.name).replace(/'/g,"\\'")}')">Выбрать победителя</button></td>`).join('')}
+                </tr>
+                </tbody>
+            </table>`;
+
+            document.getElementById('compareTableWrap').innerHTML = html;
+            document.getElementById('compareModal').style.display = 'flex';
+        }
+
+        async function acceptProposalFromCompare(proposalId, supplier) {
+            if (!proposalId) { alert('Нет ID предложения (демо-данные)'); return; }
+            if (!confirm(`Выбрать «${supplier}» победителем? Тендер будет закрыт.`)) return;
+            document.getElementById('compareModal').style.display = 'none';
+            try {
+                const r = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
+                    method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const data = await r.json();
+                if (!r.ok) { alert(data.error || 'Ошибка'); return; }
+                window.location.reload();
+            } catch { alert('Сервер недоступен'); }
         }
 
         function openEditFromPanel() {
