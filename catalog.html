@@ -311,7 +311,7 @@
                     <label class="filter-check"><input type="checkbox"> ГОСТ Р ИСО</label>
                     <label class="filter-check"><input type="checkbox"> ТР ТС</label>
                 </div>
-                <button class="btn-secondary" style="width:100%;margin-top:16px;">Применить фильтры (0)</button>
+                <button id="applyFiltersBtn" class="btn-secondary" style="width:100%;margin-top:16px;" onclick="applySidebarFilters()">Применить фильтры (0)</button>
             </aside>
 
             <section class="catalog-results-panel">
@@ -356,7 +356,7 @@
                     <div class="compare-rating">★ 4,7</div>
                 </div>
                 <div class="compare-add">＋<br>Добавить поставщика<br><span style="font-size:11px;">Максимум 4 для сравнения</span></div>
-                <button class="btn-primary" style="width:100%;">Сравнить (3)</button>
+                <button class="btn-primary" style="width:100%;" onclick="openCompareModal()">Сравнить (3)</button>
                 <div style="margin-top:14px;background:#F8FBFF;border-radius:8px;padding:12px;color:var(--text-secondary);font-size:12px;text-align:center;">Сравните условия поставки, цены и характеристики выбранных поставщиков</div>
             </aside>
         </div>
@@ -554,6 +554,77 @@
                 ${capacityBlock}
                 <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn">Открыть профиль →</a>
             </div>`;
+        }
+
+        let sidebarCategories = [];
+        let sidebarRegion = '';
+
+        function applySidebarFilters() {
+            const checkedCats = [...document.querySelectorAll('.filter-check input[type=checkbox]:checked')]
+                .map(el => el.parentElement.textContent.trim().split(/\s+\d/)[0].trim());
+            sidebarCategories = checkedCats;
+            sidebarRegion = document.querySelector('.filter-group select')?.value || '';
+            const count = checkedCats.length + (sidebarRegion ? 1 : 0);
+            document.getElementById('applyFiltersBtn').textContent = `Применить фильтры (${count})`;
+            render();
+        }
+
+        // Hook sidebar checkboxes to update count live
+        document.querySelectorAll('.filter-check input[type=checkbox]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const n = document.querySelectorAll('.filter-check input[type=checkbox]:checked').length;
+                document.getElementById('applyFiltersBtn').textContent = `Применить фильтры (${n})`;
+            });
+        });
+
+        const _originalFiltered = filtered;
+        function filtered() {
+            let list = _originalFiltered();
+            if (sidebarCategories.length) {
+                list = list.filter(p => {
+                    const caps = (p.capabilities || []).join(' ') + ' ' + (p.specialization || '');
+                    return sidebarCategories.some(c => caps.toLowerCase().includes(c.toLowerCase().split(' ')[0]));
+                });
+            }
+            return list;
+        }
+
+        function openCompareModal() {
+            const modal = document.getElementById('catalogCompareModal');
+            if (modal) { modal.style.display = 'flex'; return; }
+            const m = document.createElement('div');
+            m.id = 'catalogCompareModal';
+            m.onclick = e => { if (e.target === m) m.style.display = 'none'; };
+            Object.assign(m.style, { position:'fixed', inset:'0', background:'rgba(0,0,0,.55)', zIndex:'1000', display:'flex', alignItems:'center', justifyContent:'center' });
+            const compareItems = [
+                { name:'Римера-Альнас', spec:'Насосное оборудование', rating:'4,6', city:'Екатеринбург', deals:312, delivery:'14 дн', cert:'ISO 9001, ГОСТ' },
+                { name:'НефтеГазТехКомплект', spec:'Трубопроводная арматура', rating:'4,7', city:'Тюмень', deals:201, delivery:'7 дн', cert:'ГОСТ Р, ТР ТС' },
+            ];
+            const rows = [
+                ['Специализация', compareItems.map(c=>c.spec)],
+                ['Рейтинг', compareItems.map(c=>`★ ${c.rating}`)],
+                ['Город', compareItems.map(c=>c.city)],
+                ['Завершено сделок', compareItems.map(c=>c.deals)],
+                ['Срок поставки', compareItems.map(c=>c.delivery)],
+                ['Сертификаты', compareItems.map(c=>c.cert)],
+            ];
+            m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:600px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+                <div style="font-size:16px;font-weight:700;margin-bottom:18px;">Сравнение поставщиков</div>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead><tr>
+                        <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;border-bottom:1px solid var(--card-border);">Параметр</th>
+                        ${compareItems.map(c=>`<th style="padding:6px 8px;color:var(--text-primary);font-weight:700;border-bottom:1px solid var(--card-border);">${c.name}</th>`).join('')}
+                    </tr></thead>
+                    <tbody>${rows.map(([label,vals],i)=>`<tr style="background:${i%2?'var(--card-bg)':'var(--surface)'}">
+                        <td style="padding:8px;color:var(--text-secondary);">${label}</td>
+                        ${vals.map(v=>`<td style="padding:8px;text-align:center;font-weight:600;">${v}</td>`).join('')}
+                    </tr>`).join('')}</tbody>
+                </table>
+                <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+                    <button onclick="document.getElementById('catalogCompareModal').style.display='none'" style="padding:9px 22px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Закрыть</button>
+                </div>
+            </div>`;
+            document.body.appendChild(m);
         }
 
         document.addEventListener('DOMContentLoaded', loadCatalog);

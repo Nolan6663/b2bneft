@@ -171,24 +171,24 @@
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><strong>КО-50-16-01</strong><span class="badge win">В работе</span></div>
                     <div class="side-row"><span>№ закупки</span><strong>2025-06-017</strong></div>
                     <div class="side-row"><span>Объём</span><strong>120 тн</strong></div>
-                    <button class="btn-secondary" style="width:100%;margin-top:10px;">Открыть закупку ↗</button>
+                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='deals.html'">Открыть закупку ↗</button>
                 </div>
                 <div class="side-card">
                     <h3>Поставщик</h3>
                     <div style="font-weight:850;color:var(--text-primary);margin-bottom:8px;">ООО «НефтеПромСнаб»</div>
                     <div class="side-row"><span>ИНН</span><strong>7701234567</strong></div>
                     <div class="side-row"><span>Контакт</span><strong>Петров Игорь</strong></div>
-                    <button class="btn-secondary" style="width:100%;margin-top:10px;">Перейти в карточку</button>
+                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='company-profile.html'">Перейти в карточку</button>
                 </div>
                 <div class="side-card">
                     <h3>Файлы в переписке</h3>
-                    <div class="file-row"><span>📄 КП_НКТ_73мм.pdf<br><small>PDF · 1.2 МБ</small></span><button class="proc-row-btn">↓</button></div>
-                    <div class="file-row"><span>📄 Техническое описание.pdf<br><small>PDF · 0.8 МБ</small></span><button class="proc-row-btn">↓</button></div>
+                    <div class="file-row"><span>📄 КП_НКТ_73мм.pdf<br><small>PDF · 1.2 МБ</small></span><button class="proc-row-btn" onclick="msgToast('Файл будет доступен после подписания договора')">↓</button></div>
+                    <div class="file-row"><span>📄 Техническое описание.pdf<br><small>PDF · 0.8 МБ</small></span><button class="proc-row-btn" onclick="msgToast('Файл будет доступен после подписания договора')">↓</button></div>
                 </div>
                 <div class="side-card">
                     <h3>Действия</h3>
-                    <button class="btn-secondary" style="width:100%;margin-bottom:8px;">Создать задачу</button>
-                    <button class="btn-secondary" style="width:100%;">Зафиксировать договорённость</button>
+                    <button class="btn-secondary" style="width:100%;margin-bottom:8px;" onclick="msgToast('Создание задач доступно в следующем обновлении')">Создать задачу</button>
+                    <button class="btn-secondary" style="width:100%;" onclick="msgToast('Функция будет доступна в следующем обновлении')">Зафиксировать договорённость</button>
                 </div>
             </aside>
         </div>
@@ -197,6 +197,14 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
 <script>
+function msgToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'var(--accent-bright)', color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s' });
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
 function toggleTheme() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
