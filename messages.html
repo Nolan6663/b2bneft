@@ -247,12 +247,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ── Conversations list ──────────────────────────────────────────
 
+        const MOCK_CONVERSATIONS = [
+            { orderId:1, orderTitle:'Компрессор воздушный ВП-50/8', company:'ООО «НефтеПромСнаб»', customerCompany:'АО «ГазНефтьЗаказ»', lastMessage:'Подтверждаем отгрузку 25 июня. Документы вышлем отдельно.', lastSender:'producer', lastAt: new Date(Date.now()-3600000).toISOString(), unreadCount:2 },
+            { orderId:2, orderTitle:'Манжета резиновая армированная 60×90×10', company:'ООО «АктивСнаб»', customerCompany:'АО «ГазНефтьЗаказ»', lastMessage:'Готовы предложить 500 шт. по 374 руб/шт, срок 14 дней', lastSender:'producer', lastAt: new Date(Date.now()-7200000).toISOString(), unreadCount:1 },
+            { orderId:3, orderTitle:'Фланец стальной Ду100 Ру16', company:'АО «РегионСнаб»', customerCompany:'АО «ГазНефтьЗаказ»', lastMessage:'Вы: Спасибо, ждём счёт на оплату', lastSender:'customer', lastAt: new Date(Date.now()-86400000).toISOString(), unreadCount:0 },
+            { orderId:5, orderTitle:'Насос ЦНС 38-132 в сборе', company:'ООО «ТехноПром»', customerCompany:'АО «ГазНефтьЗаказ»', lastMessage:'Нет сообщений', lastSender:'', lastAt: new Date(Date.now()-172800000).toISOString(), unreadCount:0 },
+        ];
+
         async function loadConversations() {
             try {
                 const r = await fetch(`${SERVER_URL}/messages/conversations`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                allConversations = r.ok ? await r.json() : [];
+                allConversations = r.ok ? await r.json() : MOCK_CONVERSATIONS;
                 renderConversationList(allConversations);
 
                 // open conv from URL param if present
@@ -264,7 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (target) openConversation(target);
                 }
             } catch {
-                document.getElementById('convList').innerHTML = '<div class="conv-empty">Не удалось загрузить переписки</div>';
+                allConversations = MOCK_CONVERSATIONS;
+                renderConversationList(allConversations);
             }
         }
 

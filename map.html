@@ -285,20 +285,25 @@
         }
 
         // ── Load data ─────────────────────────────────────────────────────
+        const MOCK_MAP_PRODUCERS = [
+            { id:1, company:'ООО «НефтеПромСнаб»', city:'Тюмень', lat:57.1533, lng:68.0000, specialization:'РТИ, МТР', categories:['РТИ'], verified:true, rating:4.8, totalDeals:124 },
+            { id:2, company:'ООО «АктивСнаб»', city:'Екатеринбург', lat:56.8389, lng:60.6057, specialization:'Металлоконструкции, трубная арматура', categories:['Металл'], verified:true, rating:4.6, totalDeals:89 },
+            { id:3, company:'ООО «ПромМаш»', city:'Уфа', lat:54.7388, lng:55.9721, specialization:'Насосное оборудование', categories:['Насосы'], verified:true, rating:4.5, totalDeals:201 },
+            { id:4, company:'АО «РегионСнаб»', city:'Сургут', lat:61.2500, lng:73.4167, specialization:'Электрооборудование, КИПиА', categories:['Электро'], verified:true, rating:4.3, totalDeals:56 },
+            { id:5, company:'ООО «ТехноПром»', city:'Пермь', lat:58.0105, lng:56.2502, specialization:'Трубопровод, запорная арматура', categories:['Трубопровод'], verified:false, rating:4.1, totalDeals:43 },
+            { id:6, company:'ПАО «Завод РТИ»', city:'Казань', lat:55.7887, lng:49.1221, specialization:'Резинотехнические изделия', categories:['РТИ'], verified:true, rating:4.7, totalDeals:312 },
+            { id:7, company:'ООО «МеталлСерв»', city:'Нижневартовск', lat:60.9344, lng:76.5436, specialization:'Металлопрокат, стальные трубы', categories:['Металл'], verified:true, rating:4.2, totalDeals:78 },
+        ];
+
         async function loadMap() {
             try {
                 const r = await fetch(`${SERVER_URL}/map`);
                 if (!r.ok) throw new Error();
                 allProducers = await r.json();
-                applyFilters();
-
-                if (allProducers.length === 0) {
-                    document.getElementById('mapCounter').innerHTML =
-                        'Заводы ещё не добавлены на карту. Производителям нужно указать город в профиле.';
-                }
             } catch {
-                document.getElementById('mapCounter').innerHTML = 'Не удалось загрузить данные';
+                allProducers = MOCK_MAP_PRODUCERS;
             }
+            applyFilters();
         }
 
         // ── Event listeners ───────────────────────────────────────────────

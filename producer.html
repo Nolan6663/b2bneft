@@ -364,12 +364,23 @@ function renderCompanyStatus(status) {
             } catch (error) { console.error(error); }
         }
 
+        const MOCK_ORDERS_PRODUCER = [
+            { id:1, title:'Компрессор воздушный ВП-50/8', category:'Насосное оборудование', status:'Активный', responses:8, deadline:'2026-07-20', createdAt:'2026-06-01', quantity:2, unit:'шт', description:'ГОСТ 12.2.016, давление 8 бар' },
+            { id:2, title:'Манжета резиновая армированная 60×90×10', category:'РТИ', status:'Активный', responses:14, deadline:'2026-07-05', createdAt:'2026-06-03', quantity:500, unit:'шт', description:'Стойкость к нефти и нефтепродуктам' },
+            { id:3, title:'Фланец стальной Ду100 Ру16', category:'Металлоконструкции', status:'Активный', responses:6, deadline:'2026-07-15', createdAt:'2026-06-05', quantity:120, unit:'шт', description:'Сталь 09Г2С' },
+            { id:4, title:'Труба НКТ 73×5.5 ГОСТ 633', category:'Трубопровод', status:'Активный', responses:9, deadline:'2026-07-10', createdAt:'2026-06-06', quantity:300, unit:'м', description:'Группа прочности Д' },
+            { id:5, title:'Насос ЦНС 38-132 в сборе', category:'Насосное оборудование', status:'Активный', responses:3, deadline:'2026-07-25', createdAt:'2026-06-07', quantity:1, unit:'шт', description:'Для перекачки нефти' },
+            { id:6, title:'Запорная арматура DN50 PN40', category:'Трубопровод', status:'Активный', responses:5, deadline:'2026-07-08', createdAt:'2026-06-08', quantity:24, unit:'шт', description:'Нержавеющая сталь' },
+            { id:7, title:'Кабель ВВГнг 4×16', category:'Электрооборудование', status:'Активный', responses:11, deadline:'2026-07-03', createdAt:'2026-06-09', quantity:1000, unit:'м', description:'ГОСТ 16442' },
+        ];
+
         async function loadOrdersForProducers() {
+            let orders = MOCK_ORDERS_PRODUCER;
             try {
                 const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
                 const response = await fetch(`${SERVER_URL}/orders`, { headers });
-                const orders = await response.json();
-
+                const fetched = await response.json();
+                orders = fetched;
                 if (!isGuest) {
                     try {
                         const scoresResponse = await fetch(`${SERVER_URL}/orders/match-scores`, { headers });
@@ -378,88 +389,98 @@ function renderCompanyStatus(status) {
                             orders.forEach(o => { o.matchScore = scores[o.id] != null ? scores[o.id] : null; });
                             orders.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
                         }
-                    } catch (e) { /* матчинг недоступен — показываем как обычно, без сортировки */ }
+                    } catch (e) { /* матчинг недоступен */ }
+                }
+            } catch (error) { /* keep mock */ }
+
+            ordersCache = orders;
+            document.getElementById('tabOrdersCount').innerText = orders.length;
+
+            const ordersList = document.getElementById('ordersList');
+            if (!ordersList) return;
+            ordersList.innerHTML = '';
+
+            orders.forEach(order => {
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                orderItem.setAttribute('data-category', order.category);
+                const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
+                const displayTitle = order.title;
+                orderItem.setAttribute('data-search', `${displayTitle} ${order.description || ''}`.toLowerCase());
+
+                const chatBtn = isGuest
+                    ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
+                    : `<button class="btn-secondary" data-oid="${order.id}" data-title="${escapeHtml(displayTitle)}" data-company="${escapeHtml(localStorage.getItem('userCompany') || '')}" onclick="openGlobalChat(+this.dataset.oid, this.dataset.title, this.dataset.company)">Открыть чат</button>`;
+
+                let statusBlock, actionBtn;
+                if (order.status === 'Отменена') {
+                    statusBlock = `<div class="meta status-dot muted">Закупка отменена заказчиком</div>`;
+                    actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
+                } else if (order.status === 'Закрыта') {
+                    statusBlock = `<div class="meta status-dot closed">Закупка завершена</div>`;
+                    actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
+                } else if (isGuest) {
+                    statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
+                    actionBtn = `<button class="btn-primary" onclick="window.location.href='login.html'">Войти для отклика</button>`;
+                } else {
+                    statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
+                    actionBtn = `<button class="btn-primary" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
                 }
 
-                ordersCache = orders;
-                document.getElementById('tabOrdersCount').innerText = orders.length;
+                const drawingBlock = isGuest
+                    ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
+                    : (order.drawing
+                        ? `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(order.drawing.originalName)}</a></div>`
+                        : `<div class="meta">📁 Чертеж: отсутствует</div>`);
 
-                const ordersList = document.getElementById('ordersList');
-                if (!ordersList) return;
-                ordersList.innerHTML = '';
+                let matchBadge = '';
+                if (order.matchScore != null) {
+                    const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
+                    matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🧩 ${order.matchScore}% совпадение</span>`;
+                }
 
-                orders.forEach(order => {
-                    const orderItem = document.createElement('div');
-                    orderItem.className = 'order-item';
-                    orderItem.setAttribute('data-category', order.category);
-                    const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
-                    const displayTitle = order.title;
-                    orderItem.setAttribute('data-search', `${displayTitle} ${order.description || ''}`.toLowerCase());
+                const createdStr = order.createdAt
+                    ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '';
+                const quantityBlock = order.quantity
+                    ? `<div class="meta">Количество: <span class="meta-value">${order.quantity} ${order.unit || 'шт'}</span></div>`
+                    : '';
+                const descriptionBlock = order.description
+                    ? `<div class="meta" style="margin-top:6px; color: var(--text-tertiary); font-size: 12.5px;">${escapeHtml(order.description)}</div>`
+                    : '';
 
-                    const chatBtn = isGuest
-                        ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
-                        : `<button class="btn-secondary" data-oid="${order.id}" data-title="${escapeHtml(displayTitle)}" data-company="${escapeHtml(localStorage.getItem('userCompany') || '')}" onclick="openGlobalChat(+this.dataset.oid, this.dataset.title, this.dataset.company)">Открыть чат</button>`;
-
-                    let statusBlock, actionBtn;
-                    if (order.status === 'Отменена') {
-                        statusBlock = `<div class="meta status-dot muted">Закупка отменена заказчиком</div>`;
-                        actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
-                    } else if (order.status === 'Закрыта') {
-                        statusBlock = `<div class="meta status-dot closed">Закупка завершена</div>`;
-                        actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
-                    } else if (isGuest) {
-                        statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
-                        actionBtn = `<button class="btn-primary" onclick="window.location.href='login.html'">Войти для отклика</button>`;
-                    } else {
-                        statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
-                        actionBtn = `<button class="btn-primary" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
-                    }
-
-                    const drawingBlock = isGuest
-                        ? `<div class="meta" style="color: var(--error);">🔒 Авторизуйтесь для просмотра вложений</div>`
-                        : (order.drawing
-                            ? `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color: var(--accent-bright); text-decoration:underline;">${escapeHtml(order.drawing.originalName)}</a></div>`
-                            : `<div class="meta">📁 Чертеж: отсутствует</div>`);
-
-                    let matchBadge = '';
-                    if (order.matchScore != null) {
-                        const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
-                        matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией и оборудованием">🧩 ${order.matchScore}% совпадение</span>`;
-                    }
-
-                    const createdStr = order.createdAt
-                        ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                        : '';
-                    const quantityBlock = order.quantity
-                        ? `<div class="meta">Количество: <span class="meta-value">${order.quantity} шт</span></div>`
-                        : '';
-                    const descriptionBlock = order.description
-                        ? `<div class="meta" style="margin-top:6px; color: var(--text-tertiary); font-size: 12.5px;">${escapeHtml(order.description)}</div>`
-                        : '';
-
-                    orderItem.innerHTML = `
-                        <div class="order-info">
-                            <div class="order-title-row">
-                                <h4>${escapeHtml(displayTitle)}</h4>
-                                <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
-                                <span class="tag ${tagClass}">${escapeHtml(order.category)}</span>
-                                ${matchBadge}
-                            </div>
-                            ${statusBlock}
-                            ${quantityBlock}
-                            <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
-                            <div class="meta">Дедлайн: <span class="meta-value">${formatDeadline(order.deadline)}</span></div>
-                            ${createdStr ? `<div class="meta">Размещена: <span class="meta-value">${createdStr}</span></div>` : ''}
-                            ${descriptionBlock}
-                            ${drawingBlock}
+                orderItem.innerHTML = `
+                    <div class="order-info">
+                        <div class="order-title-row">
+                            <h4>${escapeHtml(displayTitle)}</h4>
+                            <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
+                            <span class="tag ${tagClass}">${escapeHtml(order.category)}</span>
+                            ${matchBadge}
                         </div>
-                        <div class="order-actions">${chatBtn}${actionBtn}</div>`;
-                    ordersList.appendChild(orderItem);
-                });
-            } catch (error) { console.error(error); }
+                        ${statusBlock}
+                        ${quantityBlock}
+                        <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
+                        <div class="meta">Дедлайн: <span class="meta-value">${formatDeadline(order.deadline)}</span></div>
+                        ${createdStr ? `<div class="meta">Размещена: <span class="meta-value">${createdStr}</span></div>` : ''}
+                        ${descriptionBlock}
+                        ${drawingBlock}
+                    </div>
+                    <div class="order-actions">${chatBtn}${actionBtn}</div>`;
+                ordersList.appendChild(orderItem);
+            });
+        }
+
+        function setCrmStatsMock() {
+            const el = id => document.getElementById(id);
+            if (el('crmLeads'))      el('crmLeads').textContent = '142';
+            if (el('crmSent'))       el('crmSent').textContent = '38';
+            if (el('crmActive'))     el('crmActive').textContent = '14';
+            if (el('crmWon'))        el('crmWon').textContent = '11';
+            if (el('crmConversion')) el('crmConversion').textContent = '28,9%';
         }
 
         async function loadCrmStats() {
+            setCrmStatsMock();
             try {
                 const r = await fetch(`${SERVER_URL}/producer/crm-stats`, { headers: { 'Authorization': 'Bearer ' + token } });
                 if (!r.ok) return;
@@ -469,8 +490,7 @@ function renderCompanyStatus(status) {
                 document.getElementById('crmActive').textContent = s.active;
                 document.getElementById('crmWon').textContent = s.won;
                 document.getElementById('crmConversion').textContent = s.conversion + '%';
-                /* kpi-row is always visible */
-            } catch { /* тихо */ }
+            } catch { /* keep mock */ }
         }
 
         async function loadMyProposals() {

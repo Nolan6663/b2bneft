@@ -244,6 +244,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let allDeals    = [];
         let currentFilter = 'all';
 
+        const MOCK_DEALS = [
+            { id:1, title:'Компрессор воздушный ВП-50/8', category:'Насосное оборудование', completionStatus:'active', counterparty:'ООО «НефтеПромСнаб»', counterpartyProfileId:1, price:2450000, quantity:2, unit:'шт', days:21, dealDate:'2026-05-15', orderId:1, proposalId:1, description:'Поставка компрессорного оборудования согласно ТЗ' },
+            { id:2, title:'Манжета резиновая армированная 60×90×10', category:'РТИ', completionStatus:'active', counterparty:'ООО «АктивСнаб»', counterpartyProfileId:2, price:187000, quantity:500, unit:'шт', days:14, dealDate:'2026-05-20', orderId:2, proposalId:2, description:'ГОСТ 12.2.016, стойкость к нефти' },
+            { id:3, title:'Фланец стальной Ду100 Ру16', category:'Металлоконструкции', completionStatus:'completed', counterparty:'АО «РегионСнаб»', counterpartyProfileId:3, price:980000, quantity:120, unit:'шт', days:30, dealDate:'2026-04-10', orderId:3, proposalId:3, description:'Сталь 09Г2С, поставлено в срок' },
+            { id:4, title:'Труба НКТ 73×5.5 ГОСТ 633', category:'Трубопровод', completionStatus:'completed', counterparty:'ООО «ПромМаш»', counterpartyProfileId:4, price:1340000, quantity:300, unit:'м', days:45, dealDate:'2026-03-22', orderId:4, proposalId:4, description:'Группа прочности Д, приёмка выполнена' },
+            { id:5, title:'Насос ЦНС 38-132 в сборе', category:'Насосное оборудование', completionStatus:'active', counterparty:'ООО «ТехноПром»', counterpartyProfileId:5, price:810000, quantity:1, unit:'шт', days:60, dealDate:'2026-06-01', orderId:5, proposalId:5, description:'Насос для перекачки нефти' },
+            { id:6, title:'Запорная арматура DN50 PN40', category:'Трубопровод', completionStatus:'active', counterparty:'ООО «НефтеПромСнаб»', counterpartyProfileId:1, price:560000, quantity:24, unit:'шт', days:18, dealDate:'2026-06-05', orderId:6, proposalId:6, description:'Нержавеющая сталь' },
+            { id:7, title:'Кабель ВВГнг 4×16', category:'Электрооборудование', completionStatus:'completed', counterparty:'АО «РегионСнаб»', counterpartyProfileId:3, price:320000, quantity:1000, unit:'м', days:10, dealDate:'2026-02-14', orderId:7, proposalId:7, description:'ГОСТ 16442' },
+            { id:8, title:'Задвижка клиновая 30с941нж', category:'Трубопровод', completionStatus:'completed', counterparty:'ООО «АктивСнаб»', counterpartyProfileId:2, price:670000, quantity:8, unit:'шт', days:25, dealDate:'2026-01-30', orderId:8, proposalId:8, description:'Сталь 20' },
+        ];
+
         window.addEventListener('DOMContentLoaded', async () => {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
@@ -254,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 userRole === 'customer' ? 'Мои заказы' : 'Выигранные сделки';
             document.getElementById('kpiAmountLabel').textContent =
                 userRole === 'customer' ? 'Сумма закупок' : 'Сумма выручки';
+
+            /* Show mock data immediately */
+            allDeals = MOCK_DEALS;
+            updateKPI();
+            renderDeals();
 
             try {
                 const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
@@ -280,8 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateKPI();
                 renderDeals();
             } catch {
-                document.getElementById('dealsList').innerHTML =
-                    '<div class="deals-empty"><div class="deals-empty-icon">⚠️</div>Не удалось загрузить данные</div>';
+                /* keep mock data already shown */
             }
         }
 

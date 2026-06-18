@@ -412,23 +412,33 @@
             'linear-gradient(135deg,#DC2626,#F87171)',
         ];
 
+        const MOCK_PRODUCERS = [
+            { id:1, company:'ООО «НефтеПромСнаб»', city:'Тюмень', specialization:'Резинотехнические изделия (РТИ), МТР', rating:4.8, status:'Верифицирован', capabilities:['РТИ','Металл'], about:'Крупнейший поставщик РТИ для нефтегазовой отрасли Западной Сибири. Собственное производство, сертифицировано по ИСО 9001.', yearsExperience:15, totalDeals:124, region:'Западная Сибирь' },
+            { id:2, company:'ООО «АктивСнаб»', city:'Екатеринбург', specialization:'Металлоконструкции, трубная арматура', rating:4.6, status:'Верифицирован', capabilities:['Металл','Трубопровод'], about:'Производство металлоконструкций и поставка трубной арматуры по всему Уралу. Сварочное производство 4000 м².', yearsExperience:12, totalDeals:89, region:'Урал' },
+            { id:3, company:'ООО «ПромМаш»', city:'Уфа', specialization:'Насосное оборудование, компрессоры', rating:4.5, status:'Верифицирован', capabilities:['Насосы','Электрооборудование'], about:'Сервисное обслуживание и поставка центробежных насосов серии ЦНС. Партнёр ведущих НПЗ Башкирии.', yearsExperience:18, totalDeals:201, region:'Поволжье' },
+            { id:4, company:'АО «РегионСнаб»', city:'Сургут', specialization:'Электрооборудование, КИПиА', rating:4.3, status:'Верифицирован', capabilities:['Электрооборудование','КИПиА'], about:'Поставка КИП, автоматики и электрооборудования для объектов нефтедобычи ХМАО.', yearsExperience:9, totalDeals:56, region:'ХМАО' },
+            { id:5, company:'ООО «ТехноПром»', city:'Пермь', specialization:'Трубопровод, запорная арматура', rating:4.1, status:'Верифицирован', capabilities:['Трубопровод','Металл'], about:'Поставщик трубной продукции и запорной арматуры. Склад 8000 м², более 6000 позиций в наличии.', yearsExperience:7, totalDeals:43, region:'Урал' },
+            { id:6, company:'ПАО «Завод РТИ»', city:'Казань', specialization:'Резинотехнические изделия, уплотнители', rating:4.7, status:'Верифицирован', capabilities:['РТИ'], about:'Производство РТИ с 1986 года. Экспорт в 14 стран. ГОСТ, ТУ, ИСО сертификаты.', yearsExperience:38, totalDeals:312, region:'Татарстан' },
+            { id:7, company:'ООО «МеталлСерв»', city:'Нижневартовск', specialization:'Металлопрокат, стальные трубы', rating:4.2, status:'Верифицирован', capabilities:['Металл','Трубопровод'], about:'Поставка металлопроката и стальных труб напрямую с ММК и НЛМК. Доставка до объекта.', yearsExperience:11, totalDeals:78, region:'ХМАО' },
+            { id:8, company:'ООО «ГидравлТех»', city:'Тобольск', specialization:'Гидравлические системы, насосы', rating:4.4, status:'Верифицирован', capabilities:['Насосы'], about:'Проектирование и монтаж гидравлических систем для НПЗ. Гарантия 3 года.', yearsExperience:10, totalDeals:35, region:'Западная Сибирь' },
+        ];
+
         async function loadCatalog() {
             try {
                 const res = await apiFetch(`${SERVER_URL}/catalog`);
                 if (!res.ok) throw new Error();
                 allProducers = await res.json();
-                // KPI strip
-                const t = document.getElementById('catKpiTotal');
-                const r = document.getElementById('catKpiRegions');
-                const c = document.getElementById('catKpiCaps');
-                if (t) t.textContent = allProducers.length;
-                if (r) r.textContent = new Set(allProducers.map(p => p.city).filter(Boolean)).size || '—';
-                if (c) c.textContent = new Set(allProducers.flatMap(p => (p.capabilities || []))).size || '—';
-                render();
             } catch {
-                document.getElementById('producersGrid').innerHTML =
-                    `<div class="catalog-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Не удалось загрузить каталог</p></div>`;
+                allProducers = MOCK_PRODUCERS;
             }
+            // KPI strip
+            const t = document.getElementById('catKpiTotal');
+            const r = document.getElementById('catKpiRegions');
+            const c = document.getElementById('catKpiCaps');
+            if (t) t.textContent = allProducers.length;
+            if (r) r.textContent = new Set(allProducers.map(p => p.city).filter(Boolean)).size || '—';
+            if (c) c.textContent = new Set(allProducers.flatMap(p => (p.capabilities || []))).size || '—';
+            render();
         }
 
         function setFilter(btn) {

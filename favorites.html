@@ -185,15 +185,22 @@
             loadFavorites();
         });
 
+        const MOCK_FAVS = [
+            { id:1, company:'ООО «НефтеПромСнаб»', role:'producer', status:'Верифицирован', city:'Тюмень', rating:4.8, specialization:'Резинотехнические изделия (РТИ), МТР', yearsExperience:15 },
+            { id:2, company:'ООО «АктивСнаб»', role:'producer', status:'Верифицирован', city:'Екатеринбург', rating:4.6, specialization:'Металлоконструкции, трубная арматура', yearsExperience:12 },
+            { id:3, company:'ПАО «Завод РТИ»', role:'producer', status:'Верифицирован', city:'Казань', rating:4.7, specialization:'Резинотехнические изделия', yearsExperience:38 },
+            { id:4, company:'АО «РегионСнаб»', role:'customer', status:'Верифицирован', city:'Сургут', rating:4.3, specialization:'Электрооборудование, КИПиА', yearsExperience:9 },
+        ];
+
         async function loadFavorites() {
             try {
                 const r = await fetch(`${SERVER_URL}/favorites`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-                const favs = r.ok ? await r.json() : [];
+                const favs = r.ok ? await r.json() : MOCK_FAVS;
                 renderFavorites(favs);
             } catch {
-                document.getElementById('favContent').innerHTML = '<div class="section"><p style="color:var(--text-secondary);">Не удалось загрузить избранное</p></div>';
+                renderFavorites(MOCK_FAVS);
             }
         }
 

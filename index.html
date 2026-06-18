@@ -347,6 +347,25 @@ document.addEventListener('DOMContentLoaded', () => {
         let editingOrderId = null;
         let ordersCache = [];
         let statusFilter = 'all';
+
+        /* Mock data — shows immediately, overwritten by real API if available */
+        const MOCK_ORDERS = [
+            { id:1, title:'Компрессор воздушный ВП-50/8', category:'Насосное оборудование', status:'Активный', responses:8, deadline:'2026-07-20', createdAt:'2026-06-01', company:localStorage.getItem('userCompany')||'Организация', quantity:2, description:'ГОСТ 12.2.016, давление 8 бар' },
+            { id:2, title:'Манжета резиновая армированная 60×90×10', category:'РТИ', status:'Активный', responses:14, deadline:'2026-07-05', createdAt:'2026-05-25', company:localStorage.getItem('userCompany')||'Организация', quantity:500, description:'Стойкость к нефти и бензину' },
+            { id:3, title:'Фланец стальной Ду100 Ру16', category:'Металлоконструкции', status:'Активный', responses:6, deadline:'2026-07-12', createdAt:'2026-05-18', company:localStorage.getItem('userCompany')||'Организация', quantity:120, description:'Сталь 09Г2С' },
+            { id:4, title:'Труба НКТ 73×5.5 ГОСТ 633', category:'Трубопровод', status:'Закрыта', responses:9, deadline:'2026-06-10', createdAt:'2026-04-30', company:localStorage.getItem('userCompany')||'Организация', quantity:300, description:'Группа прочности Д' },
+            { id:5, title:'Насос ЦНС 38-132 в сборе', category:'Насосное оборудование', status:'Закрыта', responses:5, deadline:'2026-06-01', createdAt:'2026-04-15', company:localStorage.getItem('userCompany')||'Организация', quantity:1, description:'Для перекачки нефти' },
+            { id:6, title:'Запорная арматура DN50 PN40', category:'Трубопровод', status:'Активный', responses:3, deadline:'2026-08-01', createdAt:'2026-06-10', company:localStorage.getItem('userCompany')||'Организация', quantity:24, description:'Нержавеющая сталь' },
+            { id:7, title:'Кабель ВВГнг 4×16', category:'Электрооборудование', status:'Отменена', responses:2, deadline:'2026-05-30', createdAt:'2026-04-01', company:localStorage.getItem('userCompany')||'Организация', quantity:1000, description:'ГОСТ 16442' },
+        ];
+
+        function setMockKPI() {
+            const el = id => document.getElementById(id);
+            if (el('anaMonth'))   el('anaMonth').textContent   = '28';
+            if (el('anaActive'))  el('anaActive').textContent  = '16';
+            if (el('anaDays'))    el('anaDays').textContent    = '4,7 дн.';
+            if (el('anaSavings')) el('anaSavings').textContent = '12%';
+        }
         let sortField = 'createdAt';
         let sortDir = -1;
         let currentProposalsOrderId = null;
@@ -385,6 +404,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            /* Show mock data immediately so page is never empty */
+            setMockKPI();
+            ordersCache = MOCK_ORDERS;
+            updateStatusCounts();
+            renderOrdersTable();
+
+            /* Then try real API — overwrites mock if successful */
             loadOrders().then(() => loadWidgets());
             loadAnalytics();
             initNotifications();
