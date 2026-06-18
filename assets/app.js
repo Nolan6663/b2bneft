@@ -40,8 +40,17 @@ function syncThemeUI(isLight) {
   if (icon) icon.innerText = isLight ? '☀️' : '🌙';
 }
 
+function initSidebarRole() {
+  const role = localStorage.getItem('userRole');
+  const mainLink = document.getElementById('mainCabinetLink');
+  if (mainLink) mainLink.href = role === 'producer' ? 'producer.html' : 'index.html';
+  const navProposals = document.getElementById('navProposals');
+  if (navProposals) navProposals.style.display = role === 'customer' ? 'none' : '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyStoredTheme();
+  initSidebarRole();
   initSidebarExtra();
   initHeaderRight();
   initNotifications();
