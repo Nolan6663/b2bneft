@@ -548,18 +548,18 @@
                                 <td style="padding:12px 0;"><div style="font-weight:600;color:var(--text-primary);">Иванов И.И.</div><div style="font-size:12px;color:var(--text-secondary);">ivanov@company.ru</div></td>
                                 <td style="padding:12px 0;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">Менеджер</span></td>
                                 <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">15.03.2025</td>
-                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="alert('Управление ролями доступно в Enterprise-тарифе')">Изменить</button></td>
+                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="showToast('Управление ролями доступно в Enterprise-тарифе', 'warn')">Изменить</button></td>
                             </tr>
                             <tr>
                                 <td style="padding:12px 0;"><div style="font-weight:600;color:var(--text-primary);">Петрова А.С.</div><div style="font-size:12px;color:var(--text-secondary);">petrova@company.ru</div></td>
                                 <td style="padding:12px 0;"><span style="background:rgba(251,191,36,.1);color:#b45309;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">Наблюдатель</span></td>
                                 <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">10.05.2025</td>
-                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="alert('Управление ролями доступно в Enterprise-тарифе')">Изменить</button></td>
+                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="showToast('Управление ролями доступно в Enterprise-тарифе', 'warn')">Изменить</button></td>
                             </tr>
                         </tbody>
                     </table>
                     <div style="margin-top:16px;">
-                        <button class="btn-secondary" onclick="alert('Приглашение сотрудников доступно в тарифе Профессиональный и выше')">
+                        <button class="btn-secondary" onclick="showToast('Приглашение доступно в тарифе Профессиональный и выше', 'warn')">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Пригласить сотрудника
                         </button>
@@ -656,7 +656,7 @@
                             </div>
                             <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;max-width:400px;">Включите 2FA через приложение Google Authenticator или Яндекс.Ключ — это защитит аккаунт даже если пароль окажется скомпрометирован.</div>
                         </div>
-                        <button class="btn-settings-save" onclick="alert('Настройка 2FA будет доступна в следующем обновлении. Для срочного включения обратитесь в поддержку.')">Настроить 2FA</button>
+                        <button class="btn-settings-save" onclick="showToast('2FA будет доступна в следующем обновлении')">Настроить 2FA</button>
                     </div>
                 </div>
             </div>
@@ -681,11 +681,11 @@
                                 <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">iPhone — Safari</div>
                                 <div style="font-size:12px;color:var(--text-secondary);">Последний вход: 2 дня назад</div>
                             </div>
-                            <button style="background:none;border:none;cursor:pointer;color:var(--error);font-size:12px;font-weight:600;" onclick="alert('Сессия завершена')">Завершить</button>
+                            <button style="background:none;border:none;cursor:pointer;color:var(--error);font-size:12px;font-weight:600;" onclick="terminateSession(this)">Завершить</button>
                         </div>
                     </div>
                     <div style="margin-top:14px;">
-                        <button class="btn-secondary" style="color:var(--error);border-color:rgba(239,68,68,.3);" onclick="alert('Все другие сессии завершены')">Завершить все другие сессии</button>
+                        <button class="btn-secondary" style="color:var(--error);border-color:rgba(239,68,68,.3);" onclick="terminateAllSessions()">Завершить все другие сессии</button>
                     </div>
                 </div>
             </div>
@@ -707,9 +707,9 @@
                                 <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Production API Key</div>
                                 <code style="font-size:13px;color:var(--text-primary);font-family:monospace;background:none;">b2b_pk_•••••••••••••••••••••••8f4a</code>
                             </div>
-                            <button style="background:none;border:1px solid var(--card-border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text-secondary);" onclick="alert('Ключ скопирован')">Показать</button>
+                            <button style="background:none;border:1px solid var(--card-border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text-secondary);" onclick="toggleApiKey(this)">Показать</button>
                         </div>
-                        <button class="btn-secondary" onclick="alert('Новый API ключ создан. Он отправлен на ваш email.')">
+                        <button class="btn-secondary" onclick="generateNewApiKey()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Создать новый ключ
                         </button>
@@ -736,7 +736,7 @@
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox" style="width:13px;height:13px;accent-color:var(--accent-bright);">Завершение сделки</label>
                     </div>
                     <div class="form-row-actions" style="margin-top:14px;">
-                        <button class="btn-settings-save" onclick="alert('Webhook сохранён')">Сохранить webhook</button>
+                        <button class="btn-settings-save" onclick="saveWebhook()">Сохранить webhook</button>
                     </div>
                 </div>
             </div>
@@ -747,10 +747,10 @@
                 </div>
                 <div class="settings-card-body">
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">1С: Предприятие</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="alert('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">SAP ERP</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="alert('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">Битрикс24</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="alert('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">AmoCRM</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="alert('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
+                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">1С: Предприятие</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
+                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">SAP ERP</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
+                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">Битрикс24</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
+                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">AmoCRM</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
                     </div>
                 </div>
             </div>
@@ -824,12 +824,59 @@
             }
         }
 
+        function showToast(msg, type) {
+            const t = document.createElement('div');
+            t.textContent = msg;
+            const bg = type === 'error' ? '#ef4444' : type === 'warn' ? '#f59e0b' : 'var(--accent-bright)';
+            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:bg, color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s', maxWidth:'340px' });
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
         function requestPushPermission() {
-            if (!('Notification' in window)) { alert('Ваш браузер не поддерживает push-уведомления'); return; }
+            if (!('Notification' in window)) { showToast('Ваш браузер не поддерживает push-уведомления', 'error'); return; }
             Notification.requestPermission().then(p => {
-                if (p === 'granted') alert('Push-уведомления включены!');
-                else alert('Разрешение не получено. Проверьте настройки браузера.');
+                if (p === 'granted') showToast('Push-уведомления включены!');
+                else showToast('Разрешение не получено. Проверьте настройки браузера.', 'warn');
             });
+        }
+
+        function terminateSession(btn) {
+            const row = btn.closest('[style*="display:flex"]');
+            if (row) { row.style.opacity = '0'; row.style.transition = 'opacity .3s'; setTimeout(() => row.remove(), 300); }
+            showToast('Сессия завершена');
+        }
+
+        function terminateAllSessions() {
+            document.querySelectorAll('.sessions-list > div:not(:first-child)').forEach(r => r.remove());
+            showToast('Все другие сессии завершены');
+        }
+
+        let apiKeyVisible = false;
+        const FAKE_API_KEY = 'b2b_pk_' + Array.from({length: 32}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('') + '8f4a';
+        function toggleApiKey(btn) {
+            const code = btn.closest('[style]').querySelector('code');
+            apiKeyVisible = !apiKeyVisible;
+            code.textContent = apiKeyVisible ? FAKE_API_KEY : 'b2b_pk_•••••••••••••••••••••••8f4a';
+            btn.textContent  = apiKeyVisible ? 'Скрыть' : 'Показать';
+            if (apiKeyVisible) { navigator.clipboard?.writeText(FAKE_API_KEY); showToast('Ключ скопирован в буфер'); }
+        }
+
+        function generateNewApiKey() {
+            const newKey = 'b2b_pk_' + Array.from({length: 32}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('') + (Math.random().toString(36).slice(-4));
+            const code = document.querySelector('[data-api-code]') || document.querySelector('code[style*="monospace"]');
+            if (code) code.textContent = 'b2b_pk_•••••••••••••••••••••••' + newKey.slice(-4);
+            apiKeyVisible = false;
+            const showBtn = document.querySelector('[onclick*="toggleApiKey"]');
+            if (showBtn) showBtn.textContent = 'Показать';
+            showToast('Новый ключ создан и скопирован на email');
+        }
+
+        function saveWebhook() {
+            const input = document.querySelector('input[type="url"]');
+            if (!input || !input.value.trim()) { showToast('Введите URL webhook', 'warn'); return; }
+            try { new URL(input.value.trim()); } catch { showToast('Неверный URL адрес', 'error'); return; }
+            showToast('Webhook успешно сохранён');
         }
 
         const userRole  = localStorage.getItem('userRole');

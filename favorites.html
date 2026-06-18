@@ -147,7 +147,7 @@
                 <div>
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                         <span id="favCountLabel" style="font-size:12.5px;color:var(--text-secondary);">4 компании сохранены</span>
-                        <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="alert('Управление группами')">Группы</button>
+                        <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="showFavToast('Группы доступны в тарифе Профессиональный')">Группы</button>
                     </div>
                     <div class="fav-grid" id="favGrid">
                         <div class="fav-empty">Загрузка...</div>
@@ -272,7 +272,7 @@
         <div id="tabLists" style="display:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <span style="font-size:12.5px;color:var(--text-secondary);">3 сохранённых списка</span>
-                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="alert('Создание списка')">＋ Создать список</button>
+                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="createList()">＋ Создать список</button>
             </div>
             <div class="fav-list-card">
                 <div class="fav-list-name">Поставщики РТИ</div>
@@ -346,6 +346,33 @@
             { id:3, company:'ПАО «Завод РТИ»', role:'producer', status:'Верифицирован', city:'Казань', rating:4.7, specialization:'Резинотехнические изделия', yearsExperience:38 },
             { id:4, company:'АО «РегионСнаб»', role:'customer', status:'Верифицирован', city:'Сургут', rating:4.3, specialization:'Электрооборудование, КИПиА', yearsExperience:9 },
         ];
+
+        function showFavToast(msg) {
+            const t = document.createElement('div');
+            t.textContent = msg;
+            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'var(--accent-bright)', color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s' });
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        function createList() {
+            const name = prompt('Название нового списка:');
+            if (!name || !name.trim()) return;
+            const container = document.querySelector('#tabLists');
+            if (!container) return;
+            const today = new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+            const card = document.createElement('div');
+            card.className = 'fav-list-card';
+            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name.trim())}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
+            const btn = container.querySelector('button');
+            if (btn) btn.insertAdjacentElement('afterend', card);
+            showFavToast(`Список «${name.trim()}» создан`);
+            const countEl = container.querySelector('span');
+            if (countEl) {
+                const current = parseInt(countEl.textContent) || 0;
+                countEl.textContent = `${current + 1} сохранённых списка`;
+            }
+        }
 
         function setFavTab(tab, btn) {
             document.querySelectorAll('.fav-tab').forEach(b => b.classList.remove('active'));
