@@ -1298,6 +1298,59 @@
             renderHeatmap(data);
         }
 
+        /* ══ REAL API (mock-first) ══ */
+        const SERVER_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000/api'
+            : window.location.origin + '/api';
+
+        async function tryLoadReal() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+                const r = await fetch(`${SERVER_URL}/customer/analytics`, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!r.ok) return;
+                const d = await r.json();
+
+                // Patch only the KPI fields that actually come from real data
+                // avgDays → Среднее время отклика (KPI[2])
+                if (d.avgDays != null) {
+                    MOCK.kpi[2].value = String(d.avgDays).replace('.', ',') + ' дн.';
+                    MOCK.kpi[2].label = 'Среднее время производства';
+                }
+
+                // savings → показываем % вместо млн ₽ (приближение)
+                if (d.savings != null) {
+                    MOCK.kpi[1].value = d.savings + '%';
+                    MOCK.kpi[1].label = 'Экономия (% от рыночной)';
+                }
+
+                // monthOrders, closedOrders → пишем в funnel[0] и [4]
+                if (d.monthOrders != null) {
+                    const ratio = MOCK.funnel[4].count / MOCK.funnel[0].count;
+                    MOCK.funnel[0].count = Number(d.monthOrders) || MOCK.funnel[0].count;
+                    MOCK.funnel[4].count = Math.round(MOCK.funnel[0].count * ratio);
+                }
+
+                // Re-render with real-patched MOCK (filters stay off at load)
+                renderKPI(MOCK);
+                renderFunnel(MOCK);
+                renderInsights(MOCK);
+
+                // Show indicator that some data is real
+                const hdr = document.querySelector('.an-kpi-row');
+                if (hdr && !document.getElementById('realDataBadge')) {
+                    const badge = document.createElement('div');
+                    badge.id = 'realDataBadge';
+                    badge.title = 'Часть показателей загружена из базы данных';
+                    Object.assign(badge.style, { fontSize:'11px', color:'#12A866', fontWeight:'600', gridColumn:'1/-1', display:'flex', alignItems:'center', gap:'5px', paddingBottom:'4px' });
+                    badge.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#12A866"/></svg> Часть данных — из БД';
+                    hdr.before(badge);
+                }
+            } catch { /* молча, моки остаются */ }
+        }
+
         /* ══ INIT ══ */
         window.addEventListener('DOMContentLoaded', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1314,6 +1367,8 @@
             renderRatings(MOCK);
             renderHeatmap(MOCK);
             renderInsights(MOCK);
+
+            tryLoadReal(); // тихо пробуем реальные данные поверх
         });
     </script>
 </body>

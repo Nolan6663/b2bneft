@@ -192,7 +192,7 @@
                             <li class="no"><span class="fi">—</span>Верификация</li>
                             <li class="no"><span class="fi">—</span>API-интеграция</li>
                         </ul>
-                        <button class="plan-cta" style="background:transparent;border:1px solid var(--card-border);color:var(--text-secondary);border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;" onclick="alert('Переход на Базовый')">Выбрать</button>
+                        <button class="plan-cta" style="background:transparent;border:1px solid var(--card-border);color:var(--text-secondary);border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;" onclick="showUpgradeDialog('basic')">Выбрать</button>
                     </div>
 
                     <!-- Бизнес (current) -->
@@ -339,7 +339,7 @@
                             <div style="font-size:11.5px;color:var(--text-secondary);">По реквизитам счёта</div>
                         </div>
                     </div>
-                    <button style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:transparent;border:1px dashed var(--card-border);border-radius:10px;color:var(--text-secondary);font-size:12.5px;font-weight:600;cursor:pointer;width:100%;" onclick="alert('Добавить карту')">
+                    <button style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:transparent;border:1px dashed var(--card-border);border-radius:10px;color:var(--text-secondary);font-size:12.5px;font-weight:600;cursor:pointer;width:100%;" onclick="showToast('Добавление карты будет доступно в следующем обновлении', 'warn')">
                         + Добавить карту
                     </button>
                 </div>
@@ -350,7 +350,7 @@
         <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:22px 24px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
                 <h3 style="font-size:15px;font-weight:700;margin:0;">История платежей</h3>
-                <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="alert('Экспорт истории платежей')">↓ Скачать</button>
+                <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="exportPaymentHistory()">↓ Скачать</button>
             </div>
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
@@ -408,7 +408,7 @@
                 <div style="font-size:12.5px;color:var(--text-secondary);">Алексей Соколов · Менеджер по работе с клиентами</div>
                 <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">billing@b2b-neft.ru · +7 (800) 555-01-23</div>
             </div>
-            <button class="btn-secondary" onclick="alert('Написать в поддержку')">Написать</button>
+            <button class="btn-secondary" onclick="window.location.href='mailto:billing@b2b-neft.ru'">Написать</button>
         </div>
     </div>
 
@@ -481,9 +481,19 @@
             initSidebarBadges();
         });
 
+        function exportPaymentHistory() {
+            const rows = [['Дата','Описание','Период','Сумма','Статус'],['01.06.2026','Тариф «Бизнес»','Июнь 2026','12500','Оплачен'],['01.05.2026','Тариф «Бизнес»','Май 2026','12500','Оплачен'],['01.04.2026','Тариф «Бизнес»','Апрель 2026','12500','Оплачен'],['25.06.2025','Подключение «Бизнес» (год)','Июнь 2025','128500','Оплачен']];
+            const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+            a.download = 'payments.csv';
+            a.click();
+        }
+
         function showUpgradeDialog(plan) {
-            const titles = { pro: 'Профессиональный тариф', enterprise: 'Корпоративный тариф' };
+            const titles = { basic: 'Переход на Базовый тариф', pro: 'Профессиональный тариф', enterprise: 'Корпоративный тариф' };
             const bodies = {
+                basic: 'Для перехода на Базовый тариф свяжитесь с нами: <strong>billing@b2b-neft.ru</strong> — ответим в течение 1 рабочего дня.',
                 pro: 'Онлайн-оплата тарифов скоро станет доступна. Для раннего доступа напишите нам на <strong>billing@b2b-neft.ru</strong> — ответим в течение 1 рабочего дня.',
                 enterprise: 'Для корпоративных клиентов условия рассчитываются индивидуально. Свяжитесь с нами: <strong>enterprise@b2b-neft.ru</strong> или по телефону <strong>+7 (800) 555-01-23</strong>.'
             };

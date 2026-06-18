@@ -452,7 +452,7 @@
                 body: JSON.stringify({ stage, notes, trackingNumber: tracking }),
             });
             const data = await r.json();
-            if (!r.ok) { alert(data.error || 'Ошибка'); return; }
+            if (!r.ok) { showToast(data.error || 'Ошибка', 'error'); return; }
             await load();
         } catch {
             eventsData.push({ stage, notes, updated_by: myCompany, created_at: new Date().toISOString() });

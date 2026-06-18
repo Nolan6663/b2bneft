@@ -314,7 +314,7 @@
         async function submitEditProposal() {
             const price = parseFloat(document.getElementById('editPrice').value);
             const days = parseInt(document.getElementById('editDays').value, 10);
-            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) return alert('Ошибка ввода параметров');
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) { showToast('Ошибка ввода параметров', 'error'); return; }
 
             try {
                 const response = await fetch(`${SERVER_URL}/proposals/${currentEditingId}`, {
@@ -327,10 +327,10 @@
                     await loadProposalsPage();
                 } else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось изменить предложение');
+                    showToast(err.error || 'Не удалось изменить предложение', 'error');
                 }
             } catch (error) {
-                alert('Сервер недоступен, изменения не сохранены');
+                showToast('Сервер недоступен, изменения не сохранены', 'error');
             }
         }
 
@@ -356,10 +356,10 @@
                     await loadProposalsPage();
                 } else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось отозвать предложение');
+                    showToast(err.error || 'Не удалось отозвать предложение', 'error');
                 }
             } catch (error) {
-                alert('Сервер недоступен, предложение не отозвано');
+                showToast('Сервер недоступен, предложение не отозвано', 'error');
             }
         }
     </script>

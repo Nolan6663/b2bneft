@@ -274,15 +274,15 @@
                 <span style="font-size:12.5px;color:var(--text-secondary);">3 сохранённых списка</span>
                 <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="createList()">＋ Создать список</button>
             </div>
-            <div class="fav-list-card">
+            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
                 <div class="fav-list-name">Поставщики РТИ</div>
                 <div class="fav-list-meta">3 компании · Обновлён 15.06.2026</div>
             </div>
-            <div class="fav-list-card">
+            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
                 <div class="fav-list-name">Металлопрокат Урал</div>
                 <div class="fav-list-meta">5 компаний · Обновлён 10.06.2026</div>
             </div>
-            <div class="fav-list-card">
+            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
                 <div class="fav-list-name">Насосное оборудование</div>
                 <div class="fav-list-meta">2 компании · Обновлён 01.06.2026</div>
             </div>
@@ -375,9 +375,17 @@
             const today = new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
             const card = document.createElement('div');
             card.className = 'fav-list-card';
+            card.style.cursor = 'pointer';
+            card.onclick = () => openList(card);
             card.innerHTML = `<div class="fav-list-name">${escapeHtml(name)}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
             container.insertBefore(card, container.firstChild);
             showFavToast(`Список «${name}» создан`);
+        }
+
+        function openList(card) {
+            const name = card.querySelector('.fav-list-name')?.textContent || 'Список';
+            const meta = card.querySelector('.fav-list-meta')?.textContent || '';
+            showFavToast(`Список «${name}» · ${meta}`);
         }
 
         function setFavTab(tab, btn) {

@@ -630,11 +630,11 @@
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
                 const data = await r.json();
-                if (!r.ok) return alert(data.error || 'Ошибка');
+                if (!r.ok) return showToast(data.error || 'Ошибка', 'error');
                 verificationStatus = { status: 'pending' };
                 renderProfile(currentData);
                 renderPhotoGallery(currentData.photos);
-            } catch { alert('Сервер недоступен'); }
+            } catch { showToast('Сервер недоступен', 'error'); }
         }
 
         function renderCapabilitiesEdit(selectedCaps) {
@@ -696,11 +696,11 @@
                     body: formData
                 });
                 const data = await r.json();
-                if (!r.ok) return alert(data.error || 'Ошибка загрузки');
+                if (!r.ok) return showToast(data.error || 'Ошибка загрузки', 'error');
                 if (!currentData.photos) currentData.photos = [];
                 currentData.photos.push(data);
                 renderPhotoGallery(currentData.photos);
-            } catch { alert('Сервер недоступен'); }
+            } catch { showToast('Сервер недоступен', 'error'); }
         }
 
         async function deletePhoto(e, photoId) {
@@ -714,7 +714,7 @@
                 if (!r.ok) return;
                 currentData.photos = currentData.photos.filter(p => p.id !== photoId);
                 renderPhotoGallery(currentData.photos);
-            } catch { alert('Сервер недоступен'); }
+            } catch { showToast('Сервер недоступен', 'error'); }
         }
 
         async function saveProfile() {
@@ -773,7 +773,7 @@
                     renderPhotoGallery(currentData.photos);
                 } else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось сохранить профиль');
+                    showToast(err.error || 'Не удалось сохранить профиль', 'error');
                 }
             } catch (error) { console.error(error); }
         }

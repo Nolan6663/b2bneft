@@ -818,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function compareKp() {
             if (!currentProposalsOrderId || !currentProposalsList.length) {
-                alert('Выберите закупку с предложениями для сравнения');
+                showToast('Выберите закупку с предложениями для сравнения', 'warn');
                 return;
             }
             const props = currentProposalsList;
@@ -870,7 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async function acceptProposalFromCompare(proposalId, supplier) {
-            if (!proposalId) { alert('Нет ID предложения (демо-данные)'); return; }
+            if (!proposalId) { showToast('Нет ID предложения (демо-данные)', 'warn'); return; }
             if (!confirm(`Выбрать «${supplier}» победителем? Тендер будет закрыт.`)) return;
             document.getElementById('compareModal').style.display = 'none';
             try {
@@ -878,9 +878,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
                 const data = await r.json();
-                if (!r.ok) { alert(data.error || 'Ошибка'); return; }
+                if (!r.ok) { showToast(data.error || 'Ошибка', 'error'); return; }
                 window.location.reload();
-            } catch { alert('Сервер недоступен'); }
+            } catch { showToast('Сервер недоступен', 'error'); }
         }
 
         function openEditFromPanel() {
@@ -913,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) { loadOrders(); }
                 else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось отменить закупку');
+                    showToast(err.error || 'Не удалось отменить закупку', 'error');
                 }
             } catch (error) { console.error(error); }
         }
@@ -1000,10 +1000,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const category = categoryInput.value;
             const deadlineRaw = deadlineInput.value;
 
-            if (!cleanTitle || !deadlineRaw) return alert('Заполните обязательные поля!');
+            if (!cleanTitle || !deadlineRaw) { showToast('Заполните обязательные поля!', 'warn'); return; }
 
             const today = new Date(); today.setHours(0, 0, 0, 0);
-            if (new Date(deadlineRaw) < today) return alert('Дедлайн должен быть сегодня или позднее');
+            if (new Date(deadlineRaw) < today) { showToast('Дедлайн должен быть сегодня или позднее', 'warn'); return; }
 
             const isEdit = editingOrderId !== null;
             const url = isEdit ? `${SERVER_URL}/orders/${editingOrderId}` : `${SERVER_URL}/orders`;
@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     closeModal(); loadOrders();
                 } else {
                     const err = await response.json();
-                    alert(err.error || (isEdit ? 'Не удалось сохранить изменения' : 'Не удалось создать закупку'));
+                    showToast(err.error || (isEdit ? 'Не удалось сохранить изменения' : 'Не удалось создать закупку'), 'error');
                 }
             } catch (error) { console.error(error); }
         }
@@ -1044,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) { closeProposalsModal(); loadOrders(); }
                 else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось принять предложение');
+                    showToast(err.error || 'Не удалось принять предложение', 'error');
                 }
             } catch (error) { console.error(error); }
         }
@@ -1060,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (currentProposalsOrderId != null) viewProposals(currentProposalsOrderId, currentProposalsOrderTitle);
                 } else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось отклонить предложение');
+                    showToast(err.error || 'Не удалось отклонить предложение', 'error');
                 }
             } catch (error) { console.error(error); }
         }

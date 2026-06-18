@@ -320,13 +320,19 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" class="catalog-search-input" id="catalogSearch" placeholder="Поиск по названию, продукции, производителю..." oninput="onSearch(this.value)">
                     </div>
-                    <button class="btn-secondary">♡ Сохранить поиск</button>
+                    <button class="btn-secondary" onclick="saveSearch()">♡ Сохранить поиск</button>
                 </div>
                 <div class="catalog-toolbar">
                     <span id="catalogCount">Найдено: —</span>
                     <div class="catalog-sort">
                         <span>Сортировать по:</span>
-                        <select class="filter-select" style="width:190px;"><option>Релевантности</option></select>
+                        <select class="filter-select" id="catalogSort" style="width:190px;" onchange="sortCatalog(this.value)">
+                            <option value="">Релевантности</option>
+                            <option value="rating">Рейтингу ↓</option>
+                            <option value="name">Названию А-Я</option>
+                            <option value="deals">Кол-ву сделок ↓</option>
+                            <option value="experience">Опыту ↓</option>
+                        </select>
                         <button class="catalog-view-btn">▦</button>
                         <button class="catalog-view-btn" style="color:#071936;">▥</button>
                     </div>
@@ -342,7 +348,7 @@
                 <div class="producers-grid" id="producersGrid" style="margin-top:18px;">
                     <div class="catalog-loading">Загрузка каталога...</div>
                 </div>
-                <button class="btn-secondary" style="width:100%;margin-top:14px;">Показать ещё⌄</button>
+                <button class="btn-secondary" id="showMoreBtn" style="width:100%;margin-top:14px;display:none;" onclick="showMore()">Показать ещё ⌄</button>
             </section>
 
             <aside class="catalog-compare-panel">
@@ -403,6 +409,8 @@
         let allProducers = [];
         let activeFilter = '';
         let searchQuery  = '';
+        let sortKey      = '';
+        let showCount    = 6;
 
         const GRADIENTS = [
             'linear-gradient(135deg,#0891B2,#2563EB)',
@@ -445,11 +453,13 @@
             document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             activeFilter = btn.dataset.cap;
+            showCount = 6;
             render();
         }
 
         function onSearch(val) {
             searchQuery = val.trim();
+            showCount = 6;
             render();
         }
 
@@ -485,22 +495,50 @@
             return list;
         }
 
+        function sortCatalog(key) {
+            sortKey = key;
+            showCount = 6;
+            render();
+        }
+
+        function saveSearch() {
+            const q = searchQuery || activeFilter || '(все)';
+            showToast(`Поиск «${q}» сохранён в избранное`);
+        }
+
+        function showMore() {
+            showCount += 6;
+            render();
+        }
+
         function render() {
-            const list = filtered();
-            const grid = document.getElementById('producersGrid');
+            let list = filtered();
             const n = list.length;
             document.getElementById('catalogCount').textContent =
                 n === 0 ? 'Не найдено' : `Найдено: ${n} производител${n === 1 ? 'ь' : n < 5 ? 'я' : 'ей'}`;
+
+            const grid = document.getElementById('producersGrid');
 
             if (n === 0) {
                 grid.innerHTML = `<div class="catalog-empty">
                     <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <p>Производители не найдены.<br>Попробуйте изменить фильтр или запрос.</p>
                 </div>`;
+                const btn = document.getElementById('showMoreBtn');
+                if (btn) btn.style.display = 'none';
                 return;
             }
 
-            grid.innerHTML = list.map(p => cardHTML(p)).join('');
+            if (sortKey === 'rating')     list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            else if (sortKey === 'name')  list = [...list].sort((a, b) => (a.company || '').localeCompare(b.company || '', 'ru'));
+            else if (sortKey === 'deals') list = [...list].sort((a, b) => (b.totalDeals || 0) - (a.totalDeals || 0));
+            else if (sortKey === 'experience') list = [...list].sort((a, b) => (b.yearsExperience || 0) - (a.yearsExperience || 0));
+
+            const visible = list.slice(0, showCount);
+            grid.innerHTML = visible.map(p => cardHTML(p)).join('');
+
+            const btn = document.getElementById('showMoreBtn');
+            if (btn) btn.style.display = visible.length < list.length ? '' : 'none';
         }
 
         function cardHTML(p) {

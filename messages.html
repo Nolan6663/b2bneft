@@ -489,11 +489,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateConvPreview(msg);
                 } else {
                     input.value = text;
-                    alert(msg.error || 'Не удалось отправить');
+                    msgToast(msg.error || 'Не удалось отправить');
                 }
             } catch {
                 input.value = text;
-                alert('Сервер недоступен');
+                msgToast('Сервер недоступен');
             } finally {
                 document.getElementById('sendBtn').disabled = false;
             }

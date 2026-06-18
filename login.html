@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, password })
                 });
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok) { alert(data.error || 'Неверный логин или пароль'); return; }
+                if (!response.ok) { showToast(data.error || 'Неверный логин или пароль'); return; }
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('refreshToken', data.refreshToken || '');
                 localStorage.setItem('userRole', data.role);
@@ -435,12 +435,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, password, company, inn, role })
                 });
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok) { alert(data.error || 'Ошибка при регистрации'); return; }
+                if (!response.ok) { showToast(data.error || 'Ошибка при регистрации'); return; }
                 switchTab('login');
                 document.getElementById('authEmail').value = email;
               }
             } catch (error) {
-                alert('Сервер авторизации недоступен. Проверьте, что backend запущен на http://localhost:5000.');
+                showToast('Сервер авторизации недоступен');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.style.opacity = '1';

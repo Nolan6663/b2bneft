@@ -534,7 +534,7 @@ function renderCompanyStatus(status) {
             const fileInput = document.getElementById('proposalFile');
             const price = parseFloat(priceInput.value);
             const days = parseInt(daysInput.value, 10);
-            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) return alert('Укажите корректные параметры!');
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) { showToast('Укажите корректные параметры!', 'warn'); return; }
 
             const formData = new FormData();
             formData.append('orderId', currentOrderId);
@@ -554,7 +554,7 @@ function renderCompanyStatus(status) {
                     loadOrdersForProducers(); loadMyProposals();
                 } else {
                     const err = await response.json();
-                    alert(err.error || 'Не удалось отправить предложение');
+                    showToast(err.error || 'Не удалось отправить предложение', 'error');
                 }
             } catch (error) { console.error(error); }
         }
