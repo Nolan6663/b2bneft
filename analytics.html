@@ -131,9 +131,13 @@
         .savings-pct { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
         .savings-target { font-size: 12px; color: var(--text-muted); margin-top: 10px; border-top: 1px solid var(--inner-border); padding-top: 10px; }
 
-        /* ─── Heatmap (region legend + map) ─── */
-        .heatmap-wrap { display: flex; gap: 16px; align-items: flex-start; }
-        .heatmap-svg-wrap { flex: 1; }
+        /* ─── Heatmap rows ─── */
+        .heat-row { display: flex; align-items: center; gap: 10px; }
+        .heat-name { font-size: 12px; color: var(--text-secondary); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .heat-bar-outer { flex: 1; height: 18px; background: var(--inner-bg); border-radius: 5px; overflow: hidden; }
+        .heat-bar-inner { height: 100%; border-radius: 5px; transition: width .4s ease; display: flex; align-items: center; padding-left: 7px; }
+        .heat-count { font-size: 12px; font-weight: 700; color: var(--text-primary); width: 28px; text-align: right; flex-shrink: 0; }
+        .heat-badge { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; flex-shrink: 0; }
         .heatmap-legend { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; flex-shrink: 0; }
         .heatmap-legend-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-secondary); }
         .heatmap-legend-sq { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
@@ -358,42 +362,19 @@
                 <!-- Row 3: Heatmap | Ratings | Export -->
                 <div class="an-row">
                     <div class="an-card">
-                        <div class="an-card-title">Тепловая карта откликов по регионам</div>
-                        <div class="heatmap-wrap">
-                            <div class="heatmap-svg-wrap">
-                                <svg viewBox="0 0 460 240" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- Simplified Russia outline -->
-                                    <path d="M 30,60 L 55,45 L 80,50 L 110,38 L 140,42 L 165,35 L 200,40 L 230,32 L 265,38 L 300,30 L 330,38 L 355,30 L 385,40 L 415,35 L 440,50 L 445,70 L 435,90 L 445,110 L 440,130 L 425,145 L 415,165 L 400,175 L 385,185 L 365,180 L 345,190 L 325,185 L 305,195 L 285,188 L 265,198 L 245,192 L 225,200 L 205,195 L 185,205 L 165,198 L 145,205 L 125,198 L 105,205 L 85,195 L 65,185 L 50,170 L 38,155 L 28,140 L 22,120 L 25,95 L 28,75 Z" fill="var(--inner-bg)" stroke="var(--card-border)" stroke-width="1.5"/>
-                                    <!-- Colored region dots/circles -->
-                                    <circle cx="120" cy="130" r="22" fill="#0891B2" opacity="0.85"/>
-                                    <text x="120" y="134" text-anchor="middle" fill="white" font-size="9" font-weight="700">89</text>
-                                    <circle cx="190" cy="155" r="16" fill="#2563EB" opacity="0.8"/>
-                                    <text x="190" y="159" text-anchor="middle" fill="white" font-size="9" font-weight="700">45</text>
-                                    <circle cx="155" cy="115" r="13" fill="#2563EB" opacity="0.75"/>
-                                    <text x="155" y="119" text-anchor="middle" fill="white" font-size="8" font-weight="700">38</text>
-                                    <circle cx="260" cy="125" r="10" fill="#7DD3FC" opacity="0.9"/>
-                                    <text x="260" y="129" text-anchor="middle" fill="#1E3A5F" font-size="8" font-weight="700">22</text>
-                                    <circle cx="220" cy="145" r="9" fill="#7DD3FC" opacity="0.85"/>
-                                    <text x="220" y="149" text-anchor="middle" fill="#1E3A5F" font-size="8" font-weight="700">18</text>
-                                    <circle cx="185" cy="130" r="8" fill="#BAE6FD" opacity="0.9"/>
-                                    <text x="185" y="134" text-anchor="middle" fill="#1E3A5F" font-size="7" font-weight="700">15</text>
-                                    <circle cx="235" cy="165" r="7" fill="#BAE6FD" opacity="0.85"/>
-                                    <text x="235" y="169" text-anchor="middle" fill="#1E3A5F" font-size="7" font-weight="700">8</text>
-                                    <!-- Region labels -->
-                                    <text x="115" y="168" text-anchor="middle" fill="var(--text-muted)" font-size="8">Зап. Сибирь</text>
-                                    <text x="188" y="178" text-anchor="middle" fill="var(--text-muted)" font-size="8">Поволжье</text>
-                                    <text x="152" y="97" text-anchor="middle" fill="var(--text-muted)" font-size="8">ХМАО</text>
-                                    <text x="260" y="108" text-anchor="middle" fill="var(--text-muted)" font-size="8">Урал</text>
-                                </svg>
+                        <div class="an-card-title-row">
+                            <span class="an-card-title">Активность по регионам</span>
+                            <div class="period-tabs">
+                                <button class="period-tab active" id="heatSortCount" onclick="setHeatSort('count',this)">По откликам</button>
+                                <button class="period-tab" id="heatSortAlpha" onclick="setHeatSort('alpha',this)">А–Я</button>
                             </div>
-                            <div class="heatmap-legend">
-                                <div style="font-size:10.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Кол-во откликов</div>
-                                <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#0891B2;"></div>50 и более</div>
-                                <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#2563EB;opacity:.8"></div>21–50</div>
-                                <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#7DD3FC;"></div>11–20</div>
-                                <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#BAE6FD;"></div>1–10</div>
-                                <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:var(--inner-bg);border:1px solid var(--card-border);"></div>0</div>
-                            </div>
+                        </div>
+                        <div id="heatmapRows" style="display:flex;flex-direction:column;gap:7px;"></div>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--inner-border);">
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#0891B2;"></div>50+ откликов</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#38BDF8;"></div>21–50</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#7DD3FC;"></div>11–20</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#BFDBFE;"></div>1–10</div>
                         </div>
                     </div>
 
@@ -448,23 +429,14 @@
             <div class="an-insights-panel">
                 <div class="insights-title">
                     Инсайты
-                    <div class="insights-title-icon">ℹ</div>
+                    <div class="insights-title-icon" title="Автоматически вычисляются на основе текущих данных и фильтров">ℹ</div>
                 </div>
-
                 <div class="insights-section-title">Ключевые выводы</div>
-                <div class="insights-item"><div class="insights-icon check">✓</div><span class="insights-text">Объём закупок вырос на 18% по сравнению с предыдущим периодом</span></div>
-                <div class="insights-item"><div class="insights-icon check">✓</div><span class="insights-text">Экономия увеличилась на 21% за счёт конкурентных процедур</span></div>
-                <div class="insights-item"><div class="insights-icon check">✓</div><span class="insights-text">Конверсия в договоры улучшилась на 4 п.п.</span></div>
-
+                <div id="insightConclusions"></div>
                 <div class="insights-section-title">Тренды</div>
-                <div class="insights-item"><div class="insights-icon up">↑</div><span class="insights-text">Рост интереса поставщиков в категории «РТИ и уплотнения»</span></div>
-                <div class="insights-item"><div class="insights-icon down">↓</div><span class="insights-text">Снижение среднего времени отклика на 12%</span></div>
-                <div class="insights-item"><div class="insights-icon up">↑</div><span class="insights-text">Увеличение доли договоров с региональными поставщиками</span></div>
-
+                <div id="insightTrends"></div>
                 <div class="insights-section-title">Рекомендации</div>
-                <div class="insights-item"><div class="insights-icon rec">⊙</div><span class="insights-text">Расширить пул поставщиков в категории «Металлопрокат»</span></div>
-                <div class="insights-item"><div class="insights-icon rec">⊙</div><span class="insights-text">Использовать предквалификацию для ускорения процесса отбора</span></div>
-                <div class="insights-item"><div class="insights-icon rec">⊙</div><span class="insights-text">Стандартизировать типовые спецификации для сокращения сроков</span></div>
+                <div id="insightRecs"></div>
             </div>
 
         </div><!-- /an-body -->
@@ -680,6 +652,18 @@
                 { name:'ООО «ЭнергоСнаб»',        rt:3.8, conv:25, score:3.9 },
                 { name:'ООО «Индустрия Сервис»',  rt:4.2, conv:22, score:3.6 },
             ],
+            regions: [
+                { name:'Западная Сибирь', count:89 },
+                { name:'Поволжье',         count:45 },
+                { name:'ХМАО-Югра',       count:38 },
+                { name:'Урал',            count:22 },
+                { name:'Татарстан',       count:18 },
+                { name:'Башкортостан',    count:15 },
+                { name:'Оренбуржье',      count:8  },
+                { name:'Ямало-НАО',       count:6  },
+                { name:'Пермский край',   count:4  },
+                { name:'Тюменская обл.',  count:3  },
+            ],
         };
 
         const FILTER_SCALES = {
@@ -708,6 +692,7 @@
         let starred = false;
         let selectedPeriodPreset = null;
         let ratSortKey = 'score';
+        let heatSortMode = 'count';
 
         /* ══ HELPERS ══ */
         function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
@@ -745,7 +730,7 @@
         }
 
         function computeFilteredMock() {
-            const { scale, cat, anyActive } = getFilterScale();
+            const { scale, cat, reg, anyActive } = getFilterScale();
             if (!anyActive) return MOCK;
 
             const scaledKpi = MOCK.kpi.map((k, i) => {
@@ -794,7 +779,15 @@
                 }));
             }
 
-            return { ...MOCK, kpi: scaledKpi, dynamics: scaledDynamics, funnel: scaledFunnel, suppliers: scaledSuppliers };
+            // Scale regions: if region filter active, highlight matching region
+            let scaledRegions = MOCK.regions.map(r => ({ ...r, count: Math.max(1, Math.round(r.count * scale)) }));
+            if (reg) {
+                scaledRegions = scaledRegions.map(r => r.name === reg
+                    ? { ...r, count: Math.round(r.count * 2.5) }  // highlight selected region
+                    : { ...r, count: Math.max(1, Math.round(r.count * 0.15)) });
+            }
+
+            return { ...MOCK, kpi: scaledKpi, dynamics: scaledDynamics, funnel: scaledFunnel, suppliers: scaledSuppliers, regions: scaledRegions };
         }
 
         function applyFilters() {
@@ -803,6 +796,8 @@
             renderDynamics(data);
             renderFunnel(data);
             renderSuppliers(data);
+            renderHeatmap(data);
+            renderInsights(data);
             updateFilterBadge();
         }
 
@@ -823,6 +818,8 @@
             renderDynamics(MOCK);
             renderFunnel(MOCK);
             renderSuppliers(MOCK);
+            renderHeatmap(MOCK);
+            renderInsights(MOCK);
             updateFilterBadge();
         }
 
@@ -1178,6 +1175,105 @@
                 </tr>`).join('');
         }
 
+        /* ══ HEATMAP ══ */
+        function heatColor(count) {
+            if (count >= 50) return { bg:'#0891B2', text:'#fff' };
+            if (count >= 21) return { bg:'#38BDF8', text:'#fff' };
+            if (count >= 11) return { bg:'#7DD3FC', text:'#0C4A6E' };
+            return { bg:'#BFDBFE', text:'#1E40AF' };
+        }
+
+        function heatLabel(count) {
+            if (count >= 50) return 'Высокая';
+            if (count >= 21) return 'Средняя';
+            if (count >= 11) return 'Низкая';
+            return 'Минимум';
+        }
+
+        function renderHeatmap(data = MOCK) {
+            const regions = [...data.regions];
+            if (heatSortMode === 'alpha') regions.sort((a,b) => a.name.localeCompare(b.name, 'ru'));
+            else regions.sort((a,b) => b.count - a.count);
+
+            const max = Math.max(...regions.map(r => r.count), 1);
+            document.getElementById('heatmapRows').innerHTML = regions.map(r => {
+                const pct = Math.round(r.count / max * 100);
+                const { bg, text } = heatColor(r.count);
+                const label = heatLabel(r.count);
+                return `<div class="heat-row">
+                    <span class="heat-name" title="${r.name}">${r.name}</span>
+                    <div class="heat-bar-outer">
+                        <div class="heat-bar-inner" style="width:${pct}%;background:${bg};"></div>
+                    </div>
+                    <span class="heat-count">${r.count}</span>
+                    <span class="heat-badge" style="background:${bg}20;color:${bg};">${label}</span>
+                </div>`;
+            }).join('');
+        }
+
+        function setHeatSort(mode, btn) {
+            heatSortMode = mode;
+            document.querySelectorAll('#heatSortCount,#heatSortAlpha').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderHeatmap(computeFilteredMock());
+        }
+
+        /* ══ INSIGHTS (computed from data) ══ */
+        function renderInsights(data = MOCK) {
+            // --- Ключевые выводы ---
+            const maxCatIdx  = data.categories.data.indexOf(Math.max(...data.categories.data));
+            const topCat     = data.categories.labels[maxCatIdx];
+            const topCatPct  = data.categories.data[maxCatIdx];
+            const convRate   = Math.round(data.funnel[4].count / data.funnel[0].count * 100);
+            const volKpi     = data.kpi[0];
+            const savKpi     = data.kpi[1];
+
+            const conclusions = [
+                { icon:'✓', cls:'check', text:`Категория «${topCat}» — лидер: ${topCatPct}% объёма закупок` },
+                { icon:'✓', cls:'check', text:`${volKpi.label}: ${volKpi.value}, рост ↑${volKpi.delta}%` },
+                { icon:'✓', cls:'check', text:`Конверсия из откликов в договоры: ${convRate}%` },
+            ];
+
+            // --- Тренды ---
+            const dynM  = data.dynamics.month;
+            const len   = dynM.volumes.length;
+            const last  = dynM.volumes[len-1];
+            const prev  = dynM.volumes[len-2] || last;
+            const isUp  = last >= prev;
+            const topSup = data.suppliers[0];
+            const timeKpi = data.kpi[2];
+
+            const trends = [
+                { icon: isUp ? '↑' : '↓', cls: isUp ? 'up' : 'down', text: `Закупки в ${dynM.labels[len-1]}: ${last} млн ₽ — ${isUp?'рост':'снижение'} к предыдущему периоду` },
+                { icon:'↑', cls:'up', text:`Лидер по объёму: «${topSup.name}» — ${fmt2(topSup.amount)} млн ₽` },
+                { icon:'↓', cls:'down', text:`Время отклика сократилось до ${timeKpi.value} (−${timeKpi.delta}%)` },
+            ];
+
+            // --- Рекомендации ---
+            const minCatIdx = data.categories.data.indexOf(Math.min(...data.categories.data));
+            const minCat    = data.categories.labels[minCatIdx];
+            const funnelGap = data.funnel[1].count - data.funnel[2].count;
+            const lowRegion = [...data.regions].sort((a,b)=>a.count-b.count)[0];
+
+            const recs = [
+                { text:`Расширить пул поставщиков в категории «${minCat}» — наименьший объём` },
+                { text:`Квалификационный этап отсеивает ${funnelGap} откликов — рекомендована предквалификация` },
+                { text:`Регион «${lowRegion.name}» — низкая активность (${lowRegion.count} откл.), потенциал роста` },
+            ];
+
+            document.getElementById('insightConclusions').innerHTML = conclusions.map(c =>
+                `<div class="insights-item"><div class="insights-icon ${c.cls}">${c.icon}</div><span class="insights-text">${c.text}</span></div>`
+            ).join('');
+
+            document.getElementById('insightTrends').innerHTML = trends.map(t =>
+                `<div class="insights-item"><div class="insights-icon ${t.cls}">${t.icon}</div><span class="insights-text">${t.text}</span></div>`
+            ).join('');
+
+            document.getElementById('insightRecs').innerHTML = recs.map(r =>
+                `<div class="insights-item"><div class="insights-icon rec">⊙</div><span class="insights-text">${r.text}</span></div>`
+            ).join('');
+        }
+
         /* ══ PERIOD TABS ══ */
         function setDynPeriod(p, btn) {
             dynPeriod = p;
@@ -1199,6 +1295,7 @@
             renderDynamics(data);
             renderCategories(data);
             renderCycle();
+            renderHeatmap(data);
         }
 
         /* ══ INIT ══ */
@@ -1215,6 +1312,8 @@
             renderSuppliers(MOCK);
             renderCycle();
             renderRatings(MOCK);
+            renderHeatmap(MOCK);
+            renderInsights(MOCK);
         });
     </script>
 </body>
