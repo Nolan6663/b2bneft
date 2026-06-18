@@ -1,50 +1,150 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Аналитический дашборд</title>
+    <title>B2B Нефтесервис — Аналитика</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .date-range { display: flex; align-items: center; gap: 8px; }
-        .date-range input[type="date"] { height: 38px; width: auto; transition: border-color 0.15s ease; }
-        .date-range input[type="date"]:focus { border-color: var(--accent-bright); }
-        .company-badge { font-size: 12.5px; color: var(--text-secondary); }
-        .company-badge strong { color: var(--text-primary); }
-        .analytics-notes-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px; }
-        .analytics-note { background:#fff;border:1px solid var(--card-border);border-radius:10px;box-shadow:var(--shadow-card);padding:18px; }
-        .analytics-note-title { font-size:13px;font-weight:850;color:var(--text-primary);margin-bottom:8px; }
-        .analytics-note-text { font-size:12.5px;line-height:1.45;color:var(--text-secondary); }
+        /* ── Analytics layout ── */
+        .an-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .date-range { display: flex; align-items: center; gap: 6px; }
+        .date-range input[type="date"] { height: 36px; width: auto; font-size: 13px; transition: border-color .15s; }
+        .btn-forecast { height: 36px; padding: 0 14px; font-size: 13px; font-weight: 600; background: transparent;
+            border: 1px solid var(--accent-bright); color: var(--accent-bright); border-radius: 8px; cursor: pointer; transition: all .15s; }
+        .btn-forecast.active { background: var(--accent-bright); color: #fff; }
+        .btn-export-sm { height: 36px; padding: 0 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
-        @media (max-width: 480px) {
-            .date-range { flex-wrap: wrap; gap: 6px; }
-            .date-range input[type="date"] { font-size: 12px; padding: 0 8px; height: 34px; }
-        }
-        @media (max-width: 980px) { .analytics-notes-grid { grid-template-columns:1fr; } }
+        .an-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; margin-top: 16px; }
+        .an-left  { display: flex; flex-direction: column; gap: 16px; }
+        .an-right { display: flex; flex-direction: column; gap: 16px; }
+        .an-bottom{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Chart header with tabs */
+        .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .chart-header h4 { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
+        .period-tabs { display: flex; gap: 4px; }
+        .period-tab { font-size: 11.5px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--card-border);
+            background: transparent; color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+        .period-tab.active { background: var(--accent-bright); color: #fff; border-color: var(--accent-bright); }
+        .period-tab:hover:not(.active) { border-color: var(--accent-bright); color: var(--accent-bright); }
+
+        /* Funnel */
+        .funnel-wrap { display: flex; flex-direction: column; gap: 10px; }
+        .funnel-step { display: flex; align-items: center; gap: 10px; }
+        .funnel-lbl { font-size: 12px; color: var(--text-secondary); width: 108px; flex-shrink: 0; }
+        .funnel-bar-wrap { flex: 1; background: var(--inner-bg); border-radius: 6px; height: 30px; overflow: hidden; }
+        .funnel-bar { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px;
+            font-size: 12px; font-weight: 700; color: #fff; transition: width .5s ease; }
+        .funnel-count { font-size: 14px; font-weight: 800; color: var(--text-primary); width: 38px; text-align: right; flex-shrink: 0; }
+        .funnel-arrow { text-align: center; color: var(--text-muted); font-size: 11px; padding: 0 108px 0 0; }
+
+        /* Region bars */
+        .region-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+        .region-name { font-size: 12px; color: var(--text-secondary); width: 120px; flex-shrink: 0; }
+        .region-bar-wrap { flex: 1; background: var(--inner-bg); border-radius: 4px; height: 7px; }
+        .region-bar { height: 100%; border-radius: 4px; background: var(--accent-bright); }
+        .region-pct { font-size: 12px; font-weight: 700; color: var(--text-primary); width: 30px; text-align: right; }
+
+        /* Efficiency table */
+        .eff-table { width: 100%; border-collapse: collapse; }
+        .eff-table th { font-size: 10.5px; color: var(--text-muted); text-align: left; padding: 0 0 7px; border-bottom: 1px solid var(--card-border); }
+        .eff-table th:not(:first-child) { text-align: right; }
+        .eff-table td { font-size: 12.5px; padding: 8px 0; border-bottom: 1px solid var(--inner-border); }
+        .eff-table td:not(:first-child) { text-align: right; font-weight: 700; }
+        .eff-ok   { color: var(--accent-green); }
+        .eff-warn { color: var(--accent-orange, #F59E0B); }
+
+        /* Top suppliers table */
+        .sup-table { width: 100%; border-collapse: collapse; }
+        .sup-table th { font-size: 10.5px; color: var(--text-muted); text-align: left; padding: 0 0 8px; border-bottom: 1px solid var(--card-border); }
+        .sup-table th:not(:first-child) { text-align: right; }
+        .sup-table td { font-size: 12.5px; padding: 9px 0; border-bottom: 1px solid var(--inner-border); vertical-align: middle; }
+        .sup-table td:not(:first-child) { text-align: right; }
+        .sup-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+            border-radius: 50%; background: var(--inner-bg); font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-right: 8px; flex-shrink: 0; }
+        .sup-rating { color: #F59E0B; font-size: 12px; font-weight: 700; }
+
+        /* Economy by type */
+        .economy-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+        .economy-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+        .economy-label { font-size: 12px; color: var(--text-secondary); flex: 1; }
+        .economy-val { font-size: 12.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+
+        /* Insights */
+        .insight-item { display: flex; gap: 10px; margin-bottom: 11px; align-items: flex-start; }
+        .insight-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); flex-shrink: 0; margin-top: 5px; }
+        .insight-text { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+
+        /* Big metric */
+        .big-metric { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+        .big-metric-val { font-size: 28px; font-weight: 800; color: var(--text-primary); }
+        .big-metric-unit { font-size: 13px; color: var(--text-secondary); }
+
+        /* company badge in header */
+        .company-badge { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
+        .company-badge strong { color: var(--text-primary); }
+
+        @media (max-width: 1100px) { .an-grid  { grid-template-columns: 1fr; } }
+        @media (max-width: 700px)  { .an-bottom{ grid-template-columns: 1fr; } }
+        @media (max-width: 600px)  { .an-header-controls { gap: 6px; } .date-range input[type="date"] { font-size: 12px; height: 32px; } }
     </style>
 </head>
 <body>
 
+    <!-- ══ SIDEBAR ══ -->
     <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
-        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки</a>
-        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
-        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
-        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
-        <a href="analytics.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
-        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
-        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <div class="sidebar-logo">
+            <img src="assets/icons_svg/logo_hex.svg" alt="">
+            <span>B2B НЕФТЕСЕРВИС</span>
+        </div>
+        <a href="#" id="mainCabinetLink">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Актуальные закупки
+        </a>
+        <a href="deals.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+            Заказы
+        </a>
+        <a href="partners.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Контрагенты
+        </a>
+        <a href="analytics.html" class="active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Аналитика
+        </a>
+        <a href="messages.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Сообщения<span class="nav-badge" id="navBadgeMessages"></span>
+        </a>
+        <a href="favorites.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Избранное
+        </a>
         <a href="#" id="sidebarProfileLink" style="display:none;">
-            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg>
             Мой профиль
         </a>
-        <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
-        <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
-        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
-        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+        <a href="catalog.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Каталог
+        </a>
+        <a href="map.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            Карта
+        </a>
+        <a href="settings.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            Настройки
+        </a>
+        <a href="tariff.html">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Тариф и оплата
+        </a>
 
         <div class="sidebar-bottom">
             <div class="theme-toggle-row">
@@ -55,68 +155,168 @@
                 </label>
             </div>
             <a href="#" class="switch-link" onclick="logout(); return false;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Выйти из аккаунта
             </a>
         </div>
     </div>
 
+    <!-- ══ MAIN CONTENT ══ -->
     <div class="main-content">
+
+        <!-- Header -->
         <div class="header">
-            <h2>Аналитический дашборд</h2>
-            <div style="display:flex; align-items:center; gap:16px;">
+            <h2>Аналитика</h2>
+            <div class="an-header-controls">
                 <div class="date-range">
                     <input type="date" id="dateFrom" class="date-input">
-                    <span style="color: var(--text-secondary);">–</span>
+                    <span style="color:var(--text-secondary)">–</span>
                     <input type="date" id="dateTo" class="date-input">
                 </div>
+                <button class="btn-forecast" id="btnForecast" onclick="toggleForecast()">Прогноз</button>
+                <button class="btn-primary btn-export-sm" onclick="exportCSV()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Экспорт
+                </button>
                 <button class="bell-btn" onclick="openNotificationsModal()">
                     <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
                     <span class="bell-badge" id="bellBadge">0</span>
                 </button>
             </div>
         </div>
+
         <div id="companyMeta" class="company-badge"></div>
 
-        <div class="kpi-grid" id="metricsGrid"></div>
+        <!-- KPI row -->
+        <div class="kpi-grid" id="kpiGrid"></div>
 
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h4 id="mainChartTitle">Динамика и объёмы данных</h4>
-                <div style="position: relative; height: 280px;">
-                    <canvas id="mainChart"></canvas>
+        <!-- Main analytics grid -->
+        <div class="an-grid">
+
+            <!-- ── LEFT column ── -->
+            <div class="an-left">
+
+                <!-- Dynamics bar chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4>Динамика заявок и закупок</h4>
+                        <div class="period-tabs">
+                            <button class="period-tab active" onclick="setDynPeriod('month',this)">Месяц</button>
+                            <button class="period-tab" onclick="setDynPeriod('quarter',this)">Квартал</button>
+                            <button class="period-tab" onclick="setDynPeriod('year',this)">Год</button>
+                        </div>
+                    </div>
+                    <div style="position:relative;height:240px;">
+                        <canvas id="dynamicsChart"></canvas>
+                    </div>
                 </div>
-            </div>
-            <div class="chart-card">
-                <h4 id="secondaryChartTitle">Структура долей</h4>
-                <div style="position: relative; height: 280px;">
-                    <canvas id="secondaryChart"></canvas>
+
+                <!-- Top suppliers -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4>Топ поставщиков по транзакционным затратам</h4>
+                        <span style="font-size:12px;color:var(--text-secondary);">за период</span>
+                    </div>
+                    <table class="sup-table">
+                        <thead>
+                            <tr>
+                                <th>Поставщик</th>
+                                <th>Объём</th>
+                                <th>Сделок</th>
+                                <th>Рейтинг</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliersBody"></tbody>
+                    </table>
                 </div>
-            </div>
-        </div>
 
-        <div class="analytics-notes-grid">
-            <div class="analytics-note">
-                <div class="analytics-note-title">Ключевой вывод</div>
-                <div class="analytics-note-text">Показатели пересчитываются по выбранному периоду и роли пользователя.</div>
-            </div>
-            <div class="analytics-note">
-                <div class="analytics-note-title">Контроль закупок</div>
-                <div class="analytics-note-text">Следите за количеством предложений, завершением закупок и конверсией.</div>
-            </div>
-            <div class="analytics-note">
-                <div class="analytics-note-title">Экспорт отчёта</div>
-                <div class="analytics-note-text">Данные на графиках синхронизированы с рабочими сущностями платформы.</div>
-            </div>
-        </div>
-    </div>
+                <!-- Regions + Efficiency -->
+                <div class="an-bottom">
+                    <div class="chart-card">
+                        <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                            Тепловая карта спроса по регионам
+                        </h4>
+                        <div id="regionsWrap"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                            Рабочий стол эффективности
+                        </h4>
+                        <table class="eff-table">
+                            <thead>
+                                <tr><th>Показатель</th><th>Факт</th><th>Цель</th></tr>
+                            </thead>
+                            <tbody id="effBody"></tbody>
+                        </table>
+                    </div>
+                </div>
 
+            </div><!-- /an-left -->
+
+            <!-- ── RIGHT column ── -->
+            <div class="an-right">
+
+                <!-- Funnel -->
+                <div class="chart-card">
+                    <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                        Воронка закупок
+                    </h4>
+                    <div class="funnel-wrap" id="funnelWrap"></div>
+                </div>
+
+                <!-- Categories doughnut -->
+                <div class="chart-card">
+                    <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                        Структура по категориям
+                    </h4>
+                    <div style="position:relative;height:180px;">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Production cycle -->
+                <div class="chart-card">
+                    <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+                        Средний производственный цикл
+                    </h4>
+                    <div class="big-metric">
+                        <span class="big-metric-val" id="cycleVal">4,7</span>
+                        <span class="big-metric-unit">дня</span>
+                    </div>
+                    <div style="position:relative;height:70px;">
+                        <canvas id="cycleChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Economy by type -->
+                <div class="chart-card">
+                    <h4 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                        Экономия по типу
+                    </h4>
+                    <div id="economyWrap"></div>
+                </div>
+
+                <!-- Insights -->
+                <div class="chart-card">
+                    <h4 style="font-size:13px;font-weight:700;color:var(--accent-bright);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                        Инсайты
+                    </h4>
+                    <div id="insightsWrap"></div>
+                </div>
+
+            </div><!-- /an-right -->
+
+        </div><!-- /an-grid -->
+
+    </div><!-- /main-content -->
+
+    <!-- Notification modal -->
     <div class="modal" id="notificationModal">
-        <div class="modal-content" style="width: 440px;">
+        <div class="modal-content" style="width:440px;">
             <h3>Уведомления платформы</h3>
-            <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
-            <div class="modal-actions" style="justify-content: space-between;">
-                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+            <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
                 <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
@@ -124,277 +324,463 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+
     <script>
+        /* ── Theme ── */
         function toggleTheme() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
             const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-            if (cb) cb.checked = !isDark;
+            if (cb)  cb.checked = !isDark;
             if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+            rebuildCharts();
         }
         document.addEventListener('DOMContentLoaded', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-            if (cb) cb.checked = isDark;
+            const cb  = document.getElementById('themeCheckbox');
+            const lbl = document.getElementById('themeLabel');
+            if (cb)  cb.checked = isDark;
             if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
         });
-    </script>
-    <script>
+
+        /* ── Auth guard ── */
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
-        const role = localStorage.getItem('userRole');
+        const role        = localStorage.getItem('userRole') || 'customer';
         const companyName = localStorage.getItem('userCompany') || 'Организация';
 
-        let chartInstanceMain = null;
-        let chartInstanceSecondary = null;
+        /* ── Mock data (always visible) ── */
+        const MOCK = {
+            kpi: [
+                { label: 'Экономия за период',  value: '8,45 млн ₽', delta: 12.4,  icon: 'money',   spark: [3,4,5,5,6,7,7,8,8,9] },
+                { label: 'Экономия за квартал', value: '1,37 млн ₽', delta: 5.2,   icon: 'check',   spark: [1,1,2,2,2,3,3,3,4,4] },
+                { label: 'Среднее время отклика',value: '4,7 ч',     delta: -18.3, icon: 'percent', spark: [7,6,6,5,5,5,4,5,4,4] },
+                { label: 'Конверсия в договор', value: '28,6%',      delta: 3.1,   icon: 'box',     spark: [20,22,23,24,25,25,26,27,28,28] }
+            ],
+            dynamics: {
+                month: {
+                    labels: ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+                    orders:    [12, 15, 18, 22, 19, 25, 28, 24, 31, 27, 23, 18],
+                    proposals: [38, 42, 55, 64, 58, 76, 84, 71, 95, 82, 70, 54]
+                },
+                quarter: {
+                    labels: ['Q1 2025','Q2 2025','Q3 2025','Q4 2025'],
+                    orders:    [45, 66, 83, 68],
+                    proposals: [135, 198, 250, 204]
+                },
+                year: {
+                    labels: ['2022','2023','2024','2025'],
+                    orders:    [120, 198, 312, 262],
+                    proposals: [360, 594, 936, 786]
+                }
+            },
+            funnel: [
+                { label: 'Размещено',      count: 42,  pct: 100, color: '#0891B2' },
+                { label: 'Получено КП',    count: 326, pct: 85,  color: '#2563EB' },
+                { label: 'На рассмотрении',count: 18,  pct: 43,  color: '#059669' },
+                { label: 'Завершено',      count: 8,   pct: 19,  color: '#7C3AED' }
+            ],
+            categories: {
+                labels: ['РТИ','Металлоконструкции','Трубопровод','Насосное оборудование','Прочее'],
+                data:   [35, 28, 18, 12, 7],
+                colors: ['#0891B2','#2563EB','#059669','#7C3AED','#D97706']
+            },
+            suppliers: [
+                { name: 'ООО «НефтеПромСнаб»', amount: 2450000, count: 8,  rating: 4.8 },
+                { name: 'ООО «АктивСнаб»',       amount: 1870000, count: 6,  rating: 4.6 },
+                { name: 'ООО «ПромМаш»',          amount: 1340000, count: 5,  rating: 4.5 },
+                { name: 'АО «РегионСнаб»',        amount: 980000,  count: 4,  rating: 4.3 },
+                { name: 'ООО «ТехноПром»',         amount: 810000,  count: 3,  rating: 4.1 }
+            ],
+            regions: [
+                { name: 'Западная Сибирь', pct: 38 },
+                { name: 'Поволжье',        pct: 22 },
+                { name: 'Татарстан',       pct: 18 },
+                { name: 'Урал',            pct: 12 },
+                { name: 'ХМАО',            pct: 10 }
+            ],
+            cycle: {
+                value: '4,7',
+                labels: ['Янв','Фев','Мар','Апр','Май','Июн'],
+                data:   [5.2, 4.8, 5.1, 4.5, 4.3, 4.7]
+            },
+            economy: [
+                { label: 'Конкурентная цена',    pct: 45, amount: 3800000, color: '#0891B2' },
+                { label: 'Сокращение объёма',    pct: 28, amount: 2370000, color: '#2563EB' },
+                { label: 'Переговорный дисконт', pct: 18, amount: 1520000, color: '#059669' },
+                { label: 'Прочее',               pct:  9, amount:  760000, color: '#D97706' }
+            ],
+            efficiency: [
+                { name: 'Закупочный цикл',       current: '4,7 дн', target: '4,0 дн', ok: false },
+                { name: 'Авансирование',         current: '23%',    target: '15%',    ok: false },
+                { name: 'Повторные поставщики',  current: '68%',    target: '75%',    ok: false },
+                { name: 'Закупки по плану',      current: '84%',    target: '90%',    ok: false }
+            ],
+            insights: [
+                'ООО «НефтеПромСнаб» показал лучшую конверсию (87%) — рассмотрите долгосрочный договор.',
+                'Категория «РТИ» имеет потенциал экономии 12% — разрыв с рыночной ценой.',
+                'Время отклика сократилось на 18% за счёт проверенных контрагентов.',
+                '3 закупки истекают через 7 дней — требуется оперативное решение.',
+                'В ХМАО активность поставщиков выросла на 24% за квартал.'
+            ]
+        };
 
-        window.addEventListener('DOMContentLoaded', () => {
+        /* ── Chart instances ── */
+        let chartDynamics   = null;
+        let chartCategories = null;
+        let chartCycle      = null;
+        let dynPeriod = 'month';
+        let forecastOn = false;
+
+        function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+        function baseChartOpts() {
+            const txt  = cssVar('--text-secondary');
+            const grid = cssVar('--border-subtle');
+            return {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: txt, font: { family:'Inter', size: 11.5 }, usePointStyle: true, pointStyle: 'circle', padding: 14 } },
+                    tooltip: {
+                        backgroundColor: cssVar('--card-bg'), titleColor: cssVar('--text-primary-alt'),
+                        bodyColor: cssVar('--text-tertiary'), borderColor: cssVar('--card-border'),
+                        borderWidth: 1, padding: 10, cornerRadius: 8,
+                        titleFont: { family:'Inter', weight:'700', size:12 }, bodyFont: { family:'Inter', size:12 }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: grid }, ticks: { color: txt, font: { family:'Inter', size: 11 } } },
+                    y: { grid: { color: grid }, ticks: { color: txt, font: { family:'Inter', size: 11 } } }
+                }
+            };
+        }
+
+        function sparklineSVG(values, isUp) {
+            if (!values || values.length < 2) values = [0,1];
+            const w=64, h=28, pad=3;
+            const max = Math.max(...values,1), min = Math.min(...values,0), range=(max-min)||1;
+            const stepX = (w-pad*2)/(values.length-1);
+            const pts = values.map((v,i) => {
+                const x = pad + i*stepX;
+                const y = h - pad - ((v-min)/range)*(h-pad*2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+            const color = isUp ? '#0891B2' : '#DC2626';
+            const last  = pts.split(' ').pop().split(',');
+            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="${color}"/>
+            </svg>`;
+        }
+
+        function kpiIconSVG(type) {
+            const icons = {
+                check:   '<path d="M20 6L9 17l-5-5"/>',
+                money:   '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+                percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+                box:     '<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'
+            };
+            return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[type]||icons.check}</svg>`;
+        }
+
+        /* ── Render KPI grid ── */
+        function renderKPI(items) {
+            const grid = document.getElementById('kpiGrid');
+            grid.innerHTML = items.map(k => {
+                const isUp  = k.delta >= 0;
+                const cls   = isUp ? 'up' : 'down';
+                const sign  = isUp ? '+' : '';
+                return `<div class="kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon">${kpiIconSVG(k.icon)}</div>
+                        <div class="kpi-sparkline">${sparklineSVG(k.spark, isUp)}</div>
+                    </div>
+                    <div class="kpi-label">${k.label}</div>
+                    <div class="kpi-value">${k.value}</div>
+                    <div class="kpi-change ${cls}">${sign}${k.delta.toFixed(1)}% <span class="kpi-change-note">к прошлому периоду</span></div>
+                </div>`;
+            }).join('');
+        }
+
+        /* ── Dynamics chart ── */
+        function renderDynamics() {
+            const d    = MOCK.dynamics[dynPeriod];
+            const txt  = cssVar('--text-secondary');
+            const grid = cssVar('--border-subtle');
+
+            const datasets = [
+                {
+                    label: 'Закупки (шт)',
+                    data: d.orders,
+                    backgroundColor: forecastOn
+                        ? d.orders.map((_, i) => i >= d.orders.length - 3 ? 'rgba(8,145,178,0.4)' : '#0891B2')
+                        : '#0891B2',
+                    borderRadius: 5, maxBarThickness: 28
+                },
+                {
+                    label: 'Предложения (шт)',
+                    data: d.proposals,
+                    backgroundColor: forecastOn
+                        ? d.proposals.map((_, i) => i >= d.proposals.length - 3 ? 'rgba(37,99,235,0.4)' : '#2563EB')
+                        : '#2563EB',
+                    borderRadius: 5, maxBarThickness: 28
+                }
+            ];
+
+            const opts = baseChartOpts();
+            opts.plugins.legend.display = true;
+
+            const ctx = document.getElementById('dynamicsChart').getContext('2d');
+            if (chartDynamics) chartDynamics.destroy();
+            chartDynamics = new Chart(ctx, { type:'bar', data:{ labels:d.labels, datasets }, options:opts });
+        }
+
+        /* ── Categories doughnut ── */
+        function renderCategories() {
+            const c = MOCK.categories;
+            const ctx = document.getElementById('categoriesChart').getContext('2d');
+            if (chartCategories) chartCategories.destroy();
+            const opts = baseChartOpts();
+            delete opts.scales;
+            opts.plugins.legend.position = 'right';
+            chartCategories = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: c.labels, datasets: [{ data: c.data, backgroundColor: c.colors, borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] },
+                options: opts
+            });
+        }
+
+        /* ── Cycle line ── */
+        function renderCycle() {
+            const c   = MOCK.cycle;
+            const txt = cssVar('--text-secondary');
+            document.getElementById('cycleVal').textContent = c.value;
+            const ctx = document.getElementById('cycleChart').getContext('2d');
+            if (chartCycle) chartCycle.destroy();
+            chartCycle = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: c.labels,
+                    datasets: [{
+                        label: 'дней',
+                        data: c.data,
+                        borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)',
+                        fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#0891B2'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, min: 3.5, max: 6 }
+                    }
+                }
+            });
+        }
+
+        /* ── Funnel ── */
+        function renderFunnel() {
+            const wrap = document.getElementById('funnelWrap');
+            wrap.innerHTML = MOCK.funnel.map((s, i) => {
+                const arrow = i < MOCK.funnel.length - 1
+                    ? `<div class="funnel-arrow">▾</div>` : '';
+                return `<div class="funnel-step">
+                    <span class="funnel-lbl">${s.label}</span>
+                    <div class="funnel-bar-wrap">
+                        <div class="funnel-bar" style="width:${s.pct}%;background:${s.color};"></div>
+                    </div>
+                    <span class="funnel-count">${s.count}</span>
+                </div>${arrow}`;
+            }).join('');
+        }
+
+        /* ── Suppliers table ── */
+        function renderSuppliers() {
+            const tbody = document.getElementById('suppliersBody');
+            tbody.innerHTML = MOCK.suppliers.map((s, i) => `
+                <tr>
+                    <td><span class="sup-num">${i+1}</span>${s.name}</td>
+                    <td style="font-weight:700;">${(s.amount/1000000).toFixed(2).replace('.',',')} млн ₽</td>
+                    <td>${s.count}</td>
+                    <td><span class="sup-rating">★ ${s.rating.toFixed(1)}</span></td>
+                </tr>`).join('');
+        }
+
+        /* ── Regions ── */
+        function renderRegions() {
+            const wrap = document.getElementById('regionsWrap');
+            wrap.innerHTML = MOCK.regions.map(r => `
+                <div class="region-row">
+                    <span class="region-name">${r.name}</span>
+                    <div class="region-bar-wrap"><div class="region-bar" style="width:${r.pct}%"></div></div>
+                    <span class="region-pct">${r.pct}%</span>
+                </div>`).join('');
+        }
+
+        /* ── Efficiency ── */
+        function renderEfficiency() {
+            const tbody = document.getElementById('effBody');
+            tbody.innerHTML = MOCK.efficiency.map(e => `
+                <tr>
+                    <td style="color:var(--text-secondary);font-size:12px;">${e.name}</td>
+                    <td class="${e.ok ? 'eff-ok' : 'eff-warn'}">${e.current}</td>
+                    <td style="color:var(--text-muted);">${e.target}</td>
+                </tr>`).join('');
+        }
+
+        /* ── Economy ── */
+        function renderEconomy() {
+            const wrap = document.getElementById('economyWrap');
+            wrap.innerHTML = MOCK.economy.map(e => `
+                <div class="economy-row">
+                    <div class="economy-dot" style="background:${e.color};"></div>
+                    <span class="economy-label">${e.label} <span style="color:var(--text-muted);font-size:11px;">${e.pct}%</span></span>
+                    <span class="economy-val">${(e.amount/1000000).toFixed(2).replace('.',',')} млн ₽</span>
+                </div>`).join('');
+        }
+
+        /* ── Insights ── */
+        function renderInsights() {
+            const wrap = document.getElementById('insightsWrap');
+            wrap.innerHTML = MOCK.insights.map(t => `
+                <div class="insight-item">
+                    <div class="insight-dot"></div>
+                    <span class="insight-text">${t}</span>
+                </div>`).join('');
+        }
+
+        /* ── Period tab switcher ── */
+        function setDynPeriod(p, btn) {
+            dynPeriod = p;
+            document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDynamics();
+        }
+
+        /* ── Forecast toggle ── */
+        function toggleForecast() {
+            forecastOn = !forecastOn;
+            const btn = document.getElementById('btnForecast');
+            btn.classList.toggle('active', forecastOn);
+            renderDynamics();
+        }
+
+        /* ── Export CSV ── */
+        function exportCSV() {
+            const rows = [['Поставщик','Объём (₽)','Сделок','Рейтинг']];
+            MOCK.suppliers.forEach(s => rows.push([s.name, s.amount, s.count, s.rating]));
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'analytics_export.csv';
+            a.click();
+        }
+
+        /* ── Rebuild charts on theme change ── */
+        function rebuildCharts() {
+            renderDynamics();
+            renderCategories();
+            renderCycle();
+        }
+
+        /* ── Init ── */
+        function initPage() {
+            const today = new Date();
+            const from  = new Date(today); from.setDate(from.getDate() - 90);
+            document.getElementById('dateTo').value   = today.toISOString().slice(0,10);
+            document.getElementById('dateFrom').value = from.toISOString().slice(0,10);
+            document.getElementById('dateFrom').addEventListener('change', tryLoadReal);
+            document.getElementById('dateTo').addEventListener('change', tryLoadReal);
+
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = role === 'customer' ? 'index.html' : 'producer.html';
 
             if (role === 'producer') {
                 const myId = localStorage.getItem('myCompanyId');
-                const sidebarLink = document.getElementById('sidebarProfileLink');
-                if (myId && sidebarLink) { sidebarLink.href = `company-profile.html?id=${myId}`; sidebarLink.style.display = ''; }
+                const pl   = document.getElementById('sidebarProfileLink');
+                if (myId && pl) { pl.href = `company-profile.html?id=${myId}`; pl.style.display = ''; }
             }
 
-            const today = new Date();
-            const from = new Date(today); from.setDate(from.getDate() - 90);
-            document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
-            document.getElementById('dateFrom').value = from.toISOString().slice(0, 10);
-            document.getElementById('dateFrom').addEventListener('change', loadDashboard);
-            document.getElementById('dateTo').addEventListener('change', loadDashboard);
+            const meta = document.getElementById('companyMeta');
+            if (meta) meta.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Доступ: <span style="color:var(--accent-bright);font-weight:600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
 
-            setupInterface();
-            loadDashboard();
-            initNotifications();
-            initSidebarBadges();
+            /* Render mock data immediately */
+            renderKPI(MOCK.kpi);
+            renderFunnel();
+            renderSuppliers();
+            renderRegions();
+            renderEfficiency();
+            renderEconomy();
+            renderInsights();
+            renderDynamics();
+            renderCategories();
+            renderCycle();
 
-            const themeCb = document.getElementById('themeCheckbox');
-            if (themeCb) themeCb.addEventListener('change', loadDashboard);
-        });
+            /* Try to load real data on top */
+            tryLoadReal();
 
-        function setupInterface() {
-            const metaEl = document.getElementById('companyMeta');
-            if (metaEl) {
-                metaEl.innerHTML = `Контрагент: <strong>${companyName}</strong> &nbsp;|&nbsp; Доступ: <span style="color: var(--accent-bright); font-weight: 600;">${role === 'customer' ? 'Заказчик' : 'Производитель'}</span>`;
-            }
+            if (typeof initNotifications === 'function') initNotifications();
+            if (typeof initSidebarBadges  === 'function') initSidebarBadges();
         }
 
-        function cssVar(name) {
-            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        }
-
-        function getChartThemeOptions() {
-            const textColor = cssVar('--text-secondary');
-            const gridColor = cssVar('--border-subtle');
-            return {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { labels: { color: textColor, font: { family: 'Inter', size: 11.5 }, usePointStyle: true, pointStyle: 'circle', padding: 14 } },
-                    tooltip: {
-                        backgroundColor: cssVar('--card-bg'), titleColor: cssVar('--text-primary-alt'), bodyColor: cssVar('--text-tertiary'),
-                        borderColor: cssVar('--card-border'), borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: false,
-                        titleFont: { family: 'Inter', weight: '700', size: 12 }, bodyFont: { family: 'Inter', size: 12 }
-                    }
-                },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter', size: 11 } } },
-                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter', size: 11 } } }
-                }
-            };
-        }
-
-        /* Мини-спарклайн (кумулятивный тренд по бакетам периода) — декоративный, но честный: даже при малом числе записей рисует реальный паттерн активности, а не пустую заглушку. */
-        function bucketedCumulative(items, dateField, from, to, valueFn, bucketCount = 10) {
-            const span = Math.max(1, to.getTime() - from.getTime());
-            const bucketMs = span / bucketCount;
-            const buckets = new Array(bucketCount).fill(0);
-            items.forEach(item => {
-                const t = new Date(item[dateField]).getTime();
-                if (t < from.getTime() || t > to.getTime()) return;
-                let idx = Math.floor((t - from.getTime()) / bucketMs);
-                if (idx >= bucketCount) idx = bucketCount - 1;
-                if (idx < 0) idx = 0;
-                buckets[idx] += valueFn ? valueFn(item) : 1;
-            });
-            let cum = 0;
-            return buckets.map(v => (cum += v));
-        }
-
-        function sparklineSVG(values, isUp) {
-            if (!values || values.length < 2) values = [0, 0];
-            const w = 64, h = 28, pad = 3;
-            const max = Math.max(...values, 1);
-            const min = Math.min(...values, 0);
-            const range = (max - min) || 1;
-            const stepX = (w - pad * 2) / (values.length - 1);
-            const points = values.map((v, i) => {
-                const x = pad + i * stepX;
-                const y = h - pad - ((v - min) / range) * (h - pad * 2);
-                return `${x.toFixed(1)},${y.toFixed(1)}`;
-            }).join(' ');
-            const color = isUp ? '#0891B2' : '#DC2626';
-            const last = points.split(' ').pop();
-            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-                <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="${last.split(',')[0]}" cy="${last.split(',')[1]}" r="2.2" fill="${color}"/>
-            </svg>`;
-        }
-
-        function kpiIcon(type) {
-            const icons = {
-                check: '<path d="M20 6L9 17l-5-5"></path>',
-                money: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>',
-                percent: '<line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle>',
-                x: '<circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6M9 9l6 6"></path>',
-                box: '<path d="M21 8l-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>',
-                inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>'
-            };
-            return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[type] || icons.check}</svg>`;
-        }
-
-        function getRange() {
-            const from = new Date(document.getElementById('dateFrom').value);
-            const to = new Date(document.getElementById('dateTo').value);
-            to.setHours(23, 59, 59, 999);
-            const spanMs = to - from;
-            const prevTo = new Date(from.getTime() - 1);
-            const prevFrom = new Date(from.getTime() - spanMs);
-            return { from, to, prevFrom, prevTo };
-        }
-
-        function inRange(dateStr, from, to) {
-            const d = new Date(dateStr);
-            return d >= from && d <= to;
-        }
-
-        function pctChange(curr, prev) {
-            if (prev === 0) return curr === 0 ? 0 : 100;
-            return ((curr - prev) / prev) * 100;
-        }
-
-        function kpiCard(label, value, changePct, iconType, sparkValues) {
-            const isUp = changePct >= 0;
-            const cls = isUp ? 'up' : 'down';
-            const sign = isUp ? '+' : '';
-            return `<div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon">${kpiIcon(iconType)}</div>
-                    <div class="kpi-sparkline">${sparklineSVG(sparkValues, isUp)}</div>
-                </div>
-                <div class="kpi-label">${label}</div>
-                <div class="kpi-value">${value}</div>
-                <div class="kpi-change ${cls}">${sign}${changePct.toFixed(1)}% <span class="kpi-change-note">к прошлому периоду</span></div>
-            </div>`;
-        }
-
-        function setDashboardFallback() {
-            const grid = document.getElementById('metricsGrid');
-            if (!grid) return;
-            grid.innerHTML =
-                kpiCard(role === 'customer' ? 'Размещено закупок' : 'Выиграно контрактов', '—', 0, 'box', [0, 1, 1, 2, 3, 3, 4]) +
-                kpiCard(role === 'customer' ? 'Получено предложений' : 'Сумма выигранных', '—', 0, 'inbox', [0, 0, 1, 1, 2, 2, 3]) +
-                kpiCard(role === 'customer' ? 'Завершено закупок' : 'Конверсия предложений', '—', 0, 'check', [0, 1, 1, 1, 2, 3, 3]) +
-                kpiCard(role === 'customer' ? 'Конверсия по тендерам' : 'Отклонено предложений', '—', 0, 'percent', [0, 0, 0, 1, 1, 2, 2]);
-            renderEmptyCharts();
-        }
-
-        function renderEmptyCharts() {
-            renderCharts(
-                'line',
-                { labels: ['Нет данных'], datasets: [{ label: 'Показатель', data: [0], borderColor: '#0B7CFF', backgroundColor: 'rgba(11,124,255,0.10)', fill: true, tension: 0.3 }] },
-                'doughnut',
-                { labels: ['Нет данных'], datasets: [{ data: [1], backgroundColor: ['#DCE7F5'], borderColor: cssVar('--card-bg'), borderWidth: 3 }] }
-            );
-        }
-
-        async function loadDashboard() {
-            const grid = document.getElementById('metricsGrid');
-            if (!grid) return;
-            const { from, to, prevFrom, prevTo } = getRange();
-            setDashboardFallback();
-
+        /* ── Overlay real API data (best-effort) ── */
+        async function tryLoadReal() {
             try {
                 const headers = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
+                const from = new Date(document.getElementById('dateFrom').value);
+                const to   = new Date(document.getElementById('dateTo').value);
+                to.setHours(23,59,59,999);
+
+                const inRange = (d) => { const dt = new Date(d); return dt >= from && dt <= to; };
 
                 if (role === 'customer') {
-                    document.getElementById('mainChartTitle').innerText = 'Количество предложений по тендерам';
-                    document.getElementById('secondaryChartTitle').innerText = 'Доли товарных категорий в закупках';
+                    const res  = await fetch(`${SERVER_URL}/orders`, { headers });
+                    if (!res.ok) return;
+                    const all  = await res.json();
+                    const mine = all.filter(o => o.company === companyName && inRange(o.createdAt));
+                    if (!mine.length) return;
 
-                    const response = await fetch(`${SERVER_URL}/orders`, { headers });
-                    const allOrders = await response.json();
-                    const orders = allOrders.filter(o => o.company === companyName && inRange(o.createdAt, from, to));
-                    const prevOrders = allOrders.filter(o => o.company === companyName && inRange(o.createdAt, prevFrom, prevTo));
+                    const closed    = mine.filter(o => o.status === 'Закрыта').length;
+                    const responses = mine.reduce((s,o) => s + (o.responses||0), 0);
+                    const conv      = mine.length ? ((closed/mine.length)*100).toFixed(1) : '0.0';
 
-                    const closed = orders.filter(o => o.status === 'Закрыта').length;
-                    const prevClosed = prevOrders.filter(o => o.status === 'Закрыта').length;
-                    const responses = orders.reduce((s, o) => s + (o.responses || 0), 0);
-                    const prevResponses = prevOrders.reduce((s, o) => s + (o.responses || 0), 0);
-                    const conversion = orders.length ? (closed / orders.length) * 100 : 0;
-                    const prevConversion = prevOrders.length ? (prevClosed / prevOrders.length) * 100 : 0;
-
-                    grid.innerHTML =
-                        kpiCard('Размещено закупок', orders.length, pctChange(orders.length, prevOrders.length), 'box', bucketedCumulative(orders, 'createdAt', from, to)) +
-                        kpiCard('Получено предложений', responses, pctChange(responses, prevResponses), 'inbox', bucketedCumulative(orders, 'createdAt', from, to, o => o.responses || 0)) +
-                        kpiCard('Завершено закупок', closed, pctChange(closed, prevClosed), 'check', bucketedCumulative(orders.filter(o => o.status === 'Закрыта'), 'createdAt', from, to)) +
-                        kpiCard('Конверсия по тендерам', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion), 'percent', bucketedCumulative(orders, 'createdAt', from, to));
-
-                    renderCharts(
-                        'bar',
-                        { labels: orders.map(o => o.title), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#0891B2', borderRadius: 6, maxBarThickness: 46 }] },
-                        'doughnut',
-                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#0891B2', '#2563EB'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
-                    );
+                    const liveKpi = [
+                        { label: 'Размещено закупок',  value: mine.length,  delta: 0, icon: 'box',     spark: [0,1,2,3,mine.length] },
+                        { label: 'Получено предложений',value: responses,   delta: 0, icon: 'check',   spark: [0,1,2,3,responses]   },
+                        { label: 'Завершено закупок',  value: closed,       delta: 0, icon: 'percent', spark: [0,1,closed]           },
+                        { label: 'Конверсия',          value: conv + '%',   delta: 0, icon: 'money',   spark: [10,15,20,conv]        }
+                    ];
+                    renderKPI(liveKpi);
                 } else {
-                    document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов';
-                    document.getElementById('secondaryChartTitle').innerText = 'Конверсия предложений';
+                    const res  = await fetch(`${SERVER_URL}/proposals`, { headers });
+                    if (!res.ok) return;
+                    const all  = await res.json();
+                    const mine = all.filter(p => p.company === companyName && inRange(p.createdAt));
+                    if (!mine.length) return;
 
-                    const response = await fetch(`${SERVER_URL}/proposals`, { headers });
-                    const allProposals = await response.json();
-                    const myAll = allProposals.filter(p => p.company === companyName);
-                    const myProps = myAll.filter(p => inRange(p.createdAt, from, to));
-                    const prevProps = myAll.filter(p => inRange(p.createdAt, prevFrom, prevTo));
+                    const won  = mine.filter(p => p.status === 'Выигран');
+                    const rej  = mine.filter(p => p.status === 'Отклонен');
+                    const sum  = won.reduce((s,p) => s + p.price, 0);
+                    const conv = mine.length ? ((won.length/mine.length)*100).toFixed(1) : '0.0';
 
-                    const won = myProps.filter(p => p.status === 'Выигран');
-                    const prevWon = prevProps.filter(p => p.status === 'Выигран');
-                    const rejected = myProps.filter(p => p.status === 'Отклонен');
-                    const prevRejected = prevProps.filter(p => p.status === 'Отклонен');
-                    const totalSum = won.reduce((s, p) => s + p.price, 0);
-                    const prevSum = prevWon.reduce((s, p) => s + p.price, 0);
-                    const conversion = myProps.length ? (won.length / myProps.length) * 100 : 0;
-                    const prevConversion = prevProps.length ? (prevWon.length / prevProps.length) * 100 : 0;
-
-                    grid.innerHTML =
-                        kpiCard('Выиграно контрактов', won.length, pctChange(won.length, prevWon.length), 'check', bucketedCumulative(won, 'createdAt', from, to)) +
-                        kpiCard('Общая сумма выигранных', '₽ ' + totalSum.toLocaleString(), pctChange(totalSum, prevSum), 'money', bucketedCumulative(won, 'createdAt', from, to, p => p.price)) +
-                        kpiCard('Конверсия предложений', conversion.toFixed(1) + '%', pctChange(conversion, prevConversion), 'percent', bucketedCumulative(myProps, 'createdAt', from, to)) +
-                        kpiCard('Отклонено предложений', rejected.length, pctChange(rejected.length, prevRejected.length), 'x', bucketedCumulative(rejected, 'createdAt', from, to));
-
-                    renderCharts(
-                        'line',
-                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: cssVar('--card-bg'), pointBorderColor: '#0891B2', pointBorderWidth: 2 }] },
-                        'pie',
-                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#059669', '#DC2626'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
-                    );
+                    const liveKpi = [
+                        { label: 'Выиграно контрактов',  value: won.length,                      delta: 0, icon: 'check',   spark: [0,won.length]   },
+                        { label: 'Сумма выигранных',     value: '₽ ' + sum.toLocaleString(),    delta: 0, icon: 'money',   spark: [0,sum/1000]     },
+                        { label: 'Конверсия предложений',value: conv + '%',                      delta: 0, icon: 'percent', spark: [10,20,conv]     },
+                        { label: 'Отклонено предложений',value: rej.length,                      delta: 0, icon: 'box',     spark: [0,rej.length]   }
+                    ];
+                    renderKPI(liveKpi);
                 }
-            } catch (error) {
-                console.error(error);
-                setDashboardFallback();
+            } catch(e) {
+                /* silently fall back to mock data */
             }
         }
 
-        function renderCharts(typeMain, dataMain, typeSecondary, dataSecondary) {
-            if (typeof Chart === 'undefined') return;
-            const themeOpts = getChartThemeOptions();
-            if (chartInstanceMain) chartInstanceMain.destroy();
-            if (chartInstanceSecondary) chartInstanceSecondary.destroy();
-            chartInstanceMain = new Chart(document.getElementById('mainChart').getContext('2d'), { type: typeMain, data: dataMain, options: themeOpts });
-            const sOpts = JSON.parse(JSON.stringify(themeOpts)); delete sOpts.scales;
-            chartInstanceSecondary = new Chart(document.getElementById('secondaryChart').getContext('2d'), { type: typeSecondary, data: dataSecondary, options: sOpts });
-        }
+        window.addEventListener('DOMContentLoaded', initPage);
     </script>
 </body>
 </html>
