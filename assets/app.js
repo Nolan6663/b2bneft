@@ -17,8 +17,7 @@ const SERVER_URL = (
    --------------------------------------------------------------------- */
 function applyStoredTheme() {
   const stored = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = stored ? stored === 'dark' : prefersDark;
+  const isDark = stored === 'dark';
   document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
   document.documentElement.classList.toggle('light-mode', !isDark);
   syncThemeUI(!isDark);
@@ -614,11 +613,12 @@ function initHeaderRight() {
   right.className = 'header-right';
   right.innerHTML = `
     <div class="theme-switch-wrap">
-      <span class="theme-switch-label" id="themeLabelLight">☀ Светлая</span>
+      <span class="theme-sun" aria-hidden="true">☀</span>
+      <span class="theme-switch-label" id="themeLabelLight">Светлая</span>
       <div class="theme-switch" onclick="toggleTheme()" id="themeSwitch" title="Сменить тему">
         <div class="theme-switch-knob"></div>
       </div>
-      <span class="theme-switch-label" id="themeLabelDark">🌙 Тёмная</span>
+      <span class="theme-switch-label" id="themeLabelDark">Тёмная</span>
     </div>
     <button class="bell-btn" onclick="openNotificationsModal()">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -628,7 +628,7 @@ function initHeaderRight() {
       <div class="user-avatar-pill">${escapeHtml(initials)}</div>
       <div class="user-info-block">
         <div class="user-company-name">${escapeHtml(company || 'Гость')}</div>
-        <div class="user-role-name">${escapeHtml(roleLabel)}</div>
+        <div class="user-role-name">${escapeHtml(roleLabel || 'Иванов И.И.')}</div>
       </div>
       <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       <div class="user-dropdown" id="userDropdown">

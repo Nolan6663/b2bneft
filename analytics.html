@@ -14,11 +14,16 @@
         .date-range input[type="date"]:focus { border-color: var(--accent-bright); }
         .company-badge { font-size: 12.5px; color: var(--text-secondary); }
         .company-badge strong { color: var(--text-primary); }
+        .analytics-notes-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px; }
+        .analytics-note { background:#fff;border:1px solid var(--card-border);border-radius:10px;box-shadow:var(--shadow-card);padding:18px; }
+        .analytics-note-title { font-size:13px;font-weight:850;color:var(--text-primary);margin-bottom:8px; }
+        .analytics-note-text { font-size:12.5px;line-height:1.45;color:var(--text-secondary); }
 
         @media (max-width: 480px) {
             .date-range { flex-wrap: wrap; gap: 6px; }
             .date-range input[type="date"] { font-size: 12px; padding: 0 8px; height: 34px; }
         }
+        @media (max-width: 980px) { .analytics-notes-grid { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -87,6 +92,21 @@
                 <div style="position: relative; height: 280px;">
                     <canvas id="secondaryChart"></canvas>
                 </div>
+            </div>
+        </div>
+
+        <div class="analytics-notes-grid">
+            <div class="analytics-note">
+                <div class="analytics-note-title">Ключевой вывод</div>
+                <div class="analytics-note-text">Показатели пересчитываются по выбранному периоду и роли пользователя.</div>
+            </div>
+            <div class="analytics-note">
+                <div class="analytics-note-title">Контроль закупок</div>
+                <div class="analytics-note-text">Следите за количеством предложений, завершением закупок и конверсией.</div>
+            </div>
+            <div class="analytics-note">
+                <div class="analytics-note-title">Экспорт отчёта</div>
+                <div class="analytics-note-text">Данные на графиках синхронизированы с рабочими сущностями платформы.</div>
             </div>
         </div>
     </div>
@@ -271,10 +291,31 @@
             </div>`;
         }
 
+        function setDashboardFallback() {
+            const grid = document.getElementById('metricsGrid');
+            if (!grid) return;
+            grid.innerHTML =
+                kpiCard(role === 'customer' ? 'Размещено закупок' : 'Выиграно контрактов', '—', 0, 'box', [0, 1, 1, 2, 3, 3, 4]) +
+                kpiCard(role === 'customer' ? 'Получено предложений' : 'Сумма выигранных', '—', 0, 'inbox', [0, 0, 1, 1, 2, 2, 3]) +
+                kpiCard(role === 'customer' ? 'Завершено закупок' : 'Конверсия предложений', '—', 0, 'check', [0, 1, 1, 1, 2, 3, 3]) +
+                kpiCard(role === 'customer' ? 'Конверсия по тендерам' : 'Отклонено предложений', '—', 0, 'percent', [0, 0, 0, 1, 1, 2, 2]);
+            renderEmptyCharts();
+        }
+
+        function renderEmptyCharts() {
+            renderCharts(
+                'line',
+                { labels: ['Нет данных'], datasets: [{ label: 'Показатель', data: [0], borderColor: '#0B7CFF', backgroundColor: 'rgba(11,124,255,0.10)', fill: true, tension: 0.3 }] },
+                'doughnut',
+                { labels: ['Нет данных'], datasets: [{ data: [1], backgroundColor: ['#DCE7F5'], borderColor: cssVar('--card-bg'), borderWidth: 3 }] }
+            );
+        }
+
         async function loadDashboard() {
             const grid = document.getElementById('metricsGrid');
             if (!grid) return;
             const { from, to, prevFrom, prevTo } = getRange();
+            setDashboardFallback();
 
             try {
                 const headers = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
@@ -339,10 +380,14 @@
                         { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#059669', '#DC2626'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error(error);
+                setDashboardFallback();
+            }
         }
 
         function renderCharts(typeMain, dataMain, typeSecondary, dataSecondary) {
+            if (typeof Chart === 'undefined') return;
             const themeOpts = getChartThemeOptions();
             if (chartInstanceMain) chartInstanceMain.destroy();
             if (chartInstanceSecondary) chartInstanceSecondary.destroy();
