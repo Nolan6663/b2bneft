@@ -551,7 +551,7 @@
 
             try {
                 const r = await fetch(`${SERVER_URL}/deals`, { headers: { 'Authorization': 'Bearer ' + token } });
-                if (r.ok) { allDeals = await r.json(); renderTable(); }
+                if (r.ok) { const data = await r.json(); if (data.length) { allDeals = data; renderTable(); } }
             } catch {}
 
             initNotifications();
