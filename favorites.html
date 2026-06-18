@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Избранное</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .fav-grid {
             display: grid;
@@ -102,6 +102,33 @@
             </button>
         </div>
 
+        <div class="kpi-row" id="favKpiRow" style="grid-template-columns:repeat(3,1fr);display:none;">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">В избранном</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                </div>
+                <div class="kpi-value" id="favKpiTotal">—</div>
+                <div class="kpi-sub">компаний сохранено</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Производителей</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+                </div>
+                <div class="kpi-value" id="favKpiProducers" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">поставщиков</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Верифицировано</div>
+                    <div class="kpi-icon" style="color:var(--accent-cyan);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                </div>
+                <div class="kpi-value" id="favKpiVerified" style="color:var(--accent-cyan);">—</div>
+                <div class="kpi-sub">верифицированных</div>
+            </div>
+        </div>
+
         <div id="favContent">
             <div class="section"><div class="fav-grid"><div class="fav-empty">Загрузка...</div></div></div>
         </div>
@@ -120,6 +147,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = !isDark;
+            if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = isDark;
+            if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+        });
+    </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
@@ -155,6 +198,17 @@
         }
 
         function renderFavorites(favs) {
+            const kpiRow = document.getElementById('favKpiRow');
+            if (favs.length) {
+                if (kpiRow) {
+                    kpiRow.style.display = '';
+                    document.getElementById('favKpiTotal').textContent = favs.length;
+                    document.getElementById('favKpiProducers').textContent = favs.filter(c => c.role === 'producer').length;
+                    document.getElementById('favKpiVerified').textContent = favs.filter(c => c.status === 'Верифицирован').length;
+                }
+            } else {
+                if (kpiRow) kpiRow.style.display = 'none';
+            }
             if (!favs.length) {
                 document.getElementById('favContent').innerHTML = `
                 <div class="section">

@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Вход</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-        body { display: flex; min-height: 100vh; }
+        body { display: flex; min-height: 100vh; overflow-x: hidden; }
 
         .theme-toggle-fab {
             position: fixed; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 12px;
@@ -18,31 +18,51 @@
         }
         .theme-toggle-fab:hover { transform: translateY(-1px); border-color: var(--secondary-btn-border); }
 
-        .auth-page { display: flex; width: 100%; min-height: 100vh; }
+        .auth-page { display: flex; width: 100%; min-width: 0; min-height: 100vh; overflow-x: hidden; }
 
         .auth-branding {
-            width: 360px;
+            width: 380px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 60px 32px;
-            background:
-                radial-gradient(80% 90% at 100% 50%, #11343a 0%, transparent 70%),
-                radial-gradient(120% 80% at 50% 100%, #0e3a3f 0%, #0a242b 38%, #06141a 70%, #040c11 100%);
+            align-items: flex-start;
+            text-align: left;
+            padding: 60px 40px;
+            background: linear-gradient(145deg, #0E7490 0%, #1D4ED8 100%);
             position: relative;
+            overflow: hidden;
         }
-        .auth-branding img { width: 64px; height: 64px; margin-bottom: 18px; }
-        .auth-branding .b2b-word { font-size: 26px; font-weight: 800; letter-spacing: 0.5px; color: #e9eef2; }
-        .auth-branding .neft-word { font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #cdd8de; margin-top: 4px; }
-        .auth-branding .tagline { font-size: 13px; color: #7e8b97; margin-top: 22px; max-width: 240px; line-height: 1.5; }
-        .auth-branding .auth-footer { position: absolute; bottom: 28px; left: 0; right: 0; font-size: 9.5px; color: #52606b; }
+        .auth-branding::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,.12) 0%, transparent 55%),
+                        radial-gradient(ellipse at 20% 80%, rgba(255,255,255,.06) 0%, transparent 45%);
+        }
+        .auth-branding-inner { position: relative; }
+        .auth-branding .brand-logo {
+            width: 48px; height: 48px; border-radius: 13px;
+            background: rgba(255,255,255,.2);
+            border: 1.5px solid rgba(255,255,255,.35);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 800; color: #fff;
+            margin-bottom: 22px;
+        }
+        .auth-branding .b2b-word { font-size: 28px; font-weight: 800; letter-spacing: 0.3px; color: #fff; }
+        .auth-branding .neft-word { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,.7); margin-top: 4px; text-transform: uppercase; }
+        .auth-branding .tagline { font-size: 14px; color: rgba(255,255,255,.85); margin-top: 24px; max-width: 260px; line-height: 1.6; }
+        .auth-branding .auth-steps { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
+        .auth-branding .auth-step { display: flex; align-items: center; gap: 12px; }
+        .auth-branding .auth-step-dot { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
+        .auth-branding .auth-step-text { font-size: 13px; color: rgba(255,255,255,.85); font-weight: 500; }
+        .auth-branding .auth-footer { position: absolute; bottom: 28px; left: 40px; right: 40px; font-size: 11px; color: rgba(255,255,255,.45); }
+        .auth-branding .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: rgba(255,255,255,.7); text-decoration: none; margin-bottom: 28px; transition: color .15s; }
+        .auth-branding .back-link:hover { color: #fff; }
 
-        .auth-form-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+        .auth-form-panel { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
 
-        .auth-container { width: 420px; max-width: 100%; }
+        .auth-container { width: min(420px, 100%); max-width: 100%; min-width: 0; }
         .auth-container h1 { font-size: 21px; font-weight: 800; color: var(--text-primary-alt); margin-bottom: 6px; }
         .auth-container p.subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
 
@@ -83,7 +103,24 @@
             .auth-page { flex-direction: column; }
             .auth-branding { width: 100%; padding: 32px 24px; }
             .auth-branding .auth-footer { position: static; margin-top: 18px; }
-            .auth-form-panel { padding: 32px 20px; }
+            .auth-form-panel { padding: 32px 24px; width: 100%; max-width: 100vw; overflow-x: hidden; }
+            .auth-container,
+            .tabs,
+            .form-group,
+            .form-group input,
+            .btn-auth {
+                width: min(342px, calc(100vw - 48px)) !important;
+                max-width: min(342px, calc(100vw - 48px)) !important;
+            }
+            .form-row-between { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .forgot-link { margin-left: 0; }
+        }
+
+        @media (max-width: 420px) {
+            .theme-toggle-fab { top: 12px; right: 12px; }
+            .auth-branding { padding: 32px 24px 28px; }
+            .auth-branding .b2b-word { font-size: 26px; overflow-wrap: anywhere; }
+            .auth-form-panel { padding: 30px 24px 36px; max-width: 100vw; overflow-x: hidden; }
         }
     </style>
 </head>
@@ -95,11 +132,31 @@
 
     <div class="auth-page">
         <div class="auth-branding">
-            <img src="assets/icons_svg/logo_hex.svg" alt="">
-            <div class="b2b-word">B2B</div>
-            <div class="neft-word">НЕФТЕСЕРВИС</div>
-            <div class="tagline">Единая цифровая среда для закупок и поставщиков</div>
-            <div class="auth-footer">© 2026 B2B Нефтесервис. Все права защищены.</div>
+            <div class="auth-branding-inner">
+                <a href="landing.html" class="back-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                    На главную
+                </a>
+                <div class="brand-logo">Н</div>
+                <div class="b2b-word">B2B НЕФТЕСЕРВИС</div>
+                <div class="neft-word">Цифровая площадка</div>
+                <div class="tagline">Единая среда для закупок МТР, РТИ, металлоконструкций и оборудования в нефтесервисе.</div>
+                <div class="auth-steps">
+                    <div class="auth-step">
+                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div>
+                        <div class="auth-step-text">Разместите закупку и получите КП за 24 часа</div>
+                    </div>
+                    <div class="auth-step">
+                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/></svg></div>
+                        <div class="auth-step-text">Более 1200 верифицированных производителей</div>
+                    </div>
+                    <div class="auth-step">
+                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg></div>
+                        <div class="auth-step-text">Безопасные сделки и верификация компаний</div>
+                    </div>
+                </div>
+            </div>
+            <div class="auth-footer">© 2025 B2B Нефтесервис. Все права защищены.</div>
         </div>
 
         <div class="auth-form-panel">
@@ -204,6 +261,26 @@
     </div>
 
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         let currentMode = 'login';
 
@@ -321,14 +398,18 @@
 
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
+            const submitBtn = document.getElementById('btnSubmit');
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '.75';
 
-            if (currentMode === 'login') {
+            try {
+              if (currentMode === 'login') {
                 const response = await fetch(`${SERVER_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
                 if (!response.ok) { alert(data.error || 'Неверный логин или пароль'); return; }
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('refreshToken', data.refreshToken || '');
@@ -337,7 +418,7 @@
                 if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
                 window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
 
-            } else {
+              } else {
                 const company = document.getElementById('regCompany').value.trim();
                 const inn = document.getElementById('regInn').value.trim();
                 const role = document.getElementById('regRole').value;
@@ -353,10 +434,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, company, inn, role })
                 });
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
                 if (!response.ok) { alert(data.error || 'Ошибка при регистрации'); return; }
                 switchTab('login');
                 document.getElementById('authEmail').value = email;
+              }
+            } catch (error) {
+                alert('Сервер авторизации недоступен. Проверьте, что backend запущен на http://localhost:5000.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
             }
         }
     </script>

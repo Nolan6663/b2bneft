@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Реестр контрагентов</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
         .filters-row .custom-select-wrapper { max-width: 220px; }
@@ -83,6 +83,33 @@
             </button>
         </div>
 
+        <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Всего контрагентов</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiPartTotal">—</div>
+                <div class="kpi-sub">зарегистрированных</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Верифицированных</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiPartVerified" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">прошли проверку</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Производителей</div>
+                    <div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiPartProducers" style="color:var(--accent-blue);">—</div>
+                <div class="kpi-sub">активных поставщиков</div>
+            </div>
+        </div>
+
         <div class="filter-section">
             <div class="filters-row" style="flex: 1;">
                 <div class="search-input-wrapper">
@@ -91,7 +118,7 @@
                 </div>
             </div>
             <button class="btn-secondary" onclick="exportRegistry()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
                 Экспорт реестра
             </button>
         </div>
@@ -222,6 +249,26 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
@@ -284,6 +331,13 @@
                     status: "Верифицирован"
                 });
             }
+            // KPI strip
+            const total = document.getElementById('kpiPartTotal');
+            const verified = document.getElementById('kpiPartVerified');
+            const producers = document.getElementById('kpiPartProducers');
+            if (total) total.textContent = allCompanies.length;
+            if (verified) verified.textContent = allCompanies.filter(c => c.status === 'Верифицирован').length;
+            if (producers) producers.textContent = allCompanies.filter(c => c.role === 'producer').length;
             applyFilters();
         }
 

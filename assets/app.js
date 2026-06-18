@@ -4,19 +4,32 @@
    <script src="assets/app.js"></script>
    ===================================================================== */
 
-const SERVER_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const SERVER_URL = (
+  window.location.protocol === 'file:' ||
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+)
   ? 'http://localhost:5000/api'
   : (window.location.origin + '/api');
 
 /* ---------------------------------------------------------------------
    Светлая / тёмная тема
    --------------------------------------------------------------------- */
-// Класс .light-mode уже может быть выставлен инлайн-скриптом в <head>
-// (до загрузки CSS, чтобы избежать мигания) — здесь только переключение и UI.
+function applyStoredTheme() {
+  const stored = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = stored ? stored === 'dark' : prefersDark;
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  document.documentElement.classList.toggle('light-mode', !isDark);
+  syncThemeUI(!isDark);
+}
+
 function toggleTheme() {
-  const isLight = document.documentElement.classList.toggle('light-mode');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  syncThemeUI(isLight);
+  const isDark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  document.documentElement.classList.toggle('light-mode', !isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  syncThemeUI(!isDark);
 }
 
 function syncThemeUI(isLight) {
@@ -29,7 +42,11 @@ function syncThemeUI(isLight) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  syncThemeUI(document.documentElement.classList.contains('light-mode'));
+  applyStoredTheme();
+  initSidebarExtra();
+  initHeaderRight();
+  initNotifications();
+  initSidebarBadges();
 });
 
 /* ---------------------------------------------------------------------
@@ -480,4 +497,167 @@ async function initSidebarBadges() {
     }
     _setBadge('navBadgeMessages', counts.unreadMessages);
   } catch { /* сервер недоступен — тихо */ }
+}
+
+/* ---------------------------------------------------------------------
+   Theme pill helpers — вызываются из кнопок в шапке
+   --------------------------------------------------------------------- */
+function activateLightTheme() {
+  if (document.documentElement.getAttribute('data-theme') === 'dark') toggleTheme();
+}
+function activateDarkTheme() {
+  if (document.documentElement.getAttribute('data-theme') !== 'dark') toggleTheme();
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar extras — промо-виджет, блок поддержки, кнопка сворачивания
+   --------------------------------------------------------------------- */
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+  const collapsed = sidebar.classList.toggle('collapsed');
+  localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+}
+
+function initSidebarExtra() {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Оборачиваем текстовые узлы навигации в <span.nav-label>
+  // чтобы CSS мог их скрывать в свёрнутом режиме
+  sidebar.querySelectorAll('a').forEach(link => {
+    Array.from(link.childNodes).forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        const span = document.createElement('span');
+        span.className = 'nav-label';
+        span.textContent = node.textContent;
+        link.replaceChild(span, node);
+      }
+    });
+  });
+
+  // Убираем старый sidebar-bottom (toggle + logout)
+  const oldBottom = sidebar.querySelector('.sidebar-bottom');
+  if (oldBottom) oldBottom.remove();
+
+  // Спейсер — растягивает пространство между навигацией и нижним блоком
+  const spacer = document.createElement('div');
+  spacer.className = 'sidebar-spacer';
+  sidebar.appendChild(spacer);
+
+  // Промо-виджет
+  const promo = document.createElement('div');
+  promo.className = 'sidebar-promo';
+  promo.innerHTML = `
+    <div class="sidebar-promo-img"></div>
+    <div class="sidebar-promo-text">Автоматизация закупок<br>для нефтегазовой отрасли</div>
+    <a href="#" class="sidebar-promo-btn">Подробнее</a>`;
+  sidebar.appendChild(promo);
+
+  // Блок поддержки
+  const support = document.createElement('div');
+  support.className = 'sidebar-support';
+  support.innerHTML = `
+    <div class="sidebar-support-head">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Нужна помощь?
+    </div>
+    <div class="sidebar-support-sub">Служба поддержки 24/7</div>
+    <div class="sidebar-support-phone">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.6a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.9 18z"/></svg>
+      8 800 555-27-27
+    </div>`;
+  sidebar.appendChild(support);
+
+  // Кнопка свернуть/развернуть
+  const colBtn = document.createElement('button');
+  colBtn.className = 'sidebar-collapse-btn';
+  colBtn.onclick = toggleSidebar;
+  colBtn.innerHTML = `
+    <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    <span class="sidebar-collapse-label">Свернуть меню</span>`;
+  sidebar.appendChild(colBtn);
+
+  // Восстанавливаем свёрнутое состояние
+  if (localStorage.getItem('sidebarCollapsed') === '1') {
+    sidebar.classList.add('collapsed');
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Header right section — тема, колокол, пользователь
+   --------------------------------------------------------------------- */
+function toggleUserMenu(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('userDropdown');
+  if (dd) dd.classList.toggle('open');
+}
+
+function initHeaderRight() {
+  const header = document.querySelector('.header') || document.querySelector('.msg-header');
+  if (!header) return;
+
+  // Убираем старый bell-btn из HTML, он будет в новой header-right
+  const oldBell = header.querySelector('.bell-btn');
+  if (oldBell) oldBell.remove();
+
+  const company   = localStorage.getItem('userCompany') || '';
+  const role      = localStorage.getItem('userRole') || '';
+  const roleLabel = role === 'customer' ? 'Заказчик'
+                  : role === 'producer' ? 'Производитель'
+                  : role === 'admin'    ? 'Администратор' : '';
+
+  const clean    = company.replace(/[«»""']/g, '').replace(/^(ООО|АО|ЗАО|ИП|ПАО)\s+/i, '').trim();
+  const initials = (clean || company).slice(0, 2).toUpperCase() || 'ББ';
+
+  const right = document.createElement('div');
+  right.className = 'header-right';
+  right.innerHTML = `
+    <div class="theme-switch-wrap">
+      <span class="theme-switch-label" id="themeLabelLight">☀ Светлая</span>
+      <div class="theme-switch" onclick="toggleTheme()" id="themeSwitch" title="Сменить тему">
+        <div class="theme-switch-knob"></div>
+      </div>
+      <span class="theme-switch-label" id="themeLabelDark">🌙 Тёмная</span>
+    </div>
+    <button class="bell-btn" onclick="openNotificationsModal()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="bell-badge" id="bellBadge" style="display:none;"></span>
+    </button>
+    <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
+      <div class="user-avatar-pill">${escapeHtml(initials)}</div>
+      <div class="user-info-block">
+        <div class="user-company-name">${escapeHtml(company || 'Гость')}</div>
+        <div class="user-role-name">${escapeHtml(roleLabel)}</div>
+      </div>
+      <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="settings.html" class="user-dropdown-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Настройки
+        </a>
+        <a href="company-profile.html" class="user-dropdown-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Профиль компании
+        </a>
+        <div class="user-dropdown-sep"></div>
+        <button class="user-dropdown-item danger" onclick="logout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Выйти из аккаунта
+        </button>
+      </div>
+    </div>`;
+
+  header.appendChild(right);
+
+  // CSS handles switch position via [data-theme="dark"] — nothing to sync here
+
+  // Закрываем дропдаун при клике вне меню
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('userMenu');
+    if (menu && !menu.contains(e.target)) {
+      const dd = document.getElementById('userDropdown');
+      if (dd) dd.classList.remove('open');
+    }
+  });
 }

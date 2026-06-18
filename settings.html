@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Настройки</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .settings-layout {
             max-width: 680px;
@@ -67,9 +67,9 @@
             border-radius: 20px;
             font-size: 11.5px;
             font-weight: 600;
-            background: rgba(126, 178, 232, 0.12);
-            border: 1px solid rgba(126, 178, 232, 0.25);
-            color: #7eb2e8;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            color: var(--accent-blue);
         }
         .profile-link-btn {
             display: inline-flex;
@@ -81,13 +81,13 @@
             font-weight: 600;
             background: transparent;
             border: 1px solid var(--inner-border);
-            color: var(--accent-bright);
+            color: var(--accent-cyan);
             text-decoration: none;
             transition: border-color 0.15s, background 0.15s;
         }
         .profile-link-btn:hover {
-            background: rgba(84, 199, 159, 0.08);
-            border-color: var(--accent-bright);
+            background: rgba(8, 145, 178, 0.08);
+            border-color: var(--accent-cyan);
         }
 
         /* Settings cards */
@@ -155,14 +155,14 @@
             display: none;
         }
         .alert-inline.success {
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid rgba(74, 222, 128, 0.25);
-            color: #4ade80;
+            background: rgba(5, 150, 105, 0.08);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+            color: var(--accent-green);
         }
         .alert-inline.error {
-            background: rgba(248, 113, 113, 0.1);
-            border: 1px solid rgba(248, 113, 113, 0.25);
-            color: #f87171;
+            background: rgba(220, 38, 38, 0.08);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            color: var(--error);
         }
 
         .btn-settings-save {
@@ -360,6 +360,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = !isDark;
+            if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = isDark;
+            if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+        });
+    </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 

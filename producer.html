@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Кабинет производителя</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .tab-panel { display: none; flex-direction: column; gap: 16px; }
         .tab-panel.active { display: flex; }
@@ -87,61 +87,46 @@
             </div>
         </div>
 
-        <div class="info-row" id="infoBoxes">
-            <div class="info-box">
-                <div class="info-label">Организация</div>
-                <div class="info-value" id="infoCompany">Загрузка...</div>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Роль в системе</div>
-                <div class="info-value accent">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a7 7 0 0 1 16 0v1"></path></svg>
-                    Производитель
+        <div class="kpi-row" id="crmFunnel">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Лидов на рынке</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
                 </div>
+                <div class="kpi-value" id="crmLeads">—</div>
+                <div class="kpi-sub">активных закупок</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Статус аккаунта</div>
-                <div class="info-value accent" id="infoStatus">
-                    <span id="infoStatusIcon"></span>
-                    <span id="infoStatusText">Загрузка...</span>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Отправлено КП</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
                 </div>
+                <div class="kpi-value" id="crmSent">—</div>
+                <div class="kpi-sub">всего предложений</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Рейтинг надежности</div>
-                <div class="info-value">
-                    <span id="infoRating" style="color:#54c79f; font-weight:800;">—</span>
-                    <span id="infoRatingLabel">Нет данных</span>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">В работе</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 </div>
-                <div id="infoRatingStats" style="font-size:11px; color:var(--text-secondary); display:none;"></div>
+                <div class="kpi-value" id="crmActive">—</div>
+                <div class="kpi-sub">ожидают ответа</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Конверсия</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                </div>
+                <div class="kpi-value" id="crmConversion" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">Выиграно: <span id="crmWon" style="font-weight:700;color:var(--accent-green);">—</span></div>
             </div>
         </div>
 
-        <div class="crm-funnel" id="crmFunnel" style="display:none;">
-            <div class="crm-step">
-                <div class="crm-step-label">Лидов на рынке</div>
-                <div class="crm-step-value" id="crmLeads">—</div>
-                <div class="crm-step-sub">активных закупок</div>
-            </div>
-            <div class="crm-step">
-                <div class="crm-step-label">Отправлено КП</div>
-                <div class="crm-step-value" id="crmSent">—</div>
-                <div class="crm-step-sub">всего предложений</div>
-            </div>
-            <div class="crm-step">
-                <div class="crm-step-label">В работе</div>
-                <div class="crm-step-value" id="crmActive">—</div>
-                <div class="crm-step-sub">ожидают ответа</div>
-            </div>
-            <div class="crm-step">
-                <div class="crm-step-label">Выиграно</div>
-                <div class="crm-step-value" id="crmWon">—</div>
-                <div class="crm-step-sub">заказов</div>
-            </div>
-            <div class="crm-step accent">
-                <div class="crm-step-label">Конверсия</div>
-                <div class="crm-step-value" id="crmConversion">—</div>
-                <div class="crm-step-sub">КП → победа</div>
-            </div>
+        <div style="display:none;" id="infoBoxes">
+            <span id="infoCompany"></span>
+            <span id="infoStatus"><span id="infoStatusIcon"></span><span id="infoStatusText"></span></span>
+            <span id="infoRating"></span><span id="infoRatingLabel"></span>
+            <div id="infoRatingStats"></div>
         </div>
 
         <div class="tab-strip">
@@ -150,7 +135,7 @@
                 <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">Направленные предложения (<span id="tabProposalsCount">0</span>)</button>
             </div>
             <button class="refresh-btn" onclick="refreshActiveTab()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 4v5h-5"></path></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 4v5h-5"></path></svg>
                 Обновить
             </button>
         </div>
@@ -255,6 +240,26 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         let currentOrderId = null;
         let currentOrderTitle = "";
@@ -464,7 +469,7 @@ function renderCompanyStatus(status) {
                 document.getElementById('crmActive').textContent = s.active;
                 document.getElementById('crmWon').textContent = s.won;
                 document.getElementById('crmConversion').textContent = s.conversion + '%';
-                document.getElementById('crmFunnel').style.display = 'flex';
+                /* kpi-row is always visible */
             } catch { /* тихо */ }
         }
 

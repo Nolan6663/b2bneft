@@ -4,28 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Кабинет заказчика</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-        .clickable-row { cursor: pointer; }
         .form-group input[type="file"] { padding: 10px 12px; border: 2px dashed var(--input-border); background: transparent; cursor: pointer; height: auto; }
-        .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+        .sortable-th { cursor: pointer; user-select: none; white-space: nowrap; font-size: 10.5px; }
         .sortable-th:hover { color: var(--accent-bright); }
-
-        .analytics-row {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
-        }
-        .analytics-card {
-            background: var(--card-bg); border: 1px solid var(--card-border);
-            border-radius: var(--radius-card); padding: 16px 18px;
-        }
-        .analytics-card-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-        .analytics-card-value { font-size: 28px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
-        .analytics-card-value.accent { color: var(--accent-bright); }
-        .analytics-card-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
-        @media (max-width: 700px) { .analytics-row { grid-template-columns: repeat(2, 1fr); } }
-
         .chat-icon-btn {
             width: 28px; height: 28px; flex-shrink: 0; padding: 0; border-radius: 8px;
             background: transparent; border: 1px solid var(--secondary-btn-border); color: var(--secondary-btn-text);
@@ -33,19 +18,14 @@
             transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
         .chat-icon-btn:hover { border-color: var(--accent-bright); color: var(--accent-bright); transform: translateY(-1px); }
-
         .proposal-actions { display: flex; flex-direction: column; gap: 6px; min-width: 110px; margin-left: auto; }
         .proposal-actions .btn-primary, .proposal-actions .btn-secondary { height: 30px; font-size: 12px; padding: 0 10px; }
         .btn-reject { color: var(--error) !important; border-color: rgba(227, 93, 84, 0.4) !important; }
         .btn-reject:hover { background: rgba(227, 93, 84, 0.08) !important; border-color: var(--error) !important; }
-
-        @media (max-width: 768px) {
-            table, th, td, tbody, tr { display: block; width: 100%; }
-            th { display: none; }
-            tr { border: 1px solid var(--card-border); border-radius: 14px; margin-bottom: 16px; background: var(--inner-bg); padding: 12px; }
-            td { padding: 10px 0; text-align: left; border-bottom: 1px solid var(--border-subtle); }
-            td:last-child { border-bottom: none; text-align: center; padding-top: 14px; }
-        }
+        @media (max-width: 900px) { .proc-grid-cols { grid-template-columns: 1fr 0.9fr 0.9fr 0.6fr; }
+            .proc-grid-cols > :nth-child(5), .proc-grid-cols > :nth-child(6) { display: none; } }
+        @media (max-width: 600px) { .proc-grid-cols { grid-template-columns: 1fr 0.8fr; }
+            .proc-grid-cols > :nth-child(n+3) { display: none; } }
     </style>
 </head>
 <body>
@@ -87,61 +67,164 @@
             </button>
         </div>
 
-        <div class="analytics-row" id="analyticsRow" style="display:none;">
-            <div class="analytics-card">
-                <div class="analytics-card-label">Закупок за месяц</div>
-                <div class="analytics-card-value" id="anaMonth">—</div>
-                <div class="analytics-card-sub">в этом месяце</div>
+        <div class="kpi-row" id="analyticsRow">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Закупок за месяц</div>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="anaMonth">—</div>
+                <div class="kpi-sub">в этом месяце</div>
             </div>
-            <div class="analytics-card">
-                <div class="analytics-card-label">Активных</div>
-                <div class="analytics-card-value" id="anaActive">—</div>
-                <div class="analytics-card-sub">ждут предложений</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Активных</div>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="anaActive">—</div>
+                <div class="kpi-sub">ждут предложений</div>
             </div>
-            <div class="analytics-card">
-                <div class="analytics-card-label">Средний срок</div>
-                <div class="analytics-card-value" id="anaDays">—</div>
-                <div class="analytics-card-sub">дней производства</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Средний срок</div>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="anaDays">—</div>
+                <div class="kpi-sub">дней производства</div>
             </div>
-            <div class="analytics-card">
-                <div class="analytics-card-label">Экономия</div>
-                <div class="analytics-card-value accent" id="anaSavings">—</div>
-                <div class="analytics-card-sub">vs среднее по рынку</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Экономия</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="anaSavings" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">vs среднее по рынку</div>
             </div>
         </div>
 
-        <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h3>Список размещенных закупок</h3>
+        <div class="proc-layout">
+        <div class="section proc-list-panel" style="min-width:0;">
+            <div class="proc-list-head-row">
+                <h3>Список размещённых закупок</h3>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-secondary" onclick="exportOrders()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
                         Экспорт
                     </button>
-                    <button class="btn-primary" onclick="openModal()">+ Создать закупку</button>
+                    <button class="btn-primary" onclick="openModal()">＋ Создать закупку</button>
                 </div>
             </div>
-            <div class="tab-strip" style="margin-bottom:16px;">
-                <div class="tabs">
-                    <button class="tab active" id="tabFilterAll" onclick="setStatusFilter('all')">Все&nbsp;(<span id="countAll">0</span>)</button>
-                    <button class="tab" id="tabFilterActive" onclick="setStatusFilter('Активный')">Активные&nbsp;(<span id="countActive">0</span>)</button>
-                    <button class="tab" id="tabFilterClosed" onclick="setStatusFilter('Закрыта')">Закрытые&nbsp;(<span id="countClosed">0</span>)</button>
-                    <button class="tab" id="tabFilterCancelled" onclick="setStatusFilter('Отменена')">Отменённые&nbsp;(<span id="countCancelled">0</span>)</button>
+            <div class="proc-list-tabs">
+                <button class="proc-list-tab active" id="tabFilterAll" onclick="setStatusFilter('all')">Все <span class="tab-count" id="countAll">0</span></button>
+                <button class="proc-list-tab" id="tabFilterActive" onclick="setStatusFilter('Активный')">Активные <span class="tab-count" id="countActive">0</span></button>
+                <button class="proc-list-tab" id="tabFilterClosed" onclick="setStatusFilter('Закрыта')">Закрытые <span class="tab-count" id="countClosed">0</span></button>
+                <button class="proc-list-tab" id="tabFilterCancelled" onclick="setStatusFilter('Отменена')">Отменённые <span class="tab-count" id="countCancelled">0</span></button>
+            </div>
+            <div class="proc-grid-head proc-grid-cols">
+                <div class="sortable-th" onclick="sortBy('title')">Наименование <span id="sort-title"></span></div>
+                <div class="sortable-th" onclick="sortBy('category')">Категория <span id="sort-category"></span></div>
+                <div class="sortable-th" onclick="sortBy('status')">Статус <span id="sort-status"></span></div>
+                <div class="sortable-th" onclick="sortBy('responses')">Отклики <span id="sort-responses"></span></div>
+                <div class="sortable-th" onclick="sortBy('deadline')">Дедлайн <span id="sort-deadline"></span></div>
+                <div></div>
+            </div>
+            <div id="orders-table-body"></div>
+            <div class="proc-list-more" id="ordersShowMore" style="display:none;" onclick="showMoreOrders()">Показать ещё ⌄</div>
+        </div>
+
+        <!-- STICKY DETAIL PANEL -->
+        <div class="proc-detail-panel" id="procDetailPanel" style="display:none;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;flex:1;" id="detPanelTitle">—</div>
+                <button onclick="document.getElementById('procDetailPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;padding:0 0 0 8px;flex:none;">✕</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <span class="status-dot open" id="detPanelStatus"></span>
+                <span style="font-size:11.5px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;" id="detPanelNum"></span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);" id="detPanelMeta"></div>
+
+            <div style="margin-top:18px;font-size:13px;font-weight:700;margin-bottom:10px;">Коммерческие предложения</div>
+            <div id="detPanelProposals"></div>
+
+            <div style="display:flex;gap:8px;margin-top:14px;">
+                <button onclick="viewAllProposals()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:1.5px solid var(--accent-cyan);color:var(--accent-cyan);font-weight:600;font-size:13px;padding:10px;border-radius:9px;cursor:pointer;font-family:inherit;">
+                    ⇌ Все КП
+                </button>
+                <button onclick="openEditFromPanel()" id="detPanelEditBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--bg-section);border:1px solid var(--card-border);color:var(--text-primary);font-weight:600;font-size:13px;padding:10px;border-radius:9px;cursor:pointer;font-family:inherit;">
+                    ✎ Изменить
+                </button>
+            </div>
+        </div>
+        </div><!-- /.proc-layout -->
+
+        <!-- BOTTOM WIDGETS -->
+        <div class="bottom-widgets">
+            <!-- NEW KPs -->
+            <div class="card bottom-widget">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div class="bottom-widget-title">Новые КП <span id="widgetNewKpCount" style="color:var(--accent-cyan);font-family:'JetBrains Mono',monospace;margin-left:4px;">0</span></div>
+                    <a href="proposals.html" style="color:var(--accent-blue);font-size:12.5px;font-weight:600;text-decoration:none;">Все</a>
+                </div>
+                <div id="widgetNewKpList" style="display:flex;flex-direction:column;gap:0;"></div>
+                <div onclick="window.location='messages.html'" style="margin-top:10px;color:var(--accent-blue);font-weight:600;font-size:12.5px;cursor:pointer;">Перейти в сообщения ⌄</div>
+            </div>
+
+            <!-- MINI ANALYTICS CHART -->
+            <div class="card bottom-widget">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div class="bottom-widget-title">Аналитика</div>
+                    <a href="analytics.html" style="font-size:11.5px;color:var(--text-secondary);border:1px solid var(--card-border);padding:3px 9px;border-radius:7px;text-decoration:none;">Подробнее</a>
+                </div>
+                <div style="display:flex;gap:14px;font-size:10.5px;color:var(--text-secondary);margin-bottom:12px;">
+                    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--accent-blue);display:inline-block;"></span>Закупки</span>
+                    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--accent-green);display:inline-block;"></span>Активные</span>
+                </div>
+                <div class="widget-bar-chart" id="widgetBars"></div>
+            </div>
+
+            <!-- MAP PREVIEW -->
+            <div class="card bottom-widget">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
+                    <div class="bottom-widget-title">Карта поставщиков</div>
+                    <a href="map.html" style="font-size:11.5px;color:var(--text-secondary);border:1px solid var(--card-border);padding:3px 9px;border-radius:7px;text-decoration:none;">Открыть</a>
+                </div>
+                <div class="widget-map-preview" id="widgetMap">
+                    <div class="widget-map-dot" style="left:18%;top:22%;"><div class="widget-map-dot-circle"></div><div class="widget-map-dot-label">Тюмень</div></div>
+                    <div class="widget-map-dot" style="left:52%;top:38%;"><div class="widget-map-dot-circle" style="background:var(--accent-blue);box-shadow:0 0 0 3px rgba(37,99,235,.2);"></div><div class="widget-map-dot-label">Екатеринбург</div></div>
+                    <div class="widget-map-dot" style="left:76%;top:55%;"><div class="widget-map-dot-circle" style="background:var(--accent-green);box-shadow:0 0 0 3px rgba(5,150,105,.2);"></div><div class="widget-map-dot-label">Уфа</div></div>
+                    <div class="widget-map-dot" style="left:34%;top:68%;"><div class="widget-map-dot-circle"></div><div class="widget-map-dot-label">Пермь</div></div>
+                    <div class="widget-map-dot" style="left:62%;top:18%;"><div class="widget-map-dot-circle" style="background:var(--accent-orange);box-shadow:0 0 0 3px rgba(234,88,12,.2);"></div><div class="widget-map-dot-label">Сургут</div></div>
                 </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th class="sortable-th" onclick="sortBy('title')">Наименование <span id="sort-title"></span></th>
-                        <th class="sortable-th" onclick="sortBy('category')">Категория <span id="sort-category"></span></th>
-                        <th class="sortable-th" onclick="sortBy('status')">Статус <span id="sort-status"></span></th>
-                        <th class="sortable-th" onclick="sortBy('responses')">Отклики <span id="sort-responses"></span></th>
-                        <th class="sortable-th" onclick="sortBy('deadline')">Дедлайн <span id="sort-deadline"></span></th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="orders-table-body"></tbody>
-            </table>
+
+            <!-- QUICK ACTIONS -->
+            <div class="card bottom-widget">
+                <div class="bottom-widget-title" style="margin-bottom:14px;">Быстрые действия</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button onclick="openModal()" class="btn-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Создать закупку
+                    </button>
+                    <a href="catalog.html" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                        Каталог заводов
+                    </a>
+                    <a href="analytics.html" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Аналитика
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -238,6 +321,26 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         authGuard('customer');
 
@@ -282,7 +385,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            loadOrders();
+            loadOrders().then(() => loadWidgets());
             loadAnalytics();
             initNotifications();
             initSidebarBadges();
@@ -295,12 +398,73 @@
                 const r = await fetch(`${SERVER_URL}/customer/analytics`, { headers: { 'Authorization': 'Bearer ' + token } });
                 if (!r.ok) return;
                 const s = await r.json();
-                document.getElementById('anaMonth').textContent = s.monthOrders;
-                document.getElementById('anaActive').textContent = s.activeOrders;
-                document.getElementById('anaDays').textContent = s.avgDays != null ? s.avgDays + ' дн.' : '—';
-                document.getElementById('anaSavings').textContent = s.savings != null ? s.savings + '%' : '—';
-                document.getElementById('analyticsRow').style.display = 'grid';
+                if (s.monthOrders != null) document.getElementById('anaMonth').textContent = s.monthOrders;
+                if (s.activeOrders != null) document.getElementById('anaActive').textContent = s.activeOrders;
+                if (s.avgDays != null) document.getElementById('anaDays').textContent = s.avgDays + ' дн.';
+                if (s.savings != null) document.getElementById('anaSavings').textContent = s.savings + '%';
             } catch { /* тихо */ }
+        }
+
+        async function loadWidgets() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            // Новые КП — берём из активных заказов
+            try {
+                const activeOrders = (ordersCache || []).filter(o => o.status === 'Активный').slice(0, 3);
+                const allProposals = [];
+                await Promise.all(activeOrders.map(async o => {
+                    try {
+                        const r = await fetch(`${SERVER_URL}/order-proposals/${o.id}`, { headers: { 'Authorization': 'Bearer ' + token } });
+                        if (r.ok) {
+                            const props = await r.json();
+                            props.forEach(p => allProposals.push({ ...p, orderTitle: o.title }));
+                        }
+                    } catch {}
+                }));
+                const pending = allProposals.filter(p => p.status === 'Ожидает ответа');
+                const cnt = document.getElementById('widgetNewKpCount');
+                if (cnt) cnt.textContent = pending.length;
+                const list = document.getElementById('widgetNewKpList');
+                if (list) {
+                    const show = pending.slice(0, 3);
+                    list.innerHTML = show.length ? show.map(p => `
+                        <div class="widget-new-kp-row">
+                            <div style="display:flex;justify-content:space-between;gap:8px;">
+                                <span style="font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">${escapeHtml(p.company||'—')}</span>
+                                <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;white-space:nowrap;">${p.price ? Number(p.price).toLocaleString('ru-RU')+'₽' : '—'}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;gap:8px;">
+                                <span style="font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${escapeHtml(p.orderTitle||'')}</span>
+                                <span style="font-size:11px;color:var(--text-secondary);">${p.deliveryDays ? p.deliveryDays+' дн.' : ''}</span>
+                            </div>
+                        </div>`).join('') : `<div style="font-size:12px;color:var(--text-secondary);padding:8px 0;">Новых КП нет</div>`;
+                }
+            } catch { /* тихо */ }
+
+            // Мини-гистограмма (из ordersCache по месяцам создания)
+            const barCont = document.getElementById('widgetBars');
+            if (barCont) {
+                const now = new Date();
+                const labels = [];
+                const counts = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    labels.push(d.toLocaleString('ru-RU', { month: 'short' }).replace('.', ''));
+                    const c = (ordersCache || []).filter(o => {
+                        if (!o.createdAt) return false;
+                        const od = new Date(o.createdAt);
+                        return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth();
+                    }).length;
+                    counts.push(c || 0);
+                }
+                const maxV = Math.max(...counts, 1);
+                barCont.innerHTML = labels.map((lbl, i) => `
+                    <div class="widget-bar-col">
+                        <div class="widget-bar" style="height:${Math.max(Math.round(counts[i]/maxV*80), counts[i]>0?8:0)}%;background:linear-gradient(180deg,var(--accent-blue),#3B82F6);"></div>
+                        <div class="widget-bar-label">${lbl}</div>
+                    </div>`).join('');
+            }
         }
 
         function resetOrderForm() {
@@ -358,6 +522,7 @@
             } catch (error) {
                 console.error('Ошибка при загрузке заявок:', error);
             }
+            return true;
         }
 
         function updateStatusCounts() {
@@ -388,41 +553,141 @@
             if (!tableBody) return;
             tableBody.innerHTML = '';
 
+            const showMore = document.getElementById('ordersShowMore');
+
             if (sorted.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-secondary); padding:40px;">Нет закупок</td></tr>`;
+                tableBody.innerHTML = `<div style="text-align:center;color:var(--text-secondary);padding:40px 14px;">Нет закупок</div>`;
+                if (showMore) showMore.style.display = 'none';
                 return;
             }
 
-            sorted.forEach(order => {
-                const row = document.createElement('tr');
-                row.className = 'clickable-row';
-                const displayTitle = order.title;
-                const createdStr = order.createdAt
-                    ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                    : '';
+            const INITIAL = 8;
+            let visibleCount = INITIAL;
+            window._sortedOrders = sorted;
 
-                row.onclick = () => viewProposals(order.id, displayTitle);
-                const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
-                const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
+            function renderRows() {
+                tableBody.innerHTML = '';
+                window._sortedOrders.slice(0, visibleCount).forEach(order => {
+                    const row = document.createElement('div');
+                    row.className = 'proc-row proc-grid-cols';
+                    row.dataset.orderId = order.id;
+                    const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
+                    const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
+                    const dFmt = formatDeadline(order.deadline);
+                    const dColor = order.deadline && (new Date(order.deadline) - Date.now()) < 3 * 86400000
+                        ? 'var(--accent-orange)' : 'var(--text-primary)';
 
-                const actionsCell = isLocked
-                    ? `<span style="color: var(--text-muted); font-size: 12px;">—</span>`
-                    : `<button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px;" onclick="event.stopPropagation(); openEditModal(${order.id})">✎ Изменить</button>
-                       <button class="btn-secondary" style="height:32px; padding:0 10px; font-size:12px; margin-left:6px;" onclick="event.stopPropagation(); cancelOrder(${order.id})">✕ Отменить</button>`;
+                    row.onclick = () => {
+                        document.querySelectorAll('#orders-table-body .proc-row').forEach(r => r.classList.remove('row-selected'));
+                        row.classList.add('row-selected');
+                        showDetailPanel(order);
+                    };
 
-                row.innerHTML = `
-                    <td>
-                        <strong>${escapeHtml(displayTitle)}</strong>
-                        ${createdStr ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">создана ${createdStr}</div>` : ''}
-                    </td>
-                    <td>${escapeHtml(order.category)}</td>
-                    <td><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></td>
-                    <td style="color: var(--accent-bright); font-weight: 700;">${order.responses} (посмотреть)</td>
-                    <td>${formatDeadline(order.deadline)}</td>
-                    <td>${actionsCell}</td>
-                `;
-                tableBody.appendChild(row);
-            });
+                    row.innerHTML = `
+                        <div>
+                            <div class="proc-row-title">${escapeHtml(order.title)}</div>
+                            <div class="proc-row-num">ЗК-${String(order.id).padStart(5,'0')}</div>
+                        </div>
+                        <div class="proc-row-cat">${escapeHtml(order.category)}</div>
+                        <div><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></div>
+                        <div class="proc-row-resp">${order.responses}</div>
+                        <div>
+                            <div class="proc-row-deadline" style="color:${dColor};">${dFmt}</div>
+                        </div>
+                        <div class="proc-row-actions">
+                            <button class="proc-row-btn" title="КП" onclick="event.stopPropagation();viewProposals(${order.id},'${escapeHtml(order.title).replace(/'/g,"\\'")}')">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            ${!isLocked ? `<button class="proc-row-btn" title="Изменить" onclick="event.stopPropagation();openEditModal(${order.id})">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>` : ''}
+                        </div>`;
+                    tableBody.appendChild(row);
+                });
+
+                if (showMore) {
+                    if (visibleCount < window._sortedOrders.length) {
+                        const rem = window._sortedOrders.length - visibleCount;
+                        showMore.style.display = 'block';
+                        showMore.textContent = `Показать ещё ${rem} закупк${rem===1?'у':rem<5?'и':'ок'} ⌄`;
+                    } else {
+                        showMore.style.display = 'none';
+                    }
+                }
+            }
+
+            window.showMoreOrders = () => { visibleCount += INITIAL; renderRows(); };
+            renderRows();
+        }
+
+        let _detailPanelOrderId = null;
+
+        async function showDetailPanel(order) {
+            const panel = document.getElementById('procDetailPanel');
+            if (!panel) return;
+            panel.style.display = 'block';
+            _detailPanelOrderId = order.id;
+            currentProposalsOrderId = order.id;
+            currentProposalsOrderTitle = order.title;
+
+            document.getElementById('detPanelTitle').textContent = order.title;
+            const statusEl = document.getElementById('detPanelStatus');
+            const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
+            statusEl.className = 'status-dot ' + statusCls;
+            statusEl.textContent = order.status;
+            document.getElementById('detPanelNum').textContent = '№' + String(order.id).padStart(6, '0');
+
+            const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
+            const editBtn = document.getElementById('detPanelEditBtn');
+            if (editBtn) editBtn.style.display = isLocked ? 'none' : 'flex';
+
+            const meta = document.getElementById('detPanelMeta');
+            meta.innerHTML = [
+                ['Категория', escapeHtml(order.category), ''],
+                order.deadline ? ['Дедлайн', escapeHtml(formatDeadline(order.deadline)), 'color:var(--accent-orange);font-weight:600;font-family:"JetBrains Mono",monospace;'] : null,
+                order.quantity ? ['Количество', escapeHtml(String(order.quantity)) + ' шт.', 'font-weight:600;font-family:"JetBrains Mono",monospace;'] : null,
+                order.description ? ['Описание', escapeHtml(order.description.slice(0, 100)) + (order.description.length > 100 ? '…' : ''), ''] : null,
+            ].filter(Boolean).map(([label, val, style]) => `
+                <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:12.5px;">
+                    <span style="color:var(--text-secondary);">${label}</span>
+                    <span style="${style}">${val}</span>
+                </div>`).join('');
+
+            const proposalsEl = document.getElementById('detPanelProposals');
+            proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Загрузка…</div>';
+
+            try {
+                const res = await fetch(`${SERVER_URL}/order-proposals/${order.id}`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                const proposals = await res.json();
+                proposals.sort((a, b) => (a.price || 0) - (b.price || 0));
+
+                if (!proposals.length) {
+                    proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Пока нет предложений</div>';
+                    return;
+                }
+                proposalsEl.innerHTML = proposals.map((p, i) => {
+                    const price = p.price ? new Intl.NumberFormat('ru-RU').format(p.price) + ' ₽' : '—';
+                    const best = i === 0 ? '<span style="margin-left:6px;font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">Лучшая</span>' : '';
+                    return `<div class="proc-proposal-row" onclick="openGlobalChat(${order.id}, '${escapeHtml(order.title).replace(/'/g,"\\'")}', '${escapeHtml(p.company||p.companyName||'').replace(/'/g,"\\'")}')">
+                        <div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;">${escapeHtml(p.company||p.companyName||'—')}${best}</div>
+                        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;white-space:nowrap;">${escapeHtml(price)}</div>
+                        ${p.leadTime ? `<div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;">${p.leadTime} дн.</div>` : ''}
+                        <span style="color:var(--text-secondary);">›</span>
+                    </div>`;
+                }).join('');
+            } catch {
+                proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Ошибка загрузки</div>';
+            }
+        }
+
+        function viewAllProposals() {
+            if (currentProposalsOrderId) viewProposals(currentProposalsOrderId, currentProposalsOrderTitle);
+        }
+
+        function openEditFromPanel() {
+            if (_detailPanelOrderId) openEditModal(_detailPanelOrderId);
         }
 
         function exportOrders() {

@@ -4,28 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Заказы</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-        .kpi-strip {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        @media (max-width: 860px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
-
-        .kpi-tile {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 16px 18px;
-        }
-        .kpi-tile-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-        .kpi-tile-value { font-size: 22px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
-        .kpi-tile-value.accent { color: var(--accent-bright); }
-        .kpi-tile-value.sm { font-size: 16px; }
 
         .filter-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
         .filter-tab {
@@ -46,7 +28,8 @@
             padding: 18px 20px;
             transition: border-color .15s;
         }
-        .deal-card:hover { border-color: rgba(84,199,159,.3); }
+        .deal-card:hover { border-color: rgba(8,145,178,.3); }
+        .deal-card.row-selected { border-color: var(--accent-cyan) !important; background: var(--bg-section) !important; }
 
         .deal-card-top {
             display: flex;
@@ -64,7 +47,7 @@
             white-space: nowrap; flex-shrink: 0;
         }
         .deal-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-        .deal-status.active  { background: rgba(84,199,159,.12); border: 1px solid rgba(84,199,159,.25); color: var(--accent-bright); }
+        .deal-status.active  { background: rgba(8,145,178,.12); border: 1px solid rgba(8,145,178,.25); color: var(--accent-bright); }
         .deal-status.done    { background: rgba(148,163,184,.1); border: 1px solid rgba(148,163,184,.2); color: var(--text-secondary); }
 
         .deal-info-grid {
@@ -103,11 +86,11 @@
         .btn-complete {
             height: 34px; padding: 0 14px; font-size: 12.5px; font-weight: 600;
             border-radius: var(--radius-btn); cursor: pointer;
-            background: transparent; border: 1px solid rgba(84,199,159,.4);
+            background: transparent; border: 1px solid rgba(8,145,178,.4);
             color: var(--accent-bright);
             transition: background .15s, border-color .15s;
         }
-        .btn-complete:hover { background: rgba(84,199,159,.1); border-color: var(--accent-bright); }
+        .btn-complete:hover { background: rgba(8,145,178,.1); border-color: var(--accent-bright); }
 
         .deals-empty {
             text-align: center; padding: 80px 20px;
@@ -160,25 +143,39 @@
             </button>
         </div>
 
-        <div class="kpi-strip">
-            <div class="kpi-tile">
-                <div class="kpi-tile-label">Всего сделок</div>
-                <div class="kpi-tile-value" id="kpiTotal">—</div>
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Всего сделок</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiTotal">—</div>
             </div>
-            <div class="kpi-tile">
-                <div class="kpi-tile-label">В работе</div>
-                <div class="kpi-tile-value accent" id="kpiActive">—</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">В работе</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiActive" style="color:var(--accent-cyan);">—</div>
             </div>
-            <div class="kpi-tile">
-                <div class="kpi-tile-label">Выполнено</div>
-                <div class="kpi-tile-value" id="kpiCompleted">—</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Выполнено</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiCompleted" style="color:var(--accent-green);">—</div>
             </div>
-            <div class="kpi-tile">
-                <div class="kpi-tile-label" id="kpiAmountLabel">Сумма</div>
-                <div class="kpi-tile-value sm" id="kpiAmount">—</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label" id="kpiAmountLabel">Сумма</div>
+                    <div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                </div>
+                <div class="kpi-value" id="kpiAmount" style="font-size:20px;">—</div>
             </div>
         </div>
 
+        <div class="proc-layout">
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0;">
         <div class="filter-tabs">
             <button class="filter-tab active" data-filter="all"       onclick="setFilter('all')">Все</button>
             <button class="filter-tab"         data-filter="active"    onclick="setFilter('active')">В работе</button>
@@ -188,6 +185,21 @@
         <div class="deals-list" id="dealsList">
             <div class="deals-empty"><div class="deals-empty-icon">📋</div>Загрузка...</div>
         </div>
+        </div>
+
+        <!-- STICKY DEAL DETAIL PANEL -->
+        <div class="proc-detail-panel" id="dealDetailPanel" style="display:none;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;flex:1;" id="dealPanelTitle">—</div>
+                <button onclick="document.getElementById('dealDetailPanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;padding:0 0 0 8px;flex:none;">✕</button>
+            </div>
+            <div style="margin-bottom:16px;" id="dealPanelStatus"></div>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);margin-bottom:16px;" id="dealPanelMeta"></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Этапы и прогресс</div>
+            <div id="dealPanelStages"></div>
+            <div style="display:flex;gap:8px;margin-top:16px;" id="dealPanelActions"></div>
+        </div>
+        </div><!-- /.proc-layout -->
     </div>
 
     <div class="modal" id="notificationModal">
@@ -203,6 +215,26 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
@@ -297,9 +329,54 @@
             list.forEach(d => container.appendChild(buildDealCard(d)));
         }
 
+        function showDealPanel(d) {
+            const panel = document.getElementById('dealDetailPanel');
+            if (!panel) return;
+            panel.style.display = 'block';
+
+            document.getElementById('dealPanelTitle').textContent = d.title || '—';
+            const isActive = d.completionStatus === 'active';
+            document.getElementById('dealPanelStatus').innerHTML = isActive
+                ? '<span class="deal-status active">В работе</span>'
+                : '<span class="deal-status done">Выполнен</span>';
+
+            const date = d.dealDate ? new Date(d.dealDate).toLocaleDateString('ru-RU') : '—';
+            const partner = userRole === 'customer' ? d.counterparty : myCompany;
+            const partnerLabel = userRole === 'customer' ? 'Исполнитель' : 'Заказчик';
+
+            document.getElementById('dealPanelMeta').innerHTML = [
+                [partnerLabel, escapeHtml(partner || '—'), ''],
+                d.category ? ['Категория', escapeHtml(d.category), ''] : null,
+                d.price ? ['Цена', d.price.toLocaleString('ru-RU') + ' ₽', 'font-weight:600;font-family:"JetBrains Mono",monospace;'] : null,
+                d.days ? ['Срок', d.days + ' дней', 'font-weight:600;'] : null,
+                ['Дата сделки', date, 'font-family:"JetBrains Mono",monospace;'],
+            ].filter(Boolean).map(([label, val, style]) => `
+                <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:12.5px;">
+                    <span style="color:var(--text-secondary);">${label}</span>
+                    <span style="${style}">${val}</span>
+                </div>`).join('');
+
+            const chatCompany = userRole === 'customer' ? d.counterparty : myCompany;
+            const chatHref = `messages.html?orderId=${d.orderId}&company=${encodeURIComponent(chatCompany || '')}`;
+            const completeBtn = (userRole === 'customer' && isActive)
+                ? `<button class="btn-complete" style="flex:1;" onclick="completeDeal(${d.proposalId})">Завершить сделку</button>`
+                : '';
+            document.getElementById('dealPanelActions').innerHTML = `
+                <a href="${chatHref}" class="btn-deal-chat" style="flex:1;justify-content:center;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Чат
+                </a>
+                ${completeBtn}`;
+
+            document.getElementById('dealPanelStages').innerHTML = d.description
+                ? `<div style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;">${escapeHtml(d.description.slice(0, 200))}${d.description.length > 200 ? '…' : ''}</div>`
+                : '<div style="font-size:12.5px;color:var(--text-secondary);">Нет описания</div>';
+        }
+
         function buildDealCard(d) {
             const card = document.createElement('div');
             card.className = 'deal-card';
+            card.style.cursor = 'pointer';
 
             const isActive = d.completionStatus === 'active';
             const statusHtml = isActive
@@ -318,11 +395,11 @@
             const chatHref = `messages.html?orderId=${d.orderId}&company=${encodeURIComponent(chatCompany || '')}`;
 
             const completeBtn = (userRole === 'customer' && isActive)
-                ? `<button class="btn-complete" onclick="completeDeal(${d.proposalId})">Завершить сделку</button>`
+                ? `<button class="btn-complete" onclick="event.stopPropagation();completeDeal(${d.proposalId})">Завершить сделку</button>`
                 : '';
 
             const catBadge = d.category
-                ? `<span class="badge-category" style="font-size:11.5px;padding:3px 8px;border-radius:8px;background:rgba(84,199,159,.1);border:1px solid rgba(84,199,159,.2);color:var(--accent-bright);">${escapeHtml(d.category)}</span>`
+                ? `<span class="badge-category" style="font-size:11.5px;padding:3px 8px;border-radius:8px;background:rgba(8,145,178,.1);border:1px solid rgba(8,145,178,.2);color:var(--accent-bright);">${escapeHtml(d.category)}</span>`
                 : '';
 
             card.innerHTML = `
@@ -355,12 +432,17 @@
                     </div>
                 </div>
                 <div class="deal-card-actions">
-                    <a href="${chatHref}" class="btn-deal-chat">
+                    <a href="${chatHref}" class="btn-deal-chat" onclick="event.stopPropagation()">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         Написать
                     </a>
                     ${completeBtn}
                 </div>`;
+            card.onclick = () => {
+                document.querySelectorAll('.deal-card').forEach(c => c.classList.remove('row-selected'));
+                card.classList.add('row-selected');
+                showDealPanel(d);
+            };
             return card;
         }
 

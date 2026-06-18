@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Мои отклики</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .table-wrapper { width: 100%; overflow-x: auto; }
         .actions-cell { display: flex; gap: 8px; justify-content: flex-end; }
         .btn-action { padding: 7px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--secondary-btn-border); background: transparent; color: var(--secondary-btn-text); transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
         .btn-action:hover { transform: translateY(-1px); }
-        .btn-action.edit:hover { border-color: #7eb2e8; color: #7eb2e8; }
+        .btn-action.edit:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
         .btn-action.withdraw:hover { border-color: var(--error); color: var(--error); }
 
         .mobile-proposals-list { display: none; flex-direction: column; gap: 16px; }
@@ -67,10 +67,45 @@
             </button>
         </div>
 
+        <div class="kpi-row" id="propKpiRow" style="display:none;">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Всего КП</div>
+                    <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+                </div>
+                <div class="kpi-value" id="propKpiTotal">—</div>
+                <div class="kpi-sub">направлено</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">На рассмотрении</div>
+                    <div class="kpi-icon" style="color:var(--accent-cyan);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                </div>
+                <div class="kpi-value" id="propKpiPending" style="color:var(--accent-cyan);">—</div>
+                <div class="kpi-sub">ожидают ответа</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Принято</div>
+                    <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                </div>
+                <div class="kpi-value" id="propKpiWon" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">победных КП</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Конверсия</div>
+                    <div class="kpi-icon" style="color:var(--accent-blue);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                </div>
+                <div class="kpi-value" id="propKpiRate" style="color:var(--accent-blue);">—</div>
+                <div class="kpi-sub">от числа закрытых</div>
+            </div>
+        </div>
+
         <div class="section">
             <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
                 <button class="btn-secondary" onclick="exportProposals()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#54c79f" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
                     Экспорт КП
                 </button>
             </div>
@@ -124,6 +159,22 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = !isDark;
+            if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = isDark;
+            if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+        });
+    </script>
+    <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
         const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
@@ -150,6 +201,18 @@
                 const myProposals = await response.json();
                 window._myProposalsCache = myProposals;
 
+                if (myProposals.length) {
+                    const kpiRow = document.getElementById('propKpiRow');
+                    if (kpiRow) {
+                        kpiRow.style.display = '';
+                        const won = myProposals.filter(p => p.status === 'Победитель').length;
+                        const closed = myProposals.filter(p => p.status === 'Победитель' || p.status === 'Отклонено').length;
+                        document.getElementById('propKpiTotal').textContent = myProposals.length;
+                        document.getElementById('propKpiPending').textContent = myProposals.filter(p => p.status === 'На рассмотрении').length;
+                        document.getElementById('propKpiWon').textContent = won;
+                        document.getElementById('propKpiRate').textContent = closed ? Math.round(won / closed * 100) + '%' : '—';
+                    }
+                }
                 renderDesktopTable(myProposals);
                 renderMobileCards(myProposals);
             } catch (error) {

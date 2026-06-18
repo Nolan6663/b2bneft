@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Тариф и оплата</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         .current-plan-banner {
             background: var(--card-bg);
@@ -23,7 +23,7 @@
         .current-plan-info { display: flex; align-items: center; gap: 14px; }
         .current-plan-icon {
             width: 42px; height: 42px; border-radius: 12px;
-            background: rgba(84, 199, 159, 0.12); border: 1px solid rgba(84, 199, 159, 0.25);
+            background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.25);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .current-plan-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
@@ -31,7 +31,7 @@
         .plan-active-badge {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
-            background: rgba(84, 199, 159, 0.12); border: 1px solid rgba(84, 199, 159, 0.25);
+            background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.25);
             color: var(--accent-bright);
         }
         .plan-active-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); }
@@ -55,8 +55,8 @@
             transition: border-color .15s, transform .15s;
         }
         .plan-card:hover { transform: translateY(-2px); }
-        .plan-card.plan-current { border-color: rgba(84,199,159,.5); }
-        .plan-card.plan-featured { border-color: rgba(126,178,232,.4); }
+        .plan-card.plan-current { border-color: rgba(8,145,178,.5); }
+        .plan-card.plan-featured { border-color: rgba(37,99,235,.35); }
 
         .plan-pin {
             position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -85,7 +85,7 @@
         .plan-cta.cta-current  { background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-secondary); cursor: default; }
         .plan-cta.cta-current:hover { opacity: 1; transform: none; }
         .plan-cta.cta-upgrade  { background: var(--accent-gradient); color: var(--accent-on-button); }
-        .plan-cta.cta-enterprise { background: transparent; border: 1px solid rgba(126,178,232,.4); color: #7eb2e8; }
+        .plan-cta.cta-enterprise { background: transparent; border: 1px solid rgba(37,99,235,.35); color: var(--accent-blue); }
 
         .billing-note {
             background: var(--inner-bg);
@@ -251,6 +251,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = !isDark;
+            if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = isDark;
+            if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+        });
+    </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 

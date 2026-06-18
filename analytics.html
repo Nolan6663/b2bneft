@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Аналитический дашборд</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .date-range { display: flex; align-items: center; gap: 8px; }
@@ -105,6 +105,22 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = !isDark;
+            if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+            if (cb) cb.checked = isDark;
+            if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+        });
+    </script>
+    <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
         const role = localStorage.getItem('userRole');
@@ -157,16 +173,16 @@
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { labels: { color: textColor, font: { family: 'Manrope', size: 11.5 }, usePointStyle: true, pointStyle: 'circle', padding: 14 } },
+                    legend: { labels: { color: textColor, font: { family: 'Inter', size: 11.5 }, usePointStyle: true, pointStyle: 'circle', padding: 14 } },
                     tooltip: {
                         backgroundColor: cssVar('--card-bg'), titleColor: cssVar('--text-primary-alt'), bodyColor: cssVar('--text-tertiary'),
                         borderColor: cssVar('--card-border'), borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: false,
-                        titleFont: { family: 'Manrope', weight: '700', size: 12 }, bodyFont: { family: 'Manrope', size: 12 }
+                        titleFont: { family: 'Inter', weight: '700', size: 12 }, bodyFont: { family: 'Inter', size: 12 }
                     }
                 },
                 scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Manrope', size: 11 } } },
-                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Manrope', size: 11 } } }
+                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter', size: 11 } } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'Inter', size: 11 } } }
                 }
             };
         }
@@ -200,7 +216,7 @@
                 const y = h - pad - ((v - min) / range) * (h - pad * 2);
                 return `${x.toFixed(1)},${y.toFixed(1)}`;
             }).join(' ');
-            const color = isUp ? 'var(--accent-bright)' : 'var(--error)';
+            const color = isUp ? '#0891B2' : '#DC2626';
             const last = points.split(' ').pop();
             return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
                 <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -287,9 +303,9 @@
 
                     renderCharts(
                         'bar',
-                        { labels: orders.map(o => o.title), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#41bd97', borderRadius: 6, maxBarThickness: 46 }] },
+                        { labels: orders.map(o => o.title), datasets: [{ label: 'Подано КП', data: orders.map(o => o.responses || 0), backgroundColor: '#0891B2', borderRadius: 6, maxBarThickness: 46 }] },
                         'doughnut',
-                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#41bd97', '#3a4a55'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
+                        { labels: ['РТИ', 'Металл'], datasets: [{ data: [orders.filter(o => o.category === 'РТИ').length, orders.filter(o => o.category === 'Металл').length], backgroundColor: ['#0891B2', '#2563EB'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
                 } else {
                     document.getElementById('mainChartTitle').innerText = 'Ценовой мониторинг выигранных контрактов';
@@ -318,9 +334,9 @@
 
                     renderCharts(
                         'line',
-                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#54c79f', backgroundColor: 'rgba(70,200,160,0.2)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: cssVar('--card-bg'), pointBorderColor: '#54c79f', pointBorderWidth: 2 }] },
+                        { labels: won.map(p => p.orderTitle || 'Лот'), datasets: [{ label: 'Цена контракта', data: won.map(p => p.price), borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)', fill: true, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: cssVar('--card-bg'), pointBorderColor: '#0891B2', pointBorderWidth: 2 }] },
                         'pie',
-                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#41bd97', '#3a4a55'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
+                        { labels: ['Выиграны', 'Отклонены'], datasets: [{ data: [won.length, rejected.length], backgroundColor: ['#059669', '#DC2626'], borderColor: cssVar('--card-bg'), borderWidth: 3, hoverOffset: 6 }] }
                     );
                 }
             } catch (error) { console.error(error); }

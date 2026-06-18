@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Сообщения</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <style>html{background:#070d12}html.light-mode{background:#f3f6f8}</style>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         body { overflow: hidden; }
         .main-content { padding: 0 !important; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
@@ -25,7 +25,7 @@
         .conv-list { flex: 1; overflow-y: auto; }
         .conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 13px 14px; cursor: pointer; border-bottom: 1px solid var(--inner-border); transition: background .12s; }
         .conv-item:hover { background: var(--inner-bg); }
-        .conv-item.active { background: rgba(79,140,255,.08); border-left: 3px solid var(--accent-bright); padding-left: 11px; }
+        .conv-item.active { background: rgba(8,145,178,.08); border-left: 3px solid var(--accent-bright); padding-left: 11px; }
         .conv-item.unread .conv-title { color: var(--text-primary-alt); font-weight: 700; }
         .conv-avatar { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #fff; }
         .conv-body { flex: 1; min-width: 0; }
@@ -142,6 +142,26 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
+<script>
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = !isDark;
+    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
+    const icon = document.getElementById('themeIcon');
+    if (cb) cb.checked = isDark;
+    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
+    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+});
+</script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
 
