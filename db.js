@@ -128,12 +128,22 @@ async function initDb() {
             expires_at TIMESTAMPTZ NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS delivery_events (
+            id          SERIAL      PRIMARY KEY,
+            proposal_id INTEGER     NOT NULL,
+            stage       TEXT        NOT NULL,
+            notes       TEXT        NOT NULL DEFAULT '',
+            updated_by  TEXT        NOT NULL DEFAULT 'system',
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS free_capacity TEXT NOT NULL DEFAULT '[]';
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS lat FLOAT;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS lng FLOAT;
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS delivery_stage TEXT NOT NULL DEFAULT 'КП принят';
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
     `);
 
     const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");

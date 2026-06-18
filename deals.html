@@ -290,9 +290,15 @@
                     <div class="ddp-supplier-list" id="ddpSupplierList"></div>
                 </div>
 
-                <div style="display:flex;gap:8px;margin-top:16px;">
+                <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
                     <button class="btn-primary" style="flex:1;" onclick="alert('Выбор поставщика: перейдите в предложение')">Выбрать поставщика</button>
                     <button class="btn-secondary" onclick="window.location.href='messages.html'" style="flex:1;">Открыть чат</button>
+                </div>
+                <div id="ddpTrackBtn" style="display:none;margin-top:8px;">
+                    <button class="btn-primary" style="width:100%;background:var(--accent-green,#22c55e);border-color:var(--accent-green,#22c55e);" id="trackDeliveryBtn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        Отследить доставку
+                    </button>
                 </div>
             </div>
 
@@ -483,6 +489,17 @@
                 ['АО «РегионСнаб»','94%'],
             ].map(([name,score]) => `<div class="ddp-supplier-row"><span class="ddp-supplier-name">${name}</span><span class="ddp-supplier-score">${score}</span></div>`).join('');
             document.getElementById('ddpSuppliers').style.display = '';
+
+            // Delivery tracking button
+            const trackBtn  = document.getElementById('ddpTrackBtn');
+            const trackLink = document.getElementById('trackDeliveryBtn');
+            const pid = d.proposalId || d.id;
+            if (d.status === 'inwork' || d.status === 'completed') {
+                trackBtn.style.display = '';
+                trackLink.onclick = () => window.location.href = `delivery.html?id=${pid}`;
+            } else {
+                trackBtn.style.display = 'none';
+            }
 
             renderTable();
         }

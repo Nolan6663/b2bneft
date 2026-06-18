@@ -242,7 +242,7 @@ app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
-    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html',
+    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html',
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
@@ -680,6 +680,10 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
             for (const p of allProposals) {
                 if (p.id === proposalId) {
                     await client.query("UPDATE proposals SET status = 'Выигран' WHERE id = $1", [p.id]);
+                    await client.query(
+                        "INSERT INTO delivery_events (proposal_id, stage, notes, updated_by) VALUES ($1, 'КП принят', $2, 'system')",
+                        [p.id, `КП принят заказчиком. Сумма: ${p.price ? p.price.toLocaleString('ru-RU') + ' ₽' : '—'}, срок: ${p.days} дн.`]
+                    );
                     notifs.push({ company: p.company, text: `Ваше предложение по «${title}» принято! Заказ выигран.` });
                 } else {
                     await client.query("UPDATE proposals SET status = 'Отклонен' WHERE id = $1", [p.id]);
@@ -1386,7 +1390,7 @@ app.get('/api/deals', requireAuth, async (req, res, next) => {
                 SELECT o.id AS order_id, o.title, o.quantity, o.category,
                        p.id AS proposal_id, p.company AS counterparty,
                        p.price, p.days, p.created_at AS deal_date, p.completion_status,
-                       c.id AS counterparty_profile_id
+                       p.delivery_stage, c.id AS counterparty_profile_id
                 FROM orders o
                 JOIN proposals p ON p.order_id = o.id AND p.status = 'Выигран'
                 LEFT JOIN companies c ON c.company = p.company AND c.role = 'producer'
@@ -1399,7 +1403,7 @@ app.get('/api/deals', requireAuth, async (req, res, next) => {
                 SELECT o.id AS order_id, o.title, o.quantity, o.category,
                        p.id AS proposal_id, o.company AS counterparty,
                        p.price, p.days, p.created_at AS deal_date, p.completion_status,
-                       c.id AS counterparty_profile_id
+                       p.delivery_stage, c.id AS counterparty_profile_id
                 FROM proposals p
                 JOIN orders o ON o.id = p.order_id
                 LEFT JOIN companies c ON c.company = o.company AND c.role = 'customer'
@@ -1423,6 +1427,7 @@ app.get('/api/deals', requireAuth, async (req, res, next) => {
             days:                  r.days,
             dealDate:              r.deal_date,
             completionStatus:      r.completion_status || 'active',
+            deliveryStage:         r.delivery_stage || 'КП принят',
         })));
     } catch (e) { next(e); }
 });
@@ -1444,6 +1449,80 @@ app.put('/api/deals/:proposalId/complete', requireAuth, requireRole('customer'),
         await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
         await addNotification(row.company, `Заказчик подтвердил выполнение заказа «${plainTitle(row.order_title)}».`);
         res.json({ message: 'Сделка завершена' });
+    } catch (e) { next(e); }
+});
+
+// ===================== ДОСТАВКА =====================
+
+const DELIVERY_STAGES = ['КП принят','В производстве','Готов к отгрузке','Отгружен','Доставлен','Принят заказчиком'];
+
+app.get('/api/deals/:proposalId/delivery', requireAuth, async (req, res, next) => {
+    try {
+        const proposalId = Number(req.params.proposalId);
+        const { rows: [p] } = await pool.query(`
+            SELECT p.id, p.order_id, p.price, p.days, p.company AS producer_company,
+                   p.status, p.delivery_stage, p.tracking_number, p.created_at,
+                   o.title, o.quantity, o.category, o.company AS customer_company
+            FROM proposals p JOIN orders o ON o.id = p.order_id
+            WHERE p.id = $1 AND p.status = 'Выигран'
+        `, [proposalId]);
+        if (!p) return res.status(404).json({ error: 'Сделка не найдена' });
+
+        const { company, role } = req.user;
+        if (role !== 'admin' && company !== p.producer_company && company !== p.customer_company)
+            return res.status(403).json({ error: 'Нет доступа' });
+
+        const { rows: events } = await pool.query(
+            'SELECT * FROM delivery_events WHERE proposal_id = $1 ORDER BY created_at ASC', [proposalId]
+        );
+        res.json({ deal: p, events });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/deals/:proposalId/delivery/stage', requireAuth, async (req, res, next) => {
+    try {
+        const proposalId = Number(req.params.proposalId);
+        const { stage, notes = '', trackingNumber = '' } = req.body;
+        if (!DELIVERY_STAGES.includes(stage)) return res.status(400).json({ error: 'Неверный этап' });
+
+        const { rows: [p] } = await pool.query(`
+            SELECT p.*, o.company AS customer_company, o.title AS order_title
+            FROM proposals p JOIN orders o ON o.id = p.order_id
+            WHERE p.id = $1 AND p.status = 'Выигран'
+        `, [proposalId]);
+        if (!p) return res.status(404).json({ error: 'Сделка не найдена' });
+
+        const { company, role } = req.user;
+        if (stage === 'Принят заказчиком') {
+            if (role !== 'customer' || company !== p.customer_company)
+                return res.status(403).json({ error: 'Только заказчик подтверждает получение' });
+        } else {
+            if (role !== 'producer' || company !== p.company)
+                return res.status(403).json({ error: 'Только поставщик обновляет статус доставки' });
+        }
+
+        const currentIdx = DELIVERY_STAGES.indexOf(p.delivery_stage);
+        const newIdx = DELIVERY_STAGES.indexOf(stage);
+        if (newIdx <= currentIdx) return res.status(400).json({ error: 'Нельзя вернуться на предыдущий этап' });
+
+        await pool.query(
+            "UPDATE proposals SET delivery_stage = $1, tracking_number = COALESCE(NULLIF($2,''), tracking_number) WHERE id = $3",
+            [stage, trackingNumber, proposalId]
+        );
+        await pool.query(
+            'INSERT INTO delivery_events (proposal_id, stage, notes, updated_by) VALUES ($1,$2,$3,$4)',
+            [proposalId, stage, notes, company]
+        );
+
+        if (stage === 'Принят заказчиком') {
+            await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
+        }
+
+        const title = plainTitle(p.order_title);
+        const notifyCompany = stage === 'Принят заказчиком' ? p.company : p.customer_company;
+        await addNotification(notifyCompany, `Статус доставки по «${title}» изменён: ${stage}.`);
+
+        res.json({ message: 'Статус обновлён', stage });
     } catch (e) { next(e); }
 });
 
