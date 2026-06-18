@@ -1386,7 +1386,7 @@ html[data-theme="light"] body {
 html:not([data-theme="dark"]) .main-content,
 html[data-theme="light"] .main-content {
   background: transparent;
-  animation: none;
+  animation: pageContentIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 html:not([data-theme="dark"]) .section,
@@ -1425,12 +1425,14 @@ body {
 
 .sidebar a {
   min-height: 44px;
-  padding: 11px 14px;
+  padding: 11px 14px 11px 10px;  /* оставляем 10px слева под 4px border — контент не сдвигается */
+  border-left: 4px solid transparent;
   border-radius: 8px;
   color: #1E3656;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 500;
   position: relative;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 .sidebar a .nav-icon {
@@ -1439,6 +1441,7 @@ body {
   margin-right: 13px;
   color: #426489;
   stroke-width: 1.9;
+  transition: color 0.18s ease;
 }
 
 .sidebar a:hover {
@@ -1449,8 +1452,8 @@ body {
 .sidebar a.active {
   background: linear-gradient(90deg, rgba(0, 169, 184, .12), rgba(11, 124, 255, .04));
   color: #008EA3;
-  border-left: 4px solid #00A9B8;
-  padding-left: 10px;
+  border-left-color: #00A9B8;
+  /* padding-left не меняем — border-left уже учтён в базовом правиле */
 }
 
 .sidebar a.active .nav-icon {
