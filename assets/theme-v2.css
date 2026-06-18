@@ -185,12 +185,13 @@ button { font-family: inherit; }
 .sidebar a {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 9px;
   border-radius: 10px;
   color: var(--sidebar-text);
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 500;
+  border-left: 3px solid transparent;
 }
 .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; flex-shrink: 0; }
 .sidebar a:hover { color: var(--sidebar-text-active); background: var(--bg-secondary); }
@@ -198,8 +199,7 @@ button { font-family: inherit; }
   color: var(--accent-cyan);
   background: var(--sidebar-inner);
   font-weight: 600;
-  border-left: 3px solid var(--accent-cyan);
-  padding-left: 9px;
+  border-left-color: var(--accent-cyan);
 }
 
 .sidebar .switch-link {

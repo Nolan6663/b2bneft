@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -9,197 +9,207 @@
     <link rel="stylesheet" href="assets/theme-v2.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { overflow: hidden; }
-        .main-content {
-            padding: 0 !important;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        @media (max-width: 768px) {
-            .main-content { height: calc(100dvh - 62px); }
-        }
-        .map-content-area {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        #map { width: 100%; height: 100%; z-index: 0; }
+        .kpi-card::after { display: none !important; }
 
-        /* Right company list panel */
-        .map-company-list {
-            width: 290px;
-            flex-shrink: 0;
-            background: var(--card-bg);
-            border-left: 1px solid var(--card-border);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+        /* ── Map 3-col layout ───────────────────────────────────────── */
+        .map-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 290px;
+            gap: 16px;
+            min-height: 480px;
         }
-        .mcl-header {
-            padding: 16px 16px 10px;
-            border-bottom: 1px solid var(--inner-border);
-            font-size: 13px; font-weight: 700; color: var(--text-primary);
-            display: flex; align-items: center; justify-content: space-between;
-            flex-shrink: 0;
-        }
-        .mcl-count { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
-        .mcl-list { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-        .mcl-card {
-            background: var(--inner-bg);
-            border: 1px solid var(--inner-border);
-            border-radius: 10px;
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: border-color .15s;
-        }
-        .mcl-card:hover { border-color: var(--accent-cyan); }
-        .mcl-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .mcl-avatar {
-            width: 34px; height: 34px; border-radius: 9px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
-        }
-        .mcl-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
-        .mcl-city { font-size: 11px; color: var(--text-secondary); }
-        .mcl-spec { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
-        .mcl-tags { display: flex; flex-wrap: wrap; gap: 3px; }
-        .mcl-tag {
-            font-size: 10px; padding: 1px 7px; border-radius: 12px;
-            background: var(--bg-section); color: var(--text-secondary);
-            border: 1px solid var(--inner-border);
-        }
-        .mcl-verified { display:inline-flex; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--accent-green); }
-        @media (max-width: 900px) { .map-company-list { display: none; } }
 
-        /* Leaflet dark mode overrides */
-        [data-theme="dark"] .leaflet-layer,
-        [data-theme="dark"] .leaflet-control-zoom,
-        [data-theme="dark"] .leaflet-control-attribution { filter: invert(1) hue-rotate(180deg); }
-        [data-theme="dark"] .map-popup-wrap { filter: none; }
-
-        /* Floating control panel */
-        .map-panel {
-            position: absolute;
-            top: 14px; left: 14px;
-            z-index: 1000;
+        /* ── Left filter sidebar ────────────────────────────────────── */
+        .map-filter-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
-            padding: 14px 16px;
-            width: 300px;
-            box-shadow: 0 6px 24px rgba(0,0,0,.35);
+            padding: 18px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        @media (max-width: 768px) {
-            .map-panel { width: calc(100vw - 28px); top: 10px; left: 14px; right: 14px; padding: 10px 12px; }
+        .mf-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+        .mf-section { display: flex; flex-direction: column; gap: 8px; }
+        .mf-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+        .mf-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .mf-check input[type=checkbox] { accent-color: var(--accent-cyan); width: 14px; height: 14px; cursor: pointer; }
+        .mf-check span { font-size: 13px; color: var(--text-primary); }
+        .mf-check small { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
+        .mf-divider { border: none; border-top: 1px solid var(--inner-border); margin: 0; }
+        .mf-select {
+            width: 100%; padding: 7px 10px; border-radius: var(--radius-input);
+            border: 1px solid var(--input-border); background: var(--input-bg);
+            color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;
         }
-
-        .map-search {
+        .map-search-inp {
             width: 100%; box-sizing: border-box;
-            background: var(--input-bg); border: 1px solid var(--input-border);
-            border-radius: var(--radius-input); color: var(--text-primary);
-            padding: 8px 12px; font-size: 13px; outline: none;
+            padding: 8px 12px; border-radius: var(--radius-input);
+            border: 1px solid var(--input-border); background: var(--input-bg);
+            color: var(--text-primary); font-size: 13px; outline: none;
             transition: border-color .2s;
         }
-        .map-search:focus { border-color: var(--accent-bright); }
-
-        .map-chips {
-            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
-        }
-        .map-chip {
-            padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
-            cursor: pointer; border: 1px solid var(--card-border);
-            background: var(--inner-bg); color: var(--text-secondary);
-            transition: all .15s; white-space: nowrap;
-        }
-        .map-chip.active {
-            background: var(--accent-bright); color: #fff; border-color: var(--accent-bright);
-        }
-        .map-chip:hover:not(.active) { border-color: var(--accent-bright); color: var(--accent-bright); }
-
-        .map-counter {
-            margin-top: 10px; font-size: 11.5px; color: var(--text-secondary);
-        }
-        .map-counter b { color: var(--accent-bright); }
-
-        /* Custom marker */
-        .map-marker {
-            width: 28px; height: 28px; border-radius: 50%;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,.4);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 700; color: #fff;
-            cursor: pointer;
-        }
-        .map-marker.verified { background: #41bd97; }
-        .map-marker.regular  { background: #4a90d9; }
-
-        /* Popup */
-        .leaflet-popup-content-wrapper {
-            background: var(--card-bg) !important;
-            border: 1px solid var(--card-border) !important;
-            border-radius: var(--radius-card) !important;
-            box-shadow: 0 8px 28px rgba(0,0,0,.4) !important;
-            color: var(--text-primary) !important;
-            padding: 0 !important;
-        }
-        .leaflet-popup-content { margin: 0 !important; width: 240px !important; }
-        .leaflet-popup-tip { background: var(--card-bg) !important; }
-        .leaflet-popup-close-button { color: var(--text-secondary) !important; top: 8px !important; right: 10px !important; font-size: 18px !important; }
-
-        .popup-body { padding: 14px 16px; }
-        .popup-header { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
-        .popup-avatar {
-            width: 36px; height: 36px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
-        }
-        .popup-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
-        .popup-city { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
-        .popup-verified {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 10.5px; font-weight: 600; color: var(--accent-bright);
-            background: rgba(65,189,151,.12); border-radius: 20px;
-            padding: 2px 7px; margin-top: 6px;
-        }
-        .popup-spec { font-size: 12px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
-        .popup-caps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-        .popup-cap-tag {
-            font-size: 10.5px; padding: 2px 8px; border-radius: 20px;
-            background: var(--inner-bg); border: 1px solid var(--inner-border);
-            color: var(--text-secondary);
-        }
-        .popup-btn {
-            display: block; text-align: center; margin-top: 12px;
-            padding: 8px 0; border-radius: var(--radius-btn);
-            background: var(--accent-bright); color: #fff;
-            font-size: 12.5px; font-weight: 600; text-decoration: none;
+        .map-search-inp:focus { border-color: var(--accent-bright); }
+        .map-counter-txt { font-size: 12px; color: var(--text-secondary); }
+        .map-counter-txt b { color: var(--accent-bright); }
+        .mf-apply-btn {
+            width: 100%; padding: 9px; border-radius: var(--radius-btn);
+            background: var(--accent-bright); color: #fff; border: none;
+            font-size: 13px; font-weight: 600; cursor: pointer;
             transition: opacity .15s;
         }
+        .mf-apply-btn:hover { opacity: .85; }
+
+        /* ── Map center ─────────────────────────────────────────────── */
+        .map-center {
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            position: relative;
+        }
+        #map { width: 100%; height: 100%; min-height: 480px; z-index: 0; }
+
+        /* ── Right company list ─────────────────────────────────────── */
+        .map-company-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .mcp-header {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--inner-border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .mcp-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .mcp-count { font-size: 12px; color: var(--text-secondary); }
+        .mcp-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--inner-border); flex-shrink: 0; }
+        .mcp-tab {
+            flex: 1; padding: 8px 0; text-align: center; font-size: 12px; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent;
+            transition: color .15s, border-color .15s;
+        }
+        .mcp-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+        .mcp-list { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+        .mcp-card {
+            background: var(--inner-bg); border: 1px solid var(--inner-border);
+            border-radius: 10px; padding: 12px 13px; cursor: pointer;
+            transition: border-color .15s;
+        }
+        .mcp-card:hover, .mcp-card.selected { border-color: var(--accent-cyan); }
+        .mcp-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .mcp-avatar {
+            width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: #fff;
+        }
+        .mcp-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+        .mcp-city { font-size: 11px; color: var(--text-secondary); }
+        .mcp-spec { font-size: 11.5px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 6px; }
+        .mcp-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+        .mcp-tag { font-size: 10px; padding: 2px 7px; border-radius: 12px; background: var(--bg-section); border: 1px solid var(--inner-border); color: var(--text-secondary); }
+        .mcp-verified { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--accent-green); margin-bottom: 4px; }
+        .mcp-write-btn {
+            display: block; text-align: center; margin-top: 8px;
+            padding: 5px 0; border-radius: 6px;
+            border: 1px solid var(--secondary-btn-border); background: transparent;
+            color: var(--text-secondary); font-size: 11.5px; font-weight: 600;
+            cursor: pointer; transition: border-color .15s, color .15s;
+        }
+        .mcp-write-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+        /* ── Custom map markers ─────────────────────────────────────── */
+        .map-marker {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
+        }
+
+        /* ── Popup ──────────────────────────────────────────────────── */
+        .leaflet-popup-content-wrapper {
+            background: var(--card-bg) !important; border: 1px solid var(--card-border) !important;
+            border-radius: var(--radius-card) !important; box-shadow: 0 8px 28px rgba(0,0,0,.4) !important;
+            color: var(--text-primary) !important; padding: 0 !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; width: 250px !important; }
+        .leaflet-popup-tip { background: var(--card-bg) !important; }
+        .leaflet-popup-close-button { color: var(--text-secondary) !important; top: 8px !important; right: 10px !important; }
+        .popup-body { padding: 14px 16px; }
+        .popup-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+        .popup-avatar { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; }
+        .popup-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .popup-city { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+        .popup-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--accent-green); background: rgba(65,189,151,.12); border-radius: 20px; padding: 2px 7px; margin-bottom: 6px; }
+        .popup-spec { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
+        .popup-caps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+        .popup-cap { font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-secondary); }
+        .popup-btn { display: block; text-align: center; padding: 8px 0; border-radius: var(--radius-btn); background: var(--accent-bright); color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; transition: opacity .15s; }
         .popup-btn:hover { opacity: .85; }
 
-        /* No data message */
-        .map-no-data {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 999; text-align: center; pointer-events: none;
+        /* ── Bottom stats section ───────────────────────────────────── */
+        .map-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        .map-stat-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 18px 20px;
+        }
+        .map-stat-card h4 { font-size: 13px; font-weight: 700; color: var(--text-primary); margin: 0 0 12px; }
+        .stat-table { width: 100%; border-collapse: collapse; }
+        .stat-table th { font-size: 11px; color: var(--text-secondary); font-weight: 600; text-align: left; padding: 4px 0; border-bottom: 1px solid var(--inner-border); }
+        .stat-table td { font-size: 12.5px; color: var(--text-primary); padding: 7px 4px 7px 0; border-bottom: 1px solid var(--inner-border); vertical-align: middle; }
+        .stat-table tr:last-child td { border-bottom: none; }
+        .stat-rating { color: var(--accent-cyan); font-weight: 700; }
+        .pop-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--inner-border); }
+        .pop-item:last-child { border-bottom: none; }
+        .pop-name { font-size: 12.5px; color: var(--text-primary); }
+        .pop-bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .pop-bar-bg { width: 80px; height: 6px; background: var(--inner-border); border-radius: 3px; }
+        .pop-bar-fill { height: 6px; border-radius: 3px; background: var(--accent-cyan); }
+        .pop-pct { font-size: 11px; color: var(--text-secondary); min-width: 30px; text-align: right; }
+        .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+        .chart-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+        .chart-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--accent-cyan); opacity: .8; transition: opacity .15s; }
+        .chart-bar:hover { opacity: 1; }
+        .chart-bar-label { font-size: 10px; color: var(--text-secondary); }
+
+        /* ── Leaflet dark mode ──────────────────────────────────────── */
+        [data-theme="dark"] .leaflet-layer,
+        [data-theme="dark"] .leaflet-control-zoom,
+        [data-theme="dark"] .leaflet-control-attribution { filter: invert(1) hue-rotate(180deg); }
+
+        @media (max-width: 1100px) {
+            .map-layout { grid-template-columns: 200px 1fr; }
+            .map-company-panel { display: none; }
+            .map-stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 720px) {
+            .map-layout { grid-template-columns: 1fr; }
+            .map-filter-panel { display: none; }
+            .map-stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="sidebar-logo">
-            <img src="assets/icons_svg/logo_hex.svg" alt="">
-            <span>B2B НЕФТЕСЕРВИС</span>
-        </div>
-
-        <a href="#" id="mainLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Главная</a>
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="index.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
         <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="map.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
-        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
-
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
         <div class="sidebar-bottom">
-            <div id="sidebarProfileLink" style="display:none"></div>
             <div class="theme-toggle-row">
                 <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
                 <label class="theme-switch"><input type="checkbox" id="themeCheckbox" onchange="toggleTheme()"><span class="theme-slider"></span></label>
@@ -212,34 +222,189 @@
     </div>
 
     <div class="main-content">
-        <div class="map-content-area">
-        <div class="map-panel">
-            <input class="map-search" id="mapSearch" type="text" placeholder="Поиск по городу или названию...">
-            <div class="map-chips">
-                <button class="map-chip active" data-cat="all">Все</button>
-                <button class="map-chip" data-cat="РТИ">РТИ</button>
-                <button class="map-chip" data-cat="Металл">Металл</button>
-                <button class="map-chip" data-cat="Трубопроводная арматура">Арматура</button>
-                <button class="map-chip" data-cat="Электрооборудование">Электро</button>
-                <button class="map-chip" data-cat="verified">✓ Верифицированные</button>
+        <!-- Header -->
+        <div class="header">
+            <div style="display:flex;align-items:center;gap:16px;">
+                <h2>Карта</h2>
+                <input class="map-search-inp" id="mapSearch" type="text" placeholder="Поиск по городу или компании..." style="width:260px;">
             </div>
-            <div class="map-counter" id="mapCounter">Загрузка...</div>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
         </div>
 
-        <div id="map"></div>
-        </div><!-- /map-content-area -->
-
-        <!-- Right company list -->
-        <div class="map-company-list" id="mapCompanyList">
-            <div class="mcl-header">
-                Поставщики на карте
-                <span class="mcl-count" id="mclCount">0 компаний</span>
+        <!-- KPI Row -->
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Активных поставщиков</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient></defs><polyline points="0,24 13,20 26,22 40,15 53,17 66,10 80,8" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,24 13,20 26,22 40,15 53,17 66,10 80,8 80,30 0,30" fill="url(#mk1)"/></svg>
+                </div>
+                <div class="kpi-value" id="mapKpi1">1 243</div>
+                <div class="kpi-sub kpi-delta positive">↑ 12% к прошлому кварталу</div>
             </div>
-            <div class="mcl-list" id="mclList">
-                <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Загрузка...</div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Предложений на рассмотрении</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs><polyline points="0,22 13,18 26,20 40,12 53,14 66,8 80,10" stroke="var(--accent-blue)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,22 13,18 26,20 40,12 53,14 66,8 80,10 80,30 0,30" fill="url(#mk2)"/></svg>
+                </div>
+                <div class="kpi-value" id="mapKpi2">326</div>
+                <div class="kpi-sub">активных запросов</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Верифицированных партнёров</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-green)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0"/></linearGradient></defs><polyline points="0,25 13,22 26,20 40,18 53,14 66,12 80,9" stroke="var(--accent-green)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,25 13,22 26,20 40,18 53,14 66,12 80,9 80,30 0,30" fill="url(#mk3)"/></svg>
+                </div>
+                <div class="kpi-value" id="mapKpi3" style="color:var(--accent-green);">72</div>
+                <div class="kpi-sub">прошли проверку</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-card-top">
+                    <div class="kpi-label">Статистика партнёров</div>
+                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient></defs><polyline points="0,20 13,22 26,17 40,18 53,13 66,15 80,11" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,20 13,22 26,17 40,18 53,13 66,15 80,11 80,30 0,30" fill="url(#mk4)"/></svg>
+                </div>
+                <div class="kpi-value" id="mapKpi4">54</div>
+                <div class="kpi-sub kpi-delta positive">↑ новых за месяц</div>
             </div>
         </div>
-    </div>
+
+        <!-- 3-col map layout -->
+        <div class="map-layout">
+            <!-- Left: filter panel -->
+            <div class="map-filter-panel">
+                <div class="mf-title">Фильтры карты</div>
+
+                <div class="mf-section">
+                    <div class="mf-label">Тип производства</div>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="РТИ"><span>РТИ</span><small id="cnt-РТИ">—</small></label>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="Металл"><span>Металл</span><small id="cnt-Металл">—</small></label>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="Арматура"><span>Трубопр. арматура</span><small id="cnt-Арматура">—</small></label>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="Электро"><span>Электрооборудование</span><small id="cnt-Электро">—</small></label>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="Насосы"><span>Насосное оборудование</span><small id="cnt-Насосы">—</small></label>
+                    <label class="mf-check"><input type="checkbox" checked data-cat="Трубы"><span>Трубная продукция</span><small id="cnt-Трубы">—</small></label>
+                </div>
+
+                <hr class="mf-divider">
+
+                <div class="mf-section">
+                    <div class="mf-label">Статус компании</div>
+                    <label class="mf-check"><input type="checkbox" id="verifiedOnly"><span>Только верифицированные</span></label>
+                </div>
+
+                <hr class="mf-divider">
+
+                <div class="mf-section">
+                    <div class="mf-label">Регион</div>
+                    <select class="mf-select" id="regionSelect">
+                        <option value="">Все регионы</option>
+                        <option>Тюменская область</option>
+                        <option>Свердловская область</option>
+                        <option>Республика Татарстан</option>
+                        <option>Башкортостан</option>
+                        <option>Пермский край</option>
+                        <option>Ханты-Мансийский АО</option>
+                        <option>Оренбургская область</option>
+                    </select>
+                </div>
+
+                <div class="map-counter-txt" id="mapCounter">Загрузка...</div>
+
+                <button class="mf-apply-btn" onclick="applyFilters()">Применить фильтры</button>
+            </div>
+
+            <!-- Center: map -->
+            <div class="map-center">
+                <div id="map"></div>
+            </div>
+
+            <!-- Right: company list -->
+            <div class="map-company-panel">
+                <div class="mcp-header">
+                    <span class="mcp-title">Поставщики на карте</span>
+                    <span class="mcp-count" id="mcpCount">0 компаний</span>
+                </div>
+                <div class="mcp-tabs">
+                    <div class="mcp-tab active" onclick="setMcpTab('list',this)">По списку</div>
+                    <div class="mcp-tab" onclick="setMcpTab('top',this)">Популярные</div>
+                </div>
+                <div class="mcp-list" id="mcpList">
+                    <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom statistics -->
+        <div class="map-stats-grid">
+            <!-- Regional statistics table -->
+            <div class="map-stat-card">
+                <h4>Статистика по регионам</h4>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>Регион</th>
+                            <th>Компаний</th>
+                            <th>Верифиц.</th>
+                            <th>Рейтинг</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Тюменская обл.</td><td>28</td><td>18</td><td class="stat-rating">4.7</td></tr>
+                        <tr><td>Свердловская обл.</td><td>21</td><td>12</td><td class="stat-rating">4.5</td></tr>
+                        <tr><td>Респ. Татарстан</td><td>19</td><td>14</td><td class="stat-rating">4.6</td></tr>
+                        <tr><td>Башкортостан</td><td>15</td><td>9</td><td class="stat-rating">4.3</td></tr>
+                        <tr><td>Пермский край</td><td>12</td><td>7</td><td class="stat-rating">4.2</td></tr>
+                        <tr><td>ХМАО–Югра</td><td>11</td><td>8</td><td class="stat-rating">4.4</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Popular products -->
+            <div class="map-stat-card">
+                <h4>Популярные нефтесервисные продукты</h4>
+                <div class="pop-item">
+                    <span class="pop-name">РТИ и уплотнения</span>
+                    <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:90%"></div></div><span class="pop-pct">34%</span></div>
+                </div>
+                <div class="pop-item">
+                    <span class="pop-name">Металлоконструкции</span>
+                    <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:70%"></div></div><span class="pop-pct">26%</span></div>
+                </div>
+                <div class="pop-item">
+                    <span class="pop-name">Трубная арматура</span>
+                    <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:55%"></div></div><span class="pop-pct">21%</span></div>
+                </div>
+                <div class="pop-item">
+                    <span class="pop-name">Электрооборудование</span>
+                    <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:40%"></div></div><span class="pop-pct">15%</span></div>
+                </div>
+                <div class="pop-item">
+                    <span class="pop-name">Насосное оборудование</span>
+                    <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:22%"></div></div><span class="pop-pct">8%</span></div>
+                </div>
+            </div>
+
+            <!-- Monthly chart -->
+            <div class="map-stat-card">
+                <h4>Активность по месяцам</h4>
+                <div class="chart-bars">
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:40%"></div><span class="chart-bar-label">Янв</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:55%"></div><span class="chart-bar-label">Фев</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:48%"></div><span class="chart-bar-label">Мар</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:70%"></div><span class="chart-bar-label">Апр</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:65%"></div><span class="chart-bar-label">Май</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:90%"></div><span class="chart-bar-label">Июн</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:80%"></div><span class="chart-bar-label">Июл</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:95%"></div><span class="chart-bar-label">Авг</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:85%"></div><span class="chart-bar-label">Сен</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:75%"></div><span class="chart-bar-label">Окт</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:60%"></div><span class="chart-bar-label">Ноя</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:50%"></div><span class="chart-bar-label">Дек</span></div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /main-content -->
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
@@ -259,169 +424,177 @@
             if (cb) cb.checked = isDark;
             if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
         });
-    </script>
-    <script>
+
         const session = authGuard(null);
-        const userRole = session.role;
-
-        const mainLink = document.getElementById('mainLink');
-        if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
-
         initNotifications();
         initSidebarBadges();
 
-        // ── Map init ──────────────────────────────────────────────────────
-        const map = L.map('map', { zoomControl: true }).setView([61.5, 90], 5);
-
+        // ── Map init ──────────────────────────────────────────────────
+        const map = L.map('map', { zoomControl: true }).setView([60, 75], 4);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors', maxZoom: 18,
         }).addTo(map);
 
-        // ── State ─────────────────────────────────────────────────────────
+        // ── State ─────────────────────────────────────────────────────
         let allProducers = [];
         let markers = [];
-        let activeFilter = 'all';
-        let searchQuery = '';
+        const markerById = {};
+        const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71','#f59e0b'];
+        let activeMcpTab = 'list';
 
-        // ── Marker creation ───────────────────────────────────────────────
-        const AVATAR_COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71'];
+        // ── Mock data ─────────────────────────────────────────────────
+        const MOCK = [
+            { id:1,  company:'ООО «НефтеПромСнаб»',    city:'Тюмень',           lat:57.15, lng:68.00, specialization:'РТИ, МТР для нефтегаза',             categories:['РТИ'],       verified:true,  rating:4.8, deals:124, region:'Тюменская область' },
+            { id:2,  company:'ООО «АктивСнаб»',         city:'Екатеринбург',     lat:56.84, lng:60.61, specialization:'Металлоконструкции, трубная арматура', categories:['Металл','Арматура'], verified:true,  rating:4.6, deals:89, region:'Свердловская область' },
+            { id:3,  company:'ООО «ПромМаш»',           city:'Уфа',              lat:54.74, lng:55.97, specialization:'Насосное оборудование',               categories:['Насосы'],    verified:true,  rating:4.5, deals:201, region:'Башкортостан' },
+            { id:4,  company:'АО «РегионСнаб»',         city:'Сургут',           lat:61.25, lng:73.42, specialization:'Электрооборудование, КИПиА',          categories:['Электро'],   verified:true,  rating:4.3, deals:56, region:'Ханты-Мансийский АО' },
+            { id:5,  company:'ООО «ТехноПром»',         city:'Пермь',            lat:58.01, lng:56.25, specialization:'Трубопровод, запорная арматура',       categories:['Арматура','Трубы'], verified:false, rating:4.1, deals:43, region:'Пермский край' },
+            { id:6,  company:'ПАО «Завод РТИ»',         city:'Казань',           lat:55.79, lng:49.12, specialization:'Резинотехнические изделия',            categories:['РТИ'],       verified:true,  rating:4.7, deals:312, region:'Республика Татарстан' },
+            { id:7,  company:'ООО «МеталлСерв»',        city:'Нижневартовск',    lat:60.93, lng:76.54, specialization:'Металлопрокат, стальные трубы',        categories:['Металл','Трубы'],  verified:true,  rating:4.2, deals:78, region:'Ханты-Мансийский АО' },
+            { id:8,  company:'ЗАО «ЭлектроМаш»',        city:'Самара',           lat:53.20, lng:50.15, specialization:'Силовые трансформаторы, щитовое оборудование', categories:['Электро'], verified:false, rating:4.0, deals:34, region:'Самарская область' },
+            { id:9,  company:'ООО «ПромАрматура»',      city:'Оренбург',         lat:51.77, lng:55.10, specialization:'Шаровые краны, задвижки DN20–DN600',   categories:['Арматура'],  verified:true,  rating:4.4, deals:67, region:'Оренбургская область' },
+            { id:10, company:'ООО «СибНасос»',          city:'Томск',            lat:56.50, lng:84.98, specialization:'Погружные и центробежные насосы',       categories:['Насосы'],    verified:true,  rating:4.6, deals:145, region:'Томская область' },
+            { id:11, company:'ЗАО «УралТрубмаш»',       city:'Челябинск',        lat:55.15, lng:61.40, specialization:'Трубная продукция ГОСТ, ТУ',           categories:['Трубы','Металл'], verified:true,  rating:4.3, deals:92, region:'Свердловская область' },
+            { id:12, company:'ООО «КазаньХимСнаб»',     city:'Казань',           lat:55.82, lng:49.20, specialization:'Химреагенты, ПАВ для нефтедобычи',     categories:['РТИ'],       verified:false, rating:3.9, deals:28, region:'Республика Татарстан' },
+        ];
 
-        function makeIcon(producer) {
-            const color = producer.verified ? '#41bd97' : AVATAR_COLORS[producer.id % AVATAR_COLORS.length];
-            const letter = (producer.company || '?').replace(/[«»"ООО АОИПи ]/g,'').charAt(0).toUpperCase() || '?';
+        // ── Marker icon ───────────────────────────────────────────────
+        function makeIcon(p) {
+            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
             return L.divIcon({
                 className: '',
-                html: `<div class="map-marker${producer.verified ? ' verified' : ' regular'}" style="background:${color}">${letter}</div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14],
-                popupAnchor: [0, -16],
+                html: `<div class="map-marker" style="background:${color}">${letter}</div>`,
+                iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -18],
             });
         }
 
         function popupHtml(p) {
-            const color = p.verified ? '#41bd97' : AVATAR_COLORS[p.id % AVATAR_COLORS.length];
-            const letter = (p.company || '?').replace(/[«»"ООО АОИПи ]/g,'').charAt(0).toUpperCase() || '?';
-            const caps = (p.capabilities || []).slice(0, 4)
-                .map(c => `<span class="popup-cap-tag">${escapeHtml(c)}</span>`).join('');
-            const verified = p.verified
-                ? `<span class="popup-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>`
-                : '';
+            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
+            const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>` : '';
+            const caps = p.categories.map(c => `<span class="popup-cap">${escapeHtml(c)}</span>`).join('');
             return `<div class="popup-body">
                 <div class="popup-header">
                     <div class="popup-avatar" style="background:${color}">${letter}</div>
-                    <div>
-                        <div class="popup-name">${escapeHtml(p.company)}</div>
-                        <div class="popup-city">📍 ${escapeHtml(p.city || '—')}</div>
-                    </div>
+                    <div><div class="popup-name">${escapeHtml(p.company)}</div><div class="popup-city">📍 ${escapeHtml(p.city)}</div></div>
                 </div>
-                ${verified}
-                ${p.specialization ? `<div class="popup-spec">${escapeHtml(p.specialization)}</div>` : ''}
-                ${caps ? `<div class="popup-caps">${caps}</div>` : ''}
-                <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль →</a>
+                ${verBadge}
+                <div class="popup-spec">${escapeHtml(p.specialization)}</div>
+                <div class="popup-caps">${caps}</div>
+                <a href="#" class="popup-btn">Открыть профиль →</a>
             </div>`;
         }
 
-        // ── Filtering & rendering ─────────────────────────────────────────
+        // ── Apply filters ─────────────────────────────────────────────
         function applyFilters() {
             markers.forEach(m => map.removeLayer(m));
             markers = [];
+            Object.keys(markerById).forEach(k => delete markerById[k]);
 
-            const q = searchQuery.toLowerCase();
+            const q = document.getElementById('mapSearch').value.toLowerCase();
+            const verifiedOnly = document.getElementById('verifiedOnly').checked;
+            const regionVal = document.getElementById('regionSelect').value;
+            const checkedCats = [...document.querySelectorAll('[data-cat]:checked')].map(el => el.dataset.cat);
+
             const filtered = allProducers.filter(p => {
-                if (activeFilter === 'verified') return p.verified;
-                if (activeFilter !== 'all' && !p.categories.includes(activeFilter)) return false;
-                if (q && !p.company.toLowerCase().includes(q) && !(p.city || '').toLowerCase().includes(q) &&
-                    !(p.specialization || '').toLowerCase().includes(q)) return false;
+                if (verifiedOnly && !p.verified) return false;
+                if (regionVal && p.region !== regionVal) return false;
+                if (checkedCats.length && !p.categories.some(c => checkedCats.includes(c))) return false;
+                if (q && !p.company.toLowerCase().includes(q) && !p.city.toLowerCase().includes(q) && !p.specialization.toLowerCase().includes(q)) return false;
                 return true;
             });
 
-            Object.keys(markerById).forEach(k => { delete markerById[k]; });
             filtered.forEach(p => {
                 const m = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
-                    .bindPopup(popupHtml(p), { maxWidth: 260, className: 'map-popup-wrap' });
+                    .bindPopup(popupHtml(p), { maxWidth: 270, className: 'map-popup-wrap' });
                 m.addTo(map);
                 markers.push(m);
                 markerById[p.id] = m;
             });
 
-            document.getElementById('mapCounter').innerHTML =
-                `Показано заводов: <b>${filtered.length}</b> из ${allProducers.length}`;
+            // Category counters
+            document.querySelectorAll('[data-cat]').forEach(el => {
+                const cat = el.dataset.cat;
+                const cnt = allProducers.filter(p => p.categories.includes(cat)).length;
+                const counter = document.getElementById('cnt-' + cat);
+                if (counter) counter.textContent = cnt;
+            });
 
-            renderCompanyList(filtered);
+            document.getElementById('mapCounter').innerHTML =
+                `Показано: <b>${filtered.length}</b> из ${allProducers.length}`;
+
+            renderMcpList(filtered);
         }
 
-        function renderCompanyList(list) {
-            const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#41bd97'];
-            document.getElementById('mclCount').textContent = list.length + ' компани' + (list.length===1?'я':list.length<5?'и':'й');
-            const el = document.getElementById('mclList');
-            if (!list.length) { el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Компании не найдены</div>'; return; }
-            el.innerHTML = list.map(p => {
-                const letter = (p.company||'?').replace(/[«»"ООО АОИПи]/g,'').charAt(0).toUpperCase()||'?';
+        // ── Company panel ─────────────────────────────────────────────
+        function setMcpTab(tab, el) {
+            activeMcpTab = tab;
+            document.querySelectorAll('.mcp-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            applyFilters();
+        }
+
+        function renderMcpList(list) {
+            const sorted = activeMcpTab === 'top'
+                ? [...list].sort((a, b) => b.deals - a.deals)
+                : list;
+
+            document.getElementById('mcpCount').textContent =
+                sorted.length + ' компани' + (sorted.length === 1 ? 'я' : sorted.length < 5 ? 'и' : 'й');
+
+            const el = document.getElementById('mcpList');
+            if (!sorted.length) {
+                el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Нет компаний</div>';
+                return;
+            }
+            el.innerHTML = sorted.map(p => {
                 const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-                const verBadge = p.verified ? `<span class="mcl-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>` : '';
-                const caps = (p.categories||[]).slice(0,3).map(c=>`<span class="mcl-tag">${escapeHtml(c)}</span>`).join('');
-                return `<div class="mcl-card" onclick="flyToProducer(${p.id})">
-                    <div class="mcl-card-top">
-                        <div class="mcl-avatar" style="background:${color}">${letter}</div>
+                const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
+                const verBadge = p.verified
+                    ? `<div class="mcp-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</div>`
+                    : '';
+                const tags = p.categories.slice(0,3).map(c => `<span class="mcp-tag">${escapeHtml(c)}</span>`).join('');
+                return `<div class="mcp-card" onclick="flyToProducer(${p.id})" id="mcpc-${p.id}">
+                    <div class="mcp-card-top">
+                        <div class="mcp-avatar" style="background:${color}">${letter}</div>
                         <div>
-                            <div class="mcl-name">${escapeHtml(p.company)}</div>
-                            <div class="mcl-city">📍 ${escapeHtml(p.city||'—')}</div>
+                            <div class="mcp-name">${escapeHtml(p.company)}</div>
+                            <div class="mcp-city">📍 ${escapeHtml(p.city)}</div>
                         </div>
                     </div>
                     ${verBadge}
-                    <div class="mcl-spec" style="margin-top:${p.verified?'6':'0'}px;">${escapeHtml(p.specialization||'')}</div>
-                    ${caps ? `<div class="mcl-tags">${caps}</div>` : ''}
+                    <div class="mcp-spec">${escapeHtml(p.specialization)}</div>
+                    <div class="mcp-tags">${tags}</div>
+                    <button class="mcp-write-btn" onclick="event.stopPropagation();alert('Сообщение: ${escapeHtml(p.company)}')">Написать</button>
                 </div>`;
             }).join('');
         }
-
-        const markerById = {};
 
         function flyToProducer(id) {
             const p = allProducers.find(x => x.id === id);
             if (!p) return;
             map.flyTo([p.lat, p.lng], 10, { duration: 0.8 });
+            document.querySelectorAll('.mcp-card').forEach(c => c.classList.remove('selected'));
+            const card = document.getElementById('mcpc-' + id);
+            if (card) { card.classList.add('selected'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
             const m = markerById[id];
             if (m) setTimeout(() => m.openPopup(), 900);
         }
 
-        // ── Load data ─────────────────────────────────────────────────────
-        const MOCK_MAP_PRODUCERS = [
-            { id:1, company:'ООО «НефтеПромСнаб»', city:'Тюмень', lat:57.1533, lng:68.0000, specialization:'РТИ, МТР', categories:['РТИ'], verified:true, rating:4.8, totalDeals:124 },
-            { id:2, company:'ООО «АктивСнаб»', city:'Екатеринбург', lat:56.8389, lng:60.6057, specialization:'Металлоконструкции, трубная арматура', categories:['Металл'], verified:true, rating:4.6, totalDeals:89 },
-            { id:3, company:'ООО «ПромМаш»', city:'Уфа', lat:54.7388, lng:55.9721, specialization:'Насосное оборудование', categories:['Насосы'], verified:true, rating:4.5, totalDeals:201 },
-            { id:4, company:'АО «РегионСнаб»', city:'Сургут', lat:61.2500, lng:73.4167, specialization:'Электрооборудование, КИПиА', categories:['Электро'], verified:true, rating:4.3, totalDeals:56 },
-            { id:5, company:'ООО «ТехноПром»', city:'Пермь', lat:58.0105, lng:56.2502, specialization:'Трубопровод, запорная арматура', categories:['Трубопровод'], verified:false, rating:4.1, totalDeals:43 },
-            { id:6, company:'ПАО «Завод РТИ»', city:'Казань', lat:55.7887, lng:49.1221, specialization:'Резинотехнические изделия', categories:['РТИ'], verified:true, rating:4.7, totalDeals:312 },
-            { id:7, company:'ООО «МеталлСерв»', city:'Нижневартовск', lat:60.9344, lng:76.5436, specialization:'Металлопрокат, стальные трубы', categories:['Металл'], verified:true, rating:4.2, totalDeals:78 },
-        ];
-
+        // ── Load ──────────────────────────────────────────────────────
         async function loadMap() {
             try {
                 const r = await fetch(`${SERVER_URL}/map`);
                 if (!r.ok) throw new Error();
                 allProducers = await r.json();
             } catch {
-                allProducers = MOCK_MAP_PRODUCERS;
+                allProducers = MOCK;
             }
             applyFilters();
         }
 
-        // ── Event listeners ───────────────────────────────────────────────
-        document.querySelectorAll('.map-chip').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.map-chip').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeFilter = btn.dataset.cat;
-                applyFilters();
-            });
-        });
-
-        document.getElementById('mapSearch').addEventListener('input', e => {
-            searchQuery = e.target.value;
-            applyFilters();
-        });
+        document.getElementById('mapSearch').addEventListener('input', () => applyFilters());
 
         loadMap();
     </script>

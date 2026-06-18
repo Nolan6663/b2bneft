@@ -36,6 +36,7 @@
         }
         .plan-active-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); }
 
+        .kpi-card::after { display: none !important; }
         .plans-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -146,88 +147,207 @@
             </button>
         </div>
 
-        <!-- Текущий план -->
-        <div class="current-plan-banner">
-            <div class="current-plan-info">
-                <div class="current-plan-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <!-- KPI Row -->
+        <div class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Текущий тариф</div>
+                <div class="kpi-value" style="font-size:20px;margin-top:4px;">Бизнес</div>
+                <div class="kpi-sub"><span class="plan-active-badge" style="font-size:11px;padding:2px 8px;">Активен</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Расходы за месяц</div>
+                <div class="kpi-value" style="color:var(--accent-cyan);">128 500 <span style="font-size:14px;">₽</span></div>
+                <div class="kpi-sub">за июнь 2026</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Истечение подписки</div>
+                <div style="margin-top:8px;background:var(--inner-border);border-radius:4px;height:8px;overflow:hidden;">
+                    <div style="width:72%;height:100%;background:var(--accent-cyan);border-radius:4px;"></div>
                 </div>
-                <div>
-                    <div class="current-plan-label">Текущий тариф</div>
-                    <div class="current-plan-name">Базовый — Бесплатно</div>
-                </div>
+                <div class="kpi-sub" style="margin-top:6px;">72% использовано · 102 дня осталось</div>
             </div>
-            <span class="plan-active-badge">Активен</span>
-        </div>
-
-        <!-- Планы -->
-        <div class="plans-grid">
-
-            <!-- Базовый -->
-            <div class="plan-card plan-current">
-                <div class="plan-pin current">Ваш тариф</div>
-                <div class="plan-name">Базовый</div>
-                <div class="plan-price">0 <sub>₽</sub></div>
-                <div class="plan-cycle">Бесплатно · навсегда</div>
-                <ul class="plan-features">
-                    <li class="yes"><span class="fi">✓</span>До 5 активных закупок</li>
-                    <li class="yes"><span class="fi">✓</span>Профиль компании</li>
-                    <li class="yes"><span class="fi">✓</span>Реестр контрагентов</li>
-                    <li class="yes"><span class="fi">✓</span>Сообщения</li>
-                    <li class="yes"><span class="fi">✓</span>Базовая аналитика</li>
-                    <li class="no"><span class="fi">—</span>Верификация (приоритет)</li>
-                    <li class="no"><span class="fi">—</span>Выгрузка данных</li>
-                    <li class="no"><span class="fi">—</span>Поддержка 24/7</li>
-                </ul>
-                <button class="plan-cta cta-current" disabled>Активный тариф</button>
-            </div>
-
-            <!-- Профессиональный -->
-            <div class="plan-card plan-featured">
-                <div class="plan-pin popular">Популярный</div>
-                <div class="plan-name">Профессиональный</div>
-                <div class="plan-price">4 990 <sub>₽</sub></div>
-                <div class="plan-cycle">в месяц · при оплате за год</div>
-                <ul class="plan-features">
-                    <li class="yes"><span class="fi">✓</span>Неограниченные закупки</li>
-                    <li class="yes"><span class="fi">✓</span>Расширенный профиль + фото</li>
-                    <li class="yes"><span class="fi">✓</span>Верификация (приоритет)</li>
-                    <li class="yes"><span class="fi">✓</span>Экспорт данных (CSV, Excel)</li>
-                    <li class="yes"><span class="fi">✓</span>Расширенная аналитика</li>
-                    <li class="yes"><span class="fi">✓</span>Все возможности Базового</li>
-                    <li class="yes"><span class="fi">✓</span>Поддержка 8/5</li>
-                    <li class="no"><span class="fi">—</span>API-интеграция</li>
-                </ul>
-                <button class="plan-cta cta-upgrade" onclick="showUpgradeDialog('pro')">Перейти на Профи</button>
-            </div>
-
-            <!-- Корпоративный -->
-            <div class="plan-card">
-                <div class="plan-name">Корпоративный</div>
-                <div class="plan-price" style="font-size:22px;margin-top:6px;">По запросу</div>
-                <div class="plan-cycle">индивидуальные условия</div>
-                <ul class="plan-features">
-                    <li class="yes"><span class="fi">✓</span>Всё из Профессионального</li>
-                    <li class="yes"><span class="fi">✓</span>API-интеграция с ERP/1C</li>
-                    <li class="yes"><span class="fi">✓</span>Персональный менеджер</li>
-                    <li class="yes"><span class="fi">✓</span>SLA 99.9%</li>
-                    <li class="yes"><span class="fi">✓</span>Мультиаккаунт</li>
-                    <li class="yes"><span class="fi">✓</span>Кастомный брендинг</li>
-                    <li class="yes"><span class="fi">✓</span>Поддержка 24/7</li>
-                    <li class="yes"><span class="fi">✓</span>Обучение сотрудников</li>
-                </ul>
-                <button class="plan-cta cta-enterprise" onclick="showUpgradeDialog('enterprise')">Связаться с нами</button>
+            <div class="kpi-card">
+                <div class="kpi-label">Следующий платёж</div>
+                <div class="kpi-value" style="font-size:20px;">25.06.2026</div>
+                <div class="kpi-sub">128 500 ₽ автосписание</div>
             </div>
         </div>
 
-        <!-- Заметка -->
-        <div class="billing-note">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Оплата тарифов в настоящее время находится в разработке. Для ранних партнёров платформы действуют специальные условия — напишите нам на <strong>billing@b2b-neft.ru</strong></span>
+        <!-- Plans + Subscription 2-col -->
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;">
+            <!-- Plan cards -->
+            <div>
+                <div class="plans-grid" style="margin-bottom:0;">
+                    <!-- Базовый -->
+                    <div class="plan-card">
+                        <div class="plan-name">Базовый</div>
+                        <div class="plan-price">0 <sub>₽</sub></div>
+                        <div class="plan-cycle">Бесплатно · навсегда</div>
+                        <ul class="plan-features">
+                            <li class="yes"><span class="fi">✓</span>До 5 активных закупок</li>
+                            <li class="yes"><span class="fi">✓</span>Профиль компании</li>
+                            <li class="yes"><span class="fi">✓</span>Реестр контрагентов</li>
+                            <li class="yes"><span class="fi">✓</span>Сообщения</li>
+                            <li class="no"><span class="fi">—</span>Аналитика</li>
+                            <li class="no"><span class="fi">—</span>Верификация</li>
+                            <li class="no"><span class="fi">—</span>API-интеграция</li>
+                        </ul>
+                        <button class="plan-cta" style="background:transparent;border:1px solid var(--card-border);color:var(--text-secondary);border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;" onclick="alert('Переход на Базовый')">Выбрать</button>
+                    </div>
+
+                    <!-- Бизнес (current) -->
+                    <div class="plan-card plan-featured" style="border-color:rgba(8,145,178,.6);position:relative;">
+                        <div class="plan-pin current">Ваш тариф</div>
+                        <div class="plan-name">Бизнес</div>
+                        <div class="plan-price">12 500 <sub>₽</sub></div>
+                        <div class="plan-cycle">в месяц · при оплате за год</div>
+                        <ul class="plan-features">
+                            <li class="yes"><span class="fi">✓</span>Неограниченные закупки</li>
+                            <li class="yes"><span class="fi">✓</span>Расширенный профиль + фото</li>
+                            <li class="yes"><span class="fi">✓</span>Верификация (приоритет)</li>
+                            <li class="yes"><span class="fi">✓</span>Экспорт данных (CSV, Excel)</li>
+                            <li class="yes"><span class="fi">✓</span>Полная аналитика</li>
+                            <li class="yes"><span class="fi">✓</span>Поддержка 8/5</li>
+                            <li class="no"><span class="fi">—</span>API-интеграция</li>
+                        </ul>
+                        <button class="plan-cta cta-current" disabled>Активный тариф</button>
+                    </div>
+
+                    <!-- Корпоративный -->
+                    <div class="plan-card">
+                        <div class="plan-name">Корпоративный</div>
+                        <div class="plan-price" style="font-size:22px;margin-top:6px;">По запросу</div>
+                        <div class="plan-cycle">индивидуальные условия</div>
+                        <ul class="plan-features">
+                            <li class="yes"><span class="fi">✓</span>Всё из Бизнес</li>
+                            <li class="yes"><span class="fi">✓</span>API-интеграция с ERP/1C</li>
+                            <li class="yes"><span class="fi">✓</span>Персональный менеджер</li>
+                            <li class="yes"><span class="fi">✓</span>SLA 99.9%</li>
+                            <li class="yes"><span class="fi">✓</span>Мультиаккаунт до 50 польз.</li>
+                            <li class="yes"><span class="fi">✓</span>Кастомный брендинг</li>
+                            <li class="yes"><span class="fi">✓</span>Поддержка 24/7</li>
+                        </ul>
+                        <button class="plan-cta cta-enterprise" onclick="showUpgradeDialog('enterprise')">Связаться с нами</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: subscription info -->
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:20px;display:flex;flex-direction:column;gap:14px;">
+                <div style="font-size:14px;font-weight:700;color:var(--text-primary);">Ваша подписка</div>
+
+                <div style="background:linear-gradient(135deg,rgba(8,145,178,.08),rgba(37,99,235,.06));border:1px solid rgba(8,145,178,.2);border-radius:10px;padding:14px;">
+                    <div style="font-size:15px;font-weight:800;color:var(--accent-bright);margin-bottom:2px;">Бизнес</div>
+                    <div style="font-size:11.5px;color:var(--text-secondary);">Годовая подписка</div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Дата начала</span>
+                        <span style="font-weight:600;">25.06.2025</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Следующий платёж</span>
+                        <span style="font-weight:600;color:var(--accent-cyan);">25.06.2026</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Статус</span>
+                        <span style="font-weight:600;color:var(--accent-green);">Активна</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:var(--text-secondary);">Сумма</span>
+                        <span style="font-weight:700;font-family:'JetBrains Mono',monospace;">128 500 ₽/год</span>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid var(--inner-border);padding-top:12px;font-size:12px;">
+                    <div style="color:var(--text-secondary);margin-bottom:6px;font-weight:600;">Счета</div>
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="color:var(--text-primary);">Счёт № 2026-0041</span>
+                            <button style="background:none;border:none;cursor:pointer;color:var(--accent-cyan);font-size:11.5px;font-weight:600;">PDF</button>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="color:var(--text-primary);">Счёт № 2025-0041</span>
+                            <button style="background:none;border:none;cursor:pointer;color:var(--accent-cyan);font-size:11.5px;font-weight:600;">PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button style="width:100%;padding:10px;background:var(--accent-bright);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;" onclick="showUpgradeDialog('pro')">
+                    Продлить подписку
+                </button>
+                <button style="width:100%;padding:9px;background:transparent;color:var(--text-secondary);border:1px solid var(--card-border);border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="showUpgradeDialog('enterprise')">
+                    Изменить тариф
+                </button>
+            </div>
+        </div>
+
+        <!-- Использование ресурсов + Способы оплаты -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <!-- Использование ресурсов -->
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:20px;">
+                <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Использование ресурсов</div>
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+                            <span style="color:var(--text-primary);font-weight:500;">Активные закупки</span>
+                            <span style="color:var(--text-secondary);">28 / ∞</span>
+                        </div>
+                        <div style="background:var(--inner-border);border-radius:4px;height:7px;"><div style="width:28%;height:100%;background:var(--accent-cyan);border-radius:4px;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+                            <span style="color:var(--text-primary);font-weight:500;">Участники команды</span>
+                            <span style="color:var(--text-secondary);">6 / 20</span>
+                        </div>
+                        <div style="background:var(--inner-border);border-radius:4px;height:7px;"><div style="width:30%;height:100%;background:var(--accent-blue);border-radius:4px;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+                            <span style="color:var(--text-primary);font-weight:500;">Хранилище документов</span>
+                            <span style="color:var(--text-secondary);">3.2 / 50 ГБ</span>
+                        </div>
+                        <div style="background:var(--inner-border);border-radius:4px;height:7px;"><div style="width:6%;height:100%;background:var(--accent-green);border-radius:4px;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+                            <span style="color:var(--text-primary);font-weight:500;">Контрагенты в базе</span>
+                            <span style="color:var(--text-secondary);">312 / ∞</span>
+                        </div>
+                        <div style="background:var(--inner-border);border-radius:4px;height:7px;"><div style="width:52%;height:100%;background:#f59e0b;border-radius:4px;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Способы оплаты -->
+            <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:20px;">
+                <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Способы оплаты</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--inner-bg);border:1px solid var(--accent-cyan);border-radius:10px;">
+                        <svg width="32" height="22" viewBox="0 0 32 22" fill="none"><rect width="32" height="22" rx="4" fill="#1A1F71"/><rect x="19" y="4" width="9" height="14" rx="2" fill="#EB001B" opacity=".8"/><circle cx="13" cy="11" r="7" fill="#EB001B"/><circle cx="19" cy="11" r="7" fill="#F79E1B" opacity=".7"/></svg>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:600;">•••• •••• •••• 4291</div>
+                            <div style="font-size:11.5px;color:var(--text-secondary);">Mastercard · Истекает 09/27</div>
+                        </div>
+                        <span style="font-size:11px;font-weight:700;color:var(--accent-green);background:rgba(5,150,105,.1);padding:2px 8px;border-radius:20px;">Основная</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
+                        <div style="width:32px;height:22px;background:var(--bg-section);border:1px solid var(--inner-border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text-secondary);font-weight:700;">БП</div>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:600;">Банковский перевод</div>
+                            <div style="font-size:11.5px;color:var(--text-secondary);">По реквизитам счёта</div>
+                        </div>
+                    </div>
+                    <button style="display:flex;align-items:center;justify-content:center;gap:8px;padding:9px;background:transparent;border:1px dashed var(--card-border);border-radius:10px;color:var(--text-secondary);font-size:12.5px;font-weight:600;cursor:pointer;width:100%;" onclick="alert('Добавить карту')">
+                        + Добавить карту
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- История платежей -->
-        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:22px 24px;margin-top:8px;">
+        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:22px 24px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
                 <h3 style="font-size:15px;font-weight:700;margin:0;">История платежей</h3>
                 <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="alert('Экспорт истории платежей')">↓ Скачать</button>
@@ -246,38 +366,49 @@
                 <tbody>
                     <tr style="border-bottom:1px solid var(--inner-border);">
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">01.06.2026</td>
-                        <td style="padding:12px 0;font-weight:600;">Тариф «Профессиональный»</td>
+                        <td style="padding:12px 0;font-weight:600;">Тариф «Бизнес»</td>
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">Июнь 2026</td>
-                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">4 990 ₽</td>
+                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">12 500 ₽</td>
                         <td style="padding:12px 0;text-align:center;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;">Оплачен</span></td>
                         <td style="padding:12px 0;text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--accent-bright);font-size:12px;font-weight:600;">PDF</button></td>
                     </tr>
                     <tr style="border-bottom:1px solid var(--inner-border);">
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">01.05.2026</td>
-                        <td style="padding:12px 0;font-weight:600;">Тариф «Профессиональный»</td>
+                        <td style="padding:12px 0;font-weight:600;">Тариф «Бизнес»</td>
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">Май 2026</td>
-                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">4 990 ₽</td>
+                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">12 500 ₽</td>
                         <td style="padding:12px 0;text-align:center;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;">Оплачен</span></td>
                         <td style="padding:12px 0;text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--accent-bright);font-size:12px;font-weight:600;">PDF</button></td>
                     </tr>
                     <tr style="border-bottom:1px solid var(--inner-border);">
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">01.04.2026</td>
-                        <td style="padding:12px 0;font-weight:600;">Тариф «Профессиональный»</td>
+                        <td style="padding:12px 0;font-weight:600;">Тариф «Бизнес»</td>
                         <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">Апрель 2026</td>
-                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">4 990 ₽</td>
+                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">12 500 ₽</td>
                         <td style="padding:12px 0;text-align:center;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;">Оплачен</span></td>
                         <td style="padding:12px 0;text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--accent-bright);font-size:12px;font-weight:600;">PDF</button></td>
                     </tr>
                     <tr>
-                        <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">01.03.2026</td>
-                        <td style="padding:12px 0;font-weight:600;">Тариф «Базовый» (начало)</td>
-                        <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">Март 2026</td>
-                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">0 ₽</td>
-                        <td style="padding:12px 0;text-align:center;"><span style="background:rgba(107,114,128,.08);color:var(--text-secondary);padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;">Бесплатно</span></td>
-                        <td style="padding:12px 0;text-align:right;">—</td>
+                        <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">25.06.2025</td>
+                        <td style="padding:12px 0;font-weight:600;">Подключение «Бизнес» (год)</td>
+                        <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">Июнь 2025</td>
+                        <td style="padding:12px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">128 500 ₽</td>
+                        <td style="padding:12px 0;text-align:center;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;">Оплачен</span></td>
+                        <td style="padding:12px 0;text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--accent-bright);font-size:12px;font-weight:600;">PDF</button></td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Support contact -->
+        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:20px;display:flex;align-items:center;gap:20px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;flex-shrink:0;">А</div>
+            <div style="flex:1;">
+                <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">Поддержка по оплате</div>
+                <div style="font-size:12.5px;color:var(--text-secondary);">Алексей Соколов · Менеджер по работе с клиентами</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">billing@b2b-neft.ru · +7 (800) 555-01-23</div>
+            </div>
+            <button class="btn-secondary" onclick="alert('Написать в поддержку')">Написать</button>
         </div>
     </div>
 

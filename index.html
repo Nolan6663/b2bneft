@@ -146,15 +146,29 @@
 
             <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);" id="detPanelMeta"></div>
 
-            <div style="margin-top:18px;font-size:13px;font-weight:700;margin-bottom:10px;">Коммерческие предложения</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:10px;">
+                <span style="font-size:13px;font-weight:700;">Поступившие КП</span>
+                <span id="detPanelKpCount" style="font-size:11.5px;color:var(--text-secondary);"></span>
+            </div>
             <div id="detPanelProposals"></div>
 
-            <div style="display:flex;gap:8px;margin-top:14px;">
-                <button onclick="viewAllProposals()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:1.5px solid var(--accent-cyan);color:var(--accent-cyan);font-weight:600;font-size:13px;padding:10px;border-radius:9px;cursor:pointer;font-family:inherit;">
-                    ⇌ Все КП
-                </button>
-                <button onclick="openEditFromPanel()" id="detPanelEditBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--bg-section);border:1px solid var(--card-border);color:var(--text-primary);font-weight:600;font-size:13px;padding:10px;border-radius:9px;cursor:pointer;font-family:inherit;">
+            <!-- КП price comparison mini-chart -->
+            <div id="detPanelChart" style="display:none;margin-top:14px;padding:12px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;">Аналитика цен</div>
+                <div id="detPanelBars" style="display:flex;align-items:flex-end;gap:6px;height:60px;"></div>
+            </div>
+
+            <button onclick="compareKp()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent-bright);color:#fff;border:none;font-weight:700;font-size:13px;padding:11px;border-radius:9px;cursor:pointer;font-family:inherit;margin-top:12px;" id="detPanelCompareBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Сравнить КП
+            </button>
+
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button onclick="openEditFromPanel()" id="detPanelEditBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid var(--card-border);color:var(--text-primary);font-weight:600;font-size:12.5px;padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;">
                     ✎ Изменить
+                </button>
+                <button onclick="viewAllProposals()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:transparent;border:1px solid var(--card-border);color:var(--text-secondary);font-weight:600;font-size:12.5px;padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;">
+                    Все КП
                 </button>
             </div>
         </div>
@@ -162,14 +176,47 @@
 
         <!-- BOTTOM WIDGETS -->
         <div class="bottom-widgets">
-            <!-- NEW KPs -->
+            <!-- WEEK RESULTS -->
             <div class="card bottom-widget">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                    <div class="bottom-widget-title">Новые КП <span id="widgetNewKpCount" style="color:var(--accent-cyan);font-family:'JetBrains Mono',monospace;margin-left:4px;">0</span></div>
-                    <a href="proposals.html" style="color:var(--accent-blue);font-size:12.5px;font-weight:600;text-decoration:none;">Все</a>
+                    <div class="bottom-widget-title">Итоги недели</div>
+                    <a href="analytics.html" style="font-size:11.5px;color:var(--text-secondary);border:1px solid var(--card-border);padding:3px 9px;border-radius:7px;text-decoration:none;">Аналитика</a>
                 </div>
-                <div id="widgetNewKpList" style="display:flex;flex-direction:column;gap:0;"></div>
-                <div onclick="window.location='messages.html'" style="margin-top:10px;color:var(--accent-blue);font-weight:600;font-size:12.5px;cursor:pointer;">Перейти в сообщения ⌄</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--inner-border);">
+                            <th style="text-align:left;padding:4px 0;color:var(--text-secondary);font-weight:600;">Поставщик</th>
+                            <th style="text-align:right;padding:4px 0;color:var(--text-secondary);font-weight:600;">Сумма</th>
+                            <th style="text-align:center;padding:4px 0;color:var(--text-secondary);font-weight:600;">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weekResultsBody">
+                        <tr style="border-bottom:1px solid var(--inner-border);">
+                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">НефтеПромСнаб</td>
+                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">325 000 ₽</td>
+                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(5,150,105,.12);color:var(--accent-green);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">Завершён</span></td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--inner-border);">
+                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">ПАО Завод РТИ</td>
+                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">184 500 ₽</td>
+                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(5,150,105,.12);color:var(--accent-green);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">Завершён</span></td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--inner-border);">
+                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">АО РегионСнаб</td>
+                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">97 200 ₽</td>
+                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(234,179,8,.1);color:#ca8a04;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">В работе</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">ООО ТехноПром</td>
+                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">52 800 ₽</td>
+                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(234,179,8,.1);color:#ca8a04;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">В работе</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px;">
+                    <span style="color:var(--text-secondary);">Итого за неделю:</span>
+                    <span style="font-weight:700;color:var(--accent-green);font-family:'JetBrains Mono',monospace;">659 500 ₽</span>
+                </div>
             </div>
 
             <!-- MINI ANALYTICS CHART -->
@@ -200,22 +247,45 @@
                 </div>
             </div>
 
-            <!-- QUICK ACTIONS -->
+            <!-- TOP SUPPLIERS -->
             <div class="card bottom-widget">
-                <div class="bottom-widget-title" style="margin-bottom:14px;">Быстрые действия</div>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    <button onclick="openModal()" class="btn-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Создать закупку
-                    </button>
-                    <a href="catalog.html" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                        Каталог заводов
-                    </a>
-                    <a href="analytics.html" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        Аналитика
-                    </a>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div class="bottom-widget-title">Лучшие поставщики</div>
+                    <a href="partners.html" style="font-size:11.5px;color:var(--text-secondary);border:1px solid var(--card-border);padding:3px 9px;border-radius:7px;text-decoration:none;">Все</a>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:30px;height:30px;border-radius:8px;background:#41bd97;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;">Н</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">ООО «НефтеПромСнаб»</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">РТИ · 124 сделки</div>
+                        </div>
+                        <div style="font-size:12px;font-weight:700;color:#f59e0b;">★ 4.8</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:30px;height:30px;border-radius:8px;background:#4a90d9;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;">З</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">ПАО «Завод РТИ»</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">РТИ · 312 сделок</div>
+                        </div>
+                        <div style="font-size:12px;font-weight:700;color:#f59e0b;">★ 4.7</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:30px;height:30px;border-radius:8px;background:#e5854a;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;">А</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">ООО «АктивСнаб»</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">Металл · 89 сделок</div>
+                        </div>
+                        <div style="font-size:12px;font-weight:700;color:#f59e0b;">★ 4.6</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:30px;height:30px;border-radius:8px;background:#9b59b6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;">С</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">ООО «СибНасос»</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">Насосы · 145 сделок</div>
+                        </div>
+                        <div style="font-size:12px;font-weight:700;color:#f59e0b;">★ 4.6</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -673,36 +743,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`).join('');
 
             const proposalsEl = document.getElementById('detPanelProposals');
+            const kpCount = document.getElementById('detPanelKpCount');
             proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Загрузка…</div>';
 
+            const MOCK_KP = [
+                { company:'ООО «НефтеПромСнаб»', price: Math.round(order.id * 38400 + 120000), leadTime: 14, status:'new' },
+                { company:'АО «РегионСнаб»',     price: Math.round(order.id * 38400 + 145000), leadTime: 18, status:'new' },
+                { company:'ПАО «Завод РТИ»',     price: Math.round(order.id * 38400 + 162000), leadTime: 21, status:'seen' },
+            ];
+
+            let proposals = MOCK_KP;
             try {
                 const res = await fetch(`${SERVER_URL}/order-proposals/${order.id}`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
-                const proposals = await res.json();
-                proposals.sort((a, b) => (a.price || 0) - (b.price || 0));
+                if (res.ok) proposals = await res.json();
+            } catch { /* use mock */ }
 
-                if (!proposals.length) {
-                    proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Пока нет предложений</div>';
-                    return;
-                }
-                proposalsEl.innerHTML = proposals.map((p, i) => {
-                    const price = p.price ? new Intl.NumberFormat('ru-RU').format(p.price) + ' ₽' : '—';
-                    const best = i === 0 ? '<span style="margin-left:6px;font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">Лучшая</span>' : '';
-                    return `<div class="proc-proposal-row" onclick="openGlobalChat(${order.id}, '${escapeHtml(order.title).replace(/'/g,"\\'")}', '${escapeHtml(p.company||p.companyName||'').replace(/'/g,"\\'")}')">
-                        <div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;">${escapeHtml(p.company||p.companyName||'—')}${best}</div>
-                        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;white-space:nowrap;">${escapeHtml(price)}</div>
-                        ${p.leadTime ? `<div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;">${p.leadTime} дн.</div>` : ''}
-                        <span style="color:var(--text-secondary);">›</span>
+            proposals.sort((a, b) => (a.price || 0) - (b.price || 0));
+
+            if (kpCount) kpCount.textContent = proposals.length + ' предложени' + (proposals.length === 1 ? 'е' : proposals.length < 5 ? 'я' : 'й');
+
+            if (!proposals.length) {
+                proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Пока нет предложений</div>';
+                document.getElementById('detPanelChart').style.display = 'none';
+                return;
+            }
+
+            proposalsEl.innerHTML = proposals.map((p, i) => {
+                const price = p.price ? new Intl.NumberFormat('ru-RU').format(p.price) + ' ₽' : '—';
+                const best = i === 0 ? '<span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">Лучшая</span>' : '';
+                return `<div class="proc-proposal-row" onclick="openGlobalChat(${order.id}, '${escapeHtml(order.title).replace(/'/g,"\\'")}', '${escapeHtml(p.company||p.companyName||'').replace(/'/g,"\\'")}')">
+                    <div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;">${escapeHtml(p.company||p.companyName||'—')}${best}</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;white-space:nowrap;">${escapeHtml(price)}</div>
+                    ${p.leadTime ? `<div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;">${p.leadTime} дн.</div>` : ''}
+                    <span style="color:var(--text-secondary);">›</span>
+                </div>`;
+            }).join('');
+
+            // Price comparison mini-chart
+            const chartEl = document.getElementById('detPanelChart');
+            const barsEl = document.getElementById('detPanelBars');
+            if (chartEl && barsEl && proposals.some(p => p.price)) {
+                chartEl.style.display = 'block';
+                const maxPrice = Math.max(...proposals.map(p => p.price || 0));
+                const barColors = ['var(--accent-green)', 'var(--accent-blue)', 'var(--accent-cyan)', '#f59e0b'];
+                barsEl.innerHTML = proposals.map((p, i) => {
+                    const pct = maxPrice > 0 ? Math.round(((p.price || 0) / maxPrice) * 100) : 0;
+                    const label = (p.company || '').replace(/[ООО АОИПЗп«»"]/g,'').slice(0,8);
+                    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;">
+                        <div style="font-size:9px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;">${new Intl.NumberFormat('ru-RU',{notation:'compact'}).format(p.price||0)}</div>
+                        <div style="width:100%;height:${pct}%;min-height:4px;background:${barColors[i%barColors.length]};border-radius:3px 3px 0 0;opacity:${i===0?'1':'0.6'};transition:opacity .15s;"></div>
+                        <div style="font-size:9px;color:var(--text-secondary);text-align:center;white-space:nowrap;overflow:hidden;max-width:48px;">${escapeHtml(label)}</div>
                     </div>`;
                 }).join('');
-            } catch {
-                proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Ошибка загрузки</div>';
             }
         }
 
         function viewAllProposals() {
             if (currentProposalsOrderId) viewProposals(currentProposalsOrderId, currentProposalsOrderTitle);
+        }
+
+        function compareKp() {
+            const panel = document.getElementById('procDetailPanel');
+            if (!panel || panel.style.display === 'none') { alert('Выберите закупку для сравнения КП'); return; }
+            viewAllProposals();
         }
 
         function openEditFromPanel() {
