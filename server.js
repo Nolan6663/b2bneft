@@ -365,6 +365,45 @@ function getProducerCategories(producer) {
     });
 }
 
+const CITY_PRODUCTION_POINTS = {
+    'Тюмень': { lat: 57.1522, lng: 65.5272, region: 'Тюменская область' },
+    'Тобольск': { lat: 58.2017, lng: 68.2538, region: 'Тюменская область' },
+    'Екатеринбург': { lat: 56.8389, lng: 60.6057, region: 'Свердловская область' },
+    'Нижний Тагил': { lat: 57.9194, lng: 59.9650, region: 'Свердловская область' },
+    'Пермь': { lat: 58.0105, lng: 56.2502, region: 'Пермский край' },
+    'Уфа': { lat: 54.7388, lng: 55.9721, region: 'Башкортостан' },
+    'Казань': { lat: 55.7961, lng: 49.1064, region: 'Республика Татарстан' },
+    'Сургут': { lat: 61.2540, lng: 73.3962, region: 'Ханты-Мансийский АО' },
+    'Нижневартовск': { lat: 60.9397, lng: 76.5696, region: 'Ханты-Мансийский АО' },
+    'Самара': { lat: 53.1959, lng: 50.1008, region: 'Самарская область' },
+    'Оренбург': { lat: 51.7682, lng: 55.0969, region: 'Оренбургская область' },
+    'Томск': { lat: 56.4846, lng: 84.9482, region: 'Томская область' },
+    'Челябинск': { lat: 55.1644, lng: 61.4368, region: 'Челябинская область' },
+    'Москва': { lat: 55.7558, lng: 37.6173, region: 'Москва' },
+    'Санкт-Петербург': { lat: 59.9386, lng: 30.3141, region: 'Санкт-Петербург' },
+    'Ярославль': { lat: 57.6261, lng: 39.8845, region: 'Ярославская область' },
+};
+
+function getCityProductionPoint(city = '') {
+    const cleanCity = String(city || '')
+        .replace(/^г\.\s*/i, '')
+        .replace(/^город\s+/i, '')
+        .trim();
+    if (!cleanCity) return null;
+    return CITY_PRODUCTION_POINTS[cleanCity] || null;
+}
+
+function offsetProductionPoint(point, index) {
+    if (!point || index === 0) return point;
+    const angle = (index % 8) * (Math.PI / 4);
+    const radius = 0.045 + Math.floor(index / 8) * 0.018;
+    return {
+        ...point,
+        lat: Number(point.lat) + Math.sin(angle) * radius,
+        lng: Number(point.lng) + Math.cos(angle) * radius,
+    };
+}
+
 async function geocodeExisting() {
     try {
         const { rows } = await pool.query(
@@ -1035,30 +1074,48 @@ app.get('/api/public/stats', async (req, res, next) => {
 app.get('/api/map', async (req, res, next) => {
     try {
         const { rows } = await pool.query(`
-            SELECT id, company, city, specialization, status, verified_by_platform,
-                   lat, lng, capabilities, equipment, about
-            FROM companies WHERE role = 'producer' AND lat IS NOT NULL AND lng IS NOT NULL
+            SELECT *
+            FROM companies
+            WHERE role = 'producer'
+            ORDER BY verified_by_platform DESC, company ASC
         `);
-        res.json(rows.map(r => {
-            const producer = {
-                specialization: r.specialization || '',
-                equipment: JSON.parse(r.equipment || '[]'),
-                capabilities: JSON.parse(r.capabilities || '[]'),
-                about: r.about || '',
-            };
+        const cityIndexes = new Map();
+        const result = rows.map(r => {
+            const producer = rowToCompany(r);
+            const fallbackPoint = getCityProductionPoint(producer.city);
+            const basePoint = producer.lat != null && producer.lng != null
+                ? { lat: Number(producer.lat), lng: Number(producer.lng), region: fallbackPoint?.region || producer.city || '' }
+                : fallbackPoint;
+            if (!basePoint) return null;
+
+            const cityKey = producer.city || producer.company;
+            const cityIndex = cityIndexes.get(cityKey) || 0;
+            cityIndexes.set(cityKey, cityIndex + 1);
+            const point = offsetProductionPoint(basePoint, cityIndex);
+            const categories = getProducerCategories(producer);
+
             return {
-                id: r.id,
-                company: r.company,
-                city: r.city,
-                specialization: r.specialization,
-                capabilities: JSON.parse(r.capabilities || '[]'),
-                status: r.status,
-                verified: Boolean(r.verified_by_platform),
-                lat: r.lat,
-                lng: r.lng,
-                categories: getProducerCategories(producer),
+                id: producer.id,
+                company: producer.company,
+                city: producer.city,
+                region: point.region || producer.city || '',
+                specialization: producer.specialization || '',
+                about: producer.about || '',
+                equipment: producer.equipment || [],
+                capabilities: producer.capabilities || [],
+                categories: categories.length ? categories : ['Прочее'],
+                status: producer.status,
+                verified: producer.verifiedByPlatform,
+                lat: point.lat,
+                lng: point.lng,
+                productionLoad: producer.productionLoad,
+                freeCapacity: producer.freeCapacity || [],
+                machinesCount: producer.machinesCount,
+                productionArea: producer.productionArea,
+                yearsExperience: producer.yearsExperience,
             };
-        }));
+        }).filter(Boolean);
+        res.json(result);
     } catch (e) { next(e); }
 });
 

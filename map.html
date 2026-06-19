@@ -39,6 +39,7 @@
         }
         .mf-check span { font-size: 12.5px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .mf-check small { font-size: 11px; color: var(--text-secondary); margin-left: auto; flex-shrink: 0; }
+        .mf-check-list { display: flex; flex-direction: column; gap: 8px; }
         .mf-divider { border: none; border-top: 1px solid var(--inner-border); margin: 0; }
         .mf-select-wrap { position: relative; }
         .mf-select-wrap::after {
@@ -79,6 +80,48 @@
             position: relative;
         }
         #map { width: 100%; height: 100%; min-height: 480px; z-index: 0; }
+        .map-production-summary {
+            position: absolute;
+            left: 14px;
+            top: 14px;
+            z-index: 400;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            max-width: calc(100% - 28px);
+            pointer-events: none;
+        }
+        .map-summary-pill {
+            background: rgba(255,255,255,.94);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            padding: 7px 10px;
+            box-shadow: var(--shadow-card);
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+        .map-summary-pill b { color: var(--accent-bright); }
+        .map-empty-state {
+            position: absolute;
+            inset: 76px 18px 18px;
+            z-index: 401;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            pointer-events: none;
+        }
+        .map-empty-card {
+            width: min(360px, 100%);
+            background: rgba(255,255,255,.96);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            padding: 22px;
+        }
+        .map-empty-card b { display:block; color:var(--text-primary); font-size:14px; margin-bottom:6px; }
+        .map-empty-card span { color:var(--text-secondary); font-size:12.5px; line-height:1.45; }
 
         /* ── Right company list ─────────────────────────────────────── */
         .map-company-panel {
@@ -122,6 +165,13 @@
         .mcp-spec { font-size: 11.5px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 6px; }
         .mcp-tags { display: flex; flex-wrap: wrap; gap: 3px; }
         .mcp-tag { font-size: 10px; padding: 2px 7px; border-radius: 12px; background: var(--bg-section); border: 1px solid var(--inner-border); color: var(--text-secondary); }
+        .mcp-production-meta { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 2px; }
+        .mcp-meta-pill { font-size:10.5px; font-weight:700; color:var(--text-tertiary); background:#fff; border:1px solid var(--card-border); border-radius:999px; padding:3px 7px; }
+        .mcp-capacity {
+            height: 6px; border-radius: 999px; background: var(--inner-border);
+            overflow: hidden; margin-top: 8px;
+        }
+        .mcp-capacity-fill { height:100%; border-radius:inherit; background: var(--accent-gradient); }
         .mcp-verified { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--accent-green); margin-bottom: 4px; }
         .mcp-write-btn {
             display: block; text-align: center; margin-top: 8px;
@@ -134,11 +184,14 @@
 
         /* ── Custom map markers ─────────────────────────────────────── */
         .map-marker {
-            width: 30px; height: 30px; border-radius: 50%;
-            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4);
+            width: 34px; height: 34px; border-radius: 12px 12px 12px 4px;
+            border: 3px solid #fff; box-shadow: 0 8px 18px rgba(15,23,42,.24);
             display: flex; align-items: center; justify-content: center;
+            transform: rotate(-45deg);
             font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
         }
+        .map-marker span { transform: rotate(45deg); display:block; }
+        .map-marker.verified { box-shadow: 0 8px 20px rgba(18,168,102,.28); }
 
         /* ── Popup ──────────────────────────────────────────────────── */
         .leaflet-popup-content-wrapper {
@@ -158,6 +211,10 @@
         .popup-spec { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
         .popup-caps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
         .popup-cap { font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-secondary); }
+        .popup-production-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0; }
+        .popup-production-metric { border:1px solid var(--inner-border); border-radius:8px; padding:7px 8px; background:var(--inner-bg); }
+        .popup-production-metric span { display:block; font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+        .popup-production-metric b { display:block; margin-top:2px; font-size:13px; color:var(--text-primary); }
         .popup-btn { display: block; text-align: center; padding: 8px 0; border-radius: var(--radius-btn); background: var(--accent-bright); color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; transition: opacity .15s; }
         .popup-btn:hover { opacity: .85; }
 
@@ -203,7 +260,12 @@
         @media (max-width: 720px) {
             .map-layout { grid-template-columns: 1fr; }
             .map-filter-panel { display: none; }
+            .map-company-panel { display: flex; min-height: 360px; }
             .map-stats-grid { grid-template-columns: 1fr; }
+            .map-production-summary { position: static; margin: 0 0 10px; pointer-events: auto; }
+            .map-empty-state { position: static; inset:auto; min-height:160px; }
+            .map-center { display:flex; flex-direction:column; padding:10px; gap:10px; }
+            #map { border-radius: var(--radius-inner); overflow:hidden; min-height:420px; border:1px solid var(--inner-border); }
         }
     </style>
 </head>
@@ -291,12 +353,9 @@
 
                 <div class="mf-section">
                     <div class="mf-label">Тип производства</div>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="РТИ"><span>РТИ</span><small id="cnt-РТИ">—</small></label>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="Металл"><span>Металл</span><small id="cnt-Металл">—</small></label>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="Арматура"><span>Трубопр. арматура</span><small id="cnt-Арматура">—</small></label>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="Электро"><span>Электрооборудование</span><small id="cnt-Электро">—</small></label>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="Насосы"><span>Насосное оборудование</span><small id="cnt-Насосы">—</small></label>
-                    <label class="mf-check"><input type="checkbox" checked data-cat="Трубы"><span>Трубная продукция</span><small id="cnt-Трубы">—</small></label>
+                    <div class="mf-check-list" id="categoryFilters">
+                        <div style="color:var(--text-secondary);font-size:12px;">Загрузка типов...</div>
+                    </div>
                 </div>
 
                 <hr class="mf-divider">
@@ -313,13 +372,6 @@
                 <div class="mf-select-wrap">
                     <select class="mf-select" id="regionSelect">
                         <option value="">Все регионы</option>
-                        <option>Тюменская область</option>
-                        <option>Свердловская область</option>
-                        <option>Республика Татарстан</option>
-                        <option>Башкортостан</option>
-                        <option>Пермский край</option>
-                        <option>Ханты-Мансийский АО</option>
-                        <option>Оренбургская область</option>
                     </select>
                 </div>
                 </div>
@@ -331,18 +383,25 @@
 
             <!-- Center: map -->
             <div class="map-center">
+                <div class="map-production-summary" id="mapProductionSummary"></div>
+                <div class="map-empty-state" id="mapEmptyState">
+                    <div class="map-empty-card">
+                        <b>Нет производств с геоданными</b>
+                        <span>Заполните город в профиле производителя или добавьте координаты, и предприятие появится на карте.</span>
+                    </div>
+                </div>
                 <div id="map"></div>
             </div>
 
             <!-- Right: company list -->
             <div class="map-company-panel">
                 <div class="mcp-header">
-                    <span class="mcp-title">Поставщики на карте</span>
+                    <span class="mcp-title">Производства на карте</span>
                     <span class="mcp-count" id="mcpCount">0 компаний</span>
                 </div>
                 <div class="mcp-tabs">
                     <div class="mcp-tab active" onclick="setMcpTab('list',this)">По списку</div>
-                    <div class="mcp-tab" onclick="setMcpTab('top',this)">Популярные</div>
+                    <div class="mcp-tab" onclick="setMcpTab('top',this)">По мощности</div>
                 </div>
                 <div class="mcp-list" id="mcpList">
                     <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Загрузка...</div>
@@ -443,6 +502,80 @@
         const markerById = {};
         const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71','#f59e0b'];
         let activeMcpTab = 'list';
+        let selectedProducerId = null;
+        let filtersReady = false;
+
+        function normalizeCategory(category) {
+            const raw = String(category || '').trim();
+            const value = raw.toLowerCase();
+            if (!value) return 'Прочее';
+            if (value.includes('рти') || value.includes('резин') || value.includes('уплот')) return 'РТИ';
+            if (value.includes('металл') || value.includes('токар') || value.includes('фрезер') || value.includes('лазер')) return 'Металл';
+            if (value.includes('арматур') || value.includes('трубопровод') || value.includes('задвиж') || value.includes('кран')) return 'Арматура';
+            if (value.includes('электро') || value.includes('кабель') || value.includes('щит') || value.includes('трансформ')) return 'Электро';
+            if (value.includes('насос')) return 'Насосы';
+            if (value.includes('труб')) return 'Трубы';
+            return raw || 'Прочее';
+        }
+
+        function productionLoad(p) {
+            if (Number.isFinite(Number(p.productionLoad))) return Math.max(0, Math.min(100, Number(p.productionLoad)));
+            const free = Array.isArray(p.freeCapacity) ? p.freeCapacity : [];
+            if (!free.length) return null;
+            const avgFree = free.reduce((sum, item) => sum + (Number(item.percent) || 0), 0) / free.length;
+            return Math.max(0, Math.min(100, Math.round(100 - avgFree)));
+        }
+
+        function normalizeProducer(p) {
+            const categories = (Array.isArray(p.categories) && p.categories.length ? p.categories : ['Прочее'])
+                .map(normalizeCategory)
+                .filter(Boolean);
+            const uniqueCategories = [...new Set(categories)];
+            return {
+                ...p,
+                lat: Number(p.lat),
+                lng: Number(p.lng),
+                categories: uniqueCategories.length ? uniqueCategories : ['Прочее'],
+                equipment: Array.isArray(p.equipment) ? p.equipment : [],
+                freeCapacity: Array.isArray(p.freeCapacity) ? p.freeCapacity : [],
+                capabilities: Array.isArray(p.capabilities) ? p.capabilities : [],
+                region: p.region || p.city || 'Регион не указан',
+                productionLoadValue: productionLoad(p),
+                machinesCount: p.machinesCount ?? null,
+                productionArea: p.productionArea ?? null,
+                yearsExperience: p.yearsExperience ?? null,
+            };
+        }
+
+        function selectedCategories() {
+            return [...document.querySelectorAll('#categoryFilters [data-cat]:checked')].map(el => el.dataset.cat);
+        }
+
+        function renderDynamicFilters() {
+            const current = new Set(filtersReady ? selectedCategories() : []);
+            const counts = new Map();
+            allProducers.forEach(p => p.categories.forEach(cat => counts.set(cat, (counts.get(cat) || 0) + 1)));
+            const order = ['РТИ', 'Металл', 'Арматура', 'Электро', 'Насосы', 'Трубы', 'Прочее'];
+            const categories = [...counts.keys()].sort((a, b) => {
+                const ai = order.indexOf(a), bi = order.indexOf(b);
+                return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || a.localeCompare(b, 'ru');
+            });
+            const categoryBox = document.getElementById('categoryFilters');
+            categoryBox.innerHTML = categories.length
+                ? categories.map(cat => {
+                    const checked = !filtersReady || current.has(cat) ? 'checked' : '';
+                    return `<label class="mf-check"><input type="checkbox" ${checked} data-cat="${escapeHtml(cat)}"><span>${escapeHtml(cat)}</span><small>${counts.get(cat)}</small></label>`;
+                }).join('')
+                : '<div style="color:var(--text-secondary);font-size:12px;">Нет типов производств</div>';
+            categoryBox.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('change', applyFilters));
+
+            const regionSelect = document.getElementById('regionSelect');
+            const previousRegion = regionSelect.value;
+            const regions = [...new Set(allProducers.map(p => p.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+            regionSelect.innerHTML = `<option value="">Все регионы</option>` + regions.map(r => `<option>${escapeHtml(r)}</option>`).join('');
+            if (regions.includes(previousRegion)) regionSelect.value = previousRegion;
+            filtersReady = true;
+        }
 
         // ── Mock data ─────────────────────────────────────────────────
         const MOCK = [
@@ -463,27 +596,36 @@
         // ── Marker icon ───────────────────────────────────────────────
         function makeIcon(p) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
             return L.divIcon({
                 className: '',
-                html: `<div class="map-marker" style="background:${color}">${letter}</div>`,
-                iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -18],
+                html: `<div class="map-marker ${p.verified ? 'verified' : ''}" style="background:${color}"><span>${letter}</span></div>`,
+                iconSize: [34, 34], iconAnchor: [17, 30], popupAnchor: [0, -28],
             });
         }
 
         function popupHtml(p) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
             const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>` : '';
             const caps = p.categories.map(c => `<span class="popup-cap">${escapeHtml(c)}</span>`).join('');
+            const loadText = p.productionLoadValue == null ? '—' : `${p.productionLoadValue}%`;
+            const equipmentText = p.equipment.length ? p.equipment.slice(0, 2).join(', ') : 'Оборудование не указано';
             return `<div class="popup-body">
                 <div class="popup-header">
                     <div class="popup-avatar" style="background:${color}">${letter}</div>
-                    <div><div class="popup-name">${escapeHtml(p.company)}</div><div class="popup-city">📍 ${escapeHtml(p.city)}</div></div>
+                    <div><div class="popup-name">${escapeHtml(p.company)}</div><div class="popup-city">${escapeHtml(p.city || p.region)}</div></div>
                 </div>
                 ${verBadge}
                 <div class="popup-spec">${escapeHtml(p.specialization)}</div>
                 <div class="popup-caps">${caps}</div>
+                <div class="popup-production-grid">
+                    <div class="popup-production-metric"><span>Загрузка</span><b>${loadText}</b></div>
+                    <div class="popup-production-metric"><span>Станки</span><b>${p.machinesCount || '—'}</b></div>
+                    <div class="popup-production-metric"><span>Площадь</span><b>${p.productionArea ? p.productionArea + ' м²' : '—'}</b></div>
+                    <div class="popup-production-metric"><span>Опыт</span><b>${p.yearsExperience ? p.yearsExperience + ' лет' : '—'}</b></div>
+                </div>
+                <div class="popup-spec">${escapeHtml(equipmentText)}</div>
                 <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль →</a>
             </div>`;
         }
@@ -497,19 +639,21 @@
             const q = document.getElementById('mapSearch').value.toLowerCase();
             const verifiedOnly = document.getElementById('verifiedOnly').checked;
             const regionVal = document.getElementById('regionSelect').value;
-            const checkedCats = [...document.querySelectorAll('[data-cat]:checked')].map(el => el.dataset.cat);
+            const checkedCats = selectedCategories();
 
             const filtered = allProducers.filter(p => {
                 if (verifiedOnly && !p.verified) return false;
                 if (regionVal && p.region !== regionVal) return false;
                 if (checkedCats.length && !p.categories.some(c => checkedCats.includes(c))) return false;
-                if (q && !p.company.toLowerCase().includes(q) && !p.city.toLowerCase().includes(q) && !p.specialization.toLowerCase().includes(q)) return false;
+                const searchText = [p.company, p.city, p.region, p.specialization, p.equipment.join(' '), p.categories.join(' ')].join(' ').toLowerCase();
+                if (q && !searchText.includes(q)) return false;
                 return true;
             });
 
             filtered.forEach(p => {
                 const m = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
                     .bindPopup(popupHtml(p), { maxWidth: 270, className: 'map-popup-wrap' });
+                m.on('click', () => selectProducer(p.id, false));
                 m.addTo(map);
                 markers.push(m);
                 markerById[p.id] = m;
@@ -521,18 +665,42 @@
             }
             setTimeout(() => map.invalidateSize(), 0);
 
-            // Category counters
-            document.querySelectorAll('[data-cat]').forEach(el => {
-                const cat = el.dataset.cat;
-                const cnt = allProducers.filter(p => p.categories.includes(cat)).length;
-                const counter = document.getElementById('cnt-' + cat);
-                if (counter) counter.textContent = cnt;
-            });
-
             document.getElementById('mapCounter').innerHTML =
                 `Показано: <b>${filtered.length}</b> из ${allProducers.length}`;
 
+            updateMapSummary(filtered);
+            updateMapKpis();
             renderMcpList(filtered);
+        }
+
+        function updateMapSummary(list) {
+            const avgLoadValues = list.map(p => p.productionLoadValue).filter(v => v != null);
+            const avgLoad = avgLoadValues.length
+                ? Math.round(avgLoadValues.reduce((sum, v) => sum + v, 0) / avgLoadValues.length)
+                : null;
+            const machines = list.reduce((sum, p) => sum + (Number(p.machinesCount) || 0), 0);
+            const regions = new Set(list.map(p => p.region).filter(Boolean)).size;
+            const emptyState = document.getElementById('mapEmptyState');
+            if (emptyState) emptyState.style.display = list.length ? 'none' : 'flex';
+            document.getElementById('mapProductionSummary').innerHTML = `
+                <span class="map-summary-pill"><b>${list.length}</b> производств</span>
+                <span class="map-summary-pill"><b>${regions}</b> регионов</span>
+                <span class="map-summary-pill"><b>${machines || '—'}</b> станков</span>
+                <span class="map-summary-pill">загрузка <b>${avgLoad == null ? '—' : avgLoad + '%'}</b></span>
+            `;
+        }
+
+        function updateMapKpis() {
+            const verified = allProducers.filter(p => p.verified).length;
+            const regions = new Set(allProducers.map(p => p.region).filter(Boolean)).size;
+            const avgLoadValues = allProducers.map(p => p.productionLoadValue).filter(v => v != null);
+            const avgLoad = avgLoadValues.length
+                ? Math.round(avgLoadValues.reduce((sum, v) => sum + v, 0) / avgLoadValues.length)
+                : 0;
+            document.getElementById('mapKpi1').textContent = allProducers.length;
+            document.getElementById('mapKpi2').textContent = avgLoad ? `${avgLoad}%` : '—';
+            document.getElementById('mapKpi3').textContent = verified;
+            document.getElementById('mapKpi4').textContent = regions || '—';
         }
 
         // ── Company panel ─────────────────────────────────────────────
@@ -545,7 +713,7 @@
 
         function renderMcpList(list) {
             const sorted = activeMcpTab === 'top'
-                ? [...list].sort((a, b) => b.deals - a.deals)
+                ? [...list].sort((a, b) => (b.machinesCount || 0) - (a.machinesCount || 0) || (b.productionArea || 0) - (a.productionArea || 0))
                 : list;
 
             document.getElementById('mcpCount').textContent =
@@ -558,56 +726,79 @@
             }
             el.innerHTML = sorted.map(p => {
                 const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-                const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').charAt(0).toUpperCase() || '?';
+                const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
                 const verBadge = p.verified
                     ? `<div class="mcp-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</div>`
                     : '';
                 const tags = p.categories.slice(0,3).map(c => `<span class="mcp-tag">${escapeHtml(c)}</span>`).join('');
-                return `<div class="mcp-card" onclick="flyToProducer(${p.id})" id="mcpc-${p.id}">
+                const load = p.productionLoadValue == null ? null : p.productionLoadValue;
+                const loadWidth = load == null ? 0 : Math.max(4, load);
+                const selected = selectedProducerId === p.id ? ' selected' : '';
+                return `<div class="mcp-card${selected}" onclick="flyToProducer(${p.id})" id="mcpc-${p.id}">
                     <div class="mcp-card-top">
                         <div class="mcp-avatar" style="background:${color}">${letter}</div>
                         <div>
                             <div class="mcp-name">${escapeHtml(p.company)}</div>
-                            <div class="mcp-city">📍 ${escapeHtml(p.city)}</div>
+                            <div class="mcp-city">${escapeHtml(p.city || p.region)}</div>
                         </div>
                     </div>
                     ${verBadge}
                     <div class="mcp-spec">${escapeHtml(p.specialization)}</div>
                     <div class="mcp-tags">${tags}</div>
-                    <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='messages.html'">Написать</button>
+                    <div class="mcp-production-meta">
+                        <span class="mcp-meta-pill">${p.machinesCount ? p.machinesCount + ' станков' : 'станки —'}</span>
+                        <span class="mcp-meta-pill">${p.productionArea ? p.productionArea + ' м²' : 'площадь —'}</span>
+                        <span class="mcp-meta-pill">${load == null ? 'загрузка —' : 'загрузка ' + load + '%'}</span>
+                    </div>
+                    <div class="mcp-capacity"><div class="mcp-capacity-fill" style="width:${loadWidth}%"></div></div>
+                    <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='company-profile.html?id=${p.id}'">Открыть профиль</button>
                 </div>`;
             }).join('');
+        }
+
+        function selectProducer(id, scrollCard = true) {
+            selectedProducerId = id;
+            document.querySelectorAll('.mcp-card').forEach(c => c.classList.remove('selected'));
+            const card = document.getElementById('mcpc-' + id);
+            if (card) {
+                card.classList.add('selected');
+                if (scrollCard) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         function flyToProducer(id) {
             const p = allProducers.find(x => x.id === id);
             if (!p) return;
+            selectProducer(id);
             map.flyTo([p.lat, p.lng], 10, { duration: 0.8 });
-            document.querySelectorAll('.mcp-card').forEach(c => c.classList.remove('selected'));
-            const card = document.getElementById('mcpc-' + id);
-            if (card) { card.classList.add('selected'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
             const m = markerById[id];
             if (m) setTimeout(() => m.openPopup(), 900);
         }
 
         // ── Load ──────────────────────────────────────────────────────
         async function loadMap() {
-            allProducers = shouldUseMockData() ? MOCK : [];
+            allProducers = shouldUseMockData() ? MOCK.map(normalizeProducer) : [];
+            renderDynamicFilters();
             applyFilters();
             try {
                 const r = await fetch(`${SERVER_URL}/map`);
                 if (!r.ok) throw new Error('map request failed');
                 const data = await r.json();
                 if (data.length || !shouldUseMockData()) {
-                    allProducers = data;
+                    allProducers = data
+                        .filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
+                        .map(normalizeProducer);
+                    renderDynamicFilters();
                     applyFilters();
                 }
             } catch {
                 if (shouldUseMockData()) {
-                    allProducers = MOCK;
+                    allProducers = MOCK.map(normalizeProducer);
+                    renderDynamicFilters();
                     applyFilters();
                 } else {
                     allProducers = [];
+                    renderDynamicFilters();
                     applyFilters();
                     showDataLoadError('Не удалось загрузить поставщиков на карте');
                 }
@@ -615,6 +806,8 @@
         }
 
         document.getElementById('mapSearch').addEventListener('input', () => applyFilters());
+        document.getElementById('verifiedOnly').addEventListener('change', () => applyFilters());
+        document.getElementById('regionSelect').addEventListener('change', () => applyFilters());
 
         loadMap();
     </script>
