@@ -204,25 +204,6 @@ function msgToast(msg) {
     document.body.appendChild(t);
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
 }
-
-function toggleTheme() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = !isDark;
-    if (lbl) lbl.textContent = isDark ? '☀ Светлая тема' : '🌙 Тёмная тема';
-    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const cb = document.getElementById('themeCheckbox'), lbl = document.getElementById('themeLabel');
-    const icon = document.getElementById('themeIcon');
-    if (cb) cb.checked = isDark;
-    if (lbl) lbl.textContent = isDark ? '🌙 Тёмная тема' : '☀ Светлая тема';
-    if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-});
 </script>
     <script>
         if (!localStorage.getItem('authToken')) window.location.href = 'login.html';

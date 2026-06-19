@@ -1283,20 +1283,13 @@
             renderDynamics(data);
         }
 
-        /* ══ THEME ══ */
-        function toggleTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            isDark ? document.documentElement.removeAttribute('data-theme') : document.documentElement.setAttribute('data-theme','dark');
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
-            const cb=document.getElementById('themeCheckbox'), lbl=document.getElementById('themeLabel');
-            if(cb) cb.checked=!isDark;
-            if(lbl) lbl.textContent=isDark?'☀ Светлая тема':'🌙 Тёмная тема';
+        document.addEventListener('themechange', () => {
             const data = computeFilteredMock();
             renderDynamics(data);
             renderCategories(data);
             renderCycle();
             renderHeatmap(data);
-        }
+        });
 
         /* ══ REAL API (mock-first) ══ */
         /* SERVER_URL берётся из app.js */
@@ -1351,11 +1344,6 @@
 
         /* ══ INIT ══ */
         window.addEventListener('DOMContentLoaded', () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const cb=document.getElementById('themeCheckbox'), lbl=document.getElementById('themeLabel');
-            if(cb) cb.checked=isDark;
-            if(lbl) lbl.textContent=isDark?'🌙 Тёмная тема':'☀ Светлая тема';
-
             renderKPI(MOCK);
             renderDynamics(MOCK);
             renderFunnel(MOCK);
