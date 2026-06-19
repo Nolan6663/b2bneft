@@ -12,6 +12,14 @@ const { Resend } = require('resend');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
 
+function htmlEscape(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
@@ -136,6 +144,15 @@ function rowToNotification(r) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.set('trust proxy', 1);
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-DNS-Prefetch-Control', 'off');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+    res.setHeader('X-Download-Options', 'noopen');
+    next();
+});
 app.use(cors({
     origin(origin, callback) {
         if (isAllowedOrigin(origin)) return callback(null, true);
@@ -161,7 +178,9 @@ try { Server = require('socket.io').Server; }
 catch { console.warn('socket.io не установлен — работаем через поллинг.'); }
 
 const httpServer = http.createServer(app);
-const socketOrigin = IS_PRODUCTION ? Array.from(ALLOWED_ORIGINS) : '*';
+const socketOrigin = IS_PRODUCTION
+    ? Array.from(ALLOWED_ORIGINS)
+    : [...Array.from(ALLOWED_ORIGINS), 'http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5000'];
 const io = Server ? new Server(httpServer, { cors: { origin: socketOrigin } }) : null;
 
 if (io) {
@@ -182,6 +201,11 @@ if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR);
 const ALLOWED_DRAWING_EXT = ['.pdf', '.png', '.jpg', '.jpeg', '.dxf', '.dwg', '.step', '.stp'];
 const KP_ALLOWED_EXT = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
 const PHOTO_ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp'];
+const BLOCKED_MIME = new Set([
+    'text/html', 'text/javascript', 'application/javascript',
+    'application/x-php', 'text/x-php', 'application/x-httpd-php',
+    'application/x-sh', 'text/x-python',
+]);
 
 const drawingStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -203,6 +227,7 @@ const uploadDrawing = multer({
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
         if (!ALLOWED_DRAWING_EXT.includes(ext)) return cb(new Error('Недопустимый тип файла. Разрешены: ' + ALLOWED_DRAWING_EXT.join(', ')));
+        if (BLOCKED_MIME.has(file.mimetype)) return cb(new Error('Недопустимый MIME-тип файла'));
         cb(null, true);
     }
 }).single('drawing');
@@ -212,6 +237,7 @@ const uploadKP = multer({
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
         if (!KP_ALLOWED_EXT.includes(ext)) return cb(new Error('Недопустимый тип файла. Разрешены: ' + KP_ALLOWED_EXT.join(', ')));
+        if (BLOCKED_MIME.has(file.mimetype)) return cb(new Error('Недопустимый MIME-тип файла'));
         cb(null, true);
     }
 }).single('kpFile');
@@ -260,7 +286,12 @@ function deleteDrawingFile(drawing) {
 
 // ===================== СТАТИКА =====================
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/uploads', express.static(UPLOADS_DIR));
+app.get('/uploads/:filename', requireAuth, (req, res) => {
+    const filename = path.basename(req.params.filename);
+    const filepath = path.join(UPLOADS_DIR, filename);
+    if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Файл не найден' });
+    res.sendFile(filepath);
+});
 app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
@@ -754,7 +785,7 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), handleKPUpload,
             if (email) await sendEmail(email, `Новый отклик на закупку «${title}»`,
                 `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
                   <h3 style="color:#41bd97">Новый отклик на закупку</h3>
-                  <p>Компания <strong>${req.user.company}</strong> подала коммерческое предложение по закупке <strong>«${title}»</strong>.</p>
+                  <p>Компания <strong>${htmlEscape(req.user.company)}</strong> подала коммерческое предложение по закупке <strong>«${htmlEscape(title)}»</strong>.</p>
                   <p>Цена: <strong>${Number(newProposal.price).toLocaleString('ru-RU')} ₽</strong> · Срок: <strong>${newProposal.days} дн.</strong></p>
                   <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
                 </div>`
@@ -831,8 +862,8 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
                 `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
                   <h3 style="color:${won ? '#41bd97' : '#e07070'}">${won ? 'Ваше предложение принято!' : 'Предложение отклонено'}</h3>
                   <p>${won
-                    ? `Поздравляем! Заказчик выбрал ваше предложение по закупке <strong>«${title}»</strong>.`
-                    : `К сожалению, заказчик выбрал другого поставщика по закупке <strong>«${title}»</strong>.`
+                    ? `Поздравляем! Заказчик выбрал ваше предложение по закупке <strong>«${htmlEscape(title)}»</strong>.`
+                    : `К сожалению, заказчик выбрал другого поставщика по закупке <strong>«${htmlEscape(title)}»</strong>.`
                   }</p>
                   <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
                 </div>`
@@ -860,7 +891,7 @@ app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer
         if (rejectEmail) await sendEmail(rejectEmail, `Предложение отклонено — «${rejectTitle}»`,
             `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
               <h3 style="color:#e07070">Предложение отклонено</h3>
-              <p>Заказчик отклонил ваше предложение по закупке <strong>«${rejectTitle}»</strong>.</p>
+              <p>Заказчик отклонил ваше предложение по закупке <strong>«${htmlEscape(rejectTitle)}»</strong>.</p>
               <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
             </div>`
         );
@@ -1256,6 +1287,9 @@ app.post('/api/auth/register', async (req, res, next) => {
     try {
         const { email, password, company, inn, role } = req.body;
         if (!email || !password || !company || !role) return res.status(400).json({ error: 'Заполните все поля регистрации' });
+        const ALLOWED_ROLES = ['customer', 'producer'];
+        if (!ALLOWED_ROLES.includes(role)) return res.status(400).json({ error: 'Недопустимая роль' });
+        if (password.length < 8) return res.status(400).json({ error: 'Пароль — минимум 8 символов' });
 
         const { rows: [taken] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)', [email]);
         if (taken) return res.status(409).json({ error: 'Пользователь с таким email уже зарегистрирован' });
@@ -1475,7 +1509,7 @@ app.post('/api/auth/reset-password', async (req, res, next) => {
     try {
         const { token, newPassword } = req.body;
         if (!token || !newPassword) return res.status(400).json({ error: 'Неверный запрос' });
-        if (newPassword.length < 6) return res.status(400).json({ error: 'Пароль — минимум 6 символов' });
+        if (newPassword.length < 8) return res.status(400).json({ error: 'Пароль — минимум 8 символов' });
         const { rows: [row] } = await pool.query(
             'SELECT * FROM password_reset_tokens WHERE token = $1 AND expires_at > NOW()',
             [token]
