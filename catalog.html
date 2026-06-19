@@ -130,6 +130,38 @@
             text-decoration: none; justify-content: center;
         }
 
+        /* ── AI Search ── */
+        .ai-search-btn {
+            flex-shrink: 0; height: 44px; padding: 0 16px;
+            border: 1px solid var(--accent-cyan); border-radius: var(--radius-input);
+            background: transparent; color: var(--accent-cyan);
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: inherit; white-space: nowrap;
+            transition: background .15s, color .15s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ai-search-btn:hover, .ai-search-btn.active {
+            background: var(--accent-cyan); color: #fff;
+        }
+        .ai-search-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .ai-reason-badge {
+            margin-top: 10px; padding: 8px 12px;
+            background: rgba(8,145,178,.07); border: 1px solid rgba(8,145,178,.2);
+            border-radius: 8px; font-size: 12px; color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .ai-reason-badge span { color: var(--accent-cyan); font-weight: 700; margin-right: 4px; }
+        .ai-mode-banner {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: rgba(8,145,178,.08); border: 1px solid rgba(8,145,178,.2);
+            border-radius: 9px; margin-bottom: 14px; font-size: 13px; color: var(--text-secondary);
+        }
+        .ai-mode-banner b { color: var(--accent-cyan); }
+        .ai-mode-exit { margin-left: auto; border: 0; background: none; color: var(--text-secondary);
+            cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 5px;
+            transition: background .12s; font-family: inherit; }
+        .ai-mode-exit:hover { background: var(--inner-bg); color: var(--accent-red); }
+
         /* ── Empty / loading states ── */
         .catalog-empty {
             grid-column: 1 / -1; padding: 60px 20px; text-align: center;
@@ -338,6 +370,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" class="catalog-search-input" id="catalogSearch" placeholder="Поиск по названию, продукции, производителю..." oninput="onSearch(this.value)">
                     </div>
+                    <button class="ai-search-btn" id="aiSearchBtn" onclick="aiSearch()" title="Умный поиск с Gemini AI">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        AI-поиск
+                    </button>
                     <button class="btn-secondary" onclick="saveSearch()">♡ Сохранить поиск</button>
                 </div>
                 <div class="catalog-toolbar">
@@ -405,6 +441,8 @@
         let searchQuery  = '';
         let sortKey      = '';
         let showCount    = 6;
+        let aiMode       = false;
+        let aiResults    = [];
 
         const GRADIENTS = [
             'linear-gradient(135deg,#0891B2,#2563EB)',
@@ -511,18 +549,72 @@
             showToast(`Поиск «${q}» сохранён в избранное`);
         }
 
+        async function aiSearch() {
+            const query = document.getElementById('catalogSearch').value.trim();
+            if (!query) { showToast('Введите запрос для AI-поиска', 'warn'); return; }
+
+            const btn = document.getElementById('aiSearchBtn');
+            btn.disabled = true;
+            btn.textContent = 'Поиск...';
+
+            try {
+                const res = await apiFetch(`${SERVER_URL}/ai-search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Ошибка AI-поиска');
+                }
+                aiResults = await res.json();
+                aiMode = true;
+                render();
+            } catch (e) {
+                showToast(e.message || 'Ошибка AI-поиска', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI-поиск`;
+            }
+        }
+
+        function exitAiMode() {
+            aiMode = false;
+            aiResults = [];
+            render();
+        }
+
         function showMore() {
             showCount += 6;
             render();
         }
 
         function render() {
+            const grid = document.getElementById('producersGrid');
+
+            // AI mode: show AI results with reasons
+            if (aiMode) {
+                const banner = `<div class="ai-mode-banner" style="grid-column:1/-1;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <div>Gemini AI нашёл <b>${aiResults.length} производител${aiResults.length === 1 ? 'я' : aiResults.length < 5 ? 'я' : 'ей'}</b> по вашему запросу</div>
+                    <button class="ai-mode-exit" onclick="exitAiMode()">✕ Обычный поиск</button>
+                </div>`;
+                if (aiResults.length === 0) {
+                    grid.innerHTML = banner + `<div class="catalog-empty"><p>AI не нашёл подходящих производителей.<br>Попробуйте изменить запрос.</p></div>`;
+                } else {
+                    grid.innerHTML = banner + aiResults.map(p => cardHTML(p, p.aiReason)).join('');
+                }
+                document.getElementById('catalogCount').textContent = `AI: найдено ${aiResults.length}`;
+                const btn = document.getElementById('showMoreBtn');
+                if (btn) btn.style.display = 'none';
+                return;
+            }
+
             let list = filtered();
             const n = list.length;
             document.getElementById('catalogCount').textContent =
                 n === 0 ? 'Не найдено' : `Найдено: ${n} производител${n === 1 ? 'ь' : n < 5 ? 'я' : 'ей'}`;
 
-            const grid = document.getElementById('producersGrid');
 
             if (n === 0) {
                 grid.innerHTML = `<div class="catalog-empty">
@@ -546,7 +638,7 @@
             if (btn) btn.style.display = visible.length < list.length ? '' : 'none';
         }
 
-        function cardHTML(p) {
+        function cardHTML(p, aiReason) {
             const letter = (p.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
             const grad   = GRADIENTS[p.id % GRADIENTS.length];
 
@@ -582,6 +674,10 @@
                 ? `<div class="catalog-about">${escapeHtml(p.about)}</div>`
                 : '';
 
+            const aiBlock = aiReason
+                ? `<div class="ai-reason-badge"><span>✦ AI:</span>${escapeHtml(aiReason)}</div>`
+                : '';
+
             return `
             <div class="catalog-card">
                 <div class="catalog-card-top">
@@ -594,6 +690,7 @@
                 </div>
                 ${caps ? `<div class="catalog-caps">${caps}</div>` : ''}
                 ${aboutBlock}
+                ${aiBlock}
                 ${capacityBlock}
                 <div style="display:flex;gap:8px;margin-top:auto;">
                     <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;">Открыть профиль →</a>

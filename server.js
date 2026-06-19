@@ -12,6 +12,10 @@ const jwt = require('jsonwebtoken');
 const { Resend } = require('resend');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = process.env.GEMINI_API_KEY
+    ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    : null;
 
 function htmlEscape(str) {
     return String(str == null ? '' : str)
@@ -1186,6 +1190,45 @@ app.get('/api/catalog', requireAuth, async (req, res, next) => {
             ORDER BY verified_by_platform DESC, company ASC
         `);
         res.json(rows.map(rowToCompany));
+    } catch (e) { next(e); }
+});
+
+app.post('/api/ai-search', requireAuth, async (req, res, next) => {
+    try {
+        if (!genAI) return res.status(503).json({ error: 'AI не настроен: добавьте GEMINI_API_KEY в .env' });
+        const { query } = req.body;
+        if (!query || !query.trim()) return res.status(400).json({ error: 'query required' });
+
+        const { rows } = await pool.query(`SELECT * FROM companies WHERE role = 'producer'`);
+        const producers = rows.map(rowToCompany);
+
+        const catalog = producers.map((p, i) =>
+            `[${i}] ${p.company} | ${p.city || '—'} | ${p.specialization || '—'} | Возможности: ${(p.capabilities || []).join(', ') || '—'} | ${p.about || ''}`
+        ).join('\n');
+
+        const prompt = `Ты — ассистент B2B маркетплейса нефтесервисного оборудования России.
+Пользователь ищет: "${query.trim()}"
+
+Каталог производителей (формат: [индекс] название | город | специализация | возможности | описание):
+${catalog}
+
+Верни JSON-массив с 1–6 наиболее подходящими производителями.
+Для каждого: index (число из каталога) и reason (1–2 предложения на русском почему подходит).
+Отвечай ТОЛЬКО валидным JSON без markdown. Пример: [{"index":0,"reason":"..."}]`;
+
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim().replace(/^```json|^```|```$/gm, '').trim();
+
+        let matches;
+        try { matches = JSON.parse(text); }
+        catch { return res.status(500).json({ error: 'Не удалось разобрать ответ AI' }); }
+
+        const found = matches
+            .filter(m => Number.isInteger(m.index) && m.index >= 0 && m.index < producers.length)
+            .map(m => ({ ...producers[m.index], aiReason: m.reason }));
+
+        res.json(found);
     } catch (e) { next(e); }
 });
 
