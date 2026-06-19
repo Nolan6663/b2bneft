@@ -159,7 +159,7 @@
         .catalog-results-panel,
         .catalog-compare-panel,
         .catalog-bottom-panel {
-            background: #fff;
+            background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 10px;
             box-shadow: var(--shadow-card);
@@ -177,7 +177,8 @@
         .filter-title { display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:850;color:var(--text-primary);margin-bottom:10px; }
         .filter-select {
             height:36px;width:100%;border:1px solid var(--input-border);border-radius:7px;
-            color:var(--text-secondary);background:#fff;padding:0 10px;font-size:12.5px;
+            color:var(--text-secondary);background:var(--input-bg);padding:0 10px;font-size:12.5px;
+            appearance:none; -webkit-appearance:none;
         }
         .filter-check { display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12.5px;color:var(--text-secondary); }
         .filter-check input { width:14px;height:14px;accent-color:var(--accent-blue); }

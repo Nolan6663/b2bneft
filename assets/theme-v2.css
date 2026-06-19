@@ -864,12 +864,11 @@ html[data-theme="dark"] #themeLabelLight { opacity: .45; }
 @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } }
 
-/* ── PROC LAYOUT (2-column: list + detail panel) ─────────────────────── */
+/* ── PROC LAYOUT (list + detail panel, flex so hidden panel collapses) ── */
 .proc-layout {
-  display: grid;
-  grid-template-columns: 1fr 380px;
+  display: flex;
   gap: 20px;
-  align-items: start;
+  align-items: flex-start;
 }
 .proc-detail-panel {
   background: var(--card-bg);
