@@ -195,17 +195,28 @@
             color:var(--accent-blue);font-weight:800;cursor:pointer;
         }
         .compare-item {
-            border:1px solid var(--card-border);border-radius:9px;padding:14px;margin-bottom:12px;background:#fff;
+            border:1px solid var(--card-border);border-radius:9px;padding:12px 14px;margin-bottom:10px;
+            background:var(--card-bg);display:flex;align-items:center;gap:8px;
         }
-        .compare-logo { width:34px;height:34px;border-radius:8px;background:var(--bg-soft-blue);display:flex;align-items:center;justify-content:center;font-weight:850;color:var(--accent-blue); }
-        .compare-name { font-size:13px;font-weight:850;color:var(--text-primary); }
-        .compare-meta { font-size:12px;color:var(--text-secondary);margin-top:4px; }
-        .compare-rating { margin-top:10px;color:#FF9F1A;font-size:13px;font-weight:800; }
+        .compare-item-info { flex:1;min-width:0; }
+        .compare-logo { width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:850;font-size:15px;color:#fff; }
+        .compare-name { font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .compare-meta { font-size:11.5px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .compare-remove-btn { border:none;background:none;color:var(--text-secondary);cursor:pointer;font-size:15px;padding:2px 4px;flex-shrink:0;line-height:1;border-radius:4px;transition:color .12s,background .12s; }
+        .compare-remove-btn:hover { color:var(--accent-red);background:rgba(248,113,113,.1); }
         .compare-add {
-            border:1px dashed var(--card-border);border-radius:9px;padding:16px;text-align:center;color:var(--text-secondary);
-            font-size:12.5px;margin:12px 0 16px;cursor:pointer;transition:border-color .15s,background .15s;
+            border:1px dashed var(--card-border);border-radius:9px;padding:14px;text-align:center;color:var(--text-secondary);
+            font-size:12.5px;margin:10px 0 14px;cursor:pointer;transition:border-color .15s,background .15s,color .15s;
         }
         .compare-add:hover { border-color:var(--accent-cyan);background:var(--inner-bg);color:var(--accent-cyan); }
+        .compare-card-btn {
+            flex-shrink:0;height:36px;padding:0 12px;font-size:12px;white-space:nowrap;
+            border:1px solid var(--inner-border);border-radius:var(--radius-btn);
+            background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-weight:600;
+            transition:border-color .15s,background .15s,color .15s;
+        }
+        .compare-card-btn:hover { border-color:var(--accent-cyan);color:var(--accent-cyan); }
+        .compare-card-btn.in-compare { background:var(--accent-cyan);color:#fff;border-color:transparent; }
         .catalog-bottom-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
         .catalog-bottom-panel { padding:16px 18px; min-height:94px; }
         .catalog-mini-list { display:flex;gap:12px;align-items:center;overflow:hidden; }
@@ -359,19 +370,10 @@
                 <button class="btn-secondary" id="showMoreBtn" style="width:100%;margin-top:14px;display:none;" onclick="showMore()">Показать ещё ⌄</button>
             </section>
 
-            <aside class="catalog-compare-panel">
-                <div class="catalog-panel-title">Быстрое сравнение <span style="color:#607492;font-size:12px;">3/4</span></div>
-                <div class="compare-item">
-                    <div style="display:flex;gap:10px;align-items:center;"><div class="compare-logo">Р</div><div><div class="compare-name">Римера-Альнас</div><div class="compare-meta">Насосное оборудование</div></div></div>
-                    <div class="compare-rating">★ 4,6</div>
+            <aside class="catalog-compare-panel" id="compareSidePanel">
+                <div id="comparePanelInner">
+                    <!-- рендерится через renderComparePanel() -->
                 </div>
-                <div class="compare-item">
-                    <div style="display:flex;gap:10px;align-items:center;"><div class="compare-logo">Н</div><div><div class="compare-name">НефтеГазТехКомплект</div><div class="compare-meta">Трубопроводная арматура</div></div></div>
-                    <div class="compare-rating">★ 4,7</div>
-                </div>
-                <div class="compare-add" onclick="showToast('Нажмите «Открыть профиль» на карточке поставщика и добавьте его к сравнению')">＋<br>Добавить поставщика<br><span style="font-size:11px;">Максимум 4 для сравнения</span></div>
-                <button class="btn-primary" style="width:100%;" onclick="openCompareModal()">Сравнить (3)</button>
-                <div style="margin-top:14px;background:#F8FBFF;border-radius:8px;padding:12px;color:var(--text-secondary);font-size:12px;text-align:center;">Сравните условия поставки, цены и характеристики выбранных поставщиков</div>
             </aside>
         </div>
 
@@ -594,8 +596,78 @@
                 ${caps ? `<div class="catalog-caps">${caps}</div>` : ''}
                 ${aboutBlock}
                 ${capacityBlock}
-                <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn">Открыть профиль →</a>
+                <div style="display:flex;gap:8px;margin-top:auto;">
+                    <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;">Открыть профиль →</a>
+                    <button class="compare-card-btn${compareList.some(x=>x.id===p.id)?' in-compare':''}"
+                        data-compare-id="${p.id}"
+                        onclick="toggleCompare(${p.id})"
+                        title="${compareList.some(x=>x.id===p.id)?'Убрать из сравнения':'Добавить к сравнению'}">
+                        ${compareList.some(x=>x.id===p.id)?'✓ Сравниваю':'+ Сравнить'}
+                    </button>
+                </div>
             </div>`;
+        }
+
+        // ── Compare list ─────────────────────────────────────────────────
+        let compareList = [];
+
+        function toggleCompare(id) {
+            const p = allProducers.find(x => x.id === id);
+            if (!p) return;
+            const idx = compareList.findIndex(x => x.id === id);
+            if (idx >= 0) {
+                compareList.splice(idx, 1);
+            } else {
+                if (compareList.length >= 4) {
+                    showToast('Максимум 4 поставщика для сравнения', 'warn'); return;
+                }
+                compareList.push(p);
+            }
+            renderComparePanel();
+            // Update all compare buttons in the grid
+            document.querySelectorAll('[data-compare-id]').forEach(btn => {
+                const bid = parseInt(btn.dataset.compareId);
+                const active = compareList.some(x => x.id === bid);
+                btn.classList.toggle('in-compare', active);
+                btn.title = active ? 'Убрать из сравнения' : 'Добавить к сравнению';
+                btn.textContent = active ? '✓ Сравниваю' : '+ Сравнить';
+            });
+        }
+
+        function renderComparePanel() {
+            const inner = document.getElementById('comparePanelInner');
+            if (!inner) return;
+            const n = compareList.length;
+            const itemsHTML = compareList.map(p => {
+                const letter = (p.company || '?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
+                const grad = GRADIENTS[p.id % GRADIENTS.length];
+                return `<div class="compare-item">
+                    <div class="compare-logo" style="background:${grad}">${letter}</div>
+                    <div class="compare-item-info">
+                        <div class="compare-name">${escapeHtml(p.company || '—')}</div>
+                        <div class="compare-meta">${escapeHtml(p.specialization || p.city || '')}</div>
+                    </div>
+                    <button class="compare-remove-btn" onclick="toggleCompare(${p.id})" title="Убрать">✕</button>
+                </div>`;
+            }).join('');
+
+            const addSlot = n < 4 ? `
+                <div class="compare-add">
+                    ＋ Добавить поставщика<br>
+                    <span style="font-size:11px;margin-top:4px;display:block;">${n}/4 выбрано — нажмите <b>+ Сравнить</b> на карточке</span>
+                </div>` : '';
+
+            const actionRow = n >= 2
+                ? `<button class="btn-primary" style="width:100%;" onclick="openCompareModal()">Сравнить (${n})</button>`
+                : `<div style="font-size:12px;color:var(--text-secondary);text-align:center;padding:4px 0;">Выберите минимум 2 поставщика</div>`;
+
+            inner.innerHTML = `
+                <div class="catalog-panel-title">Быстрое сравнение
+                    <span style="color:var(--text-secondary);font-size:12px;">${n}/4</span>
+                </div>
+                ${itemsHTML}
+                ${addSlot}
+                ${actionRow}`;
         }
 
         let sidebarCategories = [];
@@ -620,46 +692,68 @@
         });
 
         function openCompareModal() {
-            const modal = document.getElementById('catalogCompareModal');
-            if (modal) { modal.style.display = 'flex'; return; }
+            if (compareList.length < 2) {
+                showToast('Выберите минимум 2 поставщика для сравнения', 'warn'); return;
+            }
+            const existing = document.getElementById('catalogCompareModal');
+            if (existing) existing.remove();
+
             const m = document.createElement('div');
             m.id = 'catalogCompareModal';
-            m.onclick = e => { if (e.target === m) m.style.display = 'none'; };
+            m.onclick = e => { if (e.target === m) m.remove(); };
             Object.assign(m.style, { position:'fixed', inset:'0', background:'rgba(0,0,0,.55)', zIndex:'1000', display:'flex', alignItems:'center', justifyContent:'center' });
-            const compareItems = [
-                { name:'Римера-Альнас', spec:'Насосное оборудование', rating:'4,6', city:'Екатеринбург', deals:312, delivery:'14 дн', cert:'ISO 9001, ГОСТ' },
-                { name:'НефтеГазТехКомплект', spec:'Трубопроводная арматура', rating:'4,7', city:'Тюмень', deals:201, delivery:'7 дн', cert:'ГОСТ Р, ТР ТС' },
-            ];
+
+            const items = compareList;
             const rows = [
-                ['Специализация', compareItems.map(c=>c.spec)],
-                ['Рейтинг', compareItems.map(c=>`★ ${c.rating}`)],
-                ['Город', compareItems.map(c=>c.city)],
-                ['Завершено сделок', compareItems.map(c=>c.deals)],
-                ['Срок поставки', compareItems.map(c=>c.delivery)],
-                ['Сертификаты', compareItems.map(c=>c.cert)],
+                ['Специализация', items.map(p => escapeHtml(p.specialization || '—'))],
+                ['Город',         items.map(p => escapeHtml(p.city || '—'))],
+                ['Рейтинг',       items.map(p => p.rating ? `★ ${p.rating}` : '—')],
+                ['Завершено сделок', items.map(p => p.deals ?? '—')],
+                ['Срок поставки', items.map(p => p.deliveryDays ? p.deliveryDays + ' дн.' : '—')],
+                ['Сертификаты',   items.map(p => escapeHtml(p.certificates || '—'))],
+                ['Свободные мощности', items.map(p => {
+                    const fc = (p.freeCapacity || [])[0];
+                    return fc ? `${fc.percent}% (${escapeHtml(fc.name)})` : '—';
+                })],
             ];
-            m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:760px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
-                <div style="font-size:16px;font-weight:700;margin-bottom:18px;color:var(--text-primary);">Сравнение поставщиков</div>
+
+            m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:820px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                    <div style="font-size:16px;font-weight:700;color:var(--text-primary);">Сравнение поставщиков</div>
+                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-secondary);line-height:1;">✕</button>
+                </div>
                 <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:500px;">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
                     <thead><tr>
-                        <th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--card-border);white-space:nowrap;">Параметр</th>
-                        ${compareItems.map(c=>`<th style="padding:8px 12px;color:var(--text-primary);font-weight:700;border-bottom:2px solid var(--card-border);text-align:center;min-width:180px;">${c.name}</th>`).join('')}
+                        <th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--card-border);white-space:nowrap;min-width:130px;">Параметр</th>
+                        ${items.map(p => {
+                            const letter = (p.company||'?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
+                            const grad = GRADIENTS[p.id % GRADIENTS.length];
+                            return `<th style="padding:10px 12px;border-bottom:2px solid var(--card-border);text-align:center;min-width:180px;">
+                                <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+                                    <div style="width:28px;height:28px;border-radius:7px;background:${grad};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;">${letter}</div>
+                                    <span style="font-weight:700;color:var(--text-primary);font-size:13px;">${escapeHtml(p.company||'—')}</span>
+                                </div>
+                            </th>`;
+                        }).join('')}
                     </tr></thead>
-                    <tbody>${rows.map(([label,vals],i)=>`<tr style="background:${i%2?'var(--inner-bg)':'var(--card-bg)'}">
-                        <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;white-space:nowrap;border-bottom:1px solid var(--inner-border);">${label}</td>
+                    <tbody>${rows.map(([label, vals], i) => `<tr style="background:${i%2?'var(--inner-bg)':'var(--card-bg)'}">
+                        <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;white-space:nowrap;border-bottom:1px solid var(--inner-border);font-weight:600;">${label}</td>
                         ${vals.map(v=>`<td style="padding:10px 12px;text-align:center;font-weight:600;color:var(--text-primary);border-bottom:1px solid var(--inner-border);">${v}</td>`).join('')}
                     </tr>`).join('')}</tbody>
                 </table>
                 </div>
-                <div style="display:flex;justify-content:flex-end;margin-top:18px;">
-                    <button onclick="document.getElementById('catalogCompareModal').style.display='none'" style="padding:9px 22px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Закрыть</button>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="padding:9px 22px;border-radius:8px;border:1px solid var(--card-border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;">Закрыть</button>
                 </div>
             </div>`;
             document.body.appendChild(m);
         }
 
-        document.addEventListener('DOMContentLoaded', loadCatalog);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCatalog();
+            renderComparePanel();
+        });
     </script>
 </body>
 </html>

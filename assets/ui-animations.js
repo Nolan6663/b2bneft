@@ -58,8 +58,8 @@ function buildCustomSelect(sel) {
 
     function open() {
         if (isOpen) return;
+        _closeAll();   // close others before setting isOpen, so close() early-returns for this wrap
         isOpen = true;
-        _closeAll();
         wrap.classList.add('cs-open');
         menu.style.display = 'block';
         buildMenu();
