@@ -1216,13 +1216,29 @@ ${catalog}
 Для каждого: index (число из каталога) и reason (1–2 предложения на русском почему подходит).
 Отвечай ТОЛЬКО валидным JSON без markdown. Пример: [{"index":0,"reason":"..."}]`;
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            safetySettings: [
+                { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            ],
+        });
         const result = await model.generateContent(prompt);
-        const text = result.response.text().trim().replace(/^```json|^```|```$/gm, '').trim();
+
+        let rawText;
+        try { rawText = result.response.text(); }
+        catch (textErr) {
+            console.error('[ai-search] response.text() failed:', textErr.message);
+            return res.status(500).json({ error: 'Gemini заблокировал ответ. Уточните запрос.' });
+        }
+        const text = rawText.trim().replace(/^```json|^```|```$/gm, '').trim();
 
         let matches;
         try { matches = JSON.parse(text); }
-        catch { return res.status(500).json({ error: 'Не удалось разобрать ответ AI' }); }
+        catch { return res.status(500).json({ error: 'Не удалось разобрать ответ AI. Попробуйте ещё раз.' }); }
+        if (!Array.isArray(matches)) return res.json([]);
 
         const found = matches
             .filter(m => Number.isInteger(m.index) && m.index >= 0 && m.index < producers.length)

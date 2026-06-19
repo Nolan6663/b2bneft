@@ -20,3 +20,5 @@ services:
         value: yandex
       - key: YANDEX_MAPS_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
