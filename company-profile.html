@@ -29,6 +29,51 @@
         .empty-hint { font-size: 12.5px; color: var(--text-muted); font-style: italic; }
         #favoriteToggleBtn.active { background: rgba(245, 185, 66, 0.12); border-color: #f5b942; color: #f5b942; }
 
+        .profile-reliability-card::after { display: none; }
+        .reliability-meter {
+            position: relative;
+            height: 42px;
+            margin-top: 12px;
+            padding: 0 4px;
+        }
+        .reliability-meter-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 12px;
+            height: 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #FEE2E2 0%, #FEF3C7 45%, #DCFCE7 100%);
+            border: 1px solid rgba(96, 116, 146, .16);
+            overflow: hidden;
+        }
+        .reliability-meter-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #00A9B8 0%, #12A866 100%);
+            box-shadow: 0 0 12px rgba(18, 168, 102, .18);
+        }
+        .reliability-meter-point {
+            position: absolute;
+            bottom: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid var(--accent-green);
+            box-shadow: 0 4px 12px rgba(18, 168, 102, .25);
+            transform: translateX(-50%);
+        }
+        .reliability-meter-labels {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
         .equipment-input-row { display: flex; gap: 8px; }
         .equipment-tags-edit { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .equipment-tag-edit { display: flex; align-items: center; gap: 6px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; }
@@ -284,18 +329,35 @@
             return { icon: '⏱', cls: 'waiting' };
         }
 
+        function reliabilityPercent(rating) {
+            const value = Number(String(rating || '').replace(',', '.'));
+            if (!Number.isFinite(value)) return 0;
+            return Math.max(0, Math.min(100, Math.round((value / 5) * 100)));
+        }
+
         function renderProfile(c) {
             const isOwn = c.company === myCompany;
             const roleText = c.role === 'customer' ? 'Заказчик' : 'Производитель';
             const roleClass = c.role === 'customer' ? 'customer' : 'producer';
             const st = statusMeta(c.status);
+            const reliability = reliabilityPercent(c.rating);
+            const reliabilityPoint = Math.max(4, Math.min(96, reliability));
 
             let statsHtml = '';
             if (c.role === 'producer') {
                 statsHtml = `
                     <div class="kpi-card"><div class="kpi-label">Выполнено заказов</div><div class="kpi-value">${c.stats ? c.stats.completedOrders : '—'}</div></div>
                     <div class="kpi-card"><div class="kpi-label">Средний срок поставки</div><div class="kpi-value">${c.stats && c.stats.avgDeliveryDays != null ? c.stats.avgDeliveryDays + ' дн.' : '—'}</div></div>
-                    <div class="kpi-card"><div class="kpi-label">Рейтинг надёжности</div><div class="kpi-value" style="color:var(--accent-bright);">${c.rating || '—'}</div><div class="kpi-change" style="color:var(--text-secondary);">${c.ratingLabel || 'Нет данных'}</div></div>
+                    <div class="kpi-card profile-reliability-card">
+                        <div class="kpi-label">Рейтинг надёжности</div>
+                        <div class="kpi-value" style="color:var(--accent-bright);">${c.rating || '—'}</div>
+                        <div class="kpi-change" style="color:var(--text-secondary);">${c.ratingLabel || 'Нет данных'}</div>
+                        <div class="reliability-meter" aria-label="Рейтинг надёжности ${reliability}%">
+                            <div class="reliability-meter-labels"><span>Низкий</span><span>Высокий</span></div>
+                            <div class="reliability-meter-track"><div class="reliability-meter-fill" style="width:${reliability}%"></div></div>
+                            <div class="reliability-meter-point" style="left:${reliabilityPoint}%"></div>
+                        </div>
+                    </div>
                 `;
             } else {
                 statsHtml = `
