@@ -25,12 +25,17 @@
         .an-period-clear { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 0 2px; line-height: 1; }
         .an-period-clear:hover { color: var(--error); }
         .an-filter-sep { width: 1px; height: 20px; background: var(--card-border); flex-shrink: 0; }
+        .an-select-wrap { position: relative; display: inline-flex; align-items: center; }
+        .an-select-wrap::after {
+            content: ''; position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+            width: 10px; height: 6px; pointer-events: none;
+            background: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+        }
         .an-filter-select {
             height: 34px; padding: 0 28px 0 10px; border: 1px solid var(--card-border);
             border-radius: 8px; background: var(--inner-bg); color: var(--text-primary);
             font-size: 12.5px; font-family: inherit; cursor: pointer;
-            appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 8px center;
+            appearance: none; -webkit-appearance: none;
         }
         .an-filter-reset {
             display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
@@ -154,7 +159,7 @@
         /* ─── Export ─── */
         .export-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--inner-border); }
         .export-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--inner-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-bright); }
-        .export-label { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+        .export-label { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
         .export-sub { font-size: 11px; color: var(--text-muted); }
         .export-open { font-size: 12px; color: var(--accent-bright); font-weight: 600; cursor: pointer; border: none; background: none; font-family: inherit; }
 
@@ -246,30 +251,36 @@
             </button>
             <div class="an-filter-sep"></div>
             <span class="an-filter-label">Категория</span>
-            <select class="an-filter-select" id="filterCategory" onchange="applyFilters()">
-                <option value="">Все категории</option>
-                <option>Трубопроводная арматура</option>
-                <option>РТИ и уплотнения</option>
-                <option>Металлопрокат</option>
-                <option>Электрооборудование</option>
-                <option>Насосное оборудование</option>
-            </select>
+            <div class="an-select-wrap">
+                <select class="an-filter-select" id="filterCategory" onchange="applyFilters()">
+                    <option value="">Все категории</option>
+                    <option>Трубопроводная арматура</option>
+                    <option>РТИ и уплотнения</option>
+                    <option>Металлопрокат</option>
+                    <option>Электрооборудование</option>
+                    <option>Насосное оборудование</option>
+                </select>
+            </div>
             <span class="an-filter-label">Регион</span>
-            <select class="an-filter-select" id="filterRegion" onchange="applyFilters()">
-                <option value="">Все регионы</option>
-                <option>Западная Сибирь</option>
-                <option>Поволжье</option>
-                <option>Урал</option>
-                <option>ХМАО-Югра</option>
-                <option>Татарстан</option>
-            </select>
+            <div class="an-select-wrap">
+                <select class="an-filter-select" id="filterRegion" onchange="applyFilters()">
+                    <option value="">Все регионы</option>
+                    <option>Западная Сибирь</option>
+                    <option>Поволжье</option>
+                    <option>Урал</option>
+                    <option>ХМАО-Югра</option>
+                    <option>Татарстан</option>
+                </select>
+            </div>
             <span class="an-filter-label">Тип поставщика</span>
-            <select class="an-filter-select" id="filterSupplierType" onchange="applyFilters()">
-                <option value="">Все типы</option>
-                <option>Производитель</option>
-                <option>Дистрибьютор</option>
-                <option>Трейдер</option>
-            </select>
+            <div class="an-select-wrap">
+                <select class="an-filter-select" id="filterSupplierType" onchange="applyFilters()">
+                    <option value="">Все типы</option>
+                    <option>Производитель</option>
+                    <option>Дистрибьютор</option>
+                    <option>Трейдер</option>
+                </select>
+            </div>
             <button class="an-filter-reset" onclick="resetAllFilters()">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
                 Сбросить фильтры
@@ -395,7 +406,7 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             </div>
                             <div style="flex:1;">
-                                <div class="export-label" onclick="exportAnalytics()" style="cursor:pointer;">Скачать отчёт по аналитике</div>
+                                <div class="export-label" onclick="exportAnalytics()">Отчёт по аналитике</div>
                                 <div class="export-sub">PDF · Excel</div>
                             </div>
                         </div>
@@ -404,7 +415,7 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                             </div>
                             <div style="flex:1;">
-                                <div class="export-label" onclick="exportDetailed()" style="cursor:pointer;">Детальный отчёт по закупкам</div>
+                                <div class="export-label" onclick="exportDetailed()">Отчёт по закупкам (Excel)</div>
                                 <div class="export-sub">Excel</div>
                             </div>
                         </div>

@@ -32,15 +32,26 @@
         .mf-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
         .mf-section { display: flex; flex-direction: column; gap: 8px; }
         .mf-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
-        .mf-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .mf-check input[type=checkbox] { accent-color: var(--accent-cyan); width: 14px; height: 14px; cursor: pointer; }
-        .mf-check span { font-size: 13px; color: var(--text-primary); }
-        .mf-check small { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
+        .mf-check { display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 0; }
+        .mf-check input[type=checkbox] {
+            accent-color: var(--accent-cyan); width: 15px; height: 15px;
+            cursor: pointer; flex-shrink: 0; border-radius: 4px;
+        }
+        .mf-check span { font-size: 12.5px; color: var(--text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mf-check small { font-size: 11px; color: var(--text-secondary); margin-left: auto; flex-shrink: 0; }
         .mf-divider { border: none; border-top: 1px solid var(--inner-border); margin: 0; }
+        .mf-select-wrap { position: relative; }
+        .mf-select-wrap::after {
+            content: ""; pointer-events: none; position: absolute;
+            right: 10px; top: 50%; transform: translateY(-50%);
+            border: 4px solid transparent; border-top: 5px solid var(--text-secondary);
+            border-bottom: 0; margin-top: 2px;
+        }
         .mf-select {
-            width: 100%; padding: 7px 10px; border-radius: var(--radius-input);
+            width: 100%; padding: 7px 28px 7px 10px; border-radius: var(--radius-input);
             border: 1px solid var(--input-border); background: var(--input-bg);
             color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;
+            appearance: none; -webkit-appearance: none;
         }
         .map-search-inp {
             width: 100%; box-sizing: border-box;
@@ -299,6 +310,7 @@
 
                 <div class="mf-section">
                     <div class="mf-label">Регион</div>
+                <div class="mf-select-wrap">
                     <select class="mf-select" id="regionSelect">
                         <option value="">Все регионы</option>
                         <option>Тюменская область</option>
@@ -309,6 +321,7 @@
                         <option>Ханты-Мансийский АО</option>
                         <option>Оренбургская область</option>
                     </select>
+                </div>
                 </div>
 
                 <div class="map-counter-txt" id="mapCounter">Загрузка...</div>

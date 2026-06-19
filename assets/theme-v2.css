@@ -1911,11 +1911,14 @@ tbody tr:hover {
 }
 
 .proc-layout {
-  grid-template-columns: minmax(0, 1fr) 430px;
+  display: flex;
   gap: 18px;
+  align-items: flex-start;
 }
 
 .proc-list-panel {
+  flex: 1;
+  min-width: 0;
   border-radius: 10px !important;
   padding: 20px !important;
 }
@@ -1984,6 +1987,8 @@ tbody tr:hover {
 }
 
 .proc-detail-panel {
+  width: 430px;
+  flex-shrink: 0;
   padding: 20px;
   top: 84px;
 }
@@ -2040,10 +2045,11 @@ tbody tr:hover {
 
 @media (max-width: 1200px) {
   .proc-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .proc-detail-panel {
+    width: 100%;
     position: static;
     max-height: none;
   }

@@ -196,9 +196,10 @@
         .compare-meta { font-size:12px;color:var(--text-secondary);margin-top:4px; }
         .compare-rating { margin-top:10px;color:#FF9F1A;font-size:13px;font-weight:800; }
         .compare-add {
-            border:1px dashed #AFC4DD;border-radius:9px;padding:16px;text-align:center;color:var(--text-secondary);
-            font-size:12.5px;margin:12px 0 16px;
+            border:1px dashed var(--card-border);border-radius:9px;padding:16px;text-align:center;color:var(--text-secondary);
+            font-size:12.5px;margin:12px 0 16px;cursor:pointer;transition:border-color .15s,background .15s;
         }
+        .compare-add:hover { border-color:var(--accent-cyan);background:var(--inner-bg);color:var(--accent-cyan); }
         .catalog-bottom-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
         .catalog-bottom-panel { padding:16px 18px; min-height:94px; }
         .catalog-mini-list { display:flex;gap:12px;align-items:center;overflow:hidden; }
@@ -362,7 +363,7 @@
                     <div style="display:flex;gap:10px;align-items:center;"><div class="compare-logo">Н</div><div><div class="compare-name">НефтеГазТехКомплект</div><div class="compare-meta">Трубопроводная арматура</div></div></div>
                     <div class="compare-rating">★ 4,7</div>
                 </div>
-                <div class="compare-add">＋<br>Добавить поставщика<br><span style="font-size:11px;">Максимум 4 для сравнения</span></div>
+                <div class="compare-add" onclick="showToast('Нажмите «Открыть профиль» на карточке поставщика и добавьте его к сравнению')">＋<br>Добавить поставщика<br><span style="font-size:11px;">Максимум 4 для сравнения</span></div>
                 <button class="btn-primary" style="width:100%;" onclick="openCompareModal()">Сравнить (3)</button>
                 <div style="margin-top:14px;background:#F8FBFF;border-radius:8px;padding:12px;color:var(--text-secondary);font-size:12px;text-align:center;">Сравните условия поставки, цены и характеристики выбранных поставщиков</div>
             </aside>
@@ -475,6 +476,12 @@
                         p.capabilities.some(c => c.toLowerCase().includes(f));
                     const inSpec = (p.specialization || '').toLowerCase().includes(f);
                     return inCaps || inSpec;
+                });
+            }
+            if (sidebarCategories && sidebarCategories.length) {
+                list = list.filter(p => {
+                    const caps = (p.capabilities || []).join(' ') + ' ' + (p.specialization || '');
+                    return sidebarCategories.some(c => caps.toLowerCase().includes(c.toLowerCase().split(' ')[0]));
                 });
             }
             return list;
@@ -600,18 +607,6 @@
             });
         });
 
-        const _originalFiltered = filtered;
-        function filtered() {
-            let list = _originalFiltered();
-            if (sidebarCategories.length) {
-                list = list.filter(p => {
-                    const caps = (p.capabilities || []).join(' ') + ' ' + (p.specialization || '');
-                    return sidebarCategories.some(c => caps.toLowerCase().includes(c.toLowerCase().split(' ')[0]));
-                });
-            }
-            return list;
-        }
-
         function openCompareModal() {
             const modal = document.getElementById('catalogCompareModal');
             if (modal) { modal.style.display = 'flex'; return; }
@@ -631,18 +626,20 @@
                 ['Срок поставки', compareItems.map(c=>c.delivery)],
                 ['Сертификаты', compareItems.map(c=>c.cert)],
             ];
-            m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:600px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
-                <div style="font-size:16px;font-weight:700;margin-bottom:18px;">Сравнение поставщиков</div>
-                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:760px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
+                <div style="font-size:16px;font-weight:700;margin-bottom:18px;color:var(--text-primary);">Сравнение поставщиков</div>
+                <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:500px;">
                     <thead><tr>
-                        <th style="text-align:left;padding:6px 8px;color:var(--text-secondary);font-weight:600;border-bottom:1px solid var(--card-border);">Параметр</th>
-                        ${compareItems.map(c=>`<th style="padding:6px 8px;color:var(--text-primary);font-weight:700;border-bottom:1px solid var(--card-border);">${c.name}</th>`).join('')}
+                        <th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--card-border);white-space:nowrap;">Параметр</th>
+                        ${compareItems.map(c=>`<th style="padding:8px 12px;color:var(--text-primary);font-weight:700;border-bottom:2px solid var(--card-border);text-align:center;min-width:180px;">${c.name}</th>`).join('')}
                     </tr></thead>
-                    <tbody>${rows.map(([label,vals],i)=>`<tr style="background:${i%2?'var(--card-bg)':'var(--surface)'}">
-                        <td style="padding:8px;color:var(--text-secondary);">${label}</td>
-                        ${vals.map(v=>`<td style="padding:8px;text-align:center;font-weight:600;">${v}</td>`).join('')}
+                    <tbody>${rows.map(([label,vals],i)=>`<tr style="background:${i%2?'var(--inner-bg)':'var(--card-bg)'}">
+                        <td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;white-space:nowrap;border-bottom:1px solid var(--inner-border);">${label}</td>
+                        ${vals.map(v=>`<td style="padding:10px 12px;text-align:center;font-weight:600;color:var(--text-primary);border-bottom:1px solid var(--inner-border);">${v}</td>`).join('')}
                     </tr>`).join('')}</tbody>
                 </table>
+                </div>
                 <div style="display:flex;justify-content:flex-end;margin-top:18px;">
                     <button onclick="document.getElementById('catalogCompareModal').style.display='none'" style="padding:9px 22px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Закрыть</button>
                 </div>
