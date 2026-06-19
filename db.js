@@ -146,19 +146,29 @@ async function initDb() {
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
     `);
 
+    const isProduction = process.env.NODE_ENV === 'production';
+    const shouldSeedAdmin = process.env.SEED_ADMIN === 'true' || !isProduction;
+    const shouldSeedDemoData = process.env.SEED_DEMO_DATA === 'true' || !isProduction;
+
     const { rows: [adminRow] } = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
-    if (!adminRow) {
-        const salt = crypto.randomBytes(16).toString('hex');
-        const hash = crypto.scryptSync('Admin2025', salt, 64).toString('hex');
-        await pool.query(
-            'INSERT INTO users (email,password,role,company,inn) VALUES ($1,$2,$3,$4,$5)',
-            ['admin@platform.ru', `${salt}:${hash}`, 'admin', '', '']
-        );
-        console.log('✓ Создан аккаунт администратора: admin@platform.ru / Admin2025');
+    if (!adminRow && shouldSeedAdmin) {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@platform.ru';
+        const adminPassword = process.env.ADMIN_PASSWORD || (isProduction ? '' : 'Admin2025');
+        if (!adminPassword) {
+            console.warn('Администратор не создан: задайте ADMIN_PASSWORD или отключите SEED_ADMIN');
+        } else {
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = crypto.scryptSync(adminPassword, salt, 64).toString('hex');
+            await pool.query(
+                'INSERT INTO users (email,password,role,company,inn) VALUES ($1,$2,$3,$4,$5)',
+                [adminEmail, `${salt}:${hash}`, 'admin', '', '']
+            );
+            console.log(`✓ Создан аккаунт администратора: ${adminEmail}`);
+        }
     }
 
     const { rows: [{ n: orderCount }] } = await pool.query('SELECT COUNT(*) AS n FROM orders');
-    if (orderCount === 0) {
+    if (orderCount === 0 && shouldSeedDemoData) {
         await pool.query(
             "INSERT INTO orders (title,category,status,responses,deadline) VALUES ($1,$2,$3,$4,$5)",
             ['Манжета резиновая армированная', 'РТИ', 'Активный', 0, '25.05.2026']

@@ -423,7 +423,12 @@
                 if (!res.ok) throw new Error();
                 allProducers = await res.json();
             } catch {
-                allProducers = MOCK_PRODUCERS;
+                if (shouldUseMockData()) {
+                    allProducers = MOCK_PRODUCERS;
+                } else {
+                    allProducers = [];
+                    showDataLoadError('Не удалось загрузить каталог производителей');
+                }
             }
             // KPI strip
             const t = document.getElementById('catKpiTotal');

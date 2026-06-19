@@ -12,9 +12,22 @@ const { Resend } = require('resend');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const APP_URL = process.env.APP_URL || 'https://b2bneft.onrender.com';
+const ALLOWED_ORIGINS = new Set(
+    [APP_URL, ...(process.env.CORS_ORIGIN || '').split(',')]
+        .map(v => String(v || '').trim())
+        .filter(Boolean)
+);
+const DEV_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+function isAllowedOrigin(origin) {
+    if (!origin) return true;
+    if (!IS_PRODUCTION && DEV_ORIGIN_RE.test(origin)) return true;
+    return ALLOWED_ORIGINS.has(origin);
+}
 
 async function sendEmail(to, subject, html) {
     if (!resend) { console.log(`[Email] To: ${to} | ${subject}`); return; }
@@ -25,7 +38,10 @@ async function sendEmail(to, subject, html) {
     }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production';
+if (IS_PRODUCTION && !process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is required in production');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-development';
 
 function generateTokens(user) {
     const payload = { userId: user.id, role: user.role, company: user.company };
@@ -119,7 +135,12 @@ function rowToNotification(r) {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin)) return callback(null, true);
+        return callback(null, false);
+    },
+}));
 app.use(express.json());
 
 const authLimiter = rateLimit({
@@ -139,7 +160,8 @@ try { Server = require('socket.io').Server; }
 catch { console.warn('socket.io не установлен — работаем через поллинг.'); }
 
 const httpServer = http.createServer(app);
-const io = Server ? new Server(httpServer, { cors: { origin: '*' } }) : null;
+const socketOrigin = IS_PRODUCTION ? Array.from(ALLOWED_ORIGINS) : '*';
+const io = Server ? new Server(httpServer, { cors: { origin: socketOrigin } }) : null;
 
 if (io) {
     io.on('connection', (socket) => {
@@ -246,6 +268,13 @@ const PUBLIC_PAGES = [
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
+app.get('/api/health', (req, res) => {
+    res.json({
+        ok: true,
+        uptime: process.uptime(),
+        env: process.env.NODE_ENV || 'development',
+    });
+});
 
 // ===================== УМНЫЙ МАТЧИНГ =====================
 const CATEGORY_KEYWORDS = {
@@ -1662,14 +1691,22 @@ app.use((err, req, res, next) => {
 
 // ===================== ЗАПУСК =====================
 
-initDb()
-    .then(() => {
-        httpServer.listen(PORT, () => {
-            console.log(`Сервер запущен на порту ${PORT}`);
-        });
+async function start() {
+    await initDb();
+    httpServer.listen(PORT, () => {
+        console.log(`Сервер запущен на порту ${PORT}`);
+    });
+    if (process.env.GEOCODE_ON_START !== 'false') {
         setTimeout(geocodeExisting, 5000);
-    })
-    .catch(err => {
+    }
+    return httpServer;
+}
+
+if (require.main === module) {
+    start().catch(err => {
         console.error('Ошибка инициализации БД:', err);
         process.exit(1);
     });
+}
+
+module.exports = { app, httpServer, start, pool };

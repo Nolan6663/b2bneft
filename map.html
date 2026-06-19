@@ -434,6 +434,8 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors', maxZoom: 18,
         }).addTo(map);
+        setTimeout(() => map.invalidateSize(), 0);
+        window.addEventListener('resize', () => map.invalidateSize());
 
         // ── State ─────────────────────────────────────────────────────
         let allProducers = [];
@@ -512,6 +514,12 @@
                 markers.push(m);
                 markerById[p.id] = m;
             });
+            if (markers.length) {
+                map.fitBounds(markers.map(m => m.getLatLng()), { padding: [34, 34], maxZoom: 7 });
+            } else {
+                map.setView([60, 75], 4);
+            }
+            setTimeout(() => map.invalidateSize(), 0);
 
             // Category counters
             document.querySelectorAll('[data-cat]').forEach(el => {
@@ -584,15 +592,26 @@
 
         // ── Load ──────────────────────────────────────────────────────
         async function loadMap() {
-            allProducers = MOCK;
+            allProducers = shouldUseMockData() ? MOCK : [];
             applyFilters();
             try {
                 const r = await fetch(`${SERVER_URL}/map`);
-                if (r.ok) {
-                    const data = await r.json();
-                    if (data.length) { allProducers = data; applyFilters(); }
+                if (!r.ok) throw new Error('map request failed');
+                const data = await r.json();
+                if (data.length || !shouldUseMockData()) {
+                    allProducers = data;
+                    applyFilters();
                 }
-            } catch {}
+            } catch {
+                if (shouldUseMockData()) {
+                    allProducers = MOCK;
+                    applyFilters();
+                } else {
+                    allProducers = [];
+                    applyFilters();
+                    showDataLoadError('Не удалось загрузить поставщиков на карте');
+                }
+            }
         }
 
         document.getElementById('mapSearch').addEventListener('input', () => applyFilters());

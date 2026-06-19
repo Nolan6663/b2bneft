@@ -12,6 +12,20 @@ const SERVER_URL = (
   ? 'http://localhost:5000/api'
   : (window.location.origin + '/api');
 
+function shouldUseMockData() {
+  return (
+    window.location.protocol === 'file:' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    localStorage.getItem('allowMockData') === '1'
+  );
+}
+
+function showDataLoadError(message = 'Не удалось загрузить данные. Обновите страницу или попробуйте позже.') {
+  if (typeof showToast === 'function') showToast(message, 'error');
+  else console.error(message);
+}
+
 /* ---------------------------------------------------------------------
    Светлая / тёмная тема
    --------------------------------------------------------------------- */

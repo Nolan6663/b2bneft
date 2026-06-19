@@ -472,13 +472,11 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            /* Show mock data immediately so page is never empty */
             setMockKPI();
-            ordersCache = MOCK_ORDERS;
+            ordersCache = shouldUseMockData() ? MOCK_ORDERS : [];
             updateStatusCounts();
             renderOrdersTable();
 
-            /* Then try real API — overwrites mock if successful */
             loadOrders().then(() => loadWidgets());
             loadAnalytics();
             initNotifications();
@@ -610,18 +608,27 @@
                 const response = await fetch(`${SERVER_URL}/orders`, {
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
                 });
+                if (!response.ok) throw new Error('orders request failed');
                 ordersCache = await response.json();
-                updateStatusCounts();
-                renderOrdersTable();
-            } catch { /* тихо */ }
+            } catch {
+                if (shouldUseMockData()) {
+                    ordersCache = MOCK_ORDERS;
+                } else {
+                    ordersCache = [];
+                    showDataLoadError('Не удалось загрузить закупки');
+                }
+            }
+            updateStatusCounts();
+            renderOrdersTable();
             return true;
         }
 
         function updateStatusCounts() {
-            document.getElementById('countAll').innerText = ordersCache.length;
-            document.getElementById('countActive').innerText = ordersCache.filter(o => o.status === 'Активный').length;
-            document.getElementById('countClosed').innerText = ordersCache.filter(o => o.status === 'Закрыта').length;
-            document.getElementById('countCancelled').innerText = ordersCache.filter(o => o.status === 'Отменена').length;
+            const list = Array.isArray(ordersCache) ? ordersCache : [];
+            document.getElementById('countAll').innerText = list.length;
+            document.getElementById('countActive').innerText = list.filter(o => o.status === 'Активный').length;
+            document.getElementById('countClosed').innerText = list.filter(o => o.status === 'Закрыта').length;
+            document.getElementById('countCancelled').innerText = list.filter(o => o.status === 'Отменена').length;
         }
 
         function setStatusFilter(status) {
