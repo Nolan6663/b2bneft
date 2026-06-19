@@ -1252,7 +1252,7 @@ ${catalog}
             return res.status(400).json({ error: 'Неверный GEMINI_API_KEY. Проверьте ключ.' });
         if (e.status === 429 || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED'))
             return res.status(429).json({ error: 'Превышен лимит запросов Gemini. Попробуйте позже.' });
-        return res.status(500).json({ error: IS_PRODUCTION ? 'Внутренняя ошибка сервера' : `AI ошибка: ${msg}` });
+        return res.status(500).json({ error: `AI ошибка: ${msg} (status: ${e.status || 'n/a'})` });
     }
 });
 
