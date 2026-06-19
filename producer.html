@@ -8,35 +8,113 @@
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
-        .tab-panel { display: none; flex-direction: column; gap: 16px; }
+        .tab-panel { display: none; flex-direction: column; gap: 14px; }
         .tab-panel.active { display: flex; }
-        .order-item .order-info h4 { display: inline; }
-        .order-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 
-        .crm-funnel {
-            display: flex; align-items: stretch; gap: 0;
+        /* ── Company info banner ───────────────────────────────────────── */
+        .producer-banner {
+            display: flex; align-items: center; gap: 14px;
             background: var(--card-bg); border: 1px solid var(--card-border);
-            border-radius: var(--radius-card); overflow: hidden; margin-bottom: 20px;
+            border-radius: var(--radius-card); padding: 14px 18px;
         }
-        .crm-step {
-            flex: 1; padding: 16px 20px; position: relative;
-            border-right: 1px solid var(--card-border);
+        .producer-banner-avatar {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            background: var(--accent-gradient); display: flex; align-items: center;
+            justify-content: center; font-size: 19px; font-weight: 800; color: #fff;
         }
-        .crm-step:last-child { border-right: none; }
-        .crm-step-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-        .crm-step-value { font-size: 26px; font-weight: 800; color: var(--text-primary-alt); line-height: 1; }
-        .crm-step-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
-        .crm-step.accent .crm-step-value { color: var(--accent-bright); }
-        .crm-arrow {
-            display: flex; align-items: center; padding: 0 4px;
-            color: var(--text-secondary); font-size: 18px; user-select: none;
-            position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
-            z-index: 1;
+        .producer-banner-info { flex: 1; min-width: 0; }
+        .producer-banner-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .producer-banner-role { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .producer-banner-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 11.5px; font-weight: 600; padding: 4px 10px;
+            border-radius: 20px; margin-top: 5px;
         }
-        @media (max-width: 700px) {
-            .crm-funnel { flex-wrap: wrap; }
-            .crm-step { border-right: none; border-bottom: 1px solid var(--card-border); }
-            .crm-step:last-child { border-bottom: none; }
+        .pbs-verified { background: rgba(52,211,153,.12); color: #059669; }
+        .pbs-pending  { background: rgba(251,146,60,.12);  color: #d97706; }
+        .pbs-rejected { background: rgba(248,113,113,.12); color: #dc2626; }
+
+        /* ── Order cards ───────────────────────────────────────────────── */
+        .orders-grid { display: flex; flex-direction: column; gap: 12px; }
+        .order-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 18px 20px;
+            display: flex; gap: 16px; align-items: flex-start;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .order-card:hover {
+            border-color: rgba(8,145,178,.35);
+            box-shadow: 0 4px 16px rgba(8,145,178,.08);
+        }
+        .order-card-body { flex: 1; min-width: 0; }
+        .order-card-head {
+            display: flex; align-items: flex-start; gap: 10px;
+            flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .order-card-title {
+            font-size: 14px; font-weight: 700; color: var(--text-primary-alt);
+            flex: 1; min-width: 0; line-height: 1.35;
+        }
+        .order-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .oc-badge {
+            font-size: 10.5px; font-weight: 700; padding: 3px 9px;
+            border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+        }
+        .oc-badge-direct { background: rgba(8,145,178,.1); color: var(--accent-cyan); }
+        .oc-badge-cat    { background: var(--inner-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); }
+        .oc-badge-match  { background: rgba(52,211,153,.12); color: #059669; }
+        .oc-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 11.5px; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px; margin-bottom: 10px;
+        }
+        .ocs-open   { background: rgba(52,211,153,.12); color: #059669; }
+        .ocs-closed { background: rgba(248,113,113,.1); color: var(--accent-red); }
+        .ocs-muted  { background: var(--inner-bg); color: var(--text-secondary); }
+        .order-card-meta {
+            display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .ocm-item {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 12.5px; color: var(--text-secondary);
+        }
+        .ocm-item b { color: var(--text-primary); font-weight: 600; }
+        .order-card-desc {
+            font-size: 12.5px; color: var(--text-secondary);
+            line-height: 1.5; margin-bottom: 12px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .order-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .order-card-actions .btn-primary,
+        .order-card-actions .btn-secondary { height: 34px; font-size: 12.5px; padding: 0 14px; }
+
+        /* ── Search/filter row ─────────────────────────────────────────── */
+        .orders-toolbar {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 14px 16px;
+        }
+        .orders-search-wrap { flex: 1; min-width: 180px; position: relative; }
+        .orders-search-wrap svg {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-secondary); pointer-events: none;
+        }
+        .orders-search-input {
+            width: 100%; box-sizing: border-box; height: 38px;
+            padding: 0 12px 0 36px; border-radius: var(--radius-input);
+            border: 1px solid var(--input-border); background: var(--input-bg);
+            color: var(--text-primary); font-size: 13px; outline: none; font-family: inherit;
+            transition: border-color .15s;
+        }
+        .orders-search-input:focus { border-color: var(--accent-cyan); }
+        .orders-search-input::placeholder { color: var(--text-secondary); }
+        .orders-cat-label { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+        .orders-cat-select { flex-shrink: 0; min-width: 150px; }
+
+        /* ── Proposals table ───────────────────────────────────────────── */
+        .proposals-table-wrap {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); overflow: hidden;
         }
     </style>
 </head>
@@ -79,13 +157,10 @@
     <div class="main-content">
         <div class="header">
             <h2>Кабинет производителя</h2>
-            <div style="display:flex; align-items:center; gap:12px;">
-                <a id="myProfileLink" href="#" class="btn-secondary" style="text-decoration:none; display:none;">Профиль компании →</a>
-                <button class="bell-btn" onclick="openNotificationsModal()">
-                    <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
-                    <span class="bell-badge" id="bellBadge">0</span>
-                </button>
-            </div>
+            <button class="bell-btn" onclick="openNotificationsModal()">
+                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <span class="bell-badge" id="bellBadge">0</span>
+            </button>
         </div>
 
         <div class="kpi-row" id="crmFunnel">
@@ -123,11 +198,21 @@
             </div>
         </div>
 
-        <div style="display:none;" id="infoBoxes">
-            <span id="infoCompany"></span>
-            <span id="infoStatus"><span id="infoStatusIcon"></span><span id="infoStatusText"></span></span>
-            <span id="infoRating"></span><span id="infoRatingLabel"></span>
-            <div id="infoRatingStats"></div>
+        <!-- Company banner -->
+        <div class="producer-banner" id="producerBanner">
+            <div class="producer-banner-avatar" id="bannerAvatar">—</div>
+            <div class="producer-banner-info">
+                <div class="producer-banner-name" id="bannerName">Загрузка...</div>
+                <div class="producer-banner-role">Производитель</div>
+                <span class="producer-banner-status pbs-pending" id="bannerStatus">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    На проверке
+                </span>
+            </div>
+            <a id="myProfileLink" href="#" class="btn-secondary" style="text-decoration:none;display:none;font-size:13px;height:36px;padding:0 16px;white-space:nowrap;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg>
+                Профиль компании
+            </a>
         </div>
 
         <div class="tab-strip">
@@ -136,52 +221,41 @@
                 <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">Направленные предложения (<span id="tabProposalsCount">0</span>)</button>
             </div>
             <button class="refresh-btn" onclick="refreshActiveTab()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 4v5h-5"></path></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
                 Обновить
             </button>
         </div>
 
         <div class="tab-panel active" id="tabOrders">
-            <div class="filter-section" id="companyBlock" style="border-left: 4px solid #41bd97;">
-                <div><strong>Вы вошли как организация:</strong> <span id="displayCompanyName" style="font-weight: 700; color: var(--accent-bright);">Загрузка...</span></div>
-            </div>
-
-            <div class="filter-section" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
-                <div style="position:relative; flex:1; min-width:200px;">
-                    <svg style="position:absolute; left:14px; top:50%; transform:translateY(-50%);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c7884" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4"></path></svg>
-                    <input type="text" id="orderSearchInput" class="search-input" placeholder="Поиск по названию или описанию..." style="padding-left:38px; width:100%;">
+            <div class="orders-toolbar">
+                <div class="orders-search-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+                    <input type="text" id="orderSearchInput" class="orders-search-input" placeholder="Поиск по названию или описанию...">
                 </div>
-                <div>
-                    <label style="font-size:11.5px; color:var(--text-secondary-alt); display:block; margin-bottom:6px;">Категория</label>
-                    <div class="custom-select-wrapper">
-                        <input type="hidden" id="categoryFilter" value="all">
-                        <div class="custom-select" id="wrapperCategoryFilter">
-                            <div class="custom-select-trigger"><span>Все категории</span></div>
-                            <div class="custom-options">
-                                <div class="custom-option selected" data-value="all">Все категории</div>
-                                <div class="custom-option" data-value="РТИ">РТИ</div>
-                                <div class="custom-option" data-value="Металл">Металл</div>
-                                <div class="custom-option" data-value="Трубопроводная арматура">Трубопроводная арматура</div>
-                                <div class="custom-option" data-value="Электрооборудование">Электрооборудование</div>
-                                <div class="custom-option" data-value="Прочее">Прочее</div>
-                            </div>
-                        </div>
-                    </div>
+                <span class="orders-cat-label">Категория</span>
+                <div class="orders-cat-select">
+                    <select id="categoryFilter" onchange="applyOrderFilters()">
+                        <option value="all">Все категории</option>
+                        <option value="РТИ">РТИ</option>
+                        <option value="Металл">Металл</option>
+                        <option value="Трубопроводная арматура">Трубопроводная арматура</option>
+                        <option value="Электрооборудование">Электрооборудование</option>
+                        <option value="Прочее">Прочее</option>
+                    </select>
                 </div>
             </div>
-
-            <div id="ordersList" class="orders-list"></div>
+            <div id="ordersList" class="orders-grid"></div>
         </div>
 
         <div class="tab-panel" id="tabProposals">
-            <div class="section">
-                <table>
+            <div class="proposals-table-wrap">
+                <table style="width:100%;border-collapse:collapse;">
                     <thead>
                         <tr>
-                            <th>Закупка</th>
-                            <th>Предложенная цена</th>
-                            <th>Срок поставки</th>
-                            <th>Статус отклика</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Закупка</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Предложенная цена</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Срок поставки</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Статус</th>
                         </tr>
                     </thead>
                     <tbody id="myResponsesTable"></tbody>
@@ -265,27 +339,22 @@
         const role = session.role;
         const isGuest = session.isGuest;
 
+        function applyOrderFilters() {
+            const cat = document.getElementById('categoryFilter').value;
+            const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
+            document.querySelectorAll('.order-card').forEach(item => {
+                const matchCat = cat === 'all' || item.getAttribute('data-category') === cat;
+                const matchSearch = !search || (item.getAttribute('data-search') || '').includes(search);
+                item.style.display = matchCat && matchSearch ? '' : 'none';
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
             loadOrdersForProducers();
             initNotifications();
             initSidebarBadges();
             if (!isGuest) { loadMyProposals(); loadCrmStats(); }
-
-            document.getElementById('displayCompanyName').innerText = isGuest ? 'Режим гостя (Ограниченный доступ)' : (localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»');
-            if (isGuest && document.getElementById('companyBlock')) { document.getElementById('companyBlock').style.borderColor = 'var(--error)'; }
-
-            function applyOrderFilters() {
-                const cat = document.getElementById('categoryFilter').value;
-                const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
-                document.querySelectorAll('.order-item').forEach(item => {
-                    const matchCat = cat === 'all' || item.getAttribute('data-category') === cat;
-                    const matchSearch = !search || (item.getAttribute('data-search') || '').includes(search);
-                    item.style.display = matchCat && matchSearch ? 'flex' : 'none';
-                });
-            }
-
-            initCustomSelect('wrapperCategoryFilter', 'categoryFilter', applyOrderFilters);
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
         });
 
@@ -301,47 +370,21 @@
             if (!isGuest) loadMyProposals();
         }
 
-function renderCompanyStatus(status) {
-            let icon, cls;
-            if (status === 'Верифицирован') {
-                cls = 'win';
-                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"></path><path d="M9 12l2 2 4-4"></path></svg>';
-            } else if (status === 'Отклонен') {
-                cls = 'loose';
-                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-6 6M9 9l6 6"></path></svg>';
-            } else {
-                cls = 'waiting';
-                icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>';
-            }
-            document.getElementById('infoStatus').className = 'info-value ' + cls;
-            document.getElementById('infoStatusIcon').innerHTML = icon;
-            document.getElementById('infoStatusText').innerText = status;
-        }
-
         async function loadCompanyInfo() {
-            const companyName = localStorage.getItem('userCompany');
-            document.getElementById('infoCompany').innerText = isGuest ? 'Гость' : (companyName || '—');
-            if (isGuest || !companyName) {
-                renderCompanyStatus('Гостевой доступ');
-                document.getElementById('infoRating').innerText = '—';
-                document.getElementById('infoRatingLabel').innerText = 'Нет данных';
-                return;
+            const companyName = localStorage.getItem('userCompany') || (isGuest ? 'Гостевой доступ' : '—');
+            const letter = companyName.replace(/[«»"ООО ]/g,'').trim()[0]?.toUpperCase() || '?';
+            document.getElementById('bannerAvatar').textContent = letter;
+            document.getElementById('bannerName').textContent = companyName;
+
+            if (isGuest || !localStorage.getItem('userCompany')) {
+                setBannerStatus('Гостевой доступ', 'pbs-pending'); return;
             }
             try {
                 const response = await fetch(`${SERVER_URL}/companies`);
                 const companies = await response.json();
                 const me = companies.find(c => c.company === companyName && c.role === 'producer');
                 if (me) {
-                    renderCompanyStatus(me.status);
-                    document.getElementById('infoRating').innerText = me.rating || '—';
-                    document.getElementById('infoRatingLabel').innerText = me.ratingLabel || 'Нет данных';
-                    const statsEl = document.getElementById('infoRatingStats');
-                    if (me.ratingStats) {
-                        statsEl.style.display = 'block';
-                        statsEl.innerText = `${me.ratingStats.won}/${me.ratingStats.resolved} выигранных тендеров`;
-                    } else {
-                        statsEl.style.display = 'none';
-                    }
+                    setBannerStatus(me.status);
                     if (me.id) {
                         localStorage.setItem('myCompanyId', me.id);
                         const profileLink = document.getElementById('myProfileLink');
@@ -352,11 +395,22 @@ function renderCompanyStatus(status) {
                         sidebarLink.style.display = '';
                     }
                 } else {
-                    renderCompanyStatus('На проверке');
-                    document.getElementById('infoRating').innerText = '—';
-                    document.getElementById('infoRatingLabel').innerText = 'Нет данных';
+                    setBannerStatus('На проверке');
                 }
             } catch { /* тихо */ }
+        }
+
+        function setBannerStatus(status, forceClass) {
+            const el = document.getElementById('bannerStatus');
+            const map = {
+                'Верифицирован': ['pbs-verified', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg>', 'Верифицирован'],
+                'Отклонен':     ['pbs-rejected', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>', 'Отклонён'],
+            };
+            const cls = forceClass || (map[status]?.[0] ?? 'pbs-pending');
+            const icon = map[status]?.[1] ?? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+            const label = map[status]?.[2] ?? status;
+            el.className = 'producer-banner-status ' + cls;
+            el.innerHTML = icon + ' ' + label;
         }
 
         const MOCK_ORDERS_PRODUCER = [
@@ -396,76 +450,77 @@ function renderCompanyStatus(status) {
             ordersList.innerHTML = '';
 
             orders.forEach(order => {
-                const orderItem = document.createElement('div');
-                orderItem.className = 'order-item';
-                orderItem.setAttribute('data-category', order.category);
-                const tagClass = order.category === 'РТИ' ? 'rti' : 'metal';
                 const displayTitle = order.title;
-                orderItem.setAttribute('data-search', `${displayTitle} ${order.description || ''}`.toLowerCase());
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                card.setAttribute('data-category', order.category || '');
+                card.setAttribute('data-search', `${displayTitle} ${order.description || ''}`.toLowerCase());
 
+                // Status
+                let statusCls, statusLabel;
+                if (order.status === 'Отменена') { statusCls = 'ocs-muted'; statusLabel = 'Отменена заказчиком'; }
+                else if (order.status === 'Закрыта') { statusCls = 'ocs-closed'; statusLabel = 'Закупка завершена'; }
+                else { statusCls = 'ocs-open'; statusLabel = order.status || 'Активна'; }
+
+                // Match badge
+                const matchBadge = (order.matchScore > 0)
+                    ? `<span class="oc-badge oc-badge-match">🧩 ${order.matchScore}% совпадение</span>` : '';
+
+                // Deadline color
+                const dl = order.deadline ? new Date(order.deadline) : null;
+                const daysLeft = dl ? Math.ceil((dl - Date.now()) / 86400000) : null;
+                const dlColor = daysLeft != null && daysLeft <= 3 ? 'var(--accent-red)' : 'var(--text-primary)';
+                const dlStr = order.deadline ? formatDeadline(order.deadline) : '—';
+
+                // Drawing
+                let drawingHTML = '';
+                if (!isGuest && order.drawing) {
+                    const rawName = order.drawing.originalName || '';
+                    const dname = /^[\x20-\x7EЀ-ӿ\s._\-()]+$/.test(rawName) ? rawName : 'Вложение';
+                    drawingHTML = `<a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank"
+                        style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent-cyan);text-decoration:none;margin-top:6px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        ${escapeHtml(dname)}</a>`;
+                }
+
+                // Buttons
                 const chatBtn = isGuest
-                    ? `<button class="btn-secondary" onclick="window.location.href='login.html'">Открыть чат</button>`
-                    : `<button class="btn-secondary" data-oid="${order.id}" data-title="${escapeHtml(displayTitle)}" data-company="${escapeHtml(localStorage.getItem('userCompany') || '')}" onclick="openGlobalChat(+this.dataset.oid, this.dataset.title, this.dataset.company)">Открыть чат</button>`;
+                    ? `<button class="btn-secondary" onclick="location.href='login.html'">Открыть чат</button>`
+                    : `<button class="btn-secondary" data-oid="${order.id}"
+                        data-title="${escapeHtml(displayTitle)}"
+                        data-company="${escapeHtml(localStorage.getItem('userCompany')||'')}"
+                        onclick="openGlobalChat(+this.dataset.oid,this.dataset.title,this.dataset.company)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Чат</button>`;
 
-                let statusBlock, actionBtn;
-                if (order.status === 'Отменена') {
-                    statusBlock = `<div class="meta status-dot muted">Закупка отменена заказчиком</div>`;
-                    actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
-                } else if (order.status === 'Закрыта') {
-                    statusBlock = `<div class="meta status-dot closed">Закупка завершена</div>`;
-                    actionBtn = `<button class="btn-disabled" disabled>Просмотр</button>`;
-                } else if (isGuest) {
-                    statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
-                    actionBtn = `<button class="btn-primary" onclick="window.location.href='login.html'">Войти для отклика</button>`;
-                } else {
-                    statusBlock = `<div class="meta status-dot open">${order.status}</div>`;
-                    actionBtn = `<button class="btn-primary" onclick="openRespondModal(${order.id}, '${displayTitle.replace(/'/g, "\\'")}')">Откликнуться</button>`;
-                }
+                const actionBtn = (order.status === 'Отменена' || order.status === 'Закрыта')
+                    ? `<button class="btn-secondary" disabled style="opacity:.5;cursor:default;">Закрыта</button>`
+                    : isGuest
+                        ? `<button class="btn-primary" onclick="location.href='login.html'">Войти для отклика</button>`
+                        : `<button class="btn-primary" onclick="openRespondModal(${order.id},'${displayTitle.replace(/'/g,"\\'")}')">Откликнуться</button>`;
 
-                let drawingBlock = '';
-                if (!isGuest) {
-                    if (order.drawing) {
-                        const rawName = order.drawing.originalName || '';
-                        const isPrintable = /^[\x20-\x7EЀ-ӿ\s._\-()]+$/.test(rawName);
-                        const displayName = isPrintable ? rawName : 'Вложение';
-                        drawingBlock = `<div class="meta">📁 Чертеж: <a href="${SERVER_URL}/orders/${order.id}/drawing" target="_blank" style="color:var(--accent-bright);text-decoration:underline;">${escapeHtml(displayName)}</a></div>`;
-                    }
-                }
-
-                let matchBadge = '';
-                if (order.matchScore != null && order.matchScore > 0) {
-                    const tier = order.matchScore >= 70 ? 'win' : (order.matchScore >= 40 ? 'waiting' : 'loose');
-                    matchBadge = `<span class="status-icon ${tier}" title="Совпадение с вашей специализацией">🧩 ${order.matchScore}% совпадение</span>`;
-                }
-
-                const createdStr = order.createdAt
-                    ? new Date(order.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                    : '';
-                const quantityBlock = order.quantity
-                    ? `<div class="meta">Количество: <span class="meta-value">${order.quantity} ${order.unit || 'шт'}</span></div>`
-                    : '';
-                const descriptionBlock = order.description
-                    ? `<div class="meta" style="margin-top:6px; color: var(--text-tertiary); font-size: 12.5px;">${escapeHtml(order.description)}</div>`
-                    : '';
-
-                orderItem.innerHTML = `
-                    <div class="order-info">
-                        <div class="order-title-row">
-                            <h4>${escapeHtml(displayTitle)}</h4>
-                            <span class="type-badge">ПРЯМАЯ ЗАКУПКА</span>
-                            <span class="tag ${tagClass}">${escapeHtml(order.category)}</span>
-                            ${matchBadge}
+                card.innerHTML = `
+                    <div class="order-card-body">
+                        <div class="order-card-head">
+                            <div class="order-card-title">${escapeHtml(displayTitle)}</div>
                         </div>
-                        ${statusBlock}
-                        ${quantityBlock}
-                        <div class="meta">Уже предложений: <span class="meta-value">${order.responses}</span></div>
-                        <div class="meta">Дедлайн: <span class="meta-value">${formatDeadline(order.deadline)}</span></div>
-                        ${createdStr ? `<div class="meta">Размещена: <span class="meta-value">${createdStr}</span></div>` : ''}
-                        ${descriptionBlock}
-                        ${drawingBlock}
-                    </div>
-                    <div class="order-actions">${chatBtn}${actionBtn}</div>`;
-                ordersList.appendChild(orderItem);
+                        <div class="order-card-badges">
+                            <span class="oc-badge oc-badge-direct">ПРЯМАЯ ЗАКУПКА</span>
+                            ${order.category ? `<span class="oc-badge oc-badge-cat">${escapeHtml(order.category)}</span>` : ''}
+                            ${matchBadge}
+                            <span class="oc-status ${statusCls}">${statusLabel}</span>
+                        </div>
+                        <div class="order-card-meta">
+                            ${order.quantity ? `<div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><b>${order.quantity} ${order.unit||'шт'}</b></div>` : ''}
+                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Дедлайн: <b style="color:${dlColor}">${dlStr}</b></div>
+                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Откликов: <b>${order.responses ?? 0}</b></div>
+                            ${order.createdAt ? `<div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>${new Date(order.createdAt).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</div>` : ''}
+                        </div>
+                        ${order.description ? `<div class="order-card-desc">${escapeHtml(order.description)}</div>` : ''}
+                        ${drawingHTML}
+                        <div class="order-card-actions" style="margin-top:${drawingHTML?'10px':'0'};">${chatBtn}${actionBtn}</div>
+                    </div>`;
+                ordersList.appendChild(card);
             });
         }
 

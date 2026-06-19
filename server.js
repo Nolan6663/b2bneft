@@ -1,6 +1,7 @@
 'use strict';
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
@@ -144,15 +145,10 @@ function rowToNotification(r) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.set('trust proxy', 1);
-app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    res.setHeader('X-DNS-Prefetch-Control', 'off');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-    res.setHeader('X-Download-Options', 'noopen');
-    next();
-});
+app.use(helmet({
+    contentSecurityPolicy: false,      // inline-скрипты в HTML-страницах
+    crossOriginEmbedderPolicy: false,  // внешние ресурсы (Leaflet CDN, fonts)
+}));
 app.use(cors({
     origin(origin, callback) {
         if (isAllowedOrigin(origin)) return callback(null, true);
