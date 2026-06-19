@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B2B Нефтесервис — Страница не найдена</title>
-    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
-    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
-    <link rel="stylesheet" href="assets/theme-v2.css">
+    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
+    <link rel="stylesheet" href="assets/theme.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .nf-wrap { text-align: center; max-width: 420px; padding: 40px 24px; }
@@ -55,6 +54,7 @@
         </div>
     </div>
     <script src="assets/app.js"></script>
+    <script src="assets/ui-animations.js"></script>
     <script>
         const role = localStorage.getItem('userRole');
         const token = localStorage.getItem('authToken');

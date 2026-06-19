@@ -2118,3 +2118,102 @@ tbody tr:hover {
 .toast-out { animation: toastOut 0.22s ease forwards; }
 @keyframes toastIn  { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 @keyframes toastOut { to   { opacity:0; transform:translateY(6px); } }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UI ANIMATIONS & CUSTOM CONTROLS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Stagger fade-slide-up ─────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal pop-in ──────────────────────────────────────────────────── */
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+/* ── Custom select dropdown ────────────────────────────────────────── */
+.cs-wrap { position: relative; display: block; width: 100%; }
+.cs-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  cursor: pointer; user-select: none; box-sizing: border-box;
+  padding: 7px 10px; border-radius: var(--radius-input);
+  border: 1px solid var(--input-border); background: var(--input-bg);
+  color: var(--text-primary); font-size: 13px; font-family: inherit;
+  min-height: 34px; width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+.cs-trigger:hover { border-color: var(--accent-cyan); }
+.cs-open .cs-trigger {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(8,145,178,.12);
+}
+.cs-val { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.cs-arrow {
+  flex-shrink: 0; color: var(--text-secondary);
+  transition: transform .2s ease;
+}
+.cs-open .cs-arrow { transform: rotate(180deg); }
+
+.cs-menu {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 600;
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 10px; box-shadow: 0 10px 32px rgba(0,0,0,.14);
+  overflow: hidden; max-height: 220px; overflow-y: auto;
+  transform-origin: top center;
+  animation: csMenuIn .17s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes csMenuIn {
+  from { opacity: 0; transform: scaleY(.88) translateY(-6px); }
+  to   { opacity: 1; transform: scaleY(1)   translateY(0); }
+}
+.cs-opt {
+  padding: 9px 14px; font-size: 13px; color: var(--text-primary);
+  cursor: pointer; transition: background .08s;
+  display: flex; align-items: center;
+}
+.cs-opt:hover { background: var(--inner-bg); }
+.cs-opt-active { color: var(--accent-cyan); font-weight: 600; }
+.cs-opt-active::after { content: '✓'; margin-left: auto; font-size: 11px; }
+
+/* ── Sidebar sliding indicator ─────────────────────────────────────── */
+.sidebar-pill-indicator {
+  position: absolute; left: 0; width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--accent-cyan); pointer-events: none; z-index: 2;
+  transition: top .22s cubic-bezier(.4,0,.2,1), height .22s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Button ripple ─────────────────────────────────────────────────── */
+.btn-primary, .btn-secondary, .mf-apply-btn { position: relative; overflow: hidden; }
+.btn-ripple {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: rgba(255,255,255,.26);
+  transform: scale(0);
+  animation: rippleAnim .5s ease-out forwards;
+}
+@keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+/* ── Skeleton loader ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+.skeleton-line {
+  border-radius: 6px; height: 13px;
+  background: linear-gradient(90deg, var(--inner-bg) 25%, var(--bg-secondary) 50%, var(--inner-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.skeleton-avatar {
+  border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(90deg, var(--inner-bg) 25%, var(--bg-secondary) 50%, var(--inner-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.skeleton-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: var(--radius-card); padding: 20px 22px;
+  display: flex; flex-direction: column; gap: 14px;
+}
