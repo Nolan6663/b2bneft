@@ -1229,7 +1229,15 @@ ${catalog}
             .map(m => ({ ...producers[m.index], aiReason: m.reason }));
 
         res.json(found);
-    } catch (e) { next(e); }
+    } catch (e) {
+        console.error('[ai-search error]', e.message, e.status || '', e.stack || '');
+        const msg = e.message || '';
+        if (msg.includes('API key') || msg.includes('API_KEY') || e.status === 400)
+            return res.status(400).json({ error: 'Неверный GEMINI_API_KEY. Проверьте ключ.' });
+        if (e.status === 429 || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED'))
+            return res.status(429).json({ error: 'Превышен лимит запросов Gemini. Попробуйте позже.' });
+        return res.status(500).json({ error: IS_PRODUCTION ? 'Внутренняя ошибка сервера' : `AI ошибка: ${msg}` });
+    }
 });
 
 // ===================== CRM / АНАЛИТИКА =====================
