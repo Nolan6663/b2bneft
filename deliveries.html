@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Нефтесервис — Доставки</title>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
+    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
+    <link rel="stylesheet" href="assets/theme-v2.css">
+    <style>
+        .stage-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; white-space: nowrap;
+        }
+        .stage-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .stage-accepted   { background: rgba(100,116,139,.12); color: var(--text-secondary); }
+        .stage-accepted   .stage-dot { background: var(--text-secondary); }
+        .stage-production { background: rgba(37,99,235,.1);  color: #2563EB; }
+        .stage-production .stage-dot { background: #2563EB; }
+        .stage-ready      { background: rgba(234,88,12,.1);  color: #EA580C; }
+        .stage-ready      .stage-dot { background: #EA580C; }
+        .stage-shipped    { background: rgba(8,145,178,.1);  color: var(--accent-cyan); }
+        .stage-shipped    .stage-dot { background: var(--accent-cyan); }
+        .stage-delivered  { background: rgba(124,58,237,.1); color: #7C3AED; }
+        .stage-delivered  .stage-dot { background: #7C3AED; }
+        .stage-done       { background: rgba(5,150,105,.1);  color: #059669; }
+        .stage-done       .stage-dot { background: #059669; }
+
+        .delivery-row { cursor: pointer; transition: background .12s; }
+        .delivery-row:hover td { background: var(--bg-secondary); }
+
+        .progress-track {
+            height: 4px; background: var(--card-border); border-radius: 2px;
+            overflow: hidden; margin-top: 4px; width: 80px;
+        }
+        .progress-fill { height: 100%; background: var(--accent-bright); border-radius: 2px; transition: width .3s; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
+        <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
+        <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>Заказы</a>
+        <a href="deliveries.html" class="active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Доставки</a>
+        <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Контрагенты</a>
+        <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Аналитика</a>
+        <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Сообщения<span class="nav-badge" id="navBadgeMessages"></span></a>
+        <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Избранное</a>
+        <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
+        <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта</a>
+        <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Настройки</a>
+        <a href="tariff.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Тариф и оплата</a>
+        <div class="sidebar-bottom">
+            <div class="theme-toggle-row">
+                <span id="themeLabel" class="theme-label">🌙 Тёмная тема</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
+            <a href="#" class="switch-link" onclick="logout(); return false;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Выйти из аккаунта
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Доставки</h2>
+        </div>
+
+        <div class="kpi-row" style="margin-bottom:20px;">
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Всего сделок</div></div><div class="kpi-value" id="kpiTotal">—</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">В процессе</div></div><div class="kpi-value" id="kpiActive">—</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Завершено</div></div><div class="kpi-value" id="kpiDone">—</div></div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div style="padding:18px 20px 14px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">Все доставки</span>
+                <input id="searchInput" type="text" placeholder="Поиск по названию или контрагенту..."
+                    style="height:34px;padding:0 12px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text-primary);font-size:13px;width:280px;"
+                    oninput="renderTable()">
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="orders-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="padding:10px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-align:left;">НАЗВАНИЕ</th>
+                            <th style="padding:10px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-align:left;">КОНТРАГЕНТ</th>
+                            <th style="padding:10px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-align:left;">ЭТАП</th>
+                            <th style="padding:10px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-align:left;">ПРОГРЕСС</th>
+                            <th style="padding:10px 16px;font-size:11px;font-weight:600;color:var(--text-secondary);text-align:right;">СУММА</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deliveryTableBody">
+                        <tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-secondary);">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" style="display:none;padding:60px 20px;text-align:center;color:var(--text-secondary);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                Нет активных доставок
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/app.js"></script>
+    <script>
+        authGuard(null);
+
+        const STAGES = ['КП принят','В производстве','Готов к отгрузке','Отгружен','Доставлен','Принят заказчиком'];
+        const STAGE_CLASS = {
+            'КП принят':          'stage-accepted',
+            'В производстве':     'stage-production',
+            'Готов к отгрузке':   'stage-ready',
+            'Отгружен':           'stage-shipped',
+            'Доставлен':          'stage-delivered',
+            'Принят заказчиком':  'stage-done',
+        };
+
+        const MOCK = [
+            { proposalId:3,  title:'Фланец стальной Ду100 Ру16',                counterparty:'АО «РегионСнаб»',    deliveryStage:'Готов к отгрузке', price:980000,  completionStatus:'active' },
+            { proposalId:4,  title:'Труба НКТ 73×5.5 ГОСТ 633',                 counterparty:'ООО «ПромМаш»',      deliveryStage:'Принят заказчиком',price:1340000, completionStatus:'completed' },
+            { proposalId:6,  title:'Запорная арматура DN50 PN40',                counterparty:'ООО «НефтеПромСнаб»',deliveryStage:'Отгружен',         price:560000,  completionStatus:'active' },
+            { proposalId:7,  title:'Кабель ВВГнг 4×16',                         counterparty:'АО «РегионСнаб»',    deliveryStage:'Принят заказчиком',price:320000,  completionStatus:'completed' },
+            { proposalId:8,  title:'Задвижка клиновая 30с941нж',                 counterparty:'ООО «АктивСнаб»',    deliveryStage:'Принят заказчиком',price:670000,  completionStatus:'completed' },
+            { proposalId:10, title:'Электродвигатель АИР 90L2 3кВт',            counterparty:'ООО «ТехноПром»',    deliveryStage:'В производстве',   price:245000,  completionStatus:'active' },
+        ];
+
+        let allDeliveries = MOCK;
+
+        function stageProgress(stage) {
+            const idx = STAGES.indexOf(stage);
+            return idx < 0 ? 0 : Math.round(((idx + 1) / STAGES.length) * 100);
+        }
+
+        function renderTable() {
+            const q = (document.getElementById('searchInput').value || '').toLowerCase();
+            const filtered = allDeliveries.filter(d =>
+                !q || d.title.toLowerCase().includes(q) || d.counterparty.toLowerCase().includes(q)
+            );
+            const tbody = document.getElementById('deliveryTableBody');
+            const empty = document.getElementById('emptyState');
+            if (!filtered.length) {
+                tbody.innerHTML = '';
+                empty.style.display = '';
+                return;
+            }
+            empty.style.display = 'none';
+            const fmt = n => Number(n).toLocaleString('ru-RU') + ' ₽';
+            tbody.innerHTML = filtered.map(d => {
+                const cls = STAGE_CLASS[d.deliveryStage] || 'stage-accepted';
+                const pct = stageProgress(d.deliveryStage);
+                return `<tr class="delivery-row" onclick="window.location.href='delivery.html?id=${d.proposalId}'">
+                    <td style="padding:12px 16px;font-size:13.5px;font-weight:600;color:var(--text-primary);">${escapeHtml(d.title)}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:var(--text-secondary);">${escapeHtml(d.counterparty)}</td>
+                    <td style="padding:12px 16px;">
+                        <span class="stage-badge ${cls}">
+                            <span class="stage-dot"></span>${escapeHtml(d.deliveryStage)}
+                        </span>
+                    </td>
+                    <td style="padding:12px 16px;">
+                        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">${pct}%</div>
+                        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                    </td>
+                    <td style="padding:12px 16px;font-size:13px;font-weight:600;color:var(--text-primary);text-align:right;">${fmt(d.price)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateKPI() {
+            document.getElementById('kpiTotal').textContent  = allDeliveries.length;
+            document.getElementById('kpiActive').textContent = allDeliveries.filter(d => d.completionStatus !== 'completed').length;
+            document.getElementById('kpiDone').textContent   = allDeliveries.filter(d => d.completionStatus === 'completed').length;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderTable();
+            updateKPI();
+            try {
+                const r = await apiFetch(`${SERVER_URL}/deals`);
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data.length) { allDeliveries = data; renderTable(); updateKPI(); }
+                }
+            } catch {}
+        });
+    </script>
+</body>
+</html>
