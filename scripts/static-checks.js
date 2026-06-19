@@ -105,6 +105,19 @@ function checkProductionGuardrails() {
   }
 }
 
+function checkAccessGuardrails() {
+  const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  const requiredSnippets = [
+    'function canAccessProposal',
+    'async function canAccessOrderThread',
+    'if (!canAccessProposal(req.user, row))',
+    'await canAccessOrderThread(req.user, orderId, company)',
+    'Чат доступен только с поставщиком, подавшим КП',
+  ];
+  const missing = requiredSnippets.filter(snippet => !server.includes(snippet));
+  if (missing.length) fail(`Missing access guardrails:\n${missing.join('\n')}`);
+}
+
 function main() {
   checkJavaScriptSyntax();
   const inlineScripts = checkInlineScripts();
@@ -113,6 +126,7 @@ function main() {
   checkEncodingArtifacts();
   checkServerCanBeImported();
   checkProductionGuardrails();
+  checkAccessGuardrails();
   console.log(`Static checks passed: ${htmlFiles.length} HTML files, ${inlineScripts} inline scripts`);
 }
 

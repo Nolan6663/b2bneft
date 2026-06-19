@@ -268,12 +268,22 @@ const PUBLIC_PAGES = [
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
-app.get('/api/health', (req, res) => {
-    res.json({
-        ok: true,
-        uptime: process.uptime(),
-        env: process.env.NODE_ENV || 'development',
-    });
+app.get('/api/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({
+            ok: true,
+            db: true,
+            uptime: process.uptime(),
+            env: process.env.NODE_ENV || 'development',
+        });
+    } catch (e) {
+        res.status(503).json({
+            ok: false,
+            db: false,
+            error: 'database_unavailable',
+        });
+    }
 });
 
 // ===================== УМНЫЙ МАТЧИНГ =====================
@@ -447,6 +457,34 @@ async function withTransaction(fn) {
     } finally {
         client.release();
     }
+}
+
+async function getOrderAccessRow(orderId) {
+    const { rows: [order] } = await pool.query('SELECT * FROM orders WHERE id = $1', [Number(orderId)]);
+    return order || null;
+}
+
+async function canAccessOrderThread(user, orderId, producerCompany) {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    const order = await getOrderAccessRow(orderId);
+    if (!order) return false;
+    if (user.role === 'customer') return order.company === user.company;
+    if (user.role === 'producer') {
+        if (producerCompany !== user.company) return false;
+        const { rows: [proposal] } = await pool.query(
+            'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
+            [Number(orderId), user.company]
+        );
+        return Boolean(proposal);
+    }
+    return false;
+}
+
+function canAccessProposal(user, proposal) {
+    if (!user || !proposal) return false;
+    if (user.role === 'admin') return true;
+    return proposal.company === user.company || proposal.order_company === user.company;
 }
 
 // ===================== COMPANIES: вычисляемые поля =====================
@@ -631,8 +669,14 @@ app.post('/api/orders/:orderId/cancel', requireAuth, requireRole('customer'), as
 
 app.get('/api/proposals/:proposalId/file', requireAuth, async (req, res, next) => {
     try {
-        const { rows: [row] } = await pool.query('SELECT kp_file FROM proposals WHERE id = $1', [Number(req.params.proposalId)]);
+        const { rows: [row] } = await pool.query(`
+            SELECT p.*, o.company AS order_company
+            FROM proposals p
+            JOIN orders o ON o.id = p.order_id
+            WHERE p.id = $1
+        `, [Number(req.params.proposalId)]);
         if (!row || !row.kp_file) return res.status(404).json({ error: 'Файл не найден' });
+        if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этому файлу' });
         const kpFile = JSON.parse(row.kp_file);
         const filePath = path.join(UPLOADS_DIR, kpFile.storedName);
         if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл был удалён с сервера' });
@@ -689,7 +733,20 @@ app.get('/api/proposals', requireAuth, async (req, res, next) => {
 
 app.get('/api/order-proposals/:orderId', requireAuth, async (req, res, next) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM proposals WHERE order_id = $1', [Number(req.params.orderId)]);
+        const orderId = Number(req.params.orderId);
+        const order = await getOrderAccessRow(orderId);
+        if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
+        let rows;
+        if (req.user.role === 'admin' || order.company === req.user.company) {
+            ({ rows } = await pool.query('SELECT * FROM proposals WHERE order_id = $1', [orderId]));
+        } else if (req.user.role === 'producer') {
+            ({ rows } = await pool.query(
+                'SELECT * FROM proposals WHERE order_id = $1 AND company = $2',
+                [orderId, req.user.company]
+            ));
+        } else {
+            return res.status(403).json({ error: 'Нет доступа к предложениям этой закупки' });
+        }
         res.json(rows.map(rowToProposal));
     } catch (e) { next(e); }
 });
@@ -1230,6 +1287,9 @@ app.post('/api/messages/:orderId/:company/read', requireAuth, async (req, res, n
     try {
         const orderId = Number(req.params.orderId);
         const company = req.params.company;
+        if (!(await canAccessOrderThread(req.user, orderId, company))) {
+            return res.status(403).json({ error: 'Нет доступа к этому чату' });
+        }
         const otherSender = req.user.role === 'producer' ? 'customer' : 'producer';
         await pool.query(
             'UPDATE messages SET read = true WHERE order_id = $1 AND company = $2 AND sender = $3 AND read = false',
@@ -1241,9 +1301,14 @@ app.post('/api/messages/:orderId/:company/read', requireAuth, async (req, res, n
 
 app.get('/api/messages/:orderId/:company', requireAuth, async (req, res, next) => {
     try {
+        const orderId = Number(req.params.orderId);
+        const company = req.params.company;
+        if (!(await canAccessOrderThread(req.user, orderId, company))) {
+            return res.status(403).json({ error: 'Нет доступа к этому чату' });
+        }
         const { rows } = await pool.query(
             'SELECT * FROM messages WHERE order_id = $1 AND company = $2 ORDER BY created_at ASC',
-            [Number(req.params.orderId), req.params.company]
+            [orderId, company]
         );
         res.json(rows.map(rowToMessage));
     } catch (e) { next(e); }
@@ -1260,12 +1325,18 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
 
         if (req.user.role === 'customer') {
             if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+            const { rows: [proposal] } = await pool.query(
+                'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
+                [oid, company]
+            );
+            if (!proposal) return res.status(403).json({ error: 'Чат доступен только с поставщиком, подавшим КП' });
         } else {
             const { rows: [proposal] } = await pool.query(
                 'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
                 [oid, req.user.company]
             );
             if (!proposal) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+            if (company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
         }
 
         const { rows: [newRow] } = await pool.query(
