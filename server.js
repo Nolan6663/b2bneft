@@ -1069,6 +1069,15 @@ app.get('/api/public/stats', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+app.get('/api/config/maps', (req, res) => {
+    const yandexKey = process.env.YANDEX_MAPS_API_KEY || '';
+    const provider = (process.env.MAP_PROVIDER || (yandexKey ? 'yandex' : 'leaflet')).toLowerCase();
+    res.json({
+        provider: provider === 'yandex' && yandexKey ? 'yandex' : 'leaflet',
+        yandexMapsApiKey: yandexKey,
+    });
+});
+
 // ===================== КАРТА ЗАВОДОВ =====================
 
 app.get('/api/map', async (req, res, next) => {

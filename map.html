@@ -217,6 +217,29 @@
         .popup-production-metric b { display:block; margin-top:2px; font-size:13px; color:var(--text-primary); }
         .popup-btn { display: block; text-align: center; padding: 8px 0; border-radius: var(--radius-btn); background: var(--accent-bright); color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; transition: opacity .15s; }
         .popup-btn:hover { opacity: .85; }
+        .ymap-production-marker-wrap { transform: translate(-50%, -100%); cursor: pointer; }
+        .ymap-popup-card {
+            position: relative;
+            width: 250px;
+            transform: translate(-50%, calc(-100% - 38px));
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            box-shadow: 0 8px 28px rgba(15,23,42,.22);
+            color: var(--text-primary);
+        }
+        .ymap-popup-close {
+            position:absolute;
+            top:8px;
+            right:10px;
+            border:0;
+            background:transparent;
+            color:var(--text-secondary);
+            font-size:20px;
+            line-height:1;
+            cursor:pointer;
+            z-index:2;
+        }
 
         /* ── Bottom stats section ───────────────────────────────────── */
         .map-stats-grid {
@@ -488,13 +511,169 @@
         initNotifications();
         initSidebarBadges();
 
-        // ── Map init ──────────────────────────────────────────────────
-        const map = L.map('map', { zoomControl: true }).setView([60, 75], 4);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors', maxZoom: 18,
-        }).addTo(map);
-        setTimeout(() => map.invalidateSize(), 0);
-        window.addEventListener('resize', () => map.invalidateSize());
+        // ── Map provider init ─────────────────────────────────────────
+        let mapAdapter = null;
+        let yandexPopupMarker = null;
+        let currentFilteredProducers = [];
+
+        function loadExternalScript(src) {
+            return new Promise((resolve, reject) => {
+                const existing = [...document.scripts].find(script => script.src === src);
+                if (existing) return resolve();
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function getMapsConfig() {
+            try {
+                const response = await fetch(`${SERVER_URL}/config/maps`);
+                if (!response.ok) throw new Error('map config request failed');
+                return await response.json();
+            } catch {
+                return { provider: 'leaflet' };
+            }
+        }
+
+        function createLeafletAdapter() {
+            const instance = L.map('map', { zoomControl: true }).setView([60, 75], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors', maxZoom: 18,
+            }).addTo(instance);
+            return {
+                provider: 'leaflet',
+                markerById: {},
+                markers: [],
+                clear() {
+                    this.markers.forEach(marker => instance.removeLayer(marker));
+                    this.markers = [];
+                    this.markerById = {};
+                },
+                addProducer(p) {
+                    const marker = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
+                        .bindPopup(popupHtml(p), { maxWidth: 270, className: 'map-popup-wrap' });
+                    marker.on('click', () => selectProducer(p.id, false));
+                    marker.addTo(instance);
+                    this.markers.push(marker);
+                    this.markerById[p.id] = marker;
+                },
+                fit() {
+                    if (this.markers.length) {
+                        instance.fitBounds(this.markers.map(marker => marker.getLatLng()), { padding: [34, 34], maxZoom: 7 });
+                    } else {
+                        instance.setView([60, 75], 4);
+                    }
+                    this.invalidate();
+                },
+                flyTo(p) { instance.flyTo([p.lat, p.lng], 10, { duration: 0.8 }); },
+                openPopup(id) { if (this.markerById[id]) this.markerById[id].openPopup(); },
+                invalidate() { setTimeout(() => instance.invalidateSize(), 0); },
+            };
+        }
+
+        function createYandexMarkerElement(p) {
+            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
+            const wrap = document.createElement('div');
+            wrap.className = 'ymap-production-marker-wrap';
+            wrap.innerHTML = `<div class="map-marker ${p.verified ? 'verified' : ''}" style="background:${color}"><span>${letter}</span></div>`;
+            wrap.addEventListener('click', () => {
+                selectProducer(p.id);
+                openYandexPopup(p);
+            });
+            return wrap;
+        }
+
+        function openYandexPopup(p) {
+            if (!mapAdapter || mapAdapter.provider !== 'yandex') return;
+            if (yandexPopupMarker) mapAdapter.instance.removeChild(yandexPopupMarker);
+            const popup = document.createElement('div');
+            popup.className = 'ymap-popup-card';
+            popup.innerHTML = popupHtml(p);
+            const close = document.createElement('button');
+            close.className = 'ymap-popup-close';
+            close.type = 'button';
+            close.textContent = '×';
+            close.addEventListener('click', event => {
+                event.stopPropagation();
+                if (yandexPopupMarker) mapAdapter.instance.removeChild(yandexPopupMarker);
+                yandexPopupMarker = null;
+            });
+            popup.appendChild(close);
+            yandexPopupMarker = new ymaps3.YMapMarker({ coordinates: [p.lng, p.lat], zIndex: 1000 }, popup);
+            mapAdapter.instance.addChild(yandexPopupMarker);
+        }
+
+        async function createYandexAdapter(apiKey) {
+            await loadExternalScript(`https://api-maps.yandex.ru/v3/?apikey=${encodeURIComponent(apiKey)}&lang=ru_RU`);
+            await ymaps3.ready;
+            const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
+            const instance = new YMap(document.getElementById('map'), {
+                location: { center: [75, 60], zoom: 4 },
+                showScaleInCopyrights: true,
+            });
+            instance.addChild(new YMapDefaultSchemeLayer({}));
+            instance.addChild(new YMapDefaultFeaturesLayer({}));
+            return {
+                provider: 'yandex',
+                instance,
+                YMapMarker,
+                markerById: {},
+                markers: [],
+                clear() {
+                    this.markers.forEach(marker => instance.removeChild(marker));
+                    this.markers = [];
+                    this.markerById = {};
+                    if (yandexPopupMarker) instance.removeChild(yandexPopupMarker);
+                    yandexPopupMarker = null;
+                },
+                addProducer(p) {
+                    const marker = new YMapMarker({ coordinates: [p.lng, p.lat] }, createYandexMarkerElement(p));
+                    instance.addChild(marker);
+                    this.markers.push(marker);
+                    this.markerById[p.id] = marker;
+                },
+                fit() {
+                    if (currentFilteredProducers.length) {
+                        const lats = currentFilteredProducers.map(p => p.lat);
+                        const lngs = currentFilteredProducers.map(p => p.lng);
+                        instance.update({
+                            location: {
+                                bounds: [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                                duration: 350,
+                            },
+                        });
+                    } else {
+                        instance.update({ location: { center: [75, 60], zoom: 4, duration: 350 } });
+                    }
+                },
+                flyTo(p) { instance.update({ location: { center: [p.lng, p.lat], zoom: 10, duration: 800 } }); },
+                openPopup(id) {
+                    const p = allProducers.find(item => item.id === id);
+                    if (p) openYandexPopup(p);
+                },
+                invalidate() {},
+            };
+        }
+
+        async function initMapProvider() {
+            const config = await getMapsConfig();
+            if (config.provider === 'yandex' && config.yandexMapsApiKey) {
+                try {
+                    mapAdapter = await createYandexAdapter(config.yandexMapsApiKey);
+                    return;
+                } catch (error) {
+                    console.warn('Yandex Maps failed, falling back to Leaflet', error);
+                }
+            }
+            mapAdapter = createLeafletAdapter();
+            window.addEventListener('resize', () => mapAdapter.invalidate());
+            mapAdapter.invalidate();
+        }
 
         // ── State ─────────────────────────────────────────────────────
         let allProducers = [];
@@ -632,7 +811,8 @@
 
         // ── Apply filters ─────────────────────────────────────────────
         function applyFilters() {
-            markers.forEach(m => map.removeLayer(m));
+            if (!mapAdapter) return;
+            mapAdapter.clear();
             markers = [];
             Object.keys(markerById).forEach(k => delete markerById[k]);
 
@@ -650,20 +830,11 @@
                 return true;
             });
 
-            filtered.forEach(p => {
-                const m = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
-                    .bindPopup(popupHtml(p), { maxWidth: 270, className: 'map-popup-wrap' });
-                m.on('click', () => selectProducer(p.id, false));
-                m.addTo(map);
-                markers.push(m);
-                markerById[p.id] = m;
-            });
-            if (markers.length) {
-                map.fitBounds(markers.map(m => m.getLatLng()), { padding: [34, 34], maxZoom: 7 });
-            } else {
-                map.setView([60, 75], 4);
-            }
-            setTimeout(() => map.invalidateSize(), 0);
+            currentFilteredProducers = filtered;
+            filtered.forEach(p => mapAdapter.addProducer(p));
+            markers = mapAdapter.markers;
+            Object.assign(markerById, mapAdapter.markerById);
+            mapAdapter.fit();
 
             document.getElementById('mapCounter').innerHTML =
                 `Показано: <b>${filtered.length}</b> из ${allProducers.length}`;
@@ -770,9 +941,9 @@
             const p = allProducers.find(x => x.id === id);
             if (!p) return;
             selectProducer(id);
-            map.flyTo([p.lat, p.lng], 10, { duration: 0.8 });
-            const m = markerById[id];
-            if (m) setTimeout(() => m.openPopup(), 900);
+            if (!mapAdapter) return;
+            mapAdapter.flyTo(p);
+            setTimeout(() => mapAdapter.openPopup(id), 900);
         }
 
         // ── Load ──────────────────────────────────────────────────────
@@ -809,7 +980,7 @@
         document.getElementById('verifiedOnly').addEventListener('change', () => applyFilters());
         document.getElementById('regionSelect').addEventListener('change', () => applyFilters());
 
-        loadMap();
+        initMapProvider().then(loadMap);
     </script>
 </body>
 </html>
