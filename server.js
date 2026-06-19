@@ -1193,11 +1193,18 @@ app.get('/api/catalog', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+const aiSearchCache = new Map(); // query → { results, ts }
+const AI_CACHE_TTL = 10 * 60 * 1000; // 10 минут
+
 app.post('/api/ai-search', requireAuth, async (req, res, next) => {
     try {
         if (!genAI) return res.status(503).json({ error: 'AI не настроен: добавьте GEMINI_API_KEY в .env' });
         const { query } = req.body;
         if (!query || !query.trim()) return res.status(400).json({ error: 'query required' });
+
+        const cacheKey = query.trim().toLowerCase();
+        const cached = aiSearchCache.get(cacheKey);
+        if (cached && Date.now() - cached.ts < AI_CACHE_TTL) return res.json(cached.results);
 
         const { rows } = await pool.query(`SELECT * FROM companies WHERE role = 'producer'`);
         const producers = rows.map(rowToCompany);
@@ -1244,6 +1251,7 @@ ${catalog}
             .filter(m => Number.isInteger(m.index) && m.index >= 0 && m.index < producers.length)
             .map(m => ({ ...producers[m.index], aiReason: m.reason }));
 
+        aiSearchCache.set(cacheKey, { results: found, ts: Date.now() });
         res.json(found);
     } catch (e) {
         console.error('[ai-search error]', e.message, e.status || '', e.stack || '');
