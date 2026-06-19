@@ -16,3 +16,7 @@ services:
         value: production
       - key: APP_URL
         sync: false
+      - key: MAP_PROVIDER
+        value: yandex
+      - key: YANDEX_MAPS_API_KEY
+        sync: false
