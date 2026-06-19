@@ -409,14 +409,34 @@ let chatPollInterval = null;
 function openGlobalChat(orderId, orderTitle, company) {
   activeChatOrderId = orderId;
   activeChatCompany = company;
+
   const titleEl = document.getElementById('chatModalTitle');
-  if (titleEl) titleEl.innerText = `Чат по закупке: ${orderTitle}`;
+  if (titleEl) titleEl.innerText = orderTitle || 'Обсуждение закупки';
+
+  const companyEl = document.getElementById('chatModalCompany');
+  if (companyEl) companyEl.innerText = company || '';
+
+  const avatarEl = document.getElementById('chatModalAvatar');
+  if (avatarEl && company) {
+    const words = company.replace(/[«»"']/g, '').trim().split(/\s+/);
+    avatarEl.innerText = words.length >= 2
+      ? (words[0][0] + words[1][0]).toUpperCase()
+      : company.slice(0, 2).toUpperCase();
+  }
+
   const modal = document.getElementById('chatModal');
   if (modal) modal.style.display = 'flex';
   if (socket) socket.emit('join-chat', { orderId, company });
   renderChatHistory();
   if (chatPollInterval) clearInterval(chatPollInterval);
   chatPollInterval = setInterval(renderChatHistory, 15000);
+}
+
+function goToFullChat() {
+  if (activeChatOrderId == null) return;
+  const title = document.getElementById('chatModalTitle')?.innerText || '';
+  closeChatModal();
+  window.location.href = `messages.html?orderId=${activeChatOrderId}&company=${encodeURIComponent(activeChatCompany)}&title=${encodeURIComponent(title)}`;
 }
 
 function closeChatModal() {
@@ -438,21 +458,14 @@ async function renderChatHistory() {
 
     container.innerHTML = '';
     if (history.length === 0) {
-      const bubble = document.createElement('div');
-      bubble.className = 'chat-bubble';
-      bubble.style.background = 'transparent';
-      bubble.style.color = 'var(--text-secondary)';
-      bubble.style.textAlign = 'center';
-      bubble.style.maxWidth = '100%';
-      bubble.style.fontSize = '12px';
-      bubble.style.fontStyle = 'italic';
-      bubble.style.alignSelf = 'center';
-      bubble.innerText = 'Чат открыт. Обсудите технические параметры ТЗ напрямую с контрагентом.';
-      container.appendChild(bubble);
+      container.innerHTML = `<div class="cmp-empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Начните переписку — напишите первое сообщение</span>
+      </div>`;
     } else {
       history.forEach(msg => {
         const bubble = document.createElement('div');
-        bubble.className = msg.sender === myRole ? 'chat-bubble me' : 'chat-bubble partner';
+        bubble.className = `cmp-bubble ${msg.sender === myRole ? 'cmp-bubble-me' : 'cmp-bubble-them'}`;
         bubble.innerText = msg.text;
         container.appendChild(bubble);
       });

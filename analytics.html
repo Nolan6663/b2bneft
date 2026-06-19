@@ -1299,9 +1299,7 @@
         }
 
         /* ══ REAL API (mock-first) ══ */
-        const SERVER_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000/api'
-            : window.location.origin + '/api';
+        /* SERVER_URL берётся из app.js */
 
         async function tryLoadReal() {
             try {

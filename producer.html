@@ -213,16 +213,29 @@
 
     <div class="modal" id="chatModal">
         <div class="modal-content">
-            <h3 id="chatModalTitle">Обсуждение спецификации</h3>
-            <div class="chat-container">
-                <div class="chat-messages" id="chatModalMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatModalInput" placeholder="Напишите сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
-                    <button class="btn-chat-submit" onclick="sendGlobalChatMessage()">➤</button>
+            <div class="cmp-header">
+                <div class="cmp-header-left">
+                    <div class="cmp-avatar" id="chatModalAvatar">—</div>
+                    <div style="min-width:0;">
+                        <div class="cmp-title" id="chatModalTitle">Обсуждение закупки</div>
+                        <div class="cmp-company" id="chatModalCompany"></div>
+                    </div>
+                </div>
+                <div class="cmp-header-actions">
+                    <button class="cmp-icon-btn goto" onclick="goToFullChat()" title="Открыть в полном чате">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </button>
+                    <button class="cmp-icon-btn" onclick="closeChatModal()" title="Закрыть">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
                 </div>
             </div>
-            <div class="modal-actions">
-                <button class="btn-modal-cancel" onclick="closeChatModal()">Закрыть</button>
+            <div class="cmp-messages" id="chatModalMessages"></div>
+            <div class="cmp-footer">
+                <input class="cmp-input" id="chatModalInput" type="text" placeholder="Написать сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
+                <button class="cmp-send-btn" onclick="sendGlobalChatMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
             </div>
         </div>
     </div>
