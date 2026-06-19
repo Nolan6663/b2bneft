@@ -242,7 +242,7 @@ app.use('/company-photos', express.static(PHOTOS_DIR));
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
-    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html',
+    'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
 ];
 PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
 app.get('/', (req, res) => res.redirect('/landing.html'));
