@@ -142,8 +142,7 @@ function initSidebarIndicator() {
     const active = sidebar.querySelector('a.active');
     if (!active) return;
 
-    sidebar.style.position = 'relative';
-
+    // sidebar is position:sticky — already a containing block, no override needed
     const ind = document.createElement('div');
     ind.className = 'sidebar-pill-indicator';
     sidebar.insertBefore(ind, sidebar.firstChild);
