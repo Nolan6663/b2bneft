@@ -484,7 +484,12 @@ async function enrichCompany(c, ownerCompany) {
 
 app.get('/api/orders', requireAuth, async (req, res, next) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+        let rows;
+        if (req.user.role === 'customer') {
+            ({ rows } = await pool.query('SELECT * FROM orders WHERE company = $1 ORDER BY created_at DESC', [req.user.company]));
+        } else {
+            ({ rows } = await pool.query('SELECT * FROM orders ORDER BY created_at DESC'));
+        }
         res.json(rows.map(rowToOrder));
     } catch (e) { next(e); }
 });

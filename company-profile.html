@@ -493,7 +493,7 @@
                     btn.classList.toggle('active', nowFavorite);
                     btn.innerText = nowFavorite ? '★ В избранном' : '☆ В избранное';
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
 
         function openEditProfile() {
@@ -775,7 +775,7 @@
                     const err = await response.json();
                     showToast(err.error || 'Не удалось сохранить профиль', 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
     </script>
 </body>

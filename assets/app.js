@@ -77,8 +77,6 @@ document.addEventListener('keydown', (e) => {
 /* ---------------------------------------------------------------------
    Auth guard / logout
    --------------------------------------------------------------------- */
-// Вызвать на защищённых страницах: const session = authGuard('producer');
-// requiredRole === null -> просто вернуть текущую сессию без редиректа.
 function authGuard(requiredRole) {
   const token = localStorage.getItem('authToken');
   const role = localStorage.getItem('userRole');
@@ -170,17 +168,8 @@ document.addEventListener('click', () => {
 });
 
 /* ---------------------------------------------------------------------
-   Mock-скачивание файла (вложения, экспорт реестра)
+   CSV-экспорт
    --------------------------------------------------------------------- */
-function downloadMockFile(filename, content) {
-  const blob = new Blob([content || ('Файл: ' + filename)], { type: 'application/octet-stream' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
-
-/* CSV-экспорт: принимает имя файла, массив заголовков и массив строк (массивов значений) */
 function exportToCSV(filename, headers, rows) {
   const BOM = '﻿';
   const escape = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
@@ -226,23 +215,28 @@ function deadlineToInputValue(str) {
 /* ---------------------------------------------------------------------
    Toast-уведомления (всплывающие карточки в углу экрана)
    --------------------------------------------------------------------- */
-function showToast(text) {
+function showToast(text, type) {
   let container = document.getElementById('toastContainer');
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainer';
     document.body.appendChild(container);
   }
+  // Deduplicate: skip if same message already visible
+  for (const el of container.querySelectorAll('.toast-text')) {
+    if (el.textContent === text) return;
+  }
+  const icon = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '🔔';
   const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `<div class="toast-icon">🔔</div><div class="toast-text">${escapeHtml(text)}</div><button class="toast-close" aria-label="Закрыть">✕</button>`;
+  toast.className = 'toast' + (type ? ' toast-' + type : '');
+  toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text">${escapeHtml(text)}</div><button class="toast-close" aria-label="Закрыть">✕</button>`;
   const dismiss = () => {
     toast.classList.add('toast-out');
     setTimeout(() => toast.remove(), 220);
   };
   toast.querySelector('.toast-close').onclick = dismiss;
   container.appendChild(toast);
-  setTimeout(dismiss, 6000);
+  setTimeout(dismiss, 5000);
 }
 
 /* ---------------------------------------------------------------------
@@ -273,9 +267,7 @@ if (typeof io === 'function') {
         renderChatHistory();
       }
     });
-  } catch (error) {
-    console.warn('Socket.IO недоступен, работаем по поллингу:', error);
-  }
+  } catch { /* socket.io недоступен — поллинг */ }
 }
 
 /* ---------------------------------------------------------------------
@@ -534,16 +526,6 @@ async function initSidebarBadges() {
 }
 
 /* ---------------------------------------------------------------------
-   Theme pill helpers — вызываются из кнопок в шапке
-   --------------------------------------------------------------------- */
-function activateLightTheme() {
-  if (document.documentElement.getAttribute('data-theme') === 'dark') toggleTheme();
-}
-function activateDarkTheme() {
-  if (document.documentElement.getAttribute('data-theme') !== 'dark') toggleTheme();
-}
-
-/* ---------------------------------------------------------------------
    Sidebar extras — промо-виджет, блок поддержки, кнопка сворачивания
    --------------------------------------------------------------------- */
 function toggleSidebar() {
@@ -557,8 +539,6 @@ function initSidebarExtra() {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
 
-  // Оборачиваем текстовые узлы навигации в <span.nav-label>
-  // чтобы CSS мог их скрывать в свёрнутом режиме
   sidebar.querySelectorAll('a').forEach(link => {
     Array.from(link.childNodes).forEach(node => {
       if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
@@ -570,16 +550,13 @@ function initSidebarExtra() {
     });
   });
 
-  // Убираем старый sidebar-bottom (toggle + logout)
   const oldBottom = sidebar.querySelector('.sidebar-bottom');
   if (oldBottom) oldBottom.remove();
 
-  // Спейсер — растягивает пространство между навигацией и нижним блоком
   const spacer = document.createElement('div');
   spacer.className = 'sidebar-spacer';
   sidebar.appendChild(spacer);
 
-  // Промо-виджет
   const promo = document.createElement('div');
   promo.className = 'sidebar-promo';
   promo.innerHTML = `
@@ -588,7 +565,6 @@ function initSidebarExtra() {
     <a href="#" class="sidebar-promo-btn">Подробнее</a>`;
   sidebar.appendChild(promo);
 
-  // Блок поддержки
   const support = document.createElement('div');
   support.className = 'sidebar-support';
   support.innerHTML = `
@@ -603,7 +579,6 @@ function initSidebarExtra() {
     </div>`;
   sidebar.appendChild(support);
 
-  // Кнопка свернуть/развернуть
   const colBtn = document.createElement('button');
   colBtn.className = 'sidebar-collapse-btn';
   colBtn.onclick = toggleSidebar;
@@ -612,7 +587,6 @@ function initSidebarExtra() {
     <span class="sidebar-collapse-label">Свернуть меню</span>`;
   sidebar.appendChild(colBtn);
 
-  // Восстанавливаем свёрнутое состояние
   if (localStorage.getItem('sidebarCollapsed') === '1') {
     sidebar.classList.add('collapsed');
   }
@@ -631,7 +605,6 @@ function initHeaderRight() {
   const header = document.querySelector('.header') || document.querySelector('.msg-header');
   if (!header) return;
 
-  // Убираем старый bell-btn из HTML, он будет в новой header-right
   const oldBell = header.querySelector('.bell-btn');
   if (oldBell) oldBell.remove();
 
@@ -685,9 +658,6 @@ function initHeaderRight() {
 
   header.appendChild(right);
 
-  // CSS handles switch position via [data-theme="dark"] — nothing to sync here
-
-  // Закрываем дропдаун при клике вне меню
   document.addEventListener('click', e => {
     const menu = document.getElementById('userMenu');
     if (menu && !menu.contains(e.target)) {

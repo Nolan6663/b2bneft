@@ -374,7 +374,7 @@ function renderCompanyStatus(status) {
                     document.getElementById('infoRating').innerText = '—';
                     document.getElementById('infoRatingLabel').innerText = 'Нет данных';
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
 
         const MOCK_ORDERS_PRODUCER = [
@@ -529,7 +529,7 @@ function renderCompanyStatus(status) {
                     row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
                     tableBody.appendChild(row);
                 });
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
 
         function openRespondModal(id, title) {
@@ -570,8 +570,7 @@ function renderCompanyStatus(status) {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось отправить предложение', 'error');
                 }
-            } catch (error) {
-                console.error(error);
+            } catch {
                 showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
             }
         }

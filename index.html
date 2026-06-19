@@ -632,9 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ordersCache = await response.json();
                 updateStatusCounts();
                 renderOrdersTable();
-            } catch (error) {
-                console.error('Ошибка при загрузке заявок:', error);
-            }
+            } catch { /* тихо */ }
             return true;
         }
 
@@ -928,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось отменить закупку', 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
 
         async function viewProposals(orderId, orderTitle) {
@@ -996,9 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         tableBody.appendChild(row);
                     });
                 }
-            } catch (error) {
-                console.error(error);
-            }
+            } catch { /* тихо */ }
         }
 
         async function saveOrder() {
@@ -1032,7 +1028,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fileInput.files.length > 0) formData.append('drawing', fileInput.files[0]);
 
             try {
-                // Content-Type не указываем сами — браузер сам выставит multipart/form-data с boundary
                 const response = await fetch(url, {
                     method,
                     headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
@@ -1044,8 +1039,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const err = await response.json();
                     showToast(err.error || (isEdit ? 'Не удалось сохранить изменения' : 'Не удалось создать закупку'), 'error');
                 }
-            } catch (error) {
-                console.error(error);
+            } catch {
                 showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
             }
         }
@@ -1062,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось принять предложение', 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
 
         async function rejectProposal(proposalId) {
@@ -1078,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось отклонить предложение', 'error');
                 }
-            } catch (error) { console.error(error); }
+            } catch { /* тихо */ }
         }
     </script>
 </body>
