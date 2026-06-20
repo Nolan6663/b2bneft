@@ -694,7 +694,7 @@
                         </div>
                         <div class="proc-row-cat">${escapeHtml(order.category)}</div>
                         <div><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></div>
-                        <div class="proc-row-resp">${order.responses}</div>
+                        <div class="proc-row-resp">${order.responses ?? 0}</div>
                         <div>
                             <div class="proc-row-deadline" style="color:${dColor};">${dFmt}</div>
                         </div>
@@ -1021,11 +1021,7 @@
             if (fileInput.files.length > 0) formData.append('drawing', fileInput.files[0]);
 
             try {
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
-                    body: formData
-                });
+                const response = await apiFetch(url, { method, body: formData });
                 if (response.ok) {
                     closeModal(); loadOrders();
                 } else {

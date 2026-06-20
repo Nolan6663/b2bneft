@@ -169,6 +169,7 @@ async function initDb() {
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS lng FLOAT;
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS delivery_stage TEXT NOT NULL DEFAULT 'КП принят';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS responses INTEGER NOT NULL DEFAULT 0;
     `);
 
     const isProduction = process.env.NODE_ENV === 'production';

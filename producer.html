@@ -594,9 +594,8 @@
             if (fileInput.files.length > 0) formData.append('kpFile', fileInput.files[0]);
 
             try {
-                const response = await fetch(`${SERVER_URL}/proposals`, {
+                const response = await apiFetch(`${SERVER_URL}/proposals`, {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token },
                     body: formData
                 });
                 if (response.ok) {
