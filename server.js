@@ -1590,32 +1590,36 @@ app.get('/api/messages/:orderId/:company', requireAuth, async (req, res, next) =
 
 app.post('/api/messages', requireAuth, async (req, res, next) => {
     try {
-        const { orderId, company, text } = req.body;
-        if (!orderId || !company || !text) return res.status(400).json({ error: 'Заполните все поля сообщения' });
+        const { orderId, text } = req.body;
+        if (!orderId || !text) return res.status(400).json({ error: 'Заполните все поля сообщения' });
 
         const oid = Number(orderId);
         const { rows: [order] } = await pool.query('SELECT company FROM orders WHERE id = $1', [oid]);
         if (!order) return res.status(404).json({ error: 'Заявка не найдена' });
 
+        let threadCompany;
         if (req.user.role === 'customer') {
             if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+            threadCompany = req.body.company;
+            if (!threadCompany) return res.status(400).json({ error: 'Не указана компания поставщика' });
             const { rows: [proposal] } = await pool.query(
                 'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
-                [oid, company]
+                [oid, threadCompany]
             );
             if (!proposal) return res.status(403).json({ error: 'Чат доступен только с поставщиком, подавшим КП' });
         } else {
+            // producer: company is always the authenticated user's company — don't trust the client
             const { rows: [proposal] } = await pool.query(
                 'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
                 [oid, req.user.company]
             );
             if (!proposal) return res.status(403).json({ error: 'Нет доступа к этому чату' });
-            if (company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
+            threadCompany = req.user.company;
         }
 
         const { rows: [newRow] } = await pool.query(
             'INSERT INTO messages (order_id,company,sender,text) VALUES ($1,$2,$3,$4) RETURNING *',
-            [oid, company, req.user.role, String(text).slice(0, 2000)]
+            [oid, threadCompany, req.user.role, String(text).slice(0, 2000)]
         );
         const msg = rowToMessage(newRow);
         if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);

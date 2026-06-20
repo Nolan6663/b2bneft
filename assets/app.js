@@ -504,10 +504,7 @@ async function sendGlobalChatMessage() {
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       input.value = text;
-      const msg = r.status === 403
-        ? 'Чтобы начать чат — сначала отправьте предложение на эту закупку'
-        : (err.error || 'Не удалось отправить сообщение');
-      showToast(msg);
+      showToast(err.error || 'Не удалось отправить сообщение');
       return;
     }
   } catch (error) {
