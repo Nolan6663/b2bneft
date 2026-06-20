@@ -47,7 +47,7 @@ async function fetchQueries(startDate, endDate) {
 
     return all.map(q => ({
         source: 'yandex',
-        date: endDate,
+        date: new Date().toISOString().slice(0, 10),
         query: q.query_text,
         page: HOST_ID,
         impressions: q.indicators?.IMPRESSIONS ?? 0,

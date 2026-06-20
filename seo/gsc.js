@@ -47,7 +47,7 @@ async function fetchSearchAnalytics(startDate, endDate) {
 
     return rows.map(r => ({
         source: 'google',
-        date: endDate,
+        date: new Date().toISOString().slice(0, 10),
         query: r.keys[0],
         page: r.keys[1],
         impressions: Math.round(r.impressions || 0),
