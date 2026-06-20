@@ -7,6 +7,44 @@
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ── SEO tab ── */
+        .seo-panel { display: none; }
+        .seo-panel.active { display: block; }
+        .seo-section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin: 0 0 12px; }
+        .seo-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 20px 24px; margin-bottom: 16px; }
+        .seo-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .seo-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .seo-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; padding: 0 10px 10px; border-bottom: 1px solid var(--inner-border); }
+        .seo-table td { padding: 10px; border-bottom: 1px solid var(--inner-border); color: var(--text-primary); vertical-align: top; }
+        .seo-table tr:last-child td { border-bottom: none; }
+        .seo-table tr.expandable { cursor: pointer; }
+        .seo-table tr.expandable:hover td { background: var(--inner-bg); }
+        .seo-score { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; padding: 0 8px; }
+        .seo-score.green { background: rgba(74,222,128,.15); color: #4ade80; }
+        .seo-score.yellow { background: rgba(250,204,21,.15); color: #facc15; }
+        .seo-score.red { background: rgba(248,113,113,.15); color: #f87171; }
+        .seo-issue-row td { background: var(--inner-bg); font-size: 12px; color: var(--text-secondary); }
+        .seo-issue-row { display: none; }
+        .seo-issue-row.open { display: table-row; }
+        .seo-badge-sev { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+        .seo-badge-sev.critical { background: rgba(248,113,113,.15); color: #f87171; }
+        .seo-badge-sev.warning  { background: rgba(250,204,21,.15);  color: #facc15; }
+        .seo-badge-sev.info     { background: rgba(148,163,184,.15); color: #94a3b8; }
+        .seo-source-btn { height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--inner-border); background: var(--inner-bg); color: var(--text-secondary); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+        .seo-source-btn.active { background: var(--accent-bright); border-color: var(--accent-bright); color: #fff; }
+        .seo-intent-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .seo-intent-badge.informational { background: rgba(99,102,241,.15); color: #818cf8; }
+        .seo-intent-badge.commercial    { background: rgba(8,145,178,.15);  color: #22d3ee; }
+        .seo-intent-badge.navigational  { background: rgba(74,222,128,.15); color: #4ade80; }
+        .seo-intent-badge.transactional { background: rgba(251,146,60,.15); color: #fb923c; }
+        .seo-delta.up   { color: #4ade80; font-weight: 700; }
+        .seo-delta.down { color: #f87171; font-weight: 700; }
+        .seo-banner { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; padding: 16px 20px; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+        .seo-banner code { font-family: monospace; background: var(--card-bg); padding: 1px 5px; border-radius: 4px; color: var(--accent-bright); font-size: 12px; }
+        .seo-chart-wrap { position: relative; height: 220px; margin-top: 16px; }
+    </style>
     <style>
         body { display: flex; flex-direction: column; min-height: 100vh; }
         .admin-topbar {
@@ -89,6 +127,7 @@
                     Ожидают проверки<span class="admin-badge" id="pendingCount" style="display:none;"></span>
                 </button>
                 <button class="admin-tab" id="tabAll" onclick="loadRequests('all')">Все заявки</button>
+                <button class="admin-tab" id="tabSeo" onclick="showSeoTab()">SEO</button>
             </div>
             <button class="btn-export" onclick="exportCsv()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -98,6 +137,55 @@
 
         <div id="requestsList">
             <div class="admin-empty">Загрузка...</div>
+        </div>
+
+        <div id="seoPanel" class="seo-panel">
+
+            <!-- Audit section -->
+            <div class="seo-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <p class="seo-section-title" style="margin:0;">Аудит страниц</p>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <select id="seoSevFilter" class="an-filter-select" style="height:32px;" onchange="renderAudit()">
+                            <option value="">Все проблемы</option>
+                            <option value="critical">Критические</option>
+                            <option value="warning">Предупреждения</option>
+                            <option value="info">Информация</option>
+                        </select>
+                        <button class="btn-primary" style="height:32px;padding:0 14px;font-size:12.5px;" onclick="runAudit()" id="auditBtn">Запустить аудит</button>
+                    </div>
+                </div>
+                <div id="auditTable"><div class="admin-empty" style="padding:30px 0;">Нажмите «Запустить аудит»</div></div>
+            </div>
+
+            <!-- Queries section -->
+            <div class="seo-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                    <p class="seo-section-title" style="margin:0;">Поисковые запросы</p>
+                    <button class="btn-primary" style="height:32px;padding:0 14px;font-size:12.5px;" onclick="runSync()" id="syncBtn">Синхронизировать</button>
+                </div>
+                <div class="seo-toolbar">
+                    <button class="seo-source-btn active" id="srcAll"    onclick="setSrc('')">Все</button>
+                    <button class="seo-source-btn"        id="srcGoogle" onclick="setSrc('google')">Google</button>
+                    <button class="seo-source-btn"        id="srcYandex" onclick="setSrc('yandex')">Яндекс</button>
+                    <select id="seoIntentFilter" class="an-filter-select" style="height:32px;" onchange="renderSnapshots()">
+                        <option value="">Все интенты</option>
+                        <option value="informational">Информационный</option>
+                        <option value="commercial">Коммерческий</option>
+                        <option value="navigational">Навигационный</option>
+                        <option value="transactional">Транзакционный</option>
+                    </select>
+                </div>
+                <div id="gcBanner" class="seo-banner" style="display:none;">
+                    Google Search Console не подключён. Добавьте в Render: <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> и <code>GOOGLE_SITE_URL</code>.
+                </div>
+                <div id="yaBanner" class="seo-banner" style="display:none;">
+                    Яндекс.Вебмастер не подключён. Добавьте в Render: <code>YANDEX_WEBMASTER_TOKEN</code> и <code>YANDEX_WEBMASTER_HOST_ID</code>.
+                </div>
+                <div id="snapshotTable"><div class="admin-empty" style="padding:30px 0;">Нет данных — выполните синхронизацию</div></div>
+                <div class="seo-chart-wrap"><canvas id="seoChart"></canvas></div>
+            </div>
+
         </div>
     </div>
 
@@ -297,6 +385,204 @@
         }
 
         loadRequests('pending');
+
+        // ── SEO ──
+        let seoData = null;
+        let seoSource = '';
+        let seoChart = null;
+
+        async function showSeoTab() {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tabSeo').classList.add('active');
+            document.getElementById('requestsList').style.display = 'none';
+            document.getElementById('seoPanel').classList.add('active');
+            document.querySelector('.admin-toolbar').style.display = 'none';
+            await loadSeoData();
+        }
+
+        async function loadSeoData() {
+            try {
+                const r = await fetch(`${SERVER_URL}/api/seo/data`, {
+                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) return;
+                seoData = await r.json();
+                renderAudit();
+                renderSnapshots();
+                renderChart();
+                document.getElementById('gcBanner').style.display = seoData.gscEnabled ? 'none' : '';
+                document.getElementById('yaBanner').style.display = seoData.yandexEnabled ? 'none' : '';
+            } catch (e) { console.error('[seo]', e); }
+        }
+
+        async function runAudit() {
+            const btn = document.getElementById('auditBtn');
+            btn.textContent = 'Запускаю...'; btn.disabled = true;
+            try {
+                const r = await fetch(`${SERVER_URL}/api/seo/audit`, {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) throw new Error('audit failed');
+                const results = await r.json();
+                if (seoData) seoData.audit = results;
+                else seoData = { audit: results, snapshots: [], gscEnabled: false, yandexEnabled: false, lastSync: {} };
+                renderAudit();
+            } catch (e) { alert('Ошибка аудита: ' + e.message); }
+            finally { btn.textContent = 'Запустить аудит'; btn.disabled = false; }
+        }
+
+        async function runSync() {
+            const btn = document.getElementById('syncBtn');
+            btn.textContent = 'Синхронизирую...'; btn.disabled = true;
+            try {
+                const r = await fetch(`${SERVER_URL}/api/seo/sync`, {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
+                });
+                if (!r.ok) throw new Error('sync failed');
+                const info = await r.json();
+                alert(`Синхронизировано: ${info.synced} записей, ${info.newQueries} новых запросов`);
+                await loadSeoData();
+            } catch (e) { alert('Ошибка синхронизации: ' + e.message); }
+            finally { btn.textContent = 'Синхронизировать'; btn.disabled = false; }
+        }
+
+        function setSrc(src) {
+            seoSource = src;
+            ['srcAll','srcGoogle','srcYandex'].forEach(id => document.getElementById(id).classList.remove('active'));
+            document.getElementById(src === '' ? 'srcAll' : src === 'google' ? 'srcGoogle' : 'srcYandex').classList.add('active');
+            renderSnapshots();
+            renderChart();
+        }
+
+        function scoreClass(s) { return s >= 80 ? 'green' : s >= 50 ? 'yellow' : 'red'; }
+
+        function renderAudit() {
+            const el = document.getElementById('auditTable');
+            if (!seoData || !seoData.audit || !seoData.audit.length) {
+                el.innerHTML = '<div class="admin-empty" style="padding:30px 0;">Нет данных — нажмите «Запустить аудит»</div>'; return;
+            }
+            const sevF = document.getElementById('seoSevFilter').value;
+            let rows = '';
+            seoData.audit.forEach((p, i) => {
+                const filtered = sevF ? p.issues.filter(iss => iss.severity === sevF) : p.issues;
+                const crits = p.issues.filter(iss => iss.severity === 'critical').length;
+                const warns = p.issues.filter(iss => iss.severity === 'warning').length;
+                rows += `<tr class="expandable" onclick="toggleAuditRow(${i})">
+                    <td>${p.page}</td>
+                    <td><span class="seo-score ${scoreClass(p.score)}">${p.score}</span></td>
+                    <td>${crits ? `<span style="color:#f87171;font-weight:700;">${crits} крит.</span>` : '—'}</td>
+                    <td>${warns ? `<span style="color:#facc15;font-weight:700;">${warns} пред.</span>` : '—'}</td>
+                    <td style="font-size:11px;color:var(--text-muted);">${p.audited_at ? new Date(p.audited_at).toLocaleDateString('ru') : '—'}</td>
+                </tr>
+                <tr class="seo-issue-row" id="auditIssues${i}"><td colspan="5" style="padding:0 10px 10px;">`;
+                if (filtered.length === 0) {
+                    rows += '<span style="color:var(--text-muted);font-size:12px;">Нет проблем этого типа</span>';
+                } else {
+                    rows += filtered.map(iss => `
+                        <div style="margin:6px 0;">
+                            <span class="seo-badge-sev ${iss.severity}">${iss.severity}</span>
+                            <strong>${iss.message}</strong>
+                            <div style="margin-top:3px;color:var(--text-secondary);font-size:12px;">↳ ${iss.fix}</div>
+                        </div>`).join('');
+                }
+                rows += '</td></tr>';
+            });
+            el.innerHTML = `<table class="seo-table">
+                <thead><tr><th>Страница</th><th>Score</th><th>Крит.</th><th>Пред.</th><th>Дата</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        function toggleAuditRow(i) {
+            const row = document.getElementById(`auditIssues${i}`);
+            row.classList.toggle('open');
+        }
+
+        function renderSnapshots() {
+            const el = document.getElementById('snapshotTable');
+            if (!seoData || !seoData.snapshots || !seoData.snapshots.length) {
+                el.innerHTML = '<div class="admin-empty" style="padding:30px 0;">Нет данных — выполните синхронизацию</div>'; return;
+            }
+            const intentF = document.getElementById('seoIntentFilter').value;
+            let items = seoData.snapshots;
+            if (seoSource) items = items.filter(s => s.source === seoSource);
+            if (intentF)   items = items.filter(s => s.intent === intentF);
+
+            const rows = items.slice(0, 200).map(s => {
+                const srcBadge = s.source === 'google'
+                    ? '<span style="background:rgba(8,145,178,.15);color:#22d3ee;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">G</span>'
+                    : '<span style="background:rgba(251,146,60,.15);color:#fb923c;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">Я</span>';
+                const intentBadge = s.intent
+                    ? `<span class="seo-intent-badge ${s.intent}">${s.intent_ru || s.intent}</span>`
+                    : '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+                const deltaHtml = s.delta == null ? '—'
+                    : s.delta < 0 ? `<span class="seo-delta up">▲${Math.abs(s.delta)}</span>`
+                    : s.delta > 0 ? `<span class="seo-delta down">▼${s.delta}</span>`
+                    : '=';
+                const pos = typeof s.position === 'number' ? s.position.toFixed(1) : '—';
+                const ctrPct = typeof s.ctr === 'number' ? (s.ctr * 100).toFixed(1) + '%' : '—';
+                return `<tr>
+                    <td>${srcBadge}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.query}">${s.query}</td>
+                    <td>${intentBadge}</td>
+                    <td style="font-size:11px;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.page}</td>
+                    <td style="font-weight:700;">${pos}</td>
+                    <td>${deltaHtml}</td>
+                    <td>${s.impressions}</td>
+                    <td>${ctrPct}</td>
+                </tr>`;
+            }).join('');
+
+            el.innerHTML = `<table class="seo-table">
+                <thead><tr><th></th><th>Запрос</th><th>Интент</th><th>Страница</th><th>Позиция</th><th>Δ</th><th>Показы</th><th>CTR</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        function renderChart() {
+            const canvas = document.getElementById('seoChart');
+            if (seoChart) { seoChart.destroy(); seoChart = null; }
+            if (!seoData || !seoData.snapshots || !seoData.snapshots.length) return;
+
+            let items = seoData.snapshots;
+            if (seoSource) items = items.filter(s => s.source === seoSource);
+
+            const top10 = items.slice(0, 10);
+            if (!top10.length) return;
+
+            const COLORS = ['#22d3ee','#4ade80','#fb923c','#818cf8','#f87171','#facc15','#a78bfa','#34d399','#60a5fa','#f472b6'];
+            seoChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(s => s.query.length > 30 ? s.query.slice(0, 30) + '…' : s.query),
+                    datasets: [{
+                        label: 'Позиция (меньше = лучше)',
+                        data: top10.map(s => s.position),
+                        backgroundColor: COLORS.slice(0, top10.length),
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { reverse: true, beginAtZero: false, title: { display: true, text: 'Позиция' } }
+                    }
+                }
+            });
+        }
+
+        // patch existing tab functions to hide SEO panel when switching away
+        const _origLoadRequests = loadRequests;
+        loadRequests = function(filter) {
+            document.getElementById('seoPanel').classList.remove('active');
+            document.getElementById('requestsList').style.display = '';
+            document.querySelector('.admin-toolbar').style.display = '';
+            return _origLoadRequests(filter);
+        };
     </script>
 </body>
 </html>
