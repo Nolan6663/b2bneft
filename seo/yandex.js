@@ -52,8 +52,8 @@ async function fetchQueries(startDate, endDate) {
         page: HOST_ID,
         impressions: q.indicators?.IMPRESSIONS ?? 0,
         clicks: q.indicators?.CLICKS ?? 0,
-        ctr: parseFloat(((q.indicators?.CTR ?? 0)).toFixed(4)),
-        position: parseFloat(((q.indicators?.POSITION ?? 0)).toFixed(2)),
+        ctr: parseFloat((q.indicators?.CTR ?? 0).toFixed(4)),
+        position: parseFloat((q.indicators?.POSITION ?? 0).toFixed(2)),
     }));
 }
 
