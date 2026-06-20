@@ -1264,6 +1264,22 @@ ${catalog}
     }
 });
 
+// ===================== SEO =====================
+const seoAuditor = require('./seo/auditor');
+
+app.post('/api/seo/audit', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const results = await seoAuditor.auditAll();
+        for (const r of results) {
+            await pool.query(
+                'INSERT INTO seo_audits (page, score, issues) VALUES ($1, $2, $3)',
+                [r.page, r.score, JSON.stringify(r.issues)]
+            );
+        }
+        res.json(results);
+    } catch (e) { next(e); }
+});
+
 // ===================== CRM / АНАЛИТИКА =====================
 
 app.get('/api/producer/crm-stats', requireAuth, requireRole('producer'), async (req, res, next) => {
