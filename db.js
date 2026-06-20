@@ -136,6 +136,31 @@ async function initDb() {
             updated_by  TEXT        NOT NULL DEFAULT 'system',
             created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS seo_audits (
+            id         SERIAL      PRIMARY KEY,
+            page       TEXT        NOT NULL,
+            score      INTEGER     NOT NULL,
+            issues     JSONB       NOT NULL,
+            audited_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS seo_snapshots (
+            id          SERIAL      PRIMARY KEY,
+            source      TEXT        NOT NULL DEFAULT 'google',
+            date        DATE        NOT NULL,
+            query       TEXT        NOT NULL,
+            page        TEXT        NOT NULL,
+            impressions INTEGER     NOT NULL DEFAULT 0,
+            clicks      INTEGER     NOT NULL DEFAULT 0,
+            ctr         REAL        NOT NULL DEFAULT 0,
+            position    REAL        NOT NULL DEFAULT 0,
+            UNIQUE(source, date, query, page)
+        );
+        CREATE TABLE IF NOT EXISTS seo_intents (
+            query         TEXT        PRIMARY KEY,
+            intent        TEXT        NOT NULL,
+            intent_ru     TEXT        NOT NULL,
+            classified_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
