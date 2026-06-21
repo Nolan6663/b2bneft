@@ -492,7 +492,7 @@
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) return;
-                const r = await fetch(`${SERVER_URL}/customer/analytics`, { headers: { 'Authorization': 'Bearer ' + token } });
+                const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
                 if (!r.ok) return;
                 const s = await r.json();
                 if (s.monthOrders != null) document.getElementById('anaMonth').textContent = s.monthOrders;
@@ -512,7 +512,7 @@
                 const allProposals = [];
                 await Promise.all(activeOrders.map(async o => {
                     try {
-                        const r = await fetch(`${SERVER_URL}/order-proposals/${o.id}`, { headers: { 'Authorization': 'Bearer ' + token } });
+                        const r = await apiFetch(`${SERVER_URL}/order-proposals/${o.id}`);
                         if (r.ok) {
                             const props = await r.json();
                             props.forEach(p => allProposals.push({ ...p, orderTitle: o.title }));
@@ -610,9 +610,7 @@
 
         async function loadOrders() {
             try {
-                const response = await fetch(`${SERVER_URL}/orders`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await apiFetch(`${SERVER_URL}/orders`);
                 if (!response.ok) throw new Error('orders request failed');
                 ordersCache = await response.json();
             } catch {
@@ -769,9 +767,7 @@
 
             let proposals = MOCK_KP;
             try {
-                const res = await fetch(`${SERVER_URL}/order-proposals/${order.id}`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const res = await apiFetch(`${SERVER_URL}/order-proposals/${order.id}`);
                 if (res.ok) proposals = await res.json();
             } catch { /* use mock */ }
             currentProposalsList = proposals;
@@ -878,9 +874,7 @@
             if (!confirm(`Выбрать «${supplier}» победителем? Тендер будет закрыт.`)) return;
             document.getElementById('compareModal').style.display = 'none';
             try {
-                const r = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
-                    method: 'POST', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });
                 const data = await r.json();
                 if (!r.ok) { showToast(data.error || 'Ошибка', 'error'); return; }
                 window.location.reload();
@@ -910,10 +904,7 @@
         async function cancelOrder(orderId) {
             if (!confirm('Отменить эту закупку? Все ожидающие предложения по ней будут сняты с рассмотрения.')) return;
             try {
-                const response = await fetch(`${SERVER_URL}/orders/${orderId}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await apiFetch(`${SERVER_URL}/orders/${orderId}/cancel`, { method: 'POST' });
                 if (response.ok) { loadOrders(); }
                 else {
                     const err = await response.json();
@@ -931,12 +922,13 @@
             document.getElementById('proposalsModal').style.display = 'flex';
 
             try {
-                const ordResponse = await fetch(`${SERVER_URL}/orders`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
-                const allOrders = await ordResponse.json();
-                const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId));
+                const ordResponse = await apiFetch(`${SERVER_URL}/orders`);
+                const allOrders = ordResponse.ok ? await ordResponse.json() : [];
+                const currentOrder = Array.isArray(allOrders) ? allOrders.find(o => Number(o.id) === Number(orderId)) : null;
 
-                const response = await fetch(`${SERVER_URL}/order-proposals/${orderId}`, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') } });
-                let proposals = await response.json();
+                const response = await apiFetch(`${SERVER_URL}/order-proposals/${orderId}`);
+                let proposals = response.ok ? await response.json() : [];
+                if (!Array.isArray(proposals)) proposals = [];
                 proposals.sort((a, b) => a.price - b.price);
 
                 tableBody.innerHTML = '';
@@ -979,8 +971,8 @@
                                 <div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div>
                                 ${fileLink}
                             </td>
-                            <td>${prop.price} ₽/шт</td>
-                            <td>${prop.days} дней</td>
+                            <td>${prop.price != null ? prop.price : '—'} ₽/шт</td>
+                            <td>${prop.days != null ? prop.days : '—'} дней</td>
                             <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>
                             <td>${actionCell}</td>
                         `;
@@ -1036,10 +1028,7 @@
         async function acceptProposal(proposalId) {
             if (!confirm('Вы уверены, что хотите принять это предложение и закрыть закупку?')) return;
             try {
-                const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/accept`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });
                 if (response.ok) { closeProposalsModal(); loadOrders(); }
                 else {
                     const err = await response.json();
@@ -1051,10 +1040,7 @@
         async function rejectProposal(proposalId) {
             if (!confirm('Отклонить это предложение? Закупка останется открытой для остальных откликов.')) return;
             try {
-                const response = await fetch(`${SERVER_URL}/proposals/${proposalId}/reject`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/reject`, { method: 'POST' });
                 if (response.ok) {
                     if (currentProposalsOrderId != null) viewProposals(currentProposalsOrderId, currentProposalsOrderTitle);
                 } else {

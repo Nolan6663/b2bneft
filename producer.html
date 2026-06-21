@@ -425,13 +425,12 @@
         async function loadOrdersForProducers() {
             let orders = MOCK_ORDERS_PRODUCER;
             try {
-                const headers = isGuest ? {} : { 'Authorization': 'Bearer ' + token };
-                const response = await fetch(`${SERVER_URL}/orders`, { headers });
-                const fetched = await response.json();
-                orders = fetched;
+                const response = isGuest ? await fetch(`${SERVER_URL}/orders`) : await apiFetch(`${SERVER_URL}/orders`);
+                const fetched = response.ok ? await response.json() : null;
+                if (Array.isArray(fetched)) orders = fetched;
                 if (!isGuest) {
                     try {
-                        const scoresResponse = await fetch(`${SERVER_URL}/orders/match-scores`, { headers });
+                        const scoresResponse = await apiFetch(`${SERVER_URL}/orders/match-scores`);
                         if (scoresResponse.ok) {
                             const scores = await scoresResponse.json();
                             orders.forEach(o => { o.matchScore = scores[o.id] != null ? scores[o.id] : null; });
@@ -535,7 +534,7 @@
         async function loadCrmStats() {
             setCrmStatsMock();
             try {
-                const r = await fetch(`${SERVER_URL}/producer/crm-stats`, { headers: { 'Authorization': 'Bearer ' + token } });
+                const r = await apiFetch(`${SERVER_URL}/producer/crm-stats`);
                 if (!r.ok) return;
                 const s = await r.json();
                 document.getElementById('crmLeads').textContent = s.leads;
@@ -548,7 +547,7 @@
 
         async function loadMyProposals() {
             try {
-                const response = await fetch(`${SERVER_URL}/proposals`, { headers: { 'Authorization': 'Bearer ' + token } });
+                const response = await apiFetch(`${SERVER_URL}/proposals`);
                 const data = response.ok ? await response.json() : null;
                 const proposals = Array.isArray(data) ? data : [];
                 document.getElementById('tabProposalsCount').innerText = proposals.length;
