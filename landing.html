@@ -4,429 +4,300 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Техзаказ — Платформа прямых закупок</title>
-  <meta name="description" content="Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей. Без посредников.">
+  <meta name="description" content="Прямые закупки без посредников. Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --dark:   #0F1A24;
-      --deep:   #071421;
+      --navy:   #152230;
       --orange: #FF6A00;
-      --orange2:#F04B00;
+      --orange2:#E55C00;
       --white:  #FFFFFF;
-      --gray:   #E8EAED;
+      --gray-bg:#F5F6F8;
       --muted:  #6B7685;
-      --font:   'Montserrat', Arial, sans-serif;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { font-family:var(--font); background:var(--white); color:var(--dark); -webkit-font-smoothing:antialiased; }
-    a { text-decoration:none; color:inherit; }
-    button { font-family:inherit; cursor:pointer; border:none; }
-
-    /* ── TOP BANNER ────────────────────────────── */
-    .top-banner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      min-height: 220px;
+      --border: #DDE1E7;
     }
 
-    /* левая часть — логотип + nav */
-    .banner-left {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
       background: var(--white);
+      color: var(--dark);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── TOP SECTION: Logo + Industrial photo ─── */
+    .top-section {
+      display: grid;
+      grid-template-columns: 55fr 45fr;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-logo {
       padding: 32px 48px 28px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 20px;
     }
-    .banner-nav {
+    .top-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-bottom: 20px;
     }
-    .btn-nav-login {
+    .btn-login {
+      border: 1.5px solid var(--border);
       background: transparent;
-      border: 1.5px solid var(--gray);
       color: var(--dark);
+      font-family: inherit;
       font-size: 13px;
       font-weight: 600;
-      padding: 8px 20px;
-      border-radius: 10px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
       transition: border-color .15s;
     }
-    .btn-nav-login:hover { border-color: var(--dark); }
-    .btn-nav-reg {
+    .btn-login:hover { border-color: var(--dark); }
+    .btn-register {
       background: var(--orange);
+      border: none;
       color: #fff;
+      font-family: inherit;
       font-size: 13px;
       font-weight: 700;
-      padding: 8px 20px;
-      border-radius: 10px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
       transition: background .15s;
     }
-    .btn-nav-reg:hover { background: var(--orange2); }
+    .btn-register:hover { background: var(--orange2); }
 
-    /* логотип */
-    .logo-block { display:flex; align-items:flex-start; gap:16px; }
-    .logo-mark svg { width:64px; height:auto; display:block; }
-    .logo-text .logo-name {
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      line-height: 1;
+    .logo-block {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
     }
-    .logo-text .logo-name .lo { color: var(--dark); }
-    .logo-text .logo-name .hi { color: var(--orange); }
-    .logo-text .logo-sub {
+    .logo-mark { width: 72px; flex-shrink: 0; }
+    .logo-mark svg { width: 100%; height: auto; display: block; }
+    .logo-name {
+      font-size: 46px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .logo-name .lo { color: var(--dark); }
+    .logo-name .hi { color: var(--orange); }
+    .logo-sub {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.22em;
       color: var(--dark);
-      margin-top: 4px;
+      margin-top: 6px;
     }
-    .logo-text .logo-tag {
-      font-size: 13px;
+    .logo-tag {
+      font-size: 14px;
       font-weight: 500;
       color: var(--muted);
-      margin-top: 10px;
-      letter-spacing: 0.02em;
+      margin-top: 12px;
+      font-style: italic;
     }
 
-    /* правая часть — промо фото */
-    .banner-right {
-      background: var(--dark);
+    .top-photo {
       position: relative;
       overflow: hidden;
+      min-height: 210px;
     }
-    /* имитация индустриального фото через градиент */
-    .banner-photo {
+    .top-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* white diagonal cut on bottom-left of photo */
+    .top-photo::after {
+      content: '';
       position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse at 70% 40%, rgba(30,50,70,.9) 0%, transparent 65%),
-        radial-gradient(ellipse at 20% 80%, rgba(8,20,30,.8) 0%, transparent 60%),
-        linear-gradient(135deg, #0d1e2a 0%, #1a3040 40%, #0b1820 100%);
+      bottom: 0; left: 0;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 70px 90px 0 0;
+      border-color: transparent transparent transparent var(--white);
+      z-index: 2;
     }
-    /* металлическая текстура — сетка */
-    .banner-photo::before {
-      content:'';
-      position:absolute; inset:0;
-      background-image:
-        repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0px, rgba(255,255,255,.025) 1px, transparent 1px, transparent 40px),
-        repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0px, rgba(255,255,255,.02) 1px, transparent 1px, transparent 40px);
-    }
-    /* оранжевый диагональный треугольник */
-    .banner-photo::after {
-      content:'';
-      position:absolute;
-      top:0; right:0;
-      width:0; height:0;
-      border-style:solid;
-      border-width:0 160px 160px 0;
-      border-color:transparent var(--orange) transparent transparent;
+    /* orange diagonal accent top-left */
+    .photo-accent {
+      position: absolute;
+      top: 0; left: 0;
+      width: 0; height: 0;
+      border-style: solid;
+      border-width: 90px 72px 0 0;
+      border-color: var(--orange) transparent transparent transparent;
+      z-index: 2;
     }
 
-    /* ── HERO (H1 + схема) ─────────────────────── */
-    .hero {
+    /* ─── HERO: H1 + Flow diagram ─────────────── */
+    .hero-section {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      padding: 56px 48px 64px;
+      grid-template-columns: 55fr 45fr;
       background: var(--white);
+      padding-bottom: 64px;
     }
 
-    .hero-left {}
-    .hero h1 {
-      font-size: clamp(36px, 5vw, 62px);
+    .hero-text {
+      padding: 44px 48px 0;
+    }
+    .hero-h1 {
+      font-size: clamp(38px, 4.5vw, 68px);
       font-weight: 900;
       line-height: 1.0;
-      letter-spacing: -0.03em;
-      margin-bottom: 20px;
+      letter-spacing: -0.035em;
+      color: var(--dark);
+      margin-bottom: 18px;
     }
-    .hero-sub {
-      font-size: 17px;
+    .hero-body {
+      font-size: 16px;
       font-weight: 500;
       color: var(--muted);
-      line-height: 1.55;
-      max-width: 440px;
-      margin-bottom: 36px;
+      line-height: 1.6;
+      max-width: 420px;
+      margin-bottom: 32px;
     }
-    .hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
     .btn-primary {
       background: var(--orange);
       color: #fff;
-      font-weight: 700;
+      font-family: inherit;
       font-size: 15px;
-      padding: 16px 32px;
-      border-radius: 12px;
+      font-weight: 700;
+      padding: 15px 32px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       transition: background .15s, transform .1s;
     }
-    .btn-primary:hover { background:var(--orange2); transform:translateY(-1px); }
+    .btn-primary:hover { background: var(--orange2); transform: translateY(-1px); }
     .btn-outline {
       background: transparent;
-      border: 2px solid var(--gray);
+      border: 2px solid var(--border);
       color: var(--dark);
-      font-weight: 600;
+      font-family: inherit;
       font-size: 15px;
-      padding: 16px 32px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      font-weight: 600;
+      padding: 15px 32px;
+      border-radius: 10px;
+      cursor: pointer;
       transition: border-color .15s;
     }
     .btn-outline:hover { border-color: var(--dark); }
 
-    /* ── COMPACT FLOW DIAGRAM ─────────────────── */
+    .hero-diagram {
+      padding: 44px 48px 0 24px;
+    }
     .flow-card {
-      border: 1.5px solid var(--gray);
-      border-radius: 20px;
-      padding: 28px 24px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 20px;
     }
     .flow-label {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--dark);
-      background: var(--gray);
-      border-radius: 8px;
-      padding: 7px 14px;
+      background: var(--gray-bg);
+      border-radius: 6px;
+      padding: 6px 12px;
       display: inline-block;
-      align-self: flex-start;
+      margin-bottom: 18px;
     }
-    .flow-diagram {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-    /* Заказчик */
-    .flow-node-customer {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .flow-customer-box {
-      width: 68px; height: 68px;
-      border: 2px solid var(--dark);
-      border-radius: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-    .flow-customer-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--dark);
-    }
-    /* стрелки */
-    .flow-arrows-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      flex: 1;
-      position: relative;
-    }
-    .flow-arr-right {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-    .flow-arr-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--dark);
-      white-space: nowrap;
-      padding: 0 6px;
-    }
-    .flow-arr-line {
-      flex: 1;
-      height: 2px;
-      background: var(--dark);
-      position: relative;
-    }
-    .flow-arr-line::after {
-      content:'';
-      position:absolute; right:-1px; top:-4px;
-      border:5px solid transparent;
-      border-left:8px solid var(--dark);
-    }
-    .flow-arr-return {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-    .flow-arr-return-line {
-      flex: 1;
-      height: 2px;
-      background: var(--orange);
-      border-top: 2px dashed var(--orange);
-      background: transparent;
-      position: relative;
-    }
-    .flow-arr-return-line::before {
-      content:'';
-      position:absolute; left:-1px; top:-4px;
-      border:5px solid transparent;
-      border-right:8px solid var(--orange);
-    }
-    .flow-arr-label-return {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--orange);
-      padding: 0 6px;
-      white-space: nowrap;
-    }
-    /* платформа */
-    .flow-platform {
-      background: var(--dark);
-      border-radius: 14px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    .flow-platform-name {
-      font-size: 11px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: .5px;
-    }
-    .flow-platform-name .o { color: var(--orange); }
-    /* производители */
-    .flow-right-col {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .flow-producer-row {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-    .flow-producer-arrow {
-      width: 28px;
-      height: 2px;
-      background: var(--dark);
-      position: relative;
-      flex-shrink: 0;
-    }
-    .flow-producer-arrow::after {
-      content:'';
-      position:absolute; right:-1px; top:-4px;
-      border:5px solid transparent;
-      border-left:8px solid var(--dark);
-    }
-    /* оранжевая стрелка обратно для производителей */
-    .flow-producer-arrow-back {
-      width: 28px; height: 2px;
-      border-top: 2px dashed var(--orange);
-      position: relative;
-      flex-shrink: 0;
-    }
-    .flow-producer-box {
-      border: 1.5px solid var(--dark);
-      border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--dark);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
+    .flow-svg-wrap { width: 100%; }
+    .flow-svg-wrap svg { width: 100%; height: auto; }
 
-    /* ── PROCESS ────────────────────────────────── */
-    .process { background: var(--dark); padding: 56px 48px; }
+    /* ─── PROCESS SECTION ─────────────────────── */
+    .process-section {
+      background: var(--dark);
+      padding: 48px;
+    }
     .process-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
       gap: 0;
       align-items: stretch;
     }
-    .process-step {
-      padding: 28px 24px;
-      position: relative;
+    .process-step-wrap {
+      display: flex;
+      align-items: center;
+      flex: 1;
     }
-    /* стрелка между шагами */
-    .process-step:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      right: -12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border: 10px solid transparent;
-      border-left: 14px solid var(--orange);
-      z-index: 2;
-    }
-    .process-step-inner {
-      background: #152230;
-      border-radius: 18px;
-      padding: 28px 22px;
-      height: 100%;
+    .process-card {
+      background: var(--navy);
+      border-radius: 14px;
+      padding: 24px 20px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
+      flex: 1;
     }
-    .step-num {
-      font-size: 48px;
+    .card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+    .card-icon svg { width: 44px; height: 44px; }
+    .card-num {
+      font-size: 44px;
       font-weight: 900;
       color: var(--orange);
       line-height: 1;
       letter-spacing: -0.04em;
     }
-    .step-icon {
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .step-icon svg {
-      width: 44px;
-      height: 44px;
-    }
-    .step-title {
-      font-size: 16px;
+    .card-title {
+      font-size: 15px;
       font-weight: 800;
       color: #fff;
-      line-height: 1.25;
+      line-height: 1.3;
     }
-    .step-sub {
-      font-size: 13px;
+    .card-sub {
+      font-size: 12px;
       font-weight: 500;
-      color: rgba(255,255,255,.55);
-      line-height: 1.5;
+      color: rgba(255,255,255,.45);
+      line-height: 1.55;
+    }
+    .step-arrow {
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
     }
 
-    /* ── BENEFITS ───────────────────────────────── */
-    .benefits { padding: 60px 48px; background: var(--white); }
+    /* ─── BENEFITS SECTION ───────────────────── */
+    .benefits-section {
+      background: var(--white);
+      padding: 52px 48px;
+      border-top: 1px solid var(--border);
+    }
     .benefits-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
+      gap: 32px;
     }
-    .benefit-item { display:flex; flex-direction:column; gap:14px; }
-    .benefit-circle {
-      width: 60px; height: 60px;
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .benefit-icon-circle {
+      width: 58px;
+      height: 58px;
       background: var(--dark);
       border-radius: 50%;
       display: flex;
@@ -434,72 +305,75 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    .benefit-circle svg { width:28px; height:28px; }
-    .benefit-title { font-size:16px; font-weight:800; line-height:1.25; }
-    .benefit-text { font-size:13px; color:var(--muted); line-height:1.6; font-weight:500; }
-
-    /* ── FINAL CTA ──────────────────────────────── */
-    .final { background:var(--dark); padding:80px 48px; text-align:center; }
-    .final h2 {
-      font-size: clamp(28px, 4vw, 52px);
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: -0.03em;
-      margin-bottom: 14px;
+    .benefit-icon-circle svg { width: 28px; height: 28px; }
+    .benefit-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 6px;
     }
-    .final h2 .o { color:var(--orange); }
-    .final p { font-size:16px; color:rgba(255,255,255,.5); margin-bottom:36px; font-weight:500; }
+    .benefit-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1.6;
+    }
 
-    /* ── FOOTER ─────────────────────────────────── */
-    footer { background:var(--deep); padding:36px 48px; }
+    /* ─── FOOTER ─────────────────────────────── */
+    footer {
+      background: var(--dark);
+      padding: 28px 48px;
+    }
     .footer-inner {
-      display:flex; align-items:center; justify-content:space-between;
-      flex-wrap:wrap; gap:12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .footer-logo { display:flex; align-items:center; gap:10px; }
-    .footer-logo-name { font-size:18px; font-weight:900; }
-    .footer-logo-name .o { color:var(--orange); }
-    .footer-copy { font-size:12px; color:rgba(255,255,255,.3); }
+    .footer-logo { display: flex; align-items: center; gap: 10px; }
+    .footer-name { font-size: 16px; font-weight: 900; color: #fff; }
+    .footer-name .o { color: var(--orange); }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,.3); }
 
-    /* ── RESPONSIVE ─────────────────────────────── */
-    @media(max-width:1024px){
-      .top-banner { grid-template-columns:1fr; }
-      .banner-right { min-height:120px; }
-      .hero { grid-template-columns:1fr; gap:36px; }
-      .process-grid { grid-template-columns:1fr 1fr; }
-      .process-step::after { display:none; }
-      .benefits-grid { grid-template-columns:1fr 1fr; }
-      .hero,.process,.benefits,.final,.footer-inner { padding-left:24px; padding-right:24px; }
-      .banner-left { padding:24px; }
+    /* ─── RESPONSIVE ─────────────────────────── */
+    @media (max-width: 1024px) {
+      .top-section, .hero-section { grid-template-columns: 1fr; }
+      .top-photo { min-height: 140px; }
+      .hero-diagram { padding: 24px 24px 0; }
+      .hero-text { padding: 28px 24px 0; }
+      .top-logo { padding: 24px; }
+      .process-grid { flex-wrap: wrap; }
+      .process-step-wrap { flex: 0 0 calc(50% - 16px); }
+      .step-arrow { display: none; }
+      .benefits-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+      .process-section, .benefits-section, footer { padding: 36px 24px; }
     }
-    @media(max-width:600px){
-      .process-grid { grid-template-columns:1fr; }
-      .benefits-grid { grid-template-columns:1fr 1fr; }
-      .hero-btns { flex-direction:column; }
-      .flow-diagram { flex-direction:column; gap:12px; }
+    @media (max-width: 600px) {
+      .process-step-wrap { flex: 0 0 100%; }
+      .benefits-grid { grid-template-columns: 1fr; }
+      .hero-btns { flex-direction: column; }
+      .logo-name { font-size: 36px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ══ TOP BANNER ═══════════════════════════════ -->
-<div class="top-banner">
-
-  <!-- левая колонка: логотип + кнопки -->
-  <div class="banner-left">
-    <div class="banner-nav">
-      <a href="login.html"><button class="btn-nav-login">Войти</button></a>
-      <a href="login.html"><button class="btn-nav-reg">Зарегистрироваться</button></a>
+<!-- ══ TOP BANNER ════════════════════════════════ -->
+<div class="top-section">
+  <div class="top-logo">
+    <div class="top-actions">
+      <a href="login.html"><button class="btn-login">Войти</button></a>
+      <a href="login.html"><button class="btn-register">Зарегистрироваться</button></a>
     </div>
-
     <div class="logo-block">
       <div class="logo-mark">
-        <svg viewBox="0 0 162 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 162 120" fill="none">
           <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#0F1A24"/>
           <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
         </svg>
       </div>
-      <div class="logo-text">
+      <div>
         <div class="logo-name"><span class="lo">ТЕХ</span><span class="hi">ЗАКАЗ</span></div>
         <div class="logo-sub">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
         <div class="logo-tag">От чертежа до исполнителя.</div>
@@ -507,232 +381,281 @@
     </div>
   </div>
 
-  <!-- правая колонка: индустриальный фон -->
-  <div class="banner-right">
-    <div class="banner-photo"></div>
+  <div class="top-photo">
+    <img src="assets/hero-photo.png" alt="Промышленное производство — CNC обработка и лазерная резка">
+    <div class="photo-accent"></div>
   </div>
-
 </div>
 
-<!-- ══ HERO ═════════════════════════════════════ -->
-<section class="hero">
-  <div class="hero-left">
-    <h1>Прямые закупки<br>без посредников</h1>
-    <p class="hero-sub">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
+<!-- ══ HERO ══════════════════════════════════════ -->
+<div class="hero-section">
+  <div class="hero-text">
+    <h1 class="hero-h1">Прямые закупки<br>без посредников</h1>
+    <p class="hero-body">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
     <div class="hero-btns">
       <a href="login.html">
         <button class="btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
           Разместить заказ
         </button>
       </a>
-      <a href="#process">
-        <button class="btn-outline">Как это работает</button>
-      </a>
+      <a href="#process"><button class="btn-outline">Как это работает</button></a>
     </div>
   </div>
 
-  <!-- компактная схема -->
-  <div class="hero-right">
+  <div class="hero-diagram">
     <div class="flow-card">
       <div class="flow-label">Напрямую от заказчика к производителю</div>
+      <div class="flow-svg-wrap">
+        <svg viewBox="0 0 500 210" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-      <div class="flow-diagram">
-        <!-- Заказчик -->
-        <div class="flow-node-customer">
-          <div class="flow-customer-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg>
-          </div>
-          <div class="flow-customer-label">Заказчик</div>
-        </div>
+          <!-- Заказчик box -->
+          <rect x="4" y="65" width="88" height="82" rx="10" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
+          <circle cx="48" cy="92" r="11" stroke="#0F1A24" stroke-width="2"/>
+          <path d="M28 125 C28 112 37 105 48 105 C59 105 68 112 68 125" stroke="#0F1A24" stroke-width="2" stroke-linecap="round"/>
+          <text x="48" y="143" text-anchor="middle" font-family="Montserrat,Arial" font-size="10.5" font-weight="700" fill="#0F1A24">Заказчик</text>
 
-        <!-- стрелки: запрос → и ← предложения -->
-        <div class="flow-arrows-col">
-          <div class="flow-arr-right">
-            <div class="flow-arr-label">Запрос</div>
-            <div class="flow-arr-line"></div>
-          </div>
-          <div class="flow-arr-return">
-            <div class="flow-arr-return-line"></div>
-            <div class="flow-arr-label-return">Предложения</div>
-          </div>
-        </div>
+          <!-- Запрос → arrow -->
+          <line x1="93" y1="100" x2="150" y2="100" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="148,96 157,100 148,104" fill="#0F1A24"/>
+          <text x="123" y="95" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#0F1A24">Запрос</text>
 
-        <!-- Техзаказ -->
-        <div class="flow-platform">
-          <svg width="28" height="22" viewBox="0 0 162 120" fill="none">
-            <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#FFFFFF"/>
+          <!-- Предложения ← orange dashed -->
+          <line x1="93" y1="122" x2="150" y2="122" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <polygon points="95,118 86,122 95,126" fill="#FF6A00"/>
+          <text x="120" y="138" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#FF6A00">Предложения</text>
+
+          <!-- ТЕХЗАКАЗ platform box -->
+          <rect x="158" y="60" width="108" height="92" rx="10" fill="#0F1A24"/>
+          <!-- T mark scaled inside -->
+          <g transform="translate(176,72) scale(0.44)">
+            <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="white"/>
             <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
-          </svg>
-          <div class="flow-platform-name">ТЕХ<span class="o">ЗАКАЗ</span></div>
-        </div>
+          </g>
+          <!-- ТЕХЗАКАЗ text below mark -->
+          <text x="213" y="135" text-anchor="middle" font-family="Montserrat,Arial" font-size="11" font-weight="900" fill="white">ТЕХ</text>
+          <text x="236" y="135" text-anchor="middle" font-family="Montserrat,Arial" font-size="11" font-weight="900" fill="#FF6A00">ЗАКАЗ</text>
 
-        <!-- ветки к производителям -->
-        <div class="flow-right-col">
-          <div class="flow-producer-row">
-            <div class="flow-producer-arrow"></div>
-            <div class="flow-producer-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-              Производитель 1
-            </div>
-          </div>
-          <div class="flow-producer-row">
-            <div class="flow-producer-arrow"></div>
-            <div class="flow-producer-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-              Производитель 2
-            </div>
-          </div>
-          <div class="flow-producer-row">
-            <div class="flow-producer-arrow"></div>
-            <div class="flow-producer-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-              Производитель 3
-            </div>
-          </div>
-        </div>
+          <!-- 3 branch arrows from platform -->
+          <line x1="267" y1="88"  x2="304" y2="62"  stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="300,58 309,61 304,68" fill="#0F1A24"/>
+
+          <line x1="267" y1="106" x2="304" y2="106" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="302,102 311,106 302,110" fill="#0F1A24"/>
+
+          <line x1="267" y1="124" x2="304" y2="150" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="301,147 310,152 304,158" fill="#0F1A24"/>
+
+          <!-- Producer 1 -->
+          <rect x="308" y="38" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
+          <g transform="translate(316,48)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+            <rect x="0" y="10" width="20" height="14" rx="1"/>
+            <path d="M0 10 L5 4 L10 10"/>
+            <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
+          </g>
+          <text x="344" y="56" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 1</text>
+
+          <!-- Producer 2 -->
+          <rect x="308" y="83" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
+          <g transform="translate(316,93)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+            <rect x="0" y="10" width="20" height="14" rx="1"/>
+            <path d="M0 10 L5 4 L10 10"/>
+            <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
+          </g>
+          <text x="344" y="101" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 2</text>
+
+          <!-- Producer 3 -->
+          <rect x="308" y="128" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
+          <g transform="translate(316,138)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+            <rect x="0" y="10" width="20" height="14" rx="1"/>
+            <path d="M0 10 L5 4 L10 10"/>
+            <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
+          </g>
+          <text x="344" y="146" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 3</text>
+
+          <!-- Orange dashed return lines from producers right edge -->
+          <line x1="488" y1="61"  x2="488" y2="151" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <line x1="488" y1="61"  x2="480" y2="61"  stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <line x1="488" y1="106" x2="480" y2="106" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <line x1="488" y1="151" x2="480" y2="151" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+
+        </svg>
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ══ PROCESS ══════════════════════════════════ -->
-<section class="process" id="process">
+<!-- ══ PROCESS ════════════════════════════════════ -->
+<section class="process-section" id="process">
   <div class="process-grid">
 
-    <div class="process-step">
-      <div class="process-step-inner">
-        <div class="step-num">1</div>
-        <div class="step-icon">
-          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M62 34 H160 L200 74 V210 H62 Z"/>
-            <path d="M160 34 V76 H200"/>
-            <circle cx="118" cy="115" r="30" stroke-dasharray="9 12"/>
-            <path d="M118 70 V160 M73 115 H163"/>
-            <circle cx="178" cy="178" r="34" stroke="#FF6A00"/>
-            <path d="M178 197 V158 M160 176 L178 158 L196 176" stroke="#FF6A00"/>
-          </svg>
+    <div class="process-step-wrap">
+      <div class="process-card">
+        <div class="card-top">
+          <div class="card-icon">
+            <svg viewBox="0 0 256 256" fill="none">
+              <path d="M62 34 H160 L200 74 V210 H62 Z" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M160 34 V76 H200" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="118" cy="115" r="30" stroke="white" stroke-width="10" stroke-dasharray="9 12"/>
+              <path d="M118 70 V160 M73 115 H163" stroke="white" stroke-width="10" stroke-linecap="round"/>
+              <circle cx="178" cy="178" r="34" stroke="#FF6A00" stroke-width="10"/>
+              <path d="M178 197 V158 M160 176 L178 158 L196 176" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="card-num">1</div>
         </div>
-        <div class="step-title">Разместите чертёж или ТЗ</div>
-        <div class="step-sub">PDF, DWG, STEP или описание задачи</div>
+        <div class="card-title">Разместите чертёж или ТЗ</div>
+        <div class="card-sub">PDF, DWG, STEP или описание задачи</div>
       </div>
     </div>
 
-    <div class="process-step">
-      <div class="process-step-inner">
-        <div class="step-num">2</div>
-        <div class="step-icon">
-          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M42 190 H210 V112 L166 138 V90 L124 116 V72 L86 96 V190"/>
-            <path d="M74 190 V150 H96 V190"/>
-            <path d="M118 160 H138 M158 160 H178"/>
-            <circle cx="183" cy="174" r="34" stroke="#FF6A00"/>
-            <path d="M166 174 L178 186 L202 158" stroke="#FF6A00"/>
-          </svg>
+    <div class="step-arrow">
+      <svg viewBox="0 0 20 20" fill="none">
+        <polygon points="4,4 16,10 4,16" fill="#FF6A00"/>
+      </svg>
+    </div>
+
+    <div class="process-step-wrap">
+      <div class="process-card">
+        <div class="card-top">
+          <div class="card-icon">
+            <svg viewBox="0 0 256 256" fill="none">
+              <path d="M42 190 H210 V112 L166 138 V90 L124 116 V72 L86 96 V190" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M74 190 V150 H96 V190" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M118 160 H138 M158 160 H178" stroke="white" stroke-width="10" stroke-linecap="round"/>
+              <circle cx="183" cy="174" r="34" stroke="#FF6A00" stroke-width="10"/>
+              <path d="M166 174 L178 186 L202 158" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="card-num">2</div>
         </div>
-        <div class="step-title">Запрос уходит производителям</div>
-        <div class="step-sub">Платформа подбирает подходящие заводы</div>
+        <div class="card-title">Запрос уходит производителям</div>
+        <div class="card-sub">Платформа подбирает подходящие заводы</div>
       </div>
     </div>
 
-    <div class="process-step">
-      <div class="process-step-inner">
-        <div class="step-num">3</div>
-        <div class="step-icon">
-          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M62 34 H160 L200 74 V210 H62 Z"/>
-            <path d="M160 34 V76 H200"/>
-            <path d="M92 92 H152 M92 122 H166 M92 152 H140"/>
-            <circle cx="176" cy="176" r="34" stroke="#FF6A00"/>
-            <text x="176" y="188" text-anchor="middle" font-family="Arial" font-size="45" font-weight="700" fill="#FF6A00" stroke="none">₽</text>
-          </svg>
+    <div class="step-arrow">
+      <svg viewBox="0 0 20 20" fill="none">
+        <polygon points="4,4 16,10 4,16" fill="#FF6A00"/>
+      </svg>
+    </div>
+
+    <div class="process-step-wrap">
+      <div class="process-card">
+        <div class="card-top">
+          <div class="card-icon">
+            <svg viewBox="0 0 256 256" fill="none">
+              <path d="M55 190 V145 H82 V190" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M111 190 V105 H138 V190" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M167 190 V65 H194 V190" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M44 190 H210" stroke="white" stroke-width="10" stroke-linecap="round"/>
+              <circle cx="190" cy="188" r="30" stroke="#FF6A00" stroke-width="10"/>
+              <path d="M176 188 L186 198 L204 174" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="card-num">3</div>
         </div>
-        <div class="step-title">Получите и сравните КП</div>
-        <div class="step-sub">Цена, сроки, условия — в одном окне</div>
+        <div class="card-title">Получите и сравните КП</div>
+        <div class="card-sub">Цена, сроки, условия — в одном окне</div>
       </div>
     </div>
 
-    <div class="process-step">
-      <div class="process-step-inner">
-        <div class="step-num">4</div>
-        <div class="step-icon">
-          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M52 150 L88 114 C99 103 115 103 126 114 L132 120"/>
-            <path d="M204 150 L168 114 C157 103 141 103 130 114 L110 134 C104 140 104 150 110 156 C116 162 126 162 132 156 L146 142"/>
-            <path d="M78 140 L118 180 C128 190 143 190 153 180 L182 151"/>
-            <path d="M32 122 L62 92 L93 123 L63 153 Z" stroke="#FF6A00"/>
-            <path d="M164 123 L195 92 L225 122 L195 153 Z" stroke="#FF6A00"/>
-          </svg>
+    <div class="step-arrow">
+      <svg viewBox="0 0 20 20" fill="none">
+        <polygon points="4,4 16,10 4,16" fill="#FF6A00"/>
+      </svg>
+    </div>
+
+    <div class="process-step-wrap">
+      <div class="process-card">
+        <div class="card-top">
+          <div class="card-icon">
+            <svg viewBox="0 0 256 256" fill="none">
+              <path d="M52 150 L88 114 C99 103 115 103 126 114 L132 120" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M204 150 L168 114 C157 103 141 103 130 114 L110 134 C104 140 104 150 110 156 C116 162 126 162 132 156 L146 142" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M78 140 L118 180 C128 190 143 190 153 180 L182 151" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M32 122 L62 92 L93 123 L63 153 Z" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M164 123 L195 92 L225 122 L195 153 Z" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="card-num">4</div>
         </div>
-        <div class="step-title">Выберите исполнителя напрямую</div>
-        <div class="step-sub">Без посредников и лишних звеньев</div>
+        <div class="card-title">Выберите исполнителя напрямую</div>
+        <div class="card-sub">Без посредников и лишних звеньев</div>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- ══ BENEFITS ═════════════════════════════════ -->
-<section class="benefits">
+<!-- ══ BENEFITS ══════════════════════════════════ -->
+<section class="benefits-section">
   <div class="benefits-grid">
 
     <div class="benefit-item">
-      <div class="benefit-circle">
+      <div class="benefit-icon-circle">
         <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
         </svg>
       </div>
-      <div class="benefit-title">Прямой доступ к производителям</div>
-      <div class="benefit-text">Работайте напрямую с заводами без посредников и наценок.</div>
+      <div>
+        <div class="benefit-title">Прямой доступ к производителям</div>
+        <div class="benefit-text">Работайте напрямую с заводами без посредников и наценок.</div>
+      </div>
     </div>
 
     <div class="benefit-item">
-      <div class="benefit-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      <div class="benefit-icon-circle">
+        <svg viewBox="0 0 256 256" fill="none" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="128" cy="128" r="40"/>
+          <path d="M128 34 V62 M128 194 V222 M34 128 H62 M194 128 H222 M61 61 L81 81 M175 175 L195 195 M195 61 L175 81 M81 175 L61 195"/>
+          <path d="M112 128 L124 140 L148 112"/>
         </svg>
       </div>
-      <div class="benefit-title">Меньше ручной работы</div>
-      <div class="benefit-text">Автоматический подбор производителей и рассылка запросов.</div>
+      <div>
+        <div class="benefit-title">Меньше ручной работы</div>
+        <div class="benefit-text">Автоматический подбор производителей и рассылка запросов.</div>
+      </div>
     </div>
 
     <div class="benefit-item">
-      <div class="benefit-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
+      <div class="benefit-icon-circle">
+        <svg viewBox="0 0 256 256" fill="none" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 128 C58 82 90 60 128 60 C166 60 198 82 224 128 C198 174 166 196 128 196 C90 196 58 174 32 128Z"/>
+          <circle cx="128" cy="128" r="34"/>
+          <circle cx="128" cy="128" r="12" fill="#FF6A00" stroke="#FF6A00"/>
         </svg>
       </div>
-      <div class="benefit-title">Прозрачное сравнение КП</div>
-      <div class="benefit-text">Сравнивайте предложения по цене, срокам и условиям в одном окне.</div>
+      <div>
+        <div class="benefit-title">Прозрачное сравнение КП</div>
+        <div class="benefit-text">Сравнивайте предложения по цене, срокам и условиям в одном окне.</div>
+      </div>
     </div>
 
     <div class="benefit-item">
-      <div class="benefit-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
+      <div class="benefit-icon-circle">
+        <svg viewBox="0 0 256 256" fill="none" stroke="#FF6A00" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M48 154 C48 98 83 62 128 62 C173 62 208 98 208 154"/>
+          <path d="M64 190 H192"/>
+          <path d="M128 154 L170 104"/>
+          <path d="M72 154 H88 M168 154 H184 M128 82 V98"/>
+          <circle cx="128" cy="154" r="8" fill="#FF6A00" stroke="#FF6A00"/>
         </svg>
       </div>
-      <div class="benefit-title">Быстрее запуск закупки</div>
-      <div class="benefit-text">Сократите время от запроса до выбора исполнителя.</div>
+      <div>
+        <div class="benefit-title">Быстрее запуск закупки</div>
+        <div class="benefit-text">Сократите время от запроса до выбора исполнителя.</div>
+      </div>
     </div>
 
   </div>
-</section>
-
-<!-- ══ FINAL CTA ═════════════════════════════════ -->
-<section class="final">
-  <h2>Разместите заказ<br><span class="o">напрямую производителям</span></h2>
-  <p>От чертежа до исполнителя — без посредников.</p>
-  <a href="login.html">
-    <button class="btn-primary" style="margin:0 auto; font-size:16px; padding:18px 44px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-      Разместить заказ
-    </button>
-  </a>
 </section>
 
 <!-- ══ FOOTER ════════════════════════════════════ -->
@@ -740,10 +663,10 @@
   <div class="footer-inner">
     <div class="footer-logo">
       <svg width="28" height="22" viewBox="0 0 162 120" fill="none">
-        <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#FFFFFF"/>
+        <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="white"/>
         <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
       </svg>
-      <div class="footer-logo-name"><span style="color:#fff">ТЕХ</span><span class="o">ЗАКАЗ</span></div>
+      <div class="footer-name">ТЕХ<span class="o">ЗАКАЗ</span></div>
     </div>
     <div class="footer-copy">© 2026 Техзаказ. Платформа прямых промышленных закупок.</div>
   </div>
