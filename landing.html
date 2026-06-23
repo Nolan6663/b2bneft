@@ -117,25 +117,15 @@
       object-fit: cover;
       display: block;
     }
-    /* white diagonal cut on bottom-left of photo */
+    /* white diagonal notch at bottom-left to blend photo into white area */
     .top-photo::after {
       content: '';
       position: absolute;
       bottom: 0; left: 0;
       width: 0; height: 0;
       border-style: solid;
-      border-width: 70px 90px 0 0;
+      border-width: 60px 80px 0 0;
       border-color: transparent transparent transparent var(--white);
-      z-index: 2;
-    }
-    /* orange diagonal accent top-left */
-    .photo-accent {
-      position: absolute;
-      top: 0; left: 0;
-      width: 0; height: 0;
-      border-style: solid;
-      border-width: 90px 72px 0 0;
-      border-color: var(--orange) transparent transparent transparent;
       z-index: 2;
     }
 
@@ -383,7 +373,6 @@
 
   <div class="top-photo">
     <img src="assets/hero-photo.png" alt="Промышленное производство — CNC обработка и лазерная резка">
-    <div class="photo-accent"></div>
   </div>
 </div>
 
@@ -411,77 +400,82 @@
     <div class="flow-card">
       <div class="flow-label">Напрямую от заказчика к производителю</div>
       <div class="flow-svg-wrap">
-        <svg viewBox="0 0 500 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 510 216" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-          <!-- Заказчик box -->
-          <rect x="4" y="65" width="88" height="82" rx="10" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
-          <circle cx="48" cy="92" r="11" stroke="#0F1A24" stroke-width="2"/>
-          <path d="M28 125 C28 112 37 105 48 105 C59 105 68 112 68 125" stroke="#0F1A24" stroke-width="2" stroke-linecap="round"/>
-          <text x="48" y="143" text-anchor="middle" font-family="Montserrat,Arial" font-size="10.5" font-weight="700" fill="#0F1A24">Заказчик</text>
+          <!-- ── Заказчик box ── -->
+          <rect x="4" y="63" width="90" height="86" rx="10" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
+          <circle cx="49" cy="90" r="12" stroke="#0F1A24" stroke-width="2"/>
+          <path d="M29 127 C29 113 38 106 49 106 C60 106 69 113 69 127" stroke="#0F1A24" stroke-width="2" stroke-linecap="round"/>
+          <text x="49" y="145" text-anchor="middle" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Заказчик</text>
 
           <!-- Запрос → arrow -->
-          <line x1="93" y1="100" x2="150" y2="100" stroke="#0F1A24" stroke-width="1.5"/>
-          <polygon points="148,96 157,100 148,104" fill="#0F1A24"/>
-          <text x="123" y="95" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#0F1A24">Запрос</text>
+          <line x1="95" y1="97" x2="158" y2="97" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="155,93 165,97 155,101" fill="#0F1A24"/>
+          <text x="129" y="92" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#0F1A24">Запрос</text>
 
           <!-- Предложения ← orange dashed -->
-          <line x1="93" y1="122" x2="150" y2="122" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
-          <polygon points="95,118 86,122 95,126" fill="#FF6A00"/>
-          <text x="120" y="138" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#FF6A00">Предложения</text>
+          <line x1="95" y1="120" x2="158" y2="120" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <polygon points="98,116 88,120 98,124" fill="#FF6A00"/>
+          <text x="126" y="136" text-anchor="middle" font-family="Montserrat,Arial" font-size="10" font-weight="600" fill="#FF6A00">Предложения</text>
 
-          <!-- ТЕХЗАКАЗ platform box -->
-          <rect x="158" y="60" width="108" height="92" rx="10" fill="#0F1A24"/>
-          <!-- T mark scaled inside -->
-          <g transform="translate(176,72) scale(0.44)">
+          <!-- ── ТЕХЗАКАЗ platform box ── -->
+          <rect x="166" y="58" width="110" height="96" rx="10" fill="#0F1A24"/>
+          <!-- T mark -->
+          <g transform="translate(185,68) scale(0.44)">
             <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="white"/>
             <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
           </g>
-          <!-- ТЕХЗАКАЗ text below mark -->
-          <text x="213" y="135" text-anchor="middle" font-family="Montserrat,Arial" font-size="11" font-weight="900" fill="white">ТЕХ</text>
-          <text x="236" y="135" text-anchor="middle" font-family="Montserrat,Arial" font-size="11" font-weight="900" fill="#FF6A00">ЗАКАЗ</text>
+          <!-- ТЕХЗАКАЗ — single text with tspan so colors don't mis-align -->
+          <text x="221" y="140" text-anchor="middle" font-family="Montserrat,Arial" font-size="11.5" font-weight="900">
+            <tspan fill="white">ТЕХ</tspan><tspan fill="#FF6A00">ЗАКАЗ</tspan>
+          </text>
 
-          <!-- 3 branch arrows from platform -->
-          <line x1="267" y1="88"  x2="304" y2="62"  stroke="#0F1A24" stroke-width="1.5"/>
-          <polygon points="300,58 309,61 304,68" fill="#0F1A24"/>
+          <!-- ── 3 branch arrows platform → producers ── -->
+          <!-- to P1 (top) -->
+          <line x1="277" y1="86"  x2="312" y2="62"  stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="308,58 317,61 311,68" fill="#0F1A24"/>
+          <!-- to P2 (middle) -->
+          <line x1="277" y1="106" x2="312" y2="106" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="310,102 320,106 310,110" fill="#0F1A24"/>
+          <!-- to P3 (bottom) -->
+          <line x1="277" y1="126" x2="312" y2="150" stroke="#0F1A24" stroke-width="1.5"/>
+          <polygon points="309,147 318,152 311,158" fill="#0F1A24"/>
 
-          <line x1="267" y1="106" x2="304" y2="106" stroke="#0F1A24" stroke-width="1.5"/>
-          <polygon points="302,102 311,106 302,110" fill="#0F1A24"/>
-
-          <line x1="267" y1="124" x2="304" y2="150" stroke="#0F1A24" stroke-width="1.5"/>
-          <polygon points="301,147 310,152 304,158" fill="#0F1A24"/>
-
-          <!-- Producer 1 -->
-          <rect x="308" y="38" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
-          <g transform="translate(316,48)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+          <!-- ── Producer 1 — orange dashed border ── -->
+          <rect x="316" y="36" width="180" height="48" rx="8" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 4" fill="white"/>
+          <g transform="translate(324,46)" stroke="#0F1A24" stroke-width="1.5" fill="none">
             <rect x="0" y="10" width="20" height="14" rx="1"/>
             <path d="M0 10 L5 4 L10 10"/>
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
-          <text x="344" y="56" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 1</text>
+          <text x="352" y="54" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 1</text>
+          <!-- orange return arrow from right of P1 -->
+          <line x1="496" y1="60" x2="506" y2="60" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="494,56 486,60 494,64" fill="#FF6A00"/>
 
-          <!-- Producer 2 -->
-          <rect x="308" y="83" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
-          <g transform="translate(316,93)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+          <!-- ── Producer 2 — orange dashed border ── -->
+          <rect x="316" y="82" width="180" height="48" rx="8" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 4" fill="white"/>
+          <g transform="translate(324,92)" stroke="#0F1A24" stroke-width="1.5" fill="none">
             <rect x="0" y="10" width="20" height="14" rx="1"/>
             <path d="M0 10 L5 4 L10 10"/>
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
-          <text x="344" y="101" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 2</text>
+          <text x="352" y="100" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 2</text>
+          <!-- orange return arrow from right of P2 -->
+          <line x1="496" y1="106" x2="506" y2="106" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="494,102 486,106 494,110" fill="#FF6A00"/>
 
-          <!-- Producer 3 -->
-          <rect x="308" y="128" width="180" height="46" rx="8" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
-          <g transform="translate(316,138)" stroke="#0F1A24" stroke-width="1.5" fill="none">
+          <!-- ── Producer 3 — orange dashed border ── -->
+          <rect x="316" y="128" width="180" height="48" rx="8" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 4" fill="white"/>
+          <g transform="translate(324,138)" stroke="#0F1A24" stroke-width="1.5" fill="none">
             <rect x="0" y="10" width="20" height="14" rx="1"/>
             <path d="M0 10 L5 4 L10 10"/>
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
-          <text x="344" y="146" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 3</text>
-
-          <!-- Orange dashed return lines from producers right edge -->
-          <line x1="488" y1="61"  x2="488" y2="151" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
-          <line x1="488" y1="61"  x2="480" y2="61"  stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
-          <line x1="488" y1="106" x2="480" y2="106" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
-          <line x1="488" y1="151" x2="480" y2="151" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <text x="352" y="146" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 3</text>
+          <!-- orange return arrow from right of P3 -->
+          <line x1="496" y1="152" x2="506" y2="152" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="494,148 486,152 494,156" fill="#FF6A00"/>
 
         </svg>
       </div>
