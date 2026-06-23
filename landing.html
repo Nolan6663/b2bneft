@@ -117,17 +117,6 @@
       object-fit: cover;
       display: block;
     }
-    /* white diagonal notch at bottom-left to blend photo into white area */
-    .top-photo::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0;
-      width: 0; height: 0;
-      border-style: solid;
-      border-width: 60px 80px 0 0;
-      border-color: transparent transparent transparent var(--white);
-      z-index: 2;
-    }
 
     /* ─── HERO: H1 + Flow diagram ─────────────── */
     .hero-section {
@@ -198,10 +187,10 @@
     .flow-label {
       font-size: 12px;
       font-weight: 700;
-      color: var(--dark);
-      background: var(--gray-bg);
+      color: #ffffff;
+      background: var(--dark);
       border-radius: 6px;
-      padding: 6px 12px;
+      padding: 7px 14px;
       display: inline-block;
       margin-bottom: 18px;
     }
@@ -400,7 +389,7 @@
     <div class="flow-card">
       <div class="flow-label">Напрямую от заказчика к производителю</div>
       <div class="flow-svg-wrap">
-        <svg viewBox="0 0 510 216" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 524 216" fill="none" xmlns="http://www.w3.org/2000/svg">
 
           <!-- ── Заказчик box ── -->
           <rect x="4" y="63" width="90" height="86" rx="10" stroke="#0F1A24" stroke-width="1.5" fill="white"/>
@@ -449,9 +438,9 @@
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
           <text x="352" y="54" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 1</text>
-          <!-- orange return arrow from right of P1 -->
-          <line x1="496" y1="60" x2="506" y2="60" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <polygon points="494,56 486,60 494,64" fill="#FF6A00"/>
+          <!-- orange return arrow: FROM right INTO P1 box (arrowhead points left at box edge) -->
+          <line x1="522" y1="60" x2="499" y2="60" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="501,56 493,60 501,64" fill="#FF6A00"/>
 
           <!-- ── Producer 2 — orange dashed border ── -->
           <rect x="316" y="82" width="180" height="48" rx="8" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 4" fill="white"/>
@@ -461,9 +450,9 @@
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
           <text x="352" y="100" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 2</text>
-          <!-- orange return arrow from right of P2 -->
-          <line x1="496" y1="106" x2="506" y2="106" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <polygon points="494,102 486,106 494,110" fill="#FF6A00"/>
+          <!-- orange return arrow: FROM right INTO P2 box -->
+          <line x1="522" y1="106" x2="499" y2="106" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="501,102 493,106 501,110" fill="#FF6A00"/>
 
           <!-- ── Producer 3 — orange dashed border ── -->
           <rect x="316" y="128" width="180" height="48" rx="8" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="5 4" fill="white"/>
@@ -473,9 +462,9 @@
             <rect x="7" y="14" width="5" height="10" fill="#0F1A24" stroke="none"/>
           </g>
           <text x="352" y="146" font-family="Montserrat,Arial" font-size="11" font-weight="700" fill="#0F1A24">Производитель 3</text>
-          <!-- orange return arrow from right of P3 -->
-          <line x1="496" y1="152" x2="506" y2="152" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <polygon points="494,148 486,152 494,156" fill="#FF6A00"/>
+          <!-- orange return arrow: FROM right INTO P3 box -->
+          <line x1="522" y1="152" x2="499" y2="152" stroke="#FF6A00" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polygon points="501,148 493,152 501,156" fill="#FF6A00"/>
 
         </svg>
       </div>
