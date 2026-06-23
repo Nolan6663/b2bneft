@@ -161,6 +161,13 @@ async function initDb() {
             intent_ru     TEXT        NOT NULL,
             classified_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS email_verification_tokens (
+            id         SERIAL      PRIMARY KEY,
+            user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token      TEXT        NOT NULL UNIQUE,
+            expires_at TIMESTAMPTZ NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
@@ -170,6 +177,13 @@ async function initDb() {
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS delivery_stage TEXT NOT NULL DEFAULT 'КП принят';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS responses INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+    `);
+
+    await pool.query(`
+        UPDATE users u SET email_verified = true
+        WHERE email_verified = false
+          AND NOT EXISTS (SELECT 1 FROM email_verification_tokens t WHERE t.user_id = u.id)
     `);
 
     const isProduction = process.env.NODE_ENV === 'production';
@@ -186,7 +200,7 @@ async function initDb() {
             const salt = crypto.randomBytes(16).toString('hex');
             const hash = crypto.scryptSync(adminPassword, salt, 64).toString('hex');
             await pool.query(
-                'INSERT INTO users (email,password,role,company,inn) VALUES ($1,$2,$3,$4,$5)',
+                'INSERT INTO users (email,password,role,company,inn,email_verified) VALUES ($1,$2,$3,$4,$5,true)',
                 [adminEmail, `${salt}:${hash}`, 'admin', '', '']
             );
             console.log(`✓ Создан аккаунт администратора: ${adminEmail}`);

@@ -271,6 +271,31 @@
             document.addEventListener('DOMContentLoaded', () => switchTab('register'));
         }
 
+        // Если в URL есть ?verify=TOKEN — подтверждение email
+        const _verifyToken = new URLSearchParams(window.location.search).get('verify');
+        if (_verifyToken) {
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    const response = await fetch(`${SERVER_URL}/auth/verify-email`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: _verifyToken }),
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (response.ok) {
+                        localStorage.setItem('emailVerified', '1');
+                        showToast(data.message || 'Email подтверждён');
+                    } else {
+                        showToast(data.error || 'Ссылка недействительна', 'error');
+                    }
+                } catch {
+                    showToast('Сервер недоступен', 'error');
+                }
+                history.replaceState({}, '', 'login.html');
+            });
+        }
+
         // Если в URL есть ?reset=TOKEN — показываем форму нового пароля
         const _resetToken = new URLSearchParams(window.location.search).get('reset');
         if (_resetToken) {
@@ -387,15 +412,13 @@
               if (currentMode === 'login') {
                 const response = await fetch(`${SERVER_URL}/auth/login`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) { showToast(data.error || 'Неверный логин или пароль'); return; }
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('refreshToken', data.refreshToken || '');
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userCompany', data.company || '');
+                applyAuthSession(data);
                 if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
                 window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
 
@@ -412,13 +435,16 @@
 
                 const response = await fetch(`${SERVER_URL}/auth/register`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, company, inn, role })
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) { showToast(data.error || 'Ошибка при регистрации'); return; }
-                switchTab('login');
-                document.getElementById('authEmail').value = email;
+                applyAuthSession(data);
+                showToast(data.message || 'Аккаунт создан. Подтвердите email.');
+                if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
+                window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
               }
             } catch (error) {
                 showToast('Сервер авторизации недоступен');

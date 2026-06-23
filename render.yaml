@@ -30,3 +30,21 @@ services:
         sync: false
       - key: YANDEX_WEBMASTER_HOST_ID
         sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_FORCE_PATH_STYLE
+        value: "true"
+      - key: S3_PUBLIC_URL
+        sync: false
+      - key: SEED_ADMIN
+        value: "false"
+      - key: SEED_DEMO_DATA
+        value: "false"

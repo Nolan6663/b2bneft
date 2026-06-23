@@ -7,3 +7,6 @@ npm-debug.log*
 .env
 data.db
 uploads/
+
+test-results/
+tests/e2e/admin-storage.json

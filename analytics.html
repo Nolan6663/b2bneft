@@ -633,7 +633,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         /* ══ MOCK DATA ══ */
         const MOCK = {
@@ -1318,11 +1318,7 @@
 
         async function tryLoadReal() {
             try {
-                const token = localStorage.getItem('authToken');
-                if (!token) return;
-                const r = await fetch(`${SERVER_URL}/customer/analytics`, {
-                    headers: { Authorization: 'Bearer ' + token }
-                });
+                const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
                 if (!r.ok) return;
                 const d = await r.json();
 

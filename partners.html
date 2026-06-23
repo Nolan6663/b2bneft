@@ -309,10 +309,9 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         const userRole = localStorage.getItem('userRole');
-        const token    = localStorage.getItem('authToken');
         let allCompanies = [];
         let roleFilter   = 'all';
         let statusFilter = 'all';
@@ -577,17 +576,22 @@
             const navProposals = document.getElementById('navProposals');
             if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
 
-            allCompanies = MOCK_PARTNERS;
+            allCompanies = shouldUseMockData() ? MOCK_PARTNERS : [];
             renderGrid(allCompanies);
             updateCounts();
 
             try {
-                const r = await fetch(`${SERVER_URL}/companies`, { headers: { 'Authorization': 'Bearer ' + token } });
+                const r = await apiFetch(`${SERVER_URL}/companies`);
                 if (r.ok) {
-                    const data = await r.json();
-                    if (data.length) { allCompanies = data; renderGrid(allCompanies); updateCounts(); }
+                    allCompanies = await r.json();
+                    renderGrid(allCompanies);
+                    updateCounts();
+                } else if (!shouldUseMockData()) {
+                    showDataLoadError('Не удалось загрузить контрагентов');
                 }
-            } catch {}
+            } catch {
+                if (!shouldUseMockData()) showDataLoadError('Не удалось загрузить контрагентов');
+            }
 
             initNotifications();
             initSidebarBadges();

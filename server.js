@@ -1,5 +1,12 @@
 'use strict';
 require('dotenv').config();
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+    });
+}
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -12,6 +19,7 @@ const jwt = require('jsonwebtoken');
 const { Resend } = require('resend');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
+const storage = require('./storage');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -55,6 +63,44 @@ if (IS_PRODUCTION && !process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is required in production');
 }
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret-change-in-development';
+const ACCESS_COOKIE = 'b2b_access';
+const REFRESH_COOKIE = 'b2b_refresh';
+
+function parseCookies(header) {
+    const out = {};
+    if (!header) return out;
+    for (const part of header.split(';')) {
+        const i = part.indexOf('=');
+        if (i === -1) continue;
+        out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    }
+    return out;
+}
+
+function getAccessToken(req) {
+    const cookies = parseCookies(req.headers.cookie);
+    if (cookies[ACCESS_COOKIE]) return cookies[ACCESS_COOKIE];
+    const match = (req.headers.authorization || '').match(/^Bearer\s+(.+)$/i);
+    return match ? match[1] : null;
+}
+
+function getRefreshToken(req) {
+    const cookies = parseCookies(req.headers.cookie);
+    if (cookies[REFRESH_COOKIE]) return cookies[REFRESH_COOKIE];
+    return req.body?.refreshToken || null;
+}
+
+function setAuthCookies(res, accessToken, refreshToken) {
+    const base = { httpOnly: true, secure: IS_PRODUCTION, sameSite: 'lax', path: '/' };
+    res.cookie(ACCESS_COOKIE, accessToken, { ...base, maxAge: 60 * 60 * 1000 });
+    res.cookie(REFRESH_COOKIE, refreshToken, { ...base, maxAge: 30 * 24 * 60 * 60 * 1000 });
+}
+
+function clearAuthCookies(res) {
+    const base = { httpOnly: true, secure: IS_PRODUCTION, sameSite: 'lax', path: '/' };
+    res.clearCookie(ACCESS_COOKIE, base);
+    res.clearCookie(REFRESH_COOKIE, base);
+}
 
 function generateTokens(user) {
     const payload = { userId: user.id, role: user.role, company: user.company };
@@ -158,6 +204,7 @@ app.use(cors({
         if (isAllowedOrigin(origin)) return callback(null, true);
         return callback(null, false);
     },
+    credentials: true,
 }));
 app.use(express.json());
 
@@ -184,19 +231,43 @@ const socketOrigin = IS_PRODUCTION
 const io = Server ? new Server(httpServer, { cors: { origin: socketOrigin } }) : null;
 
 if (io) {
+    io.use(async (socket, next) => {
+        try {
+            const cookies = parseCookies(socket.handshake.headers.cookie);
+            const raw = cookies[ACCESS_COOKIE]
+                || socket.handshake.auth?.token
+                || (socket.handshake.headers?.authorization || '').replace(/^Bearer\s+/i, '');
+            if (!raw) return next(new Error('Требуется авторизация'));
+            const payload = jwt.verify(raw, JWT_SECRET);
+            const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
+            if (!user) return next(new Error('Пользователь не найден'));
+            socket.user = user;
+            next();
+        } catch {
+            next(new Error('Неверный или истёкший токен'));
+        }
+    });
+
     io.on('connection', (socket) => {
-        socket.on('join-company', (company) => { if (company) socket.join(company); });
-        socket.on('join-chat', ({ orderId, company }) => {
-            if (orderId != null && company) socket.join(`chat:${orderId}:${company}`);
+        socket.on('join-company', (company) => {
+            if (company && company === socket.user.company) socket.join(company);
+        });
+        socket.on('join-chat', async ({ orderId, company }, ack) => {
+            try {
+                if (orderId == null || !company) return;
+                if (!(await canAccessOrderThread(socket.user, orderId, company))) return;
+                socket.join(`chat:${orderId}:${company}`);
+                if (typeof ack === 'function') ack({ ok: true });
+            } catch {
+                if (typeof ack === 'function') ack({ ok: false });
+            }
         });
     });
 }
 
 // ===================== ЗАГРУЗКА ФАЙЛОВ =====================
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-const PHOTOS_DIR = path.join(UPLOADS_DIR, 'photos');
-if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR);
+const UPLOADS_DIR = storage.LOCAL_DIR;
+const PHOTOS_DIR = storage.LOCAL_PHOTOS;
 
 const ALLOWED_DRAWING_EXT = ['.pdf', '.png', '.jpg', '.jpeg', '.dxf', '.dwg', '.step', '.stp'];
 const KP_ALLOWED_EXT = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
@@ -207,22 +278,14 @@ const BLOCKED_MIME = new Set([
     'application/x-sh', 'text/x-python',
 ]);
 
-const drawingStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
-    }
-});
-const kpStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, 'kp-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
-    }
-});
+async function persistUpload(file, prefix) {
+    if (!file) return null;
+    const meta = await storage.saveFile(file, prefix);
+    return JSON.stringify({ originalName: meta.originalName, storedName: meta.storedName });
+}
+
 const uploadDrawing = multer({
-    storage: drawingStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 15 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -232,7 +295,7 @@ const uploadDrawing = multer({
     }
 }).single('drawing');
 const uploadKP = multer({
-    storage: kpStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -255,15 +318,8 @@ function handleKPUpload(req, res, next) {
     });
 }
 
-const photoStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, PHOTOS_DIR),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, 'photo-' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
-    }
-});
 const uploadPhoto = multer({
-    storage: photoStorage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -281,18 +337,23 @@ function handlePhotoUpload(req, res, next) {
 
 function deleteDrawingFile(drawing) {
     if (!drawing || !drawing.storedName) return;
-    fs.unlink(path.join(UPLOADS_DIR, drawing.storedName), () => {});
+    storage.deleteStored(drawing.storedName).catch(() => {});
 }
 
 // ===================== СТАТИКА =====================
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.get('/uploads/:filename', requireAuth, (req, res) => {
-    const filename = path.basename(req.params.filename);
-    const filepath = path.join(UPLOADS_DIR, filename);
-    if (!fs.existsSync(filepath)) return res.status(404).json({ error: 'Файл не найден' });
-    res.sendFile(filepath);
+app.get('/uploads/:filename', requireAuth, async (req, res, next) => {
+    try {
+        const filename = path.basename(req.params.filename);
+        await storage.streamToResponse(filename, res);
+    } catch (e) { next(e); }
 });
-app.use('/company-photos', express.static(PHOTOS_DIR));
+app.get('/api/company-photos/:filename', async (req, res, next) => {
+    try {
+        const filename = path.basename(req.params.filename);
+        await storage.streamToResponse(filename, res);
+    } catch (e) { next(e); }
+});
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
@@ -306,6 +367,7 @@ app.get('/api/health', async (req, res) => {
         res.json({
             ok: true,
             db: true,
+            storage: storage.isRemote() ? 's3' : 'local',
             uptime: process.uptime(),
             env: process.env.NODE_ENV || 'development',
         });
@@ -461,16 +523,42 @@ async function matchedProducers(order, minScore = 0) {
 
 async function requireAuth(req, res, next) {
     try {
-        const match = (req.headers['authorization'] || '').match(/^Bearer\s+(.+)$/);
-        if (!match) return res.status(401).json({ error: 'Требуется авторизация' });
+        const token = getAccessToken(req);
+        if (!token) return res.status(401).json({ error: 'Требуется авторизация' });
         let payload;
-        try { payload = jwt.verify(match[1], JWT_SECRET); }
+        try { payload = jwt.verify(token, JWT_SECRET); }
         catch { return res.status(401).json({ error: 'Неверный или истёкший токен' }); }
         const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
         if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
         req.user = user;
         next();
     } catch (e) { next(e); }
+}
+
+function requireVerifiedEmail(req, res, next) {
+    if (req.user.role === 'admin' || req.user.email_verified) return next();
+    return res.status(403).json({
+        error: 'Подтвердите email перед этим действием. Проверьте почту или запросите письмо повторно.',
+        code: 'email_not_verified',
+    });
+}
+
+async function sendVerificationEmail(user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    await pool.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [user.id]);
+    await pool.query(
+        "INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '24 hours')",
+        [user.id, token]
+    );
+    const link = `${APP_URL}/login.html?verify=${token}`;
+    await sendEmail(user.email, 'Подтвердите email — B2B Нефтесервис', `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a2332">
+          <h2 style="color:#41bd97">Подтверждение email</h2>
+          <p>Здравствуйте! Подтвердите адрес <strong>${htmlEscape(user.email)}</strong>, чтобы размещать заявки и откликаться на закупки.</p>
+          <a href="${link}" style="display:inline-block;margin:20px 0;padding:12px 28px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Подтвердить email</a>
+          <p style="font-size:12px;color:#666">Ссылка действительна 24 часа.</p>
+        </div>`
+    );
 }
 
 function requireRole(role) {
@@ -482,10 +570,10 @@ function requireRole(role) {
 
 async function optionalAuth(req, res, next) {
     try {
-        const match = (req.headers['authorization'] || '').match(/^Bearer\s+(.+)$/);
-        if (match) {
+        const token = getAccessToken(req);
+        if (token) {
             try {
-                const payload = jwt.verify(match[1], JWT_SECRET);
+                const payload = jwt.verify(token, JWT_SECRET);
                 const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
                 if (user) req.user = user;
             } catch { /* invalid token — continue as guest */ }
@@ -558,6 +646,22 @@ function canAccessProposal(user, proposal) {
     return proposal.company === user.company || proposal.order_company === user.company;
 }
 
+async function canAccessOrderDrawing(user, orderId) {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+    const order = await getOrderAccessRow(orderId);
+    if (!order) return false;
+    if (user.role === 'customer') return order.company === user.company;
+    if (user.role === 'producer') {
+        const { rows: [proposal] } = await pool.query(
+            'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
+            [Number(orderId), user.company]
+        );
+        return Boolean(proposal);
+    }
+    return false;
+}
+
 // ===================== COMPANIES: вычисляемые поля =====================
 
 async function computeProducerRating(companyName) {
@@ -614,7 +718,12 @@ async function enrichCompany(c, ownerCompany) {
         enriched.isFavorite = false;
     }
     const { rows: photos } = await pool.query('SELECT id, stored_name, original_name FROM company_photos WHERE company_id = $1 ORDER BY created_at ASC', [c.id]);
-    enriched.photos = photos;
+    enriched.photos = photos.map(p => ({
+        id: p.id,
+        storedName: p.stored_name,
+        originalName: p.original_name,
+        url: storage.photoPublicUrl(p.stored_name),
+    }));
     return enriched;
 }
 
@@ -645,21 +754,26 @@ app.get('/api/orders/match-scores', requireAuth, requireRole('producer'), async 
 
 app.get('/api/orders/:orderId/drawing', requireAuth, async (req, res, next) => {
     try {
-        const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [Number(req.params.orderId)]);
+        const orderId = Number(req.params.orderId);
+        if (!(await canAccessOrderDrawing(req.user, orderId))) {
+            return res.status(403).json({ error: 'Нет доступа к чертежу этой закупки' });
+        }
+        const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [orderId]);
         if (!row || !row.drawing) return res.status(404).json({ error: 'Файл не найден' });
         const drawing = JSON.parse(row.drawing);
-        const filePath = path.join(UPLOADS_DIR, drawing.storedName);
-        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл был удалён с сервера' });
-        res.download(filePath, drawing.originalName);
+        if (!storage.isRemote() && !storage.existsLocally(drawing.storedName)) {
+            return res.status(404).json({ error: 'Файл был удалён с сервера' });
+        }
+        await storage.streamToResponse(drawing.storedName, res, drawing.originalName);
     } catch (e) { next(e); }
 });
 
-app.post('/api/orders', requireAuth, requireRole('customer'), handleDrawingUpload, async (req, res, next) => {
+app.post('/api/orders', requireAuth, requireRole('customer'), requireVerifiedEmail, handleDrawingUpload, async (req, res, next) => {
     try {
         const { title, category, deadline, quantity, description } = req.body;
         if (!title || !category || !deadline) return res.status(400).json({ error: 'Заполните все поля заявки' });
 
-        const drawing = req.file ? JSON.stringify({ originalName: req.file.originalname, storedName: req.file.filename }) : null;
+        const drawing = await persistUpload(req.file, 'drawings');
         const { rows: [newRow] } = await pool.query(
             'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
             [title, category, deadline, quantity ? Number(quantity) : null,
@@ -692,7 +806,7 @@ app.put('/api/orders/:orderId', requireAuth, requireRole('customer'), handleDraw
         let drawingJson = row.drawing;
         if (req.file) {
             deleteDrawingFile(order.drawing);
-            drawingJson = JSON.stringify({ originalName: req.file.originalname, storedName: req.file.filename });
+            drawingJson = await persistUpload(req.file, 'drawings');
         }
 
         await pool.query(
@@ -749,24 +863,28 @@ app.get('/api/proposals/:proposalId/file', requireAuth, async (req, res, next) =
         if (!row || !row.kp_file) return res.status(404).json({ error: 'Файл не найден' });
         if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этому файлу' });
         const kpFile = JSON.parse(row.kp_file);
-        const filePath = path.join(UPLOADS_DIR, kpFile.storedName);
-        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл был удалён с сервера' });
-        res.download(filePath, kpFile.originalName);
+        if (!storage.isRemote() && !storage.existsLocally(kpFile.storedName)) {
+            return res.status(404).json({ error: 'Файл был удалён с сервера' });
+        }
+        await storage.streamToResponse(kpFile.storedName, res, kpFile.originalName);
     } catch (e) { next(e); }
 });
 
-app.post('/api/proposals', requireAuth, requireRole('producer'), handleKPUpload, async (req, res, next) => {
+app.post('/api/proposals', requireAuth, requireRole('producer'), requireVerifiedEmail, handleKPUpload, async (req, res, next) => {
     try {
         const { orderId, orderTitle, price, days } = req.body;
         if (!orderId || !price || !days) return res.status(400).json({ error: 'Не указаны ID заявки, цена или сроки' });
 
         const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [Number(orderId)]);
         if (!orderRow) return res.status(404).json({ error: 'Заявка с таким ID не найдена' });
+        if (orderRow.status !== 'Активный') {
+            return res.status(400).json({ error: 'Нельзя подать КП на закрытую или отменённую закупку' });
+        }
 
         const { rows: [existing] } = await pool.query('SELECT id FROM proposals WHERE order_id = $1 AND company = $2', [Number(orderId), req.user.company]);
         if (existing) return res.status(409).json({ error: 'Вы уже подали КП на эту закупку. Отредактируйте существующее предложение.' });
 
-        const kpFile = req.file ? JSON.stringify({ originalName: req.file.originalname, storedName: req.file.filename }) : null;
+        const kpFile = await persistUpload(req.file, 'kp');
 
         const newRow = await withTransaction(async (client) => {
             const { rows: [r] } = await client.query(
@@ -1034,11 +1152,17 @@ app.post('/api/companies/:id/photos', requireAuth, handlePhotoUpload, async (req
         const { rows: [{ n: count }] } = await pool.query('SELECT COUNT(*) AS n FROM company_photos WHERE company_id = $1', [id]);
         if (count >= 10) return res.status(400).json({ error: 'Максимум 10 фотографий' });
 
+        const meta = await storage.saveFile(req.file, 'photos');
         const { rows: [photo] } = await pool.query(
             'INSERT INTO company_photos (company_id, stored_name, original_name) VALUES ($1, $2, $3) RETURNING *',
-            [id, req.file.filename, req.file.originalname]
+            [id, meta.storedName, meta.originalName]
         );
-        res.status(201).json({ id: photo.id, storedName: photo.stored_name, originalName: photo.original_name });
+        res.status(201).json({
+            id: photo.id,
+            storedName: photo.stored_name,
+            originalName: photo.original_name,
+            url: storage.photoPublicUrl(photo.stored_name),
+        });
     } catch (e) { next(e); }
 });
 
@@ -1054,7 +1178,7 @@ app.delete('/api/companies/:id/photos/:photoId', requireAuth, async (req, res, n
         if (!photo) return res.status(404).json({ error: 'Фото не найдено' });
 
         await pool.query('DELETE FROM company_photos WHERE id = $1', [photoId]);
-        fs.unlink(path.join(PHOTOS_DIR, photo.stored_name), () => {});
+        storage.deleteStored(photo.stored_name).catch(() => {});
         res.json({ message: 'Удалено' });
     } catch (e) { next(e); }
 });
@@ -1487,7 +1611,16 @@ app.post('/api/auth/register', async (req, res, next) => {
             "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
             [newUser.id, refreshToken]
         );
-        res.status(201).json({ token: accessToken, refreshToken, role, company });
+        await sendVerificationEmail(newUser);
+        setAuthCookies(res, accessToken, refreshToken);
+        res.status(201).json({
+            token: accessToken,
+            refreshToken,
+            role,
+            company,
+            emailVerified: false,
+            message: 'Аккаунт создан. Подтвердите email — письмо отправлено на вашу почту.',
+        });
     } catch (e) { next(e); }
 });
 
@@ -1508,7 +1641,14 @@ app.post('/api/auth/login', async (req, res, next) => {
             "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
             [user.id, refreshToken]
         );
-        res.json({ token: accessToken, refreshToken, role: user.role, company: user.company });
+        setAuthCookies(res, accessToken, refreshToken);
+        res.json({
+            token: accessToken,
+            refreshToken,
+            role: user.role,
+            company: user.company,
+            emailVerified: Boolean(user.email_verified),
+        });
     } catch (e) { next(e); }
 });
 
@@ -1701,7 +1841,7 @@ app.post('/api/auth/reset-password', async (req, res, next) => {
 
 app.post('/api/auth/refresh', async (req, res, next) => {
     try {
-        const { refreshToken } = req.body;
+        const refreshToken = getRefreshToken(req);
         if (!refreshToken) return res.status(401).json({ error: 'Refresh token не указан' });
         const { rows: [tokenRow] } = await pool.query(
             'SELECT * FROM refresh_tokens WHERE token = $1 AND expires_at > NOW()',
@@ -1712,22 +1852,52 @@ app.post('/api/auth/refresh', async (req, res, next) => {
         if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
         const payload = { userId: user.id, role: user.role, company: user.company };
         const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token: accessToken });
+        setAuthCookies(res, accessToken, refreshToken);
+        res.json({ token: accessToken, emailVerified: Boolean(user.email_verified) });
     } catch (e) { next(e); }
 });
 
 app.post('/api/auth/logout', async (req, res, next) => {
     try {
-        const { refreshToken } = req.body;
+        const refreshToken = getRefreshToken(req);
         if (refreshToken) {
             await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
         }
+        clearAuthCookies(res);
         res.json({ message: 'Выход выполнен' });
     } catch (e) { next(e); }
 });
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
-    res.json({ email: req.user.email, role: req.user.role, company: req.user.company });
+    res.json({
+        email: req.user.email,
+        role: req.user.role,
+        company: req.user.company,
+        emailVerified: Boolean(req.user.email_verified),
+    });
+});
+
+app.post('/api/auth/verify-email', async (req, res, next) => {
+    try {
+        const token = String(req.body?.token || req.query?.token || '').trim();
+        if (!token) return res.status(400).json({ error: 'Токен не указан' });
+        const { rows: [row] } = await pool.query(
+            'SELECT * FROM email_verification_tokens WHERE token = $1 AND expires_at > NOW()',
+            [token]
+        );
+        if (!row) return res.status(400).json({ error: 'Ссылка недействительна или истекла' });
+        await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [row.user_id]);
+        await pool.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [row.user_id]);
+        res.json({ message: 'Email успешно подтверждён' });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/auth/resend-verification', requireAuth, async (req, res, next) => {
+    try {
+        if (req.user.email_verified) return res.json({ message: 'Email уже подтверждён' });
+        await sendVerificationEmail(req.user);
+        res.json({ message: 'Письмо с подтверждением отправлено повторно' });
+    } catch (e) { next(e); }
 });
 
 app.put('/api/auth/password', requireAuth, async (req, res, next) => {
@@ -1756,8 +1926,10 @@ app.put('/api/auth/email', requireAuth, async (req, res, next) => {
         const { rows: [taken] } = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [newEmail, req.user.id]);
         if (taken) return res.status(400).json({ error: 'Этот email уже используется' });
 
-        await pool.query('UPDATE users SET email = $1 WHERE id = $2', [newEmail, req.user.id]);
-        res.json({ message: 'Email успешно изменён' });
+        await pool.query('UPDATE users SET email = $1, email_verified = false WHERE id = $2', [newEmail, req.user.id]);
+        const { rows: [updated] } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+        await sendVerificationEmail(updated);
+        res.json({ message: 'Email изменён. Подтвердите новый адрес — письмо отправлено.' });
     } catch (e) { next(e); }
 });
 
@@ -2032,6 +2204,9 @@ app.post('/api/verification/:id/reject', requireAuth, requireRole('admin'), asyn
 app.use('/api', (req, res) => res.status(404).json({ error: 'Эндпоинт не найден' }));
 app.use((req, res) => res.status(404).sendFile(path.join(__dirname, '404.html')));
 
+if (process.env.SENTRY_DSN) {
+    Sentry.setupExpressErrorHandler(app);
+}
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
     console.error(err);
@@ -2043,7 +2218,7 @@ app.use((err, req, res, next) => {
 async function start() {
     await initDb();
     httpServer.listen(PORT, () => {
-        console.log(`Сервер запущен на порту ${PORT}`);
+        console.log(`Сервер запущен на порту ${PORT} (файлы: ${storage.isRemote() ? 'S3/R2' : 'локальный диск'})`);
     });
     if (process.env.GEOCODE_ON_START !== 'false') {
         setTimeout(geocodeExisting, 5000);

@@ -164,7 +164,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         const companyName = localStorage.getItem('userCompany') || 'ООО «Завод Исполнитель»';
         let currentEditingId = null;
@@ -191,14 +191,21 @@
         ];
 
         async function loadProposalsPage() {
-            let myProposals = MOCK_PROPOSALS;
+            let myProposals = shouldUseMockData() ? MOCK_PROPOSALS : [];
             try {
-                const response = await fetch(`${SERVER_URL}/proposals`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
-                const data = response.ok ? await response.json() : null;
-                if (Array.isArray(data)) myProposals = data;
-            } catch { /* use mock */ }
+                const response = await apiFetch(`${SERVER_URL}/proposals`);
+                if (response.ok) {
+                    myProposals = await response.json();
+                } else if (!shouldUseMockData()) {
+                    showDataLoadError('Не удалось загрузить отклики');
+                    myProposals = [];
+                }
+            } catch {
+                if (!shouldUseMockData()) {
+                    showDataLoadError('Не удалось загрузить отклики');
+                    myProposals = [];
+                }
+            }
             window._myProposalsCache = myProposals;
 
                 if (myProposals.length) {
@@ -307,9 +314,9 @@
             if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) { showToast('Ошибка ввода параметров', 'error'); return; }
 
             try {
-                const response = await fetch(`${SERVER_URL}/proposals/${currentEditingId}`, {
+                const response = await apiFetch(`${SERVER_URL}/proposals/${currentEditingId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ price, days })
                 });
                 if (response.ok) {
@@ -338,10 +345,7 @@
         async function withdrawProposal(id) {
             if (!confirm('Отозвать коммерческое предложение?')) return;
             try {
-                const response = await fetch(`${SERVER_URL}/proposals/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const response = await apiFetch(`${SERVER_URL}/proposals/${id}`, { method: 'DELETE' });
                 if (response.ok) {
                     await loadProposalsPage();
                 } else {

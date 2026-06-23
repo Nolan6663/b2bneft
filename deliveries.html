@@ -138,7 +138,7 @@
             { proposalId:10, title:'Электродвигатель АИР 90L2 3кВт',            counterparty:'ООО «ТехноПром»',    deliveryStage:'В производстве',   price:245000,  completionStatus:'active' },
         ];
 
-        let allDeliveries = MOCK;
+        let allDeliveries = [];
 
         function stageProgress(stage) {
             const idx = STAGES.indexOf(stage);
@@ -191,10 +191,25 @@
             try {
                 const r = await apiFetch(`${SERVER_URL}/deals`);
                 if (r.ok) {
-                    const data = await r.json();
-                    if (data.length) { allDeliveries = data; renderTable(); updateKPI(); }
+                    allDeliveries = await r.json();
+                    renderTable();
+                    updateKPI();
+                } else if (shouldUseMockData()) {
+                    allDeliveries = MOCK;
+                    renderTable();
+                    updateKPI();
+                } else {
+                    showDataLoadError('Не удалось загрузить доставки');
                 }
-            } catch {}
+            } catch {
+                if (shouldUseMockData()) {
+                    allDeliveries = MOCK;
+                    renderTable();
+                    updateKPI();
+                } else {
+                    showDataLoadError('Не удалось загрузить доставки');
+                }
+            }
         });
     </script>
 </body>

@@ -333,8 +333,8 @@
         let currentOrderTitle = "";
         let ordersCache = [];
 
-        const session = authGuard('producer');
-        const token = session.token;
+        const session = hasSession() ? authGuard('producer') : { isGuest: true, role: null, company: null };
+        if (!session) { /* redirected */ }
         const role = session.role;
         const isGuest = session.isGuest;
 
@@ -423,11 +423,15 @@
         ];
 
         async function loadOrdersForProducers() {
-            let orders = MOCK_ORDERS_PRODUCER;
+            let orders = shouldUseMockData() ? MOCK_ORDERS_PRODUCER : [];
             try {
                 const response = isGuest ? await fetch(`${SERVER_URL}/orders`) : await apiFetch(`${SERVER_URL}/orders`);
-                const fetched = response.ok ? await response.json() : null;
-                if (Array.isArray(fetched)) orders = fetched;
+                if (response.ok) {
+                    orders = await response.json();
+                } else if (!shouldUseMockData()) {
+                    orders = [];
+                    showDataLoadError('Не удалось загрузить закупки');
+                }
                 if (!isGuest) {
                     try {
                         const scoresResponse = await apiFetch(`${SERVER_URL}/orders/match-scores`);
@@ -438,7 +442,12 @@
                         }
                     } catch (e) { /* матчинг недоступен */ }
                 }
-            } catch (error) { /* keep mock */ }
+            } catch (error) {
+                if (!shouldUseMockData()) {
+                    orders = [];
+                    showDataLoadError('Не удалось загрузить закупки');
+                }
+            }
 
             ordersCache = orders;
             document.getElementById('tabOrdersCount').innerText = orders.length;

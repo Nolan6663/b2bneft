@@ -463,7 +463,7 @@
 <script>
   // Redirect logged-in users to their cabinet
   (function() {
-    const token = localStorage.getItem('authToken');
+    const token = hasSession();
     const role = localStorage.getItem('userRole');
     if (token && role) {
       if (role === 'admin') window.location.replace('admin.html');

@@ -211,9 +211,7 @@
             list.innerHTML = '<div class="admin-empty">Загрузка...</div>';
 
             try {
-                const r = await fetch(`${SERVER_URL}/verification/requests?filter=${filter}`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=${filter}`);
                 if (!r.ok) { list.innerHTML = '<div class="admin-empty">Ошибка загрузки</div>'; return; }
                 const items = await r.json();
                 renderRequests(items);
@@ -312,10 +310,7 @@
         async function approve(id) {
             if (!confirm('Верифицировать компанию?')) return;
             try {
-                const r = await fetch(`${SERVER_URL}/verification/${id}/approve`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/verification/${id}/approve`, { method: 'POST' });
                 if (!r.ok) { const d = await r.json(); return alert(d.error); }
                 loadRequests(currentFilter);
             } catch { alert('Сервер недоступен'); }
@@ -332,9 +327,9 @@
         async function confirmReject(id) {
             const comment = document.getElementById('rejectComment-' + id).value.trim();
             try {
-                const r = await fetch(`${SERVER_URL}/verification/${id}/reject`, {
+                const r = await apiFetch(`${SERVER_URL}/verification/${id}/reject`, {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken'), 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ comment })
                 });
                 if (!r.ok) { const d = await r.json(); return alert(d.error); }
@@ -344,9 +339,7 @@
 
         async function exportCsv() {
             try {
-                const r = await fetch(`${SERVER_URL}/verification/requests?filter=all`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=all`);
                 if (!r.ok) { alert('Ошибка загрузки данных'); return; }
                 const items = await r.json();
                 if (!items.length) { alert('Нет данных для экспорта'); return; }
@@ -377,12 +370,7 @@
             } catch { alert('Сервер недоступен'); }
         }
 
-        function adminLogout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('userCompany');
-            window.location.href = 'login.html';
-        }
+        function adminLogout() { logout(); }
 
         loadRequests('pending');
 
@@ -402,9 +390,7 @@
 
         async function loadSeoData() {
             try {
-                const r = await fetch(`${SERVER_URL}/api/seo/data`, {
-                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/seo/data`);
                 if (!r.ok) return;
                 seoData = await r.json();
                 renderAudit();
@@ -419,10 +405,7 @@
             const btn = document.getElementById('auditBtn');
             btn.textContent = 'Запускаю...'; btn.disabled = true;
             try {
-                const r = await fetch(`${SERVER_URL}/api/seo/audit`, {
-                    method: 'POST',
-                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/seo/audit`, { method: 'POST' });
                 if (!r.ok) throw new Error('audit failed');
                 const results = await r.json();
                 if (seoData) seoData.audit = results;
@@ -436,10 +419,7 @@
             const btn = document.getElementById('syncBtn');
             btn.textContent = 'Синхронизирую...'; btn.disabled = true;
             try {
-                const r = await fetch(`${SERVER_URL}/api/seo/sync`, {
-                    method: 'POST',
-                    headers: { Authorization: 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/seo/sync`, { method: 'POST' });
                 if (!r.ok) throw new Error('sync failed');
                 const info = await r.json();
                 alert(`Синхронизировано: ${info.synced} записей, ${info.newQueries} новых запросов`);

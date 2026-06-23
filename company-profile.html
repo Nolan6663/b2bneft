@@ -270,7 +270,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         const userRole = localStorage.getItem('userRole');
         const myCompany = localStorage.getItem('userCompany');
@@ -307,10 +307,9 @@
 
         async function loadProfile() {
             try {
-                const token = localStorage.getItem('authToken');
                 const [profileResp, vsResp] = await Promise.all([
-                    fetch(`${SERVER_URL}/companies/${companyId}`, { headers: { 'Authorization': 'Bearer ' + token } }),
-                    fetch(`${SERVER_URL}/verification/status`, { headers: { 'Authorization': 'Bearer ' + token } }),
+                    apiFetch(`${SERVER_URL}/companies/${companyId}`),
+                    apiFetch(`${SERVER_URL}/verification/status`),
                 ]);
                 if (!profileResp.ok) {
                     document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не найдена</div>';
@@ -530,15 +529,12 @@
             const nowFavorite = !currentData.isFavorite;
             try {
                 const response = nowFavorite
-                    ? await fetch(`${SERVER_URL}/favorites`, {
+                    ? await apiFetch(`${SERVER_URL}/favorites`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ companyId: currentData.id })
                     })
-                    : await fetch(`${SERVER_URL}/favorites/${currentData.id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                    });
+                    : await apiFetch(`${SERVER_URL}/favorites/${currentData.id}`, { method: 'DELETE' });
                 if (response.ok) {
                     currentData.isFavorite = nowFavorite;
                     const btn = document.getElementById('favoriteToggleBtn');
@@ -677,10 +673,7 @@
         async function requestVerification(isRetry) {
             if (!confirm(isRetry ? 'Подать повторную заявку на верификацию?' : 'Запросить верификацию компании на платформе?')) return;
             try {
-                const r = await fetch(`${SERVER_URL}/verification/request`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/verification/request`, { method: 'POST' });
                 const data = await r.json();
                 if (!r.ok) return showToast(data.error || 'Ошибка', 'error');
                 verificationStatus = { status: 'pending' };
@@ -715,7 +708,7 @@
                 const item = document.createElement('div');
                 item.className = 'photo-gallery-item';
                 item.innerHTML = `
-                    <img src="/company-photos/${escapeHtml(p.stored_name)}" alt="${escapeHtml(p.original_name)}" loading="lazy" onclick="openLightbox('/company-photos/${escapeHtml(p.stored_name)}')">
+                    <img src="${escapeHtml(p.url || '/api/company-photos/' + (p.storedName || p.stored_name))}" alt="${escapeHtml(p.original_name || p.originalName)}" loading="lazy" onclick="openLightbox('${escapeHtml(p.url || '/api/company-photos/' + (p.storedName || p.stored_name))}')">
                     ${isOwn ? `<button class="photo-delete-btn" onclick="deletePhoto(event,${p.id})" title="Удалить">✕</button>` : ''}
                 `;
                 gallery.appendChild(item);
@@ -742,9 +735,8 @@
             formData.append('photo', input.files[0]);
             input.value = '';
             try {
-                const r = await fetch(`${SERVER_URL}/companies/${companyId}/photos`, {
+                const r = await apiFetch(`${SERVER_URL}/companies/${companyId}/photos`, {
                     method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
                     body: formData
                 });
                 const data = await r.json();
@@ -759,10 +751,7 @@
             e.stopPropagation();
             if (!confirm('Удалить фотографию?')) return;
             try {
-                const r = await fetch(`${SERVER_URL}/companies/${companyId}/photos/${photoId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/companies/${companyId}/photos/${photoId}`, { method: 'DELETE' });
                 if (!r.ok) return;
                 currentData.photos = currentData.photos.filter(p => p.id !== photoId);
                 renderPhotoGallery(currentData.photos);
@@ -813,9 +802,9 @@
             }
 
             try {
-                const response = await fetch(`${SERVER_URL}/companies/${companyId}`, {
+                const response = await apiFetch(`${SERVER_URL}/companies/${companyId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('authToken') },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
                 });
                 if (response.ok) {

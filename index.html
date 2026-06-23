@@ -490,8 +490,7 @@
 
         async function loadAnalytics() {
             try {
-                const token = localStorage.getItem('authToken');
-                if (!token) return;
+                if (!hasSession()) return;
                 const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
                 if (!r.ok) return;
                 const s = await r.json();
@@ -503,8 +502,7 @@
         }
 
         async function loadWidgets() {
-            const token = localStorage.getItem('authToken');
-            if (!token) return;
+            if (!hasSession()) return;
 
             // Новые КП — берём из активных заказов
             try {
@@ -765,11 +763,13 @@
                 { company:'ПАО «Завод РТИ»',     price: Math.round(order.id * 38400 + 162000), leadTime: 21, status:'seen' },
             ];
 
-            let proposals = MOCK_KP;
+            let proposals = [];
             try {
                 const res = await apiFetch(`${SERVER_URL}/order-proposals/${order.id}`);
                 if (res.ok) proposals = await res.json();
-            } catch { /* use mock */ }
+            } catch {
+                if (shouldUseMockData()) proposals = MOCK_KP;
+            }
             currentProposalsList = proposals;
 
             proposals.sort((a, b) => (a.price || 0) - (b.price || 0));

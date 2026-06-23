@@ -434,7 +434,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         let allProducers = [];
         let activeFilter = '';

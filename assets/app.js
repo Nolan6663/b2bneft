@@ -77,8 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initSidebarRole();
   initSidebarExtra();
   initHeaderRight();
-  initNotifications();
-  initSidebarBadges();
+  if (hasSession()) {
+    showEmailVerificationBanner();
+    initNotifications();
+    initSidebarBadges();
+  }
 });
 
 /* ---------------------------------------------------------------------
@@ -99,67 +102,116 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ---------------------------------------------------------------------
-   Auth guard / logout
+   Auth session (httpOnly cookies) / logout
    --------------------------------------------------------------------- */
+function applyAuthSession(data) {
+  localStorage.setItem('isLoggedIn', '1');
+  localStorage.setItem('userRole', data.role || '');
+  localStorage.setItem('userCompany', data.company || '');
+  if (data.emailVerified != null) {
+    localStorage.setItem('emailVerified', data.emailVerified ? '1' : '0');
+  }
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('refreshToken');
+}
+
+function hasSession() {
+  return localStorage.getItem('isLoggedIn') === '1';
+}
+
+function clearAuthSession() {
+  const theme = localStorage.getItem('theme');
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('userCompany');
+  localStorage.removeItem('emailVerified');
+  if (theme) localStorage.setItem('theme', theme);
+}
+
 function authGuard(requiredRole) {
-  const token = localStorage.getItem('authToken');
   const role = localStorage.getItem('userRole');
   const company = localStorage.getItem('userCompany');
-  if (requiredRole && token && role !== requiredRole) {
+  if (!hasSession()) {
+    if (!requiredRole) return { role, company, isGuest: true, emailVerified: false };
     window.location.href = 'login.html';
     return null;
   }
-  return { token, role, company, isGuest: !token };
+  if (requiredRole && role !== requiredRole) {
+    window.location.href = 'login.html';
+    return null;
+  }
+  return {
+    role,
+    company,
+    isGuest: false,
+    emailVerified: localStorage.getItem('emailVerified') === '1',
+  };
 }
 
 async function logout() {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (refreshToken) {
-    try {
-      await fetch(`${SERVER_URL}/auth/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      });
-    } catch { /* тихо */ }
-  }
-  localStorage.clear();
+  try {
+    await fetch(`${SERVER_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch { /* тихо */ }
+  clearAuthSession();
   window.location.href = 'login.html';
 }
 
 async function apiFetch(url, options = {}) {
+  options.credentials = 'include';
   if (!options.headers) options.headers = {};
-  const token = localStorage.getItem('authToken');
-  if (token) options.headers['Authorization'] = 'Bearer ' + token;
 
   let response = await fetch(url, options);
 
   if (response.status === 401) {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (refreshToken) {
-      try {
-        const refreshRes = await fetch(`${SERVER_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
-        });
-        if (refreshRes.ok) {
-          const data = await refreshRes.json();
-          localStorage.setItem('authToken', data.token);
-          options.headers['Authorization'] = 'Bearer ' + data.token;
-          response = await fetch(url, options);
-        } else {
-          localStorage.clear();
-          window.location.href = 'login.html';
+    try {
+      const refreshRes = await fetch(`${SERVER_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (refreshRes.ok) {
+        const data = await refreshRes.json().catch(() => ({}));
+        if (data.emailVerified != null) {
+          localStorage.setItem('emailVerified', data.emailVerified ? '1' : '0');
         }
-      } catch {
-        localStorage.clear();
+        response = await fetch(url, options);
+      } else {
+        clearAuthSession();
         window.location.href = 'login.html';
       }
+    } catch {
+      clearAuthSession();
+      window.location.href = 'login.html';
     }
   }
 
   return response;
+}
+
+async function resendVerificationEmail() {
+  const r = await apiFetch(`${SERVER_URL}/auth/resend-verification`, { method: 'POST' });
+  const data = await r.json().catch(() => ({}));
+  if (r.ok) showToast(data.message || 'Письмо отправлено');
+  else showToast(data.error || 'Не удалось отправить письмо', 'error');
+  return r.ok;
+}
+
+function showEmailVerificationBanner() {
+  if (localStorage.getItem('emailVerified') === '1') return;
+  if (document.getElementById('emailVerifyBanner')) return;
+  const bar = document.createElement('div');
+  bar.id = 'emailVerifyBanner';
+  bar.style.cssText = 'background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.35);padding:10px 16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+  bar.innerHTML = '<span>Подтвердите email, чтобы размещать заявки и откликаться на закупки.</span>'
+    + '<button type="button" class="btn-secondary" style="font-size:12px;padding:6px 12px;">Отправить письмо повторно</button>';
+  bar.querySelector('button').addEventListener('click', resendVerificationEmail);
+  document.body.prepend(bar);
 }
 
 /* ---------------------------------------------------------------------
@@ -271,9 +323,12 @@ function showToast(text, type) {
 const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
 let socket = null;
 
-if (typeof io === 'function') {
+if (typeof io === 'function' && hasSession()) {
   try {
-    socket = io(SERVER_URL.replace(/\/api$/, ''), { transports: ['websocket', 'polling'] });
+    socket = io(SERVER_URL.replace(/\/api$/, ''), {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+    });
 
     socket.on('connect', () => {
       if (currentCompanyName !== 'Гость') socket.emit('join-company', currentCompanyName);
@@ -310,12 +365,9 @@ function initNotifications() {
 async function refreshNotificationBadge() {
   const badgeEl = document.getElementById('bellBadge');
   if (!badgeEl) return;
+  if (!hasSession()) return;
   try {
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
-    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const response = await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
     const list = await response.json();
     const unreadCount = list.filter(n => !n.read).length;
     badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -360,9 +412,7 @@ async function openNotificationsModal() {
   listEl.innerHTML = '<div class="notif-empty">Загрузка...</div>';
 
   try {
-    const token = localStorage.getItem('authToken');
-    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-    const response = await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { headers });
+    const response = await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
     const items = await response.json();
 
     if (items.length === 0) {
@@ -384,7 +434,7 @@ async function openNotificationsModal() {
       listEl.appendChild(el);
     });
 
-    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST', headers });
+    await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/read`, { method: 'POST' });
     refreshNotificationBadge();
   } catch {
     listEl.innerHTML = '<div class="notif-empty">Не удалось загрузить уведомления</div>';
@@ -397,11 +447,7 @@ function closeNotificationsModal() {
 
 async function clearNotifications() {
   try {
-    const token = localStorage.getItem('authToken');
-    await fetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, {
-      method: 'DELETE',
-      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
-    });
+    await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`, { method: 'DELETE' });
   } catch { /* ignore */ }
   if (notifDropdown) notifDropdown.classList.remove('open');
   openNotificationsModal();
@@ -526,13 +572,10 @@ function _setBadge(id, count) {
 }
 
 async function initSidebarBadges() {
-  const token = localStorage.getItem('authToken');
-  const role  = localStorage.getItem('userRole');
-  if (!token) return;
+  const role = localStorage.getItem('userRole');
+  if (!hasSession()) return;
   try {
-    const r = await fetch(`${SERVER_URL}/dashboard/counts`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const r = await apiFetch(`${SERVER_URL}/dashboard/counts`);
     if (!r.ok) return;
     const counts = await r.json();
     if (role === 'producer') {

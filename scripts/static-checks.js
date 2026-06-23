@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const htmlFiles = fs.readdirSync(root).filter(file => file.endsWith('.html')).sort();
-const jsFiles = ['server.js', 'db.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const jsFiles = ['server.js', 'db.js', 'storage.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
 
 function fail(message) {
   throw new Error(message);
@@ -110,8 +110,10 @@ function checkAccessGuardrails() {
   const requiredSnippets = [
     'function canAccessProposal',
     'async function canAccessOrderThread',
+    'async function canAccessOrderDrawing',
     'if (!canAccessProposal(req.user, row))',
     'await canAccessOrderThread(req.user, orderId, company)',
+    'await canAccessOrderDrawing(req.user, orderId)',
     'Чат доступен только с поставщиком, подавшим КП',
   ];
   const missing = requiredSnippets.filter(snippet => !server.includes(snippet));

@@ -282,7 +282,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-    if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
     const DELIVERY_STAGES = [
         { key: 'КП принят',         desc: 'Коммерческое предложение принято заказчиком' },
@@ -302,7 +302,6 @@
         'Принят заказчиком': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
     };
 
-    const token     = localStorage.getItem('authToken');
     const userRole  = localStorage.getItem('userRole');
     const myCompany = localStorage.getItem('userCompany');
 
@@ -332,14 +331,19 @@
 
     async function load() {
         try {
-            const r = await fetch(`/api/deals/${proposalId}/delivery`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!r.ok) throw 0;
+            const r = await apiFetch(`/api/deals/${proposalId}/delivery`);
+            if (!r.ok) throw new Error('delivery request failed');
             const d = await r.json();
             dealData   = d.deal;
             eventsData = d.events;
         } catch {
-            dealData   = MOCK.deal;
-            eventsData = MOCK.events;
+            if (typeof shouldUseMockData === 'function' && shouldUseMockData()) {
+                dealData   = MOCK.deal;
+                eventsData = MOCK.events;
+            } else {
+                dealData   = null;
+                eventsData = [];
+            }
         }
         render();
     }
@@ -350,6 +354,12 @@
     }
 
     function render() {
+        if (!dealData) {
+            document.getElementById('breadcrumbTitle').textContent = 'Сделка не найдена';
+            document.body.insertAdjacentHTML('beforeend',
+                '<div style="text-align:center;padding:60px 20px;color:var(--text-secondary);">Не удалось загрузить данные доставки.</div>');
+            return;
+        }
         const d  = dealData;
         const ev = eventsData;
         const curKey = d.delivery_stage || 'КП принят';

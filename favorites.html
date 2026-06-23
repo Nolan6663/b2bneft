@@ -304,7 +304,7 @@
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         const userRole  = localStorage.getItem('userRole');
         const myCompany = localStorage.getItem('userCompany');
@@ -383,13 +383,11 @@
 
         async function loadFavorites() {
             try {
-                const r = await fetch(`${SERVER_URL}/favorites`, {
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
-                const favs = r.ok ? await r.json() : MOCK_FAVS;
+                const r = await apiFetch(`${SERVER_URL}/favorites`);
+                const favs = r.ok ? await r.json() : [];
                 renderFavorites(favs);
             } catch {
-                renderFavorites(MOCK_FAVS);
+                renderFavorites(shouldUseMockData() ? MOCK_FAVS : []);
             }
         }
 
@@ -431,10 +429,7 @@
         async function removeFav(e, companyId) {
             e.stopPropagation();
             try {
-                const r = await fetch(`${SERVER_URL}/favorites/${companyId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') }
-                });
+                const r = await apiFetch(`${SERVER_URL}/favorites/${companyId}`, { method: 'DELETE' });
                 if (r.ok) loadFavorites();
                 else { /* just re-render without this item */ }
             } catch { showFavToast('Сервер недоступен', 'error'); }

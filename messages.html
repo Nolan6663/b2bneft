@@ -211,11 +211,10 @@ function msgToast(msg) {
 }
 </script>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = 'login.html';
+        if (!hasSession()) window.location.href = 'login.html';
 
         const userRole     = localStorage.getItem('userRole');
         const myCompany    = localStorage.getItem('userCompany');
-        const token        = localStorage.getItem('authToken');
 
         let allConversations = [];
         let activeConv       = null;
@@ -255,9 +254,7 @@ function msgToast(msg) {
             const urlTitle   = params.get('title') || (urlOrderId ? `Заявка #${urlOrderId}` : '');
 
             try {
-                const r = await fetch(`${SERVER_URL}/messages/conversations`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+                const r = await apiFetch(`${SERVER_URL}/messages/conversations`);
                 if (!r.ok) throw new Error('conversations request failed');
                 const data = await r.json();
                 allConversations = data.length || !shouldUseMockData() ? data : MOCK_CONVERSATIONS;
@@ -429,9 +426,7 @@ function msgToast(msg) {
 
         async function fetchMessages(conv) {
             try {
-                const r = await fetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}`, {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+                const r = await apiFetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}`);
                 const msgs = r.ok ? await r.json() : [];
                 renderMessages(msgs);
             } catch {
@@ -500,9 +495,9 @@ function msgToast(msg) {
             document.getElementById('sendBtn').disabled = true;
 
             try {
-                const r = await fetch(`${SERVER_URL}/messages`, {
+                const r = await apiFetch(`${SERVER_URL}/messages`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ orderId: activeConv.orderId, company: activeConv.company, text })
                 });
                 const msg = await r.json();
@@ -526,10 +521,7 @@ function msgToast(msg) {
 
         async function markRead(conv) {
             try {
-                await fetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}/read`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+                await apiFetch(`${SERVER_URL}/messages/${conv.orderId}/${encodeURIComponent(conv.company)}/read`, { method: 'POST' });
                 const c = allConversations.find(x => x.orderId === conv.orderId && x.company === conv.company);
                 if (c) { c.unreadCount = 0; }
                 _setBadge('navBadgeMessages', allConversations.reduce((s, x) => s + (x.unreadCount || 0), 0));
