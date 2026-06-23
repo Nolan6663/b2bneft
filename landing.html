@@ -1,585 +1,753 @@
-﻿<!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>B2B Нефтесервис — Цифровая площадка нефтесервисных закупок</title>
+  <title>Техзаказ — Платформа прямых закупок</title>
+  <meta name="description" content="Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей. Без посредников.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #FFFFFF;
-      --bg-secondary: #F8FAFC;
-      --bg-section: #F0F9FF;
-      --text-primary: #0F172A;
-      --text-secondary: #64748B;
-      --accent-cyan: #0891B2;
-      --accent-blue: #2563EB;
-      --accent-orange: #EA580C;
-      --accent-green: #059669;
-      --border-color: #E2E8F0;
-      --shadow-color: rgba(15,23,42,0.08);
-      --card-bg: #FFFFFF;
+      --dark:   #0F1A24;
+      --deep:   #071421;
+      --orange: #FF6A00;
+      --orange2:#F04B00;
+      --white:  #FFFFFF;
+      --gray:   #E8EAED;
+      --muted:  #6B7685;
+      --font:   'Montserrat', Arial, sans-serif;
     }
-    [data-theme="dark"] {
-      --bg-primary: #0F172A;
-      --bg-secondary: #1E293B;
-      --bg-section: #162032;
-      --text-primary: #F1F5F9;
-      --text-secondary: #94A3B8;
-      --accent-cyan: #22D3EE;
-      --accent-blue: #60A5FA;
-      --accent-orange: #FB923C;
-      --accent-green: #34D399;
-      --border-color: #334155;
-      --shadow-color: rgba(0,0,0,0.35);
-      --card-bg: #1E293B;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { font-family:var(--font); background:var(--white); color:var(--dark); -webkit-font-smoothing:antialiased; }
+    a { text-decoration:none; color:inherit; }
+    button { font-family:inherit; cursor:pointer; border:none; }
+
+    /* ── TOP BANNER ────────────────────────────── */
+    .top-banner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 220px;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: background .25s, color .25s; }
-    a { text-decoration: none; color: inherit; }
-    button { font-family: inherit; cursor: pointer; }
 
-    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes drawLine { to { stroke-dashoffset: 0; } }
-    @keyframes uploadPulse { 0%,100% { box-shadow:0 0 0 0 rgba(8,145,178,.25); } 50% { box-shadow:0 0 0 8px rgba(8,145,178,0); } }
-
-    /* HEADER */
-    header { position:sticky; top:0; z-index:100; background:var(--bg-primary); border-bottom:1px solid var(--border-color); }
-    .header-inner { max-width:1400px; margin:0 auto; padding:0 48px; display:flex; align-items:center; justify-content:space-between; height:62px; }
-    .header-logo { display:flex; align-items:center; gap:10px; font-weight:800; font-size:15px; }
-    .logo-icon { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:16px; box-shadow:0 4px 12px rgba(8,145,178,.35); }
-    .logo-text span { color:var(--accent-cyan); }
-    nav { display:flex; gap:28px; }
-    nav a { color:var(--text-secondary); font-weight:500; font-size:15px; transition:color .15s; }
-    nav a:hover { color:var(--text-primary); }
-    .header-actions { display:flex; align-items:center; gap:12px; }
-    .btn-theme { width:36px; height:36px; border-radius:50%; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-secondary); display:flex; align-items:center; justify-content:center; transition:all .15s; }
-    .btn-theme:hover { border-color:var(--accent-cyan); color:var(--accent-cyan); }
-    .btn-outline { background:transparent; border:1px solid var(--border-color); color:var(--text-primary); font-weight:600; font-size:14px; padding:9px 20px; border-radius:8px; transition:all .15s; }
-    .btn-outline:hover { border-color:var(--accent-cyan); color:var(--accent-cyan); }
-    .btn-primary-hdr { background:var(--accent-blue); border:none; color:#fff; font-weight:600; font-size:14px; padding:9px 20px; border-radius:8px; box-shadow:0 4px 12px rgba(37,99,235,.3); transition:opacity .15s; }
-    .btn-primary-hdr:hover { opacity:.88; }
-
-    /* HERO */
-    .hero { display:grid; grid-template-columns:minmax(360px,1fr) 1.25fr; gap:48px; align-items:center; padding:56px 48px; max-width:1400px; margin:0 auto; }
-    .hero-left { animation:fadeUp .6s ease both; }
-    .hero-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:20px; background:var(--bg-section); color:var(--accent-cyan); font-weight:600; font-size:13px; border:1px solid var(--border-color); }
-    .hero-badge::before { content:'●'; }
-    h1 { font-size:52px; line-height:1.05; font-weight:800; margin:22px 0 0; letter-spacing:-.02em; }
-    h1 .cyan { color:var(--accent-cyan); }
-    .hero-sub { font-size:18px; line-height:1.55; color:var(--text-secondary); margin:22px 0 0; max-width:440px; }
-    .hero-btns { display:flex; gap:14px; margin-top:30px; }
-    .btn-hero-cyan { background:var(--accent-cyan); border:none; color:#fff; font-weight:600; font-size:15px; padding:14px 26px; border-radius:10px; box-shadow:0 8px 20px rgba(8,145,178,.3); transition:opacity .15s; }
-    .btn-hero-cyan:hover { opacity:.88; }
-    .btn-hero-outline { background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); font-weight:600; font-size:15px; padding:14px 26px; border-radius:10px; display:flex; align-items:center; gap:8px; transition:border-color .15s; }
-    .btn-hero-outline:hover { border-color:var(--accent-cyan); }
-
-    /* Stages card */
-    .hero-right { animation:fadeUp .6s .12s ease both; }
-    .stages-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; padding:24px; box-shadow:0 20px 50px var(--shadow-color); position:relative; overflow:hidden; }
-    .stages-grid-bg { position:absolute; inset:0; background-image:linear-gradient(var(--border-color) 1px,transparent 1px),linear-gradient(90deg,var(--border-color) 1px,transparent 1px); background-size:34px 34px; opacity:.35; pointer-events:none; }
-    .stages-label { text-align:center; font-size:13px; font-weight:600; color:var(--text-secondary); letter-spacing:.04em; text-transform:uppercase; position:relative; }
-    .stages-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; position:relative; }
-    .stage-item {
-        border:1px solid var(--border-color); border-radius:11px; padding:10px;
-        background:var(--bg-primary); cursor:pointer;
-        transition: border-color .45s ease, background .45s ease,
-                    box-shadow .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+    /* левая часть — логотип + nav */
+    .banner-left {
+      background: var(--white);
+      padding: 32px 48px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .stage-item.active {
-        border-color:var(--accent-cyan); background:var(--bg-section);
-        box-shadow:0 0 0 1px var(--accent-cyan),0 6px 16px rgba(8,145,178,.18);
-        transform:translateY(-3px);
+    .banner-nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .stage-top { display:flex; align-items:center; gap:7px; }
-    .stage-num {
-        width:20px; height:20px; border-radius:6px; flex:none;
-        font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace;
-        display:flex; align-items:center; justify-content:center;
-        background:var(--bg-secondary); color:var(--text-secondary);
-        transition: background .4s ease, color .4s ease;
+    .btn-nav-login {
+      background: transparent;
+      border: 1.5px solid var(--gray);
+      color: var(--dark);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 10px;
+      transition: border-color .15s;
     }
-    .stage-item.active .stage-num { background:var(--accent-cyan); color:#fff; }
-    .stage-title-txt { font-size:12px; font-weight:600; line-height:1.15; }
-    .stage-glyph {
-        margin-top:10px; height:34px; display:flex; align-items:center;
-        justify-content:center; font-size:20px; opacity:.35; color:var(--text-secondary);
-        transition: opacity .4s ease, color .4s ease, transform .4s cubic-bezier(.34,1.56,.64,1);
+    .btn-nav-login:hover { border-color: var(--dark); }
+    .btn-nav-reg {
+      background: var(--orange);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 20px;
+      border-radius: 10px;
+      transition: background .15s;
     }
-    .stage-item.active .stage-glyph { opacity:1; color:var(--accent-cyan); transform:scale(1.15); }
-    .stage-tip {
-        margin-top:16px; padding:14px 16px; border-radius:12px;
-        background:var(--bg-section); border:1px solid var(--border-color);
-        min-height:56px; display:flex; align-items:center; gap:12px; position:relative;
-        transition: opacity .25s ease;
+    .btn-nav-reg:hover { background: var(--orange2); }
+
+    /* логотип */
+    .logo-block { display:flex; align-items:flex-start; gap:16px; }
+    .logo-mark svg { width:64px; height:auto; display:block; }
+    .logo-text .logo-name {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
     }
-    .stage-tip-num { width:30px; height:30px; border-radius:8px; background:var(--accent-cyan); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'JetBrains Mono',monospace; flex:none; }
-    .stage-tip-label { font-size:11px; font-weight:600; color:var(--accent-cyan); text-transform:uppercase; letter-spacing:.04em; }
-    .stage-tip-text { font-size:13px; color:var(--text-primary); margin-top:2px; font-weight:500; }
-    .stages-dots { display:flex; gap:6px; margin-top:14px; justify-content:center; }
-    .stage-dot {
-        height:7px; border-radius:4px; background:var(--border-color);
-        transition: width .4s cubic-bezier(.34,1.56,.64,1), background .4s ease;
-        width:7px;
+    .logo-text .logo-name .lo { color: var(--dark); }
+    .logo-text .logo-name .hi { color: var(--orange); }
+    .logo-text .logo-sub {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--dark);
+      margin-top: 4px;
     }
-    .stage-dot.active { width:20px; background:var(--accent-cyan); }
-
-    /* STATS */
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding:0 48px; max-width:1400px; margin:0 auto 40px; }
-    .stat-card { background:var(--bg-primary); border:1px solid var(--border-color); border-radius:14px; padding:20px 22px; box-shadow:0 1px 3px var(--shadow-color); animation:fadeUp .6s ease both; }
-    .stat-top { display:flex; align-items:center; gap:10px; }
-    .stat-icon { width:34px; height:34px; border-radius:9px; background:var(--bg-section); display:flex; align-items:center; justify-content:center; }
-    .stat-value { font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; }
-    .stat-label { font-size:13px; color:var(--text-secondary); margin-top:10px; font-weight:500; }
-    .spark { display:block; margin-top:8px; }
-
-    /* MAIN GRID */
-    .main-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:0 48px; max-width:1400px; margin:0 auto 40px; }
-    .card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:30px; box-shadow:0 1px 3px var(--shadow-color); }
-    .section-label { font-size:12px; font-weight:700; color:var(--accent-cyan); letter-spacing:.08em; text-transform:uppercase; }
-    .section-title { font-size:24px; font-weight:700; margin:8px 0 4px; }
-    .section-sub { color:var(--text-secondary); font-size:14px; margin:0 0 24px; }
-
-    /* Steps */
-    .steps-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-    .step-card { border:1px solid var(--border-color); border-radius:12px; padding:18px; background:var(--bg-secondary); }
-    .step-top { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-    .step-icon { width:30px; height:30px; border-radius:8px; background:var(--bg-section); color:var(--accent-cyan); display:flex; align-items:center; justify-content:center; flex:none; }
-    .step-tag { font-size:11px; font-weight:700; color:var(--text-secondary); font-family:'JetBrains Mono',monospace; }
-    .step-title { font-weight:700; font-size:15px; }
-    .step-text { font-size:13px; color:var(--text-secondary); margin-top:6px; line-height:1.5; }
-
-    /* Features */
-    .features-label { font-size:12px; font-weight:700; color:var(--accent-cyan); letter-spacing:.08em; text-transform:uppercase; margin:30px 0 14px; text-align:center; }
-    .features-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .feature-card { display:flex; gap:12px; padding:14px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-primary); }
-    .feature-icon { width:40px; height:40px; border-radius:10px; flex:none; color:#fff; display:flex; align-items:center; justify-content:center; }
-    .feature-title { font-weight:600; font-size:14px; }
-    .feature-text { font-size:12.5px; color:var(--text-secondary); margin-top:4px; line-height:1.45; }
-
-    /* Demo */
-    .demo-card { display:flex; flex-direction:column; }
-    .demo-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-top:18px; }
-    .upload-zone { border:2px dashed var(--accent-cyan); border-radius:14px; padding:26px 18px; text-align:center; background:var(--bg-section); cursor:pointer; animation:uploadPulse 1.4s ease-in-out infinite; transition:background .15s; }
-    .upload-zone:hover { background:rgba(8,145,178,.08); }
-    .upload-icon { width:52px; height:52px; margin:0 auto; border-radius:14px; background:var(--accent-cyan); color:#fff; display:flex; align-items:center; justify-content:center; }
-    .upload-title { font-weight:700; font-size:15px; margin-top:12px; line-height:1.3; }
-    .upload-hint { font-size:12px; color:var(--text-secondary); margin-top:6px; }
-    .btn-upload { margin-top:14px; background:var(--accent-cyan); border:none; color:#fff; font-weight:600; font-size:13px; padding:10px 20px; border-radius:8px; }
-    .demo-info { border:1px solid var(--border-color); border-radius:12px; padding:16px; background:var(--bg-secondary); }
-    .demo-info-label { display:flex; align-items:center; gap:6px; color:var(--accent-blue); font-weight:700; font-size:12px; }
-    .demo-info-text { font-size:12.5px; color:var(--text-secondary); margin-top:10px; line-height:1.5; }
-    .demo-process-label { font-weight:600; font-size:13px; margin:22px 0 12px; color:var(--text-secondary); }
-    .demo-steps { display:flex; align-items:center; justify-content:space-between; gap:6px; }
-    .demo-step { text-align:center; }
-    .demo-step-icon { width:42px; height:42px; border-radius:11px; background:var(--bg-section); color:var(--accent-cyan); display:flex; align-items:center; justify-content:center; margin:0 auto; }
-    .demo-step-label { font-size:11px; color:var(--text-secondary); margin-top:6px; max-width:70px; line-height:1.2; }
-    .demo-sep { color:var(--text-secondary); font-size:18px; }
-    .demo-btns { display:flex; gap:12px; margin-top:24px; }
-    .btn-cyan { background:var(--accent-cyan); border:none; color:#fff; font-weight:600; font-size:14px; padding:12px 22px; border-radius:9px; transition:opacity .15s; }
-    .btn-cyan:hover { opacity:.88; }
-    .btn-outline-sm { background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); font-weight:600; font-size:14px; padding:12px 22px; border-radius:9px; }
-
-    /* CTA */
-    .cta-wrap { padding:0 48px; max-width:1400px; margin:0 auto 40px; }
-    .cta-banner { position:relative; overflow:hidden; border-radius:18px; padding:40px 44px; background:linear-gradient(120deg,#0E7490,#1D4ED8); color:#fff; display:flex; align-items:center; justify-content:space-between; gap:30px; flex-wrap:wrap; box-shadow:0 18px 40px rgba(13,71,161,.35); }
-    .cta-banner::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 50%,rgba(255,255,255,.08) 0%,transparent 60%); }
-    .cta-title { font-size:30px; font-weight:800; margin:0; }
-    .cta-sub { margin:10px 0 0; opacity:.9; font-size:15px; max-width:520px; line-height:1.5; }
-    .cta-btns { display:flex; flex-direction:column; gap:12px; min-width:260px; position:relative; }
-    .btn-cta-white { background:#fff; border:none; color:var(--accent-blue); font-weight:700; font-size:15px; padding:14px 24px; border-radius:10px; transition:opacity .15s; }
-    .btn-cta-white:hover { opacity:.9; }
-    .btn-cta-ghost { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.4); color:#fff; font-weight:600; font-size:15px; padding:14px 24px; border-radius:10px; transition:background .15s; }
-    .btn-cta-ghost:hover { background:rgba(255,255,255,.22); }
-
-    /* FOOTER */
-    footer { background:var(--bg-primary); border-top:1px solid var(--border-color); padding:34px 48px; }
-    .footer-inner { max-width:1400px; margin:0 auto; display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr 1fr; gap:24px; }
-    .footer-brand p { font-size:13px; color:var(--text-secondary); margin-top:12px; max-width:240px; line-height:1.5; }
-    .footer-col-title { font-weight:700; font-size:14px; }
-    .footer-col ul { list-style:none; display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-    .footer-col ul li a { color:var(--text-secondary); font-size:13px; transition:color .15s; }
-    .footer-col ul li a:hover { color:var(--accent-cyan); }
-    .footer-bottom { max-width:1400px; margin:24px auto 0; padding-top:18px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; color:var(--text-secondary); font-size:12.5px; flex-wrap:wrap; gap:12px; }
-    .footer-bottom-links { display:flex; gap:20px; }
-    .footer-bottom-links a:hover { color:var(--accent-cyan); }
-
-    /* RESPONSIVE */
-    @media (max-width:1024px) {
-      .hero { grid-template-columns:1fr; }
-      .hero-right { display:none; }
-      .main-grid { grid-template-columns:1fr; }
-      .stats { grid-template-columns:repeat(2,1fr); }
-      .footer-inner { grid-template-columns:1fr 1fr; }
+    .logo-text .logo-tag {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 10px;
+      letter-spacing: 0.02em;
     }
-    @media (max-width:640px) {
-      .header-inner,.hero,.stats,.main-grid,.cta-wrap,footer { padding-left:20px; padding-right:20px; }
-      h1 { font-size:34px; }
-      .steps-grid,.features-grid { grid-template-columns:1fr; }
-      .stats { grid-template-columns:1fr; }
-      nav { display:none; }
-      .footer-inner { grid-template-columns:1fr; }
-      .cta-banner { padding:28px 24px; }
-      .demo-grid { grid-template-columns:1fr; }
+
+    /* правая часть — промо фото */
+    .banner-right {
+      background: var(--dark);
+      position: relative;
+      overflow: hidden;
+    }
+    /* имитация индустриального фото через градиент */
+    .banner-photo {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 70% 40%, rgba(30,50,70,.9) 0%, transparent 65%),
+        radial-gradient(ellipse at 20% 80%, rgba(8,20,30,.8) 0%, transparent 60%),
+        linear-gradient(135deg, #0d1e2a 0%, #1a3040 40%, #0b1820 100%);
+    }
+    /* металлическая текстура — сетка */
+    .banner-photo::before {
+      content:'';
+      position:absolute; inset:0;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0px, rgba(255,255,255,.025) 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0px, rgba(255,255,255,.02) 1px, transparent 1px, transparent 40px);
+    }
+    /* оранжевый диагональный треугольник */
+    .banner-photo::after {
+      content:'';
+      position:absolute;
+      top:0; right:0;
+      width:0; height:0;
+      border-style:solid;
+      border-width:0 160px 160px 0;
+      border-color:transparent var(--orange) transparent transparent;
+    }
+
+    /* ── HERO (H1 + схема) ─────────────────────── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      padding: 56px 48px 64px;
+      background: var(--white);
+    }
+
+    .hero-left {}
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 62px);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+    .hero-sub {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 440px;
+      margin-bottom: 36px;
+    }
+    .hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s, transform .1s;
+    }
+    .btn-primary:hover { background:var(--orange2); transform:translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--gray);
+      color: var(--dark);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color .15s;
+    }
+    .btn-outline:hover { border-color: var(--dark); }
+
+    /* ── COMPACT FLOW DIAGRAM ─────────────────── */
+    .flow-card {
+      border: 1.5px solid var(--gray);
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .flow-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+      background: var(--gray);
+      border-radius: 8px;
+      padding: 7px 14px;
+      display: inline-block;
+      align-self: flex-start;
+    }
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    /* Заказчик */
+    .flow-node-customer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .flow-customer-box {
+      width: 68px; height: 68px;
+      border: 2px solid var(--dark);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .flow-customer-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    /* стрелки */
+    .flow-arrows-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex: 1;
+      position: relative;
+    }
+    .flow-arr-right {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .flow-arr-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--dark);
+      white-space: nowrap;
+      padding: 0 6px;
+    }
+    .flow-arr-line {
+      flex: 1;
+      height: 2px;
+      background: var(--dark);
+      position: relative;
+    }
+    .flow-arr-line::after {
+      content:'';
+      position:absolute; right:-1px; top:-4px;
+      border:5px solid transparent;
+      border-left:8px solid var(--dark);
+    }
+    .flow-arr-return {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .flow-arr-return-line {
+      flex: 1;
+      height: 2px;
+      background: var(--orange);
+      border-top: 2px dashed var(--orange);
+      background: transparent;
+      position: relative;
+    }
+    .flow-arr-return-line::before {
+      content:'';
+      position:absolute; left:-1px; top:-4px;
+      border:5px solid transparent;
+      border-right:8px solid var(--orange);
+    }
+    .flow-arr-label-return {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--orange);
+      padding: 0 6px;
+      white-space: nowrap;
+    }
+    /* платформа */
+    .flow-platform {
+      background: var(--dark);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .flow-platform-name {
+      font-size: 11px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: .5px;
+    }
+    .flow-platform-name .o { color: var(--orange); }
+    /* производители */
+    .flow-right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .flow-producer-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .flow-producer-arrow {
+      width: 28px;
+      height: 2px;
+      background: var(--dark);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .flow-producer-arrow::after {
+      content:'';
+      position:absolute; right:-1px; top:-4px;
+      border:5px solid transparent;
+      border-left:8px solid var(--dark);
+    }
+    /* оранжевая стрелка обратно для производителей */
+    .flow-producer-arrow-back {
+      width: 28px; height: 2px;
+      border-top: 2px dashed var(--orange);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .flow-producer-box {
+      border: 1.5px solid var(--dark);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    /* ── PROCESS ────────────────────────────────── */
+    .process { background: var(--dark); padding: 56px 48px; }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      align-items: stretch;
+    }
+    .process-step {
+      padding: 28px 24px;
+      position: relative;
+    }
+    /* стрелка между шагами */
+    .process-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border: 10px solid transparent;
+      border-left: 14px solid var(--orange);
+      z-index: 2;
+    }
+    .process-step-inner {
+      background: #152230;
+      border-radius: 18px;
+      padding: 28px 22px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .step-num {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--orange);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    .step-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-icon svg {
+      width: 44px;
+      height: 44px;
+    }
+    .step-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.25;
+    }
+    .step-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,.55);
+      line-height: 1.5;
+    }
+
+    /* ── BENEFITS ───────────────────────────────── */
+    .benefits { padding: 60px 48px; background: var(--white); }
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+    .benefit-item { display:flex; flex-direction:column; gap:14px; }
+    .benefit-circle {
+      width: 60px; height: 60px;
+      background: var(--dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .benefit-circle svg { width:28px; height:28px; }
+    .benefit-title { font-size:16px; font-weight:800; line-height:1.25; }
+    .benefit-text { font-size:13px; color:var(--muted); line-height:1.6; font-weight:500; }
+
+    /* ── FINAL CTA ──────────────────────────────── */
+    .final { background:var(--dark); padding:80px 48px; text-align:center; }
+    .final h2 {
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+    }
+    .final h2 .o { color:var(--orange); }
+    .final p { font-size:16px; color:rgba(255,255,255,.5); margin-bottom:36px; font-weight:500; }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    footer { background:var(--deep); padding:36px 48px; }
+    .footer-inner {
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:12px;
+    }
+    .footer-logo { display:flex; align-items:center; gap:10px; }
+    .footer-logo-name { font-size:18px; font-weight:900; }
+    .footer-logo-name .o { color:var(--orange); }
+    .footer-copy { font-size:12px; color:rgba(255,255,255,.3); }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media(max-width:1024px){
+      .top-banner { grid-template-columns:1fr; }
+      .banner-right { min-height:120px; }
+      .hero { grid-template-columns:1fr; gap:36px; }
+      .process-grid { grid-template-columns:1fr 1fr; }
+      .process-step::after { display:none; }
+      .benefits-grid { grid-template-columns:1fr 1fr; }
+      .hero,.process,.benefits,.final,.footer-inner { padding-left:24px; padding-right:24px; }
+      .banner-left { padding:24px; }
+    }
+    @media(max-width:600px){
+      .process-grid { grid-template-columns:1fr; }
+      .benefits-grid { grid-template-columns:1fr 1fr; }
+      .hero-btns { flex-direction:column; }
+      .flow-diagram { flex-direction:column; gap:12px; }
     }
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div class="header-inner">
-    <div class="header-logo">
-      <div class="logo-icon">Н</div>
-      <div class="logo-text"><span>B2B</span> НЕФТЕСЕРВИС</div>
+<!-- ══ TOP BANNER ═══════════════════════════════ -->
+<div class="top-banner">
+
+  <!-- левая колонка: логотип + кнопки -->
+  <div class="banner-left">
+    <div class="banner-nav">
+      <a href="login.html"><button class="btn-nav-login">Войти</button></a>
+      <a href="login.html"><button class="btn-nav-reg">Зарегистрироваться</button></a>
     </div>
-    <nav>
-      <a href="#how">Как это работает</a>
-      <a href="#features">Возможности</a>
-      <a href="#cta">Тарифы</a>
-      <a href="catalog.html">Каталог заводов</a>
-    </nav>
-    <div class="header-actions">
-      <button class="btn-theme" onclick="toggleTheme()" title="Сменить тему">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      </button>
-      <button class="btn-outline" onclick="location.href='login.html'">Войти</button>
-      <button class="btn-primary-hdr" onclick="location.href='login.html'">Разместить закупку</button>
+
+    <div class="logo-block">
+      <div class="logo-mark">
+        <svg viewBox="0 0 162 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#0F1A24"/>
+          <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-name"><span class="lo">ТЕХ</span><span class="hi">ЗАКАЗ</span></div>
+        <div class="logo-sub">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
+        <div class="logo-tag">От чертежа до исполнителя.</div>
+      </div>
     </div>
   </div>
-</header>
 
-<!-- HERO -->
+  <!-- правая колонка: индустриальный фон -->
+  <div class="banner-right">
+    <div class="banner-photo"></div>
+  </div>
+
+</div>
+
+<!-- ══ HERO ═════════════════════════════════════ -->
 <section class="hero">
   <div class="hero-left">
-    <div class="hero-badge">Цифровая площадка нефтесервиса</div>
-    <h1>Разместите чертёж -<br>получите КП<br>от заводов <span class="cyan">за 24 часа</span></h1>
-    <p class="hero-sub">Единая среда для закупок МТР, РТИ, металлоконструкций и оборудования. Прямые тендеры, верифицированные поставщики, точная аналитика.</p>
+    <h1>Прямые закупки<br>без посредников</h1>
+    <p class="hero-sub">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
     <div class="hero-btns">
-      <button class="btn-hero-cyan" onclick="location.href='login.html'">Разместить закупку</button>
-      <button class="btn-hero-outline" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">
-        Как это работает
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
+      <a href="login.html">
+        <button class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Разместить заказ
+        </button>
+      </a>
+      <a href="#process">
+        <button class="btn-outline">Как это работает</button>
+      </a>
     </div>
   </div>
+
+  <!-- компактная схема -->
   <div class="hero-right">
-    <div class="stages-card">
-      <div class="stages-grid-bg"></div>
-      <div class="stages-label">Трансформация чертежа в готовый заказ</div>
-      <div class="stages-grid" id="stagesGrid"></div>
-      <div class="stage-tip">
-        <div class="stage-tip-num" id="tipNum">1</div>
-        <div>
-          <div class="stage-tip-label" id="tipLabel">Чертёж</div>
-          <div class="stage-tip-text" id="tipText">Загрузите чертёж или техническое задание.</div>
+    <div class="flow-card">
+      <div class="flow-label">Напрямую от заказчика к производителю</div>
+
+      <div class="flow-diagram">
+        <!-- Заказчик -->
+        <div class="flow-node-customer">
+          <div class="flow-customer-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg>
+          </div>
+          <div class="flow-customer-label">Заказчик</div>
+        </div>
+
+        <!-- стрелки: запрос → и ← предложения -->
+        <div class="flow-arrows-col">
+          <div class="flow-arr-right">
+            <div class="flow-arr-label">Запрос</div>
+            <div class="flow-arr-line"></div>
+          </div>
+          <div class="flow-arr-return">
+            <div class="flow-arr-return-line"></div>
+            <div class="flow-arr-label-return">Предложения</div>
+          </div>
+        </div>
+
+        <!-- Техзаказ -->
+        <div class="flow-platform">
+          <svg width="28" height="22" viewBox="0 0 162 120" fill="none">
+            <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#FFFFFF"/>
+            <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
+          </svg>
+          <div class="flow-platform-name">ТЕХ<span class="o">ЗАКАЗ</span></div>
+        </div>
+
+        <!-- ветки к производителям -->
+        <div class="flow-right-col">
+          <div class="flow-producer-row">
+            <div class="flow-producer-arrow"></div>
+            <div class="flow-producer-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+              Производитель 1
+            </div>
+          </div>
+          <div class="flow-producer-row">
+            <div class="flow-producer-arrow"></div>
+            <div class="flow-producer-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+              Производитель 2
+            </div>
+          </div>
+          <div class="flow-producer-row">
+            <div class="flow-producer-arrow"></div>
+            <div class="flow-producer-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+              Производитель 3
+            </div>
+          </div>
         </div>
       </div>
-      <div class="stages-dots" id="stagesDots"></div>
     </div>
   </div>
 </section>
 
-<!-- STATS -->
-<div class="stats">
-  <div class="stat-card" style="animation-delay:.05s">
-    <div class="stat-top">
-      <div class="stat-icon" style="color:var(--accent-cyan)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M7 21v-4M12 21v-4M17 21v-4"/></svg>
-      </div>
-      <div class="stat-value" style="color:var(--accent-cyan)" id="stat0">1202+</div>
-    </div>
-    <div class="stat-label">производителей</div>
-    <svg class="spark" width="84" height="26" viewBox="0 0 84 26" fill="none"><path d="M0 18 L12 14 L24 16 L36 10 L48 12 L60 6 L72 8 L84 2" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:240;stroke-dashoffset:240;animation:drawLine 1.1s .3s ease forwards"/></svg>
-  </div>
-  <div class="stat-card" style="animation-delay:.1s">
-    <div class="stat-top">
-      <div class="stat-icon" style="color:var(--accent-orange)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.5 12h11l2-8H6"/></svg>
-      </div>
-      <div class="stat-value" style="color:var(--accent-orange)" id="stat1">8609+</div>
-    </div>
-    <div class="stat-label">закупок размещено</div>
-    <svg class="spark" width="84" height="26" viewBox="0 0 84 26" fill="none"><path d="M0 14 L12 18 L24 10 L36 14 L48 8 L60 12 L72 6 L84 10" stroke="var(--accent-orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:240;stroke-dashoffset:240;animation:drawLine 1.1s .4s ease forwards"/></svg>
-  </div>
-  <div class="stat-card" style="animation-delay:.15s">
-    <div class="stat-top">
-      <div class="stat-icon" style="color:var(--accent-blue)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>
-      </div>
-      <div class="stat-value" style="color:var(--accent-blue)" id="stat2">4202+</div>
-    </div>
-    <div class="stat-label">коммерческих предложений</div>
-    <svg class="spark" width="84" height="26" viewBox="0 0 84 26" fill="none"><path d="M0 16 L12 12 L24 14 L36 8 L48 10 L60 4 L72 6 L84 2" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:240;stroke-dashoffset:240;animation:drawLine 1.1s .5s ease forwards"/></svg>
-  </div>
-  <div class="stat-card" style="animation-delay:.2s">
-    <div class="stat-top">
-      <div class="stat-icon" style="color:var(--accent-green)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M17 6a3 3 0 0 1 0 6M21 20c0-2-1-3.5-3-4.3"/></svg>
-      </div>
-      <div class="stat-value" style="color:var(--accent-green)" id="stat3">322+</div>
-    </div>
-    <div class="stat-label">компаний-заказчиков</div>
-    <svg class="spark" width="84" height="26" viewBox="0 0 84 26" fill="none"><path d="M0 20 L12 16 L24 18 L36 12 L48 10 L60 14 L72 8 L84 6" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:240;stroke-dashoffset:240;animation:drawLine 1.1s .6s ease forwards"/></svg>
-  </div>
-</div>
+<!-- ══ PROCESS ══════════════════════════════════ -->
+<section class="process" id="process">
+  <div class="process-grid">
 
-<!-- HOW IT WORKS + DEMO -->
-<div class="main-grid" id="how">
-  <div class="card">
-    <div class="section-label">Как это работает</div>
-    <h2 class="section-title">Три шага до готового КП</h2>
-    <p class="section-sub">Минимум звонков и длинных писем — всё в едином интерфейсе.</p>
-    <div class="steps-grid" id="features">
-      <div class="step-card">
-        <div class="step-top">
-          <div class="step-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg></div>
-          <div class="step-tag">ШАГ 01</div>
+    <div class="process-step">
+      <div class="process-step-inner">
+        <div class="step-num">1</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M62 34 H160 L200 74 V210 H62 Z"/>
+            <path d="M160 34 V76 H200"/>
+            <circle cx="118" cy="115" r="30" stroke-dasharray="9 12"/>
+            <path d="M118 70 V160 M73 115 H163"/>
+            <circle cx="178" cy="178" r="34" stroke="#FF6A00"/>
+            <path d="M178 197 V158 M160 176 L178 158 L196 176" stroke="#FF6A00"/>
+          </svg>
         </div>
-        <div class="step-title">Разместите закупку</div>
-        <div class="step-text">Загрузите чертёж в PDF, DWG или STEP, укажите детали, объёмы и требования.</div>
+        <div class="step-title">Разместите чертёж или ТЗ</div>
+        <div class="step-sub">PDF, DWG, STEP или описание задачи</div>
       </div>
-      <div class="step-card">
-        <div class="step-top">
-          <div class="step-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M7 21v-4M12 21v-4M17 21v-4"/></svg></div>
-          <div class="step-tag">ШАГ 02</div>
+    </div>
+
+    <div class="process-step">
+      <div class="process-step-inner">
+        <div class="step-num">2</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M42 190 H210 V112 L166 138 V90 L124 116 V72 L86 96 V190"/>
+            <path d="M74 190 V150 H96 V190"/>
+            <path d="M118 160 H138 M158 160 H178"/>
+            <circle cx="183" cy="174" r="34" stroke="#FF6A00"/>
+            <path d="M166 174 L178 186 L202 158" stroke="#FF6A00"/>
+          </svg>
         </div>
-        <div class="step-title">Получите предложения</div>
-        <div class="step-text">Подходящие производители автоматически получают запрос и отправляют КП в платформе.</div>
+        <div class="step-title">Запрос уходит производителям</div>
+        <div class="step-sub">Платформа подбирает подходящие заводы</div>
       </div>
-      <div class="step-card">
-        <div class="step-top">
-          <div class="step-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></div>
-          <div class="step-tag">ШАГ 03</div>
+    </div>
+
+    <div class="process-step">
+      <div class="process-step-inner">
+        <div class="step-num">3</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M62 34 H160 L200 74 V210 H62 Z"/>
+            <path d="M160 34 V76 H200"/>
+            <path d="M92 92 H152 M92 122 H166 M92 152 H140"/>
+            <circle cx="176" cy="176" r="34" stroke="#FF6A00"/>
+            <text x="176" y="188" text-anchor="middle" font-family="Arial" font-size="45" font-weight="700" fill="#FF6A00" stroke="none">₽</text>
+          </svg>
         </div>
-        <div class="step-title">Выберите победителя</div>
-        <div class="step-text">Сравните предложения, задайте вопросы и заключите прямой контракт с поставщиком.</div>
+        <div class="step-title">Получите и сравните КП</div>
+        <div class="step-sub">Цена, сроки, условия — в одном окне</div>
       </div>
     </div>
-    <div class="features-label">Всё что нужно для закупок</div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon" style="background:var(--accent-cyan)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div>
-        <div><div class="feature-title">Умный подбор поставщиков</div><div class="feature-text">Алгоритмы и фильтры учитывают специализацию и загрузку производств.</div></div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:var(--accent-blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
-        <div><div class="feature-title">Верификация компаний</div><div class="feature-text">Проверяем документы, лицензии и финансовую устойчивость заводов.</div></div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:var(--accent-orange)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></div>
-        <div><div class="feature-title">Аналитика закупок</div><div class="feature-text">Отслеживайте заказы, сроки и средние цены предложений в реальном времени.</div></div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:var(--accent-green)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></div>
-        <div><div class="feature-title">Биржа свободных мощностей</div><div class="feature-text">Заводы публикуют доступные мощности — находите решение для срочных задач.</div></div>
-      </div>
-    </div>
-  </div>
 
-  <div class="card demo-card">
-    <div class="section-label">Попробуйте прямо сейчас</div>
-    <div class="demo-grid">
-      <div class="upload-zone" onclick="location.href='login.html'">
-        <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M8 13l4-4 4 4"/><path d="M5 5h14"/></svg></div>
-        <div class="upload-title">Перетащите чертёж<br>или нажмите для выбора</div>
-        <div class="upload-hint">PDF, DWG, STEP — до 100 МБ</div>
-        <button class="btn-upload">Выбрать файл</button>
+    <div class="process-step">
+      <div class="process-step-inner">
+        <div class="step-num">4</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 256 256" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M52 150 L88 114 C99 103 115 103 126 114 L132 120"/>
+            <path d="M204 150 L168 114 C157 103 141 103 130 114 L110 134 C104 140 104 150 110 156 C116 162 126 162 132 156 L146 142"/>
+            <path d="M78 140 L118 180 C128 190 143 190 153 180 L182 151"/>
+            <path d="M32 122 L62 92 L93 123 L63 153 Z" stroke="#FF6A00"/>
+            <path d="M164 123 L195 92 L225 122 L195 153 Z" stroke="#FF6A00"/>
+          </svg>
+        </div>
+        <div class="step-title">Выберите исполнителя напрямую</div>
+        <div class="step-sub">Без посредников и лишних звеньев</div>
       </div>
-      <div class="demo-info">
-        <div class="demo-info-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.5" r=".5" fill="currentColor"/></svg> ДЕМО-РЕЖИМ</div>
-        <div class="demo-info-text">Это бесплатно и без регистрации. Зарегистрируйтесь, чтобы разместить реальную закупку и получать КП от заводов.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ BENEFITS ═════════════════════════════════ -->
+<section class="benefits">
+  <div class="benefits-grid">
+
+    <div class="benefit-item">
+      <div class="benefit-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
       </div>
+      <div class="benefit-title">Прямой доступ к производителям</div>
+      <div class="benefit-text">Работайте напрямую с заводами без посредников и наценок.</div>
     </div>
-    <div class="demo-process-label">Демо-процесс после загрузки</div>
-    <div class="demo-steps">
-      <div class="demo-step"><div class="demo-step-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg></div><div class="demo-step-label">Анализ чертежа</div></div>
-      <div class="demo-sep">›</div>
-      <div class="demo-step"><div class="demo-step-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/><path d="M7 21v-4M12 21v-4M17 21v-4"/></svg></div><div class="demo-step-label">Подбор заводов</div></div>
-      <div class="demo-sep">›</div>
-      <div class="demo-step"><div class="demo-step-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg></div><div class="demo-step-label">Рассылка запросов</div></div>
-      <div class="demo-sep">›</div>
-      <div class="demo-step"><div class="demo-step-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div><div class="demo-step-label">Получение КП</div></div>
-      <div class="demo-sep">›</div>
-      <div class="demo-step"><div class="demo-step-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></div><div class="demo-step-label">Выбор победителя</div></div>
-    </div>
-    <div class="demo-btns">
-      <button class="btn-cyan" onclick="location.href='login.html'">Начать бесплатно</button>
-      <button class="btn-outline-sm" onclick="location.href='catalog.html'">Каталог заводов</button>
-    </div>
-  </div>
-</div>
 
-<!-- CTA BANNER -->
-<div class="cta-wrap" id="cta">
-  <div class="cta-banner">
-    <div>
-      <h2 class="cta-title">Начните работу уже сегодня</h2>
-      <p class="cta-sub">Регистрация бесплатна. Первая закупка от размещения до получения КП — в течение 24 часов после публикации.</p>
+    <div class="benefit-item">
+      <div class="benefit-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+      </div>
+      <div class="benefit-title">Меньше ручной работы</div>
+      <div class="benefit-text">Автоматический подбор производителей и рассылка запросов.</div>
     </div>
-    <div class="cta-btns">
-      <button class="btn-cta-white" onclick="location.href='login.html'">Зарегистрироваться бесплатно</button>
-      <button class="btn-cta-ghost" onclick="location.href='login.html'">Войти в кабинет</button>
-    </div>
-  </div>
-</div>
 
-<!-- FOOTER -->
+    <div class="benefit-item">
+      <div class="benefit-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </div>
+      <div class="benefit-title">Прозрачное сравнение КП</div>
+      <div class="benefit-text">Сравнивайте предложения по цене, срокам и условиям в одном окне.</div>
+    </div>
+
+    <div class="benefit-item">
+      <div class="benefit-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="benefit-title">Быстрее запуск закупки</div>
+      <div class="benefit-text">Сократите время от запроса до выбора исполнителя.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FINAL CTA ═════════════════════════════════ -->
+<section class="final">
+  <h2>Разместите заказ<br><span class="o">напрямую производителям</span></h2>
+  <p>От чертежа до исполнителя — без посредников.</p>
+  <a href="login.html">
+    <button class="btn-primary" style="margin:0 auto; font-size:16px; padding:18px 44px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      Разместить заказ
+    </button>
+  </a>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════ -->
 <footer>
   <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="header-logo">
-        <div class="logo-icon">Н</div>
-        <div class="logo-text"><span>B2B</span> НЕФТЕСЕРВИС</div>
-      </div>
-      <p>Цифровая площадка для закупок в нефтесервисной отрасли.</p>
+    <div class="footer-logo">
+      <svg width="28" height="22" viewBox="0 0 162 120" fill="none">
+        <path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#FFFFFF"/>
+        <path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/>
+      </svg>
+      <div class="footer-logo-name"><span style="color:#fff">ТЕХ</span><span class="o">ЗАКАЗ</span></div>
     </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Платформа</div>
-      <ul><li><a href="catalog.html">Каталог заводов</a></li><li><a href="#how">О платформе</a></li><li><a href="#cta">Тарифы</a></li><li><a href="#">Безопасность</a></li></ul>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Клиентам</div>
-      <ul><li><a href="#how">Как это работает</a></li><li><a href="#features">Возможности</a></li><li><a href="login.html">Регистрация</a></li><li><a href="#">Отзывы</a></li></ul>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Поддержка</div>
-      <ul><li><a href="#">Центр помощи</a></li><li><a href="#">Документация</a></li><li><a href="#">Обучение</a></li><li><a href="#">Связаться с нами</a></li></ul>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Контакты</div>
-      <ul><li><a href="tel:88005002020">8 800 500-20-20</a></li><li><a href="mailto:info@b2b-neft.ru">info@b2b-neft.ru</a></li><li><a href="#">г. Тюмень, ул. Республики, 85</a></li></ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div>© 2025 B2B Нефтесервис. Все права защищены.</div>
-    <div class="footer-bottom-links"><a href="#">Политика конфиденциальности</a><a href="#">Пользовательское соглашение</a></div>
+    <div class="footer-copy">© 2026 Техзаказ. Платформа прямых промышленных закупок.</div>
   </div>
 </footer>
 
-<script>
-  // Redirect logged-in users to their cabinet
-  (function() {
-    const token = hasSession();
-    const role = localStorage.getItem('userRole');
-    if (token && role) {
-      if (role === 'admin') window.location.replace('admin.html');
-      else if (role === 'customer') window.location.replace('index.html');
-      else window.location.replace('producer.html');
-    }
-  })();
-
-  // Theme
-  const SUN_SVG = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
-  const MOON_SVG = '<path d="M21 13A8.5 8.5 0 1 1 11 3a6.5 6.5 0 0 0 10 10z"/>';
-  function applyTheme(t) {
-    document.documentElement.dataset.theme = t;
-    document.getElementById('themeIcon').innerHTML = t === 'dark' ? SUN_SVG : MOON_SVG;
-    try { localStorage.setItem('theme', t); } catch(e) {}
-  }
-  function toggleTheme() {
-    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-  }
-  (function() {
-    let t = 'light';
-    try { t = localStorage.getItem('theme') || 'light'; } catch(e) {}
-    applyTheme(t);
-  })();
-
-  // Stats counters
-  const TARGETS = [1202, 8609, 4202, 322];
-  function runCounters() {
-    const start = performance.now(), dur = 1400;
-    function tick(now) {
-      const p = Math.min(1, (now - start) / dur);
-      const e = 1 - Math.pow(1 - p, 3);
-      TARGETS.forEach((t, i) => {
-        const el = document.getElementById('stat' + i);
-        if (el) el.textContent = Math.round(t * e) + '+';
-      });
-      if (p < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
-  const obs = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) { runCounters(); obs.disconnect(); }
-  }, { threshold: 0.3 });
-  obs.observe(document.querySelector('.stats'));
-
-  // Hero stages animation
-  const STAGES = [
-    { n:'1', title:'Чертёж',          glyph:'▤', tip:'Загрузите чертёж или техническое задание.' },
-    { n:'2', title:'Анализ чертежа',  glyph:'⊹', tip:'Платформа считывает геометрию и параметры детали.' },
-    { n:'3', title:'3D-модель',       glyph:'◈', tip:'Чертёж преобразуется в производственную модель.' },
-    { n:'4', title:'Сетка анализа',   glyph:'⊞', tip:'Алгоритмы определяют производственные требования.' },
-    { n:'5', title:'Тех. операции',   glyph:'⚙', tip:'Закупка раскладывается на производственные операции.' },
-    { n:'6', title:'Заводы',          glyph:'⛭', tip:'Подходящие производители получают уведомление.' },
-    { n:'7', title:'КП от заводов',   glyph:'✉', tip:'Коммерческие предложения поступают прямо в платформу.' },
-    { n:'8', title:'Карточка заказа', glyph:'▥', tip:'Вся история закупки сохраняется в одном интерфейсе.' },
-  ];
-  let activeStage = 0;
-  let stageItems = [];
-  let stageDots  = [];
-
-  // Строим DOM один раз
-  function buildStages() {
-    const grid = document.getElementById('stagesGrid');
-    const dots = document.getElementById('stagesDots');
-    if (!grid) return;
-    stageItems = [];
-    stageDots  = [];
-    STAGES.forEach((s, i) => {
-      const div = document.createElement('div');
-      div.className = 'stage-item' + (i === 0 ? ' active' : '');
-      div.innerHTML = `<div class="stage-top"><div class="stage-num">${s.n}</div><div class="stage-title-txt">${s.title}</div></div><div class="stage-glyph">${s.glyph}</div>`;
-      div.addEventListener('click', () => goToStage(i));
-      grid.appendChild(div);
-      stageItems.push(div);
-
-      const dot = document.createElement('div');
-      dot.className = 'stage-dot' + (i === 0 ? ' active' : '');
-      dot.addEventListener('click', () => goToStage(i));
-      dots.appendChild(dot);
-      stageDots.push(dot);
-    });
-    updateTip(0, false);
-  }
-
-  // Только переключаем классы — CSS-transitions срабатывают сами
-  function goToStage(idx) {
-    stageItems[activeStage].classList.remove('active');
-    stageDots[activeStage].classList.remove('active');
-    activeStage = idx;
-    stageItems[activeStage].classList.add('active');
-    stageDots[activeStage].classList.add('active');
-    updateTip(idx, true);
-  }
-
-  // Fade-out → смена текста → fade-in
-  const tipEl = document.querySelector('.stage-tip');
-  function updateTip(idx, animate) {
-    const s = STAGES[idx];
-    if (!animate || !tipEl) {
-      document.getElementById('tipNum').textContent   = s.n;
-      document.getElementById('tipLabel').textContent = s.title;
-      document.getElementById('tipText').textContent  = s.tip;
-      return;
-    }
-    tipEl.style.opacity = '0';
-    setTimeout(() => {
-      document.getElementById('tipNum').textContent   = s.n;
-      document.getElementById('tipLabel').textContent = s.title;
-      document.getElementById('tipText').textContent  = s.tip;
-      tipEl.style.opacity = '1';
-    }, 200);
-  }
-
-  buildStages();
-  // Интервал 2.4s — достаточно времени увидеть каждый шаг
-  setInterval(() => goToStage((activeStage + 1) % STAGES.length), 2400);
-</script>
 </body>
 </html>
