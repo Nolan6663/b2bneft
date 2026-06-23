@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Тариф и оплата</title>
+    <title>Техзаказ — Тариф и оплата</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
@@ -23,7 +23,7 @@
         .current-plan-info { display: flex; align-items: center; gap: 14px; }
         .current-plan-icon {
             width: 42px; height: 42px; border-radius: 12px;
-            background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.25);
+            background: rgba(255, 106, 0, 0.1); border: 1px solid rgba(255, 106, 0, 0.25);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .current-plan-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
@@ -31,7 +31,7 @@
         .plan-active-badge {
             display: inline-flex; align-items: center; gap: 5px;
             padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
-            background: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.25);
+            background: rgba(255, 106, 0, 0.1); border: 1px solid rgba(255, 106, 0, 0.25);
             color: var(--accent-bright);
         }
         .plan-active-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-bright); }
@@ -56,7 +56,7 @@
             transition: border-color .15s, transform .15s;
         }
         .plan-card:hover { transform: translateY(-2px); }
-        .plan-card.plan-current { border-color: rgba(8,145,178,.5); }
+        .plan-card.plan-current { border-color: rgba(255,106,0,.5); }
         .plan-card.plan-featured { border-color: rgba(37,99,235,.35); }
 
         .plan-pin {
@@ -106,7 +106,7 @@
 <body>
 
         <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <div class="sidebar-logo"><svg class="tz-mark" width="28" height="28" viewBox="0 0 162 120" fill="none"><path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="currentColor"/><path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/></svg><span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span></div>
         <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
@@ -196,7 +196,7 @@
                     </div>
 
                     <!-- Бизнес (current) -->
-                    <div class="plan-card plan-featured" style="border-color:rgba(8,145,178,.6);position:relative;">
+                    <div class="plan-card plan-featured" style="border-color:rgba(255,106,0,.6);position:relative;">
                         <div class="plan-pin current">Ваш тариф</div>
                         <div class="plan-name">Бизнес</div>
                         <div class="plan-price">12 500 <sub>₽</sub></div>
@@ -236,7 +236,7 @@
             <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-card);padding:20px;display:flex;flex-direction:column;gap:14px;">
                 <div style="font-size:14px;font-weight:700;color:var(--text-primary);">Ваша подписка</div>
 
-                <div style="background:linear-gradient(135deg,rgba(8,145,178,.08),rgba(37,99,235,.06));border:1px solid rgba(8,145,178,.2);border-radius:10px;padding:14px;">
+                <div style="background:linear-gradient(135deg,rgba(255,106,0,.08),rgba(37,99,235,.06));border:1px solid rgba(255,106,0,.2);border-radius:10px;padding:14px;">
                     <div style="font-size:15px;font-weight:800;color:var(--accent-bright);margin-bottom:2px;">Бизнес</div>
                     <div style="font-size:11.5px;color:var(--text-secondary);">Годовая подписка</div>
                 </div>

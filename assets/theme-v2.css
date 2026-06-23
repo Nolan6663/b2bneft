@@ -1,5 +1,5 @@
 /* =====================================================================
-   B2B НЕФТЕСЕРВИС — дизайн-система v2 (светлая тема, Inter)
+   ТЕХЗАКАЗ — дизайн-система v2 (светлая тема, Inter)
    Подключается на переработанных страницах вместо theme.css
    ===================================================================== */
 
@@ -9,7 +9,7 @@
 :root {
   --bg-primary:    #FFFFFF;
   --bg-secondary:  #F8FAFC;
-  --bg-section:    #F0F9FF;
+  --bg-section:    #FFF4EC;
   --bg-darkest:    var(--bg-primary);
 
   --card-bg:       #FFFFFF;
@@ -27,20 +27,20 @@
   --text-tertiary:    #475569;
   --text-muted:       #94A3B8;
 
-  --accent-bright:  #0891B2;
-  --accent-cyan:    #0891B2;
-  --accent-blue:    #2563EB;
-  --accent-orange:  #EA580C;
+  --accent-bright:  #FF6A00;
+  --accent-cyan:    #FF6A00;
+  --accent-blue:    #F04B00;
+  --accent-orange:  #FF6A00;
   --accent-green:   #059669;
-  --accent-gradient:linear-gradient(135deg, #0891B2, #2563EB);
+  --accent-gradient:linear-gradient(135deg, #FF6A00, #F04B00);
   --accent-on-button:#FFFFFF;
 
-  --badge-producer-bg:    rgba(8,145,178,.1);
-  --badge-producer-text:  #0E7490;
-  --badge-producer-border:rgba(8,145,178,.25);
-  --badge-customer-bg:    rgba(37,99,235,.1);
-  --badge-customer-text:  #1D4ED8;
-  --badge-customer-border:rgba(37,99,235,.25);
+  --badge-producer-bg:    rgba(255,106,0,.1);
+  --badge-producer-text:  #C45000;
+  --badge-producer-border:rgba(255,106,0,.25);
+  --badge-customer-bg:    rgba(255,106,0,.07);
+  --badge-customer-text:  #A84000;
+  --badge-customer-border:rgba(255,106,0,.2);
 
   --error: #DC2626;
 
@@ -68,7 +68,7 @@
 
   --sidebar-bg:          #FFFFFF;
   --sidebar-border:      #E2E8F0;
-  --sidebar-inner:       #F0F9FF;
+  --sidebar-inner:       #FFF4EC;
   --sidebar-text:        #64748B;
   --sidebar-text-active: #0F172A;
 }
@@ -125,12 +125,8 @@ button { font-family: inherit; }
 }
 .sidebar-logo img { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
 .sidebar-logo span { font-size: 13.5px; font-weight: 800; letter-spacing: .5px; color: var(--sidebar-text-active); }
-.sidebar-logo .logo-v2-icon {
-  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 800; font-size: 14px;
-}
+.sidebar-logo .tz-mark { color: var(--text-primary); flex-shrink: 0; }
+.sidebar-logo .tz-accent { color: #FF6A00; }
 
 .sidebar a {
   display: flex;
@@ -1367,14 +1363,14 @@ table {
   --text-tertiary:     #CBD5E1;
   --text-muted:        #64748B;
 
-  --accent-bright:   #22D3EE;
-  --accent-cyan:     #22D3EE;
-  --accent-blue:     #60A5FA;
+  --accent-bright:   #FF8533;
+  --accent-cyan:     #FF8533;
+  --accent-blue:     #FF6A00;
   --accent-green:    #34D399;
   --accent-orange:   #FB923C;
   --accent-red:      #F87171;
   --accent-purple:   #A78BFA;
-  --accent-gradient: linear-gradient(135deg, #22D3EE, #60A5FA);
+  --accent-gradient: linear-gradient(135deg, #FF8533, #FF6A00);
   --accent-on-button:#FFFFFF;
 
   --badge-producer-bg:    rgba(34,211,238,.12);

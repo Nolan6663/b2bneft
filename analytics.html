@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Аналитика</title>
+    <title>Техзаказ — Аналитика</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
@@ -175,10 +175,10 @@
         .insights-section-title:first-of-type { margin-top: 0; }
         .insights-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px; }
         .insights-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; font-weight: 700; }
-        .insights-icon.check { background: #EAFBF4; color: #12A866; }
-        .insights-icon.up    { background: #EAFBF4; color: #12A866; }
-        .insights-icon.down  { background: #EAFBF4; color: #0891B2; }
-        .insights-icon.rec   { background: #EFF9FB; color: #0891B2; }
+        .insights-icon.check { background: #FFF4EC; color: #12A866; }
+        .insights-icon.up    { background: #FFF4EC; color: #12A866; }
+        .insights-icon.down  { background: #FFF4EC; color: #FF6A00; }
+        .insights-icon.rec   { background: #FFF4EC; color: #FF6A00; }
         .insights-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 
         /* ─── Period presets + date inputs ─── */
@@ -208,7 +208,7 @@
 
     <!-- ══ SIDEBAR ══ -->
         <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <div class="sidebar-logo"><svg class="tz-mark" width="28" height="28" viewBox="0 0 162 120" fill="none"><path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="currentColor"/><path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/></svg><span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span></div>
         <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
@@ -320,7 +320,7 @@
                             </div>
                         </div>
                         <div class="chart-legend">
-                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#0891B2;"></div>Объём закупок, млн ₽</div>
+                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>Объём закупок, млн ₽</div>
                             <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Экономия, млн ₽</div>
                         </div>
                         <div style="position:relative;height:220px;"><canvas id="dynamicsChart"></canvas></div>
@@ -368,7 +368,7 @@
                         </div>
                         <div class="savings-row">
                             <div class="savings-row-header"><span class="savings-row-label">Плановая экономия</span><span class="savings-row-amount">1,20 млн ₽</span></div>
-                            <div class="savings-bar-outer"><div class="savings-bar-inner" style="width:87%;background:#0891B2;"></div></div>
+                            <div class="savings-bar-outer"><div class="savings-bar-inner" style="width:87%;background:#FF6A00;"></div></div>
                             <div class="savings-pct">87%</div>
                         </div>
                         <div class="savings-row">
@@ -392,7 +392,7 @@
                         </div>
                         <div id="heatmapRows" style="display:flex;flex-direction:column;gap:7px;"></div>
                         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--inner-border);">
-                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#0891B2;"></div>50+ откликов</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#FF6A00;"></div>50+ откликов</div>
                             <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#38BDF8;"></div>21–50</div>
                             <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#7DD3FC;"></div>11–20</div>
                             <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#BFDBFE;"></div>1–10</div>
@@ -521,7 +521,7 @@
                 <button class="btn-modal-cancel" onclick="closeFullscreen()">Закрыть</button>
             </div>
             <div class="chart-legend" style="margin-bottom:12px;">
-                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#0891B2;"></div>Объём закупок, млн ₽</div>
+                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>Объём закупок, млн ₽</div>
                 <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Экономия, млн ₽</div>
             </div>
             <div style="position:relative;height:400px;"><canvas id="dynamicsChartFull"></canvas></div>
@@ -638,8 +638,8 @@
         /* ══ MOCK DATA ══ */
         const MOCK = {
             kpi: [
-                { label:'Объём закупок за период', value:'8,45 млн ₽', baseNum:8.45, delta:18, unit:'', color:'#0891B2', bg:'#EFF9FB', spark:[5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45] },
-                { label:'Экономия за период',       value:'1,37 млн ₽', baseNum:1.37, delta:21, unit:'', color:'#12A866', bg:'#EAFBF4', spark:[0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
+                { label:'Объём закупок за период', value:'8,45 млн ₽', baseNum:8.45, delta:18, unit:'', color:'#FF6A00', bg:'#FFF4EC', spark:[5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45] },
+                { label:'Экономия за период',       value:'1,37 млн ₽', baseNum:1.37, delta:21, unit:'', color:'#12A866', bg:'#FFF4EC', spark:[0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
                 { label:'Среднее время отклика',    value:'4,7 часа',   baseNum:4.7,  delta:12, unit:'часа', color:'#F59E0B', bg:'#FFF8E8', spark:[6.5,6.2,5.9,5.5,5.2,5.0,4.9,4.8,4.7,4.7] },
                 { label:'Конверсия в договоры',     value:'28,6%',      baseNum:28.6, delta:4,  unit:'п.п.', color:'#7C3AED', bg:'#F3F0FE', spark:[22,23,24,25,25,26,27,27.5,28,28.6] },
             ],
@@ -650,7 +650,7 @@
             },
             funnel: [
                 { label:'Опубликовано', count:176, pct:100, color:'#1E3A5F' },
-                { label:'Отклики',      count:98,  pct:56,  color:'#2563EB' },
+                { label:'Отклики',      count:98,  pct:56,  color:'#F04B00' },
                 { label:'Квалификация', count:61,  pct:35,  color:'#F59E0B' },
                 { label:'Переговоры',   count:34,  pct:19,  color:'#10B981' },
                 { label:'Договоры',     count:25,  pct:14,  color:'#7C3AED' },
@@ -658,7 +658,7 @@
             categories: {
                 labels:['Трубопроводная арматура','РТИ и уплотнения','Металлопрокат','Электрооборудование','Прочее'],
                 data:[32,21,16,14,17],
-                colors:['#0891B2','#12A866','#F59E0B','#7C3AED','#94A3B8']
+                colors:['#FF6A00','#12A866','#F59E0B','#7C3AED','#94A3B8']
             },
             suppliers: [
                 { name:'ООО «Арматурный Завод»', amount:1.25, share:14.8 },
@@ -954,7 +954,7 @@
                 chartDynamicsFullInstance = new Chart(document.getElementById('dynamicsChartFull').getContext('2d'), {
                     type:'bar',
                     data:{ labels:d.labels, datasets:[
-                        { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#0891B2', borderRadius:5, maxBarThickness:40, yAxisID:'y' },
+                        { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:40, yAxisID:'y' },
                         { label:'Экономия, млн ₽', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:5, borderWidth:2, yAxisID:'y2' },
                     ]},
                     options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'right'} } }
@@ -1130,7 +1130,7 @@
             chartDynamics = new Chart(document.getElementById('dynamicsChart').getContext('2d'), {
                 type:'bar',
                 data:{ labels:d.labels, datasets:[
-                    { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#0891B2', borderRadius:5, maxBarThickness:32, yAxisID:'y' },
+                    { label:'Объём закупок, млн ₽', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:32, yAxisID:'y' },
                     { label:'Экономия, млн ₽', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:4, borderWidth:2, yAxisID:'y2' },
                 ]},
                 options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{backgroundColor:cssVar('--card-bg'),titleColor:cssVar('--text-primary'),bodyColor:txt,borderColor:cssVar('--card-border'),borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'right'} } }
@@ -1181,7 +1181,7 @@
             if (chartCycle) chartCycle.destroy();
             chartCycle = new Chart(document.getElementById('cycleChart').getContext('2d'), {
                 type:'line',
-                data:{ labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], datasets:[{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#0891B2', backgroundColor:'rgba(8,145,178,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#0891B2', borderWidth:2 }] },
+                data:{ labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], datasets:[{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#FF6A00', backgroundColor:'rgba(255,106,0,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#FF6A00', borderWidth:2 }] },
                 options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{display:true,ticks:{color:cssVar('--text-muted'),font:{family:'Inter',size:10}},grid:{display:false}}, y:{display:false,min:3,max:8} } }
             });
         }
@@ -1199,7 +1199,7 @@
 
         /* ══ HEATMAP ══ */
         function heatColor(count) {
-            if (count >= 50) return { bg:'#0891B2', text:'#fff' };
+            if (count >= 50) return { bg:'#FF6A00', text:'#fff' };
             if (count >= 21) return { bg:'#38BDF8', text:'#fff' };
             if (count >= 11) return { bg:'#7DD3FC', text:'#0C4A6E' };
             return { bg:'#BFDBFE', text:'#1E40AF' };

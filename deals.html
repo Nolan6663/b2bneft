@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Заказы</title>
+    <title>Техзаказ — Заказы</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
@@ -58,8 +58,8 @@
         }
         .orders-table tbody tr { cursor: pointer; transition: background .1s; }
         .orders-table tbody tr:hover { background: var(--bg-section); }
-        .orders-table tbody tr.row-selected { background: rgba(8,145,178,.06); }
-        .orders-table tbody tr.row-selected td { border-bottom-color: rgba(8,145,178,.15); }
+        .orders-table tbody tr.row-selected { background: rgba(255,106,0,.06); }
+        .orders-table tbody tr.row-selected td { border-bottom-color: rgba(255,106,0,.15); }
         .orders-table tbody tr:last-child td { border-bottom: none; }
 
         /* Table columns */
@@ -78,7 +78,7 @@
             white-space: nowrap;
         }
         .st-pill::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
-        .st-active   { background: rgba(8,145,178,.1);   color: var(--accent-cyan);  border: 1px solid rgba(8,145,178,.2); }
+        .st-active   { background: rgba(255,106,0,.1);   color: var(--accent-cyan);  border: 1px solid rgba(255,106,0,.2); }
         .st-inwork   { background: rgba(251,191,36,.1);  color: #b45309;              border: 1px solid rgba(251,191,36,.25); }
         .st-done     { background: rgba(16,185,129,.1);  color: var(--accent-green); border: 1px solid rgba(16,185,129,.2); }
         .st-cancel   { background: rgba(107,114,128,.08); color: var(--text-secondary); border: 1px solid var(--inner-border); }
@@ -153,7 +153,7 @@
 <body>
 
         <div class="sidebar">
-        <div class="sidebar-logo"><img src="assets/icons_svg/logo_hex.svg" alt=""><span>B2B НЕФТЕСЕРВИС</span></div>
+        <div class="sidebar-logo"><svg class="tz-mark" width="28" height="28" viewBox="0 0 162 120" fill="none"><path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="currentColor"/><path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/></svg><span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span></div>
         <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Актуальные закупки<span class="nav-badge" id="navBadgeOrders"></span></a>
         <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Каталог</a>
         <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Мои отклики<span class="nav-badge" id="navBadgeProposals"></span></a>
@@ -419,7 +419,7 @@
                     <td class="col-amount">${fmtPrice(d.price)}</td>
                     <td class="col-supplier">${escapeHtml(d.supplier || '—')}</td>
                     <td class="col-proposals" style="text-align:center;">
-                        ${d.proposalCount > 0 ? `<span style="background:rgba(8,145,178,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;">КП ${d.proposalCount}</span>` : `<span style="color:var(--text-secondary);font-size:11.5px;">—</span>`}
+                        ${d.proposalCount > 0 ? `<span style="background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:10px;font-size:11.5px;font-weight:600;">КП ${d.proposalCount}</span>` : `<span style="color:var(--text-secondary);font-size:11.5px;">—</span>`}
                     </td>
                     <td><span class="st-pill ${st.cls}">${st.label}</span></td>
                     <td class="coeff-cell">

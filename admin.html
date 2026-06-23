@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B2B Нефтесервис — Администратор</title>
+    <title>Техзаказ — Администратор</title>
     <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
     <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
     <link rel="stylesheet" href="assets/theme-v2.css">
@@ -36,7 +36,7 @@
         .seo-source-btn.active { background: var(--accent-bright); border-color: var(--accent-bright); color: #fff; }
         .seo-intent-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         .seo-intent-badge.informational { background: rgba(99,102,241,.15); color: #818cf8; }
-        .seo-intent-badge.commercial    { background: rgba(8,145,178,.15);  color: #22d3ee; }
+        .seo-intent-badge.commercial    { background: rgba(255,106,0,.15);  color: #22d3ee; }
         .seo-intent-badge.navigational  { background: rgba(74,222,128,.15); color: #4ade80; }
         .seo-intent-badge.transactional { background: rgba(251,146,60,.15); color: #fb923c; }
         .seo-delta.up   { color: #4ade80; font-weight: 700; }
@@ -106,7 +106,7 @@
     <div class="admin-topbar">
         <div class="admin-topbar-title">
             <img src="assets/icons_svg/logo_hex.svg" alt="">
-            B2B НЕФТЕСЕРВИС &nbsp;/&nbsp; Панель администратора
+            ТЕХЗАКАЗ &nbsp;/&nbsp; Панель администратора
         </div>
         <div class="admin-topbar-actions">
             <div class="theme-toggle-row" style="gap:10px;">
@@ -492,7 +492,7 @@
 
             const rows = items.slice(0, 200).map(s => {
                 const srcBadge = s.source === 'google'
-                    ? '<span style="background:rgba(8,145,178,.15);color:#22d3ee;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">G</span>'
+                    ? '<span style="background:rgba(255,106,0,.15);color:#22d3ee;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">G</span>'
                     : '<span style="background:rgba(251,146,60,.15);color:#fb923c;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">Я</span>';
                 const intentBadge = s.intent
                     ? `<span class="seo-intent-badge ${s.intent}">${s.intent_ru || s.intent}</span>`
