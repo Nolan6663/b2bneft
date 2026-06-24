@@ -422,12 +422,28 @@ body {
 </div>
 
 <script>
+const SERVER_URL = (
+  window.location.protocol === 'file:' ||
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+) ? 'http://localhost:5000/api' : (window.location.origin + '/api');
+
+function applyAuthSession(data) {
+  localStorage.setItem('isLoggedIn', '1');
+  localStorage.setItem('userRole', data.role || '');
+  localStorage.setItem('userCompany', data.company || '');
+  if (data.emailVerified != null) {
+    localStorage.setItem('emailVerified', data.emailVerified ? '1' : '0');
+  }
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.auth-tab').forEach((t, i) => {
     t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
   });
   document.getElementById('form-login').classList.toggle('active', tab === 'login');
   document.getElementById('form-register').classList.toggle('active', tab === 'register');
+  clearError();
 }
 
 function selectRole(btn) {
@@ -435,19 +451,94 @@ function selectRole(btn) {
   btn.classList.add('selected');
 }
 
-function handleLogin() {
+function showError(msg) {
+  let el = document.getElementById('auth-error');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'auth-error';
+    el.style.cssText = 'padding:12px 16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;color:#DC2626;font-size:13.5px;font-weight:600;';
+    const activeForm = document.querySelector('.auth-form.active');
+    const btn = activeForm.querySelector('.btn-primary');
+    btn.before(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function clearError() {
+  const el = document.getElementById('auth-error');
+  if (el) el.style.display = 'none';
+}
+
+function setLoading(btn, loading) {
+  btn.disabled = loading;
+  btn.style.opacity = loading ? '0.7' : '1';
+  btn.style.cursor = loading ? 'wait' : '';
+}
+
+async function handleLogin() {
   const email = document.querySelector('#form-login input[type="email"]').value.trim();
-  if (!email) { alert('Введите email'); return; }
-  window.location.href = 'index.html';
+  const password = document.querySelector('#form-login input[type="password"]').value;
+  clearError();
+  if (!email || !password) { showError('Введите email и пароль'); return; }
+
+  const btn = document.querySelector('#form-login .btn-primary');
+  setLoading(btn, true);
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Ошибка входа'); return; }
+    applyAuthSession(data);
+    window.location.href = data.role === 'producer' ? 'producer.html' : 'index.html';
+  } catch {
+    showError('Нет соединения с сервером');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
-function handleRegister() {
+async function handleRegister() {
+  const company = document.querySelector('#form-register input[autocomplete="organization"]').value.trim();
   const email = document.querySelector('#form-register input[type="email"]').value.trim();
-  if (!email) { alert('Введите email'); return; }
-  window.location.href = 'index.html';
+  const password = document.querySelector('#form-register input[type="password"]').value;
+  const roleBtn = document.querySelector('#form-register .role-btn.selected');
+  const role = roleBtn?.querySelector('.role-name')?.textContent.trim() === 'Производитель' ? 'producer' : 'customer';
+  clearError();
+  if (!company || !email || !password) { showError('Заполните все обязательные поля'); return; }
+  if (password.length < 8) { showError('Пароль — минимум 8 символов'); return; }
+
+  const btn = document.querySelector('#form-register .btn-primary');
+  setLoading(btn, true);
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/register`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, company, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
+    applyAuthSession(data);
+    window.location.href = role === 'producer' ? 'producer.html' : 'index.html';
+  } catch {
+    showError('Нет соединения с сервером');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
-// Check hash for direct register link
+// Enter key submit
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('form-login').classList.contains('active')) handleLogin();
+  else handleRegister();
+});
+
 if (location.hash === '#register') switchTab('register');
 </script>
 </body>
