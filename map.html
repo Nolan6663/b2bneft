@@ -7,7 +7,6 @@
     
     
     <link rel="stylesheet" href="assets/theme-v2.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .kpi-card::after { display: none !important; }
 
@@ -276,10 +275,16 @@
         .chart-bar:hover { opacity: 1; }
         .chart-bar-label { font-size: 10px; color: var(--text-secondary); }
 
-        /* ── Leaflet dark mode ──────────────────────────────────────── */
-        [data-theme="dark"] .leaflet-layer,
-        [data-theme="dark"] .leaflet-control-zoom,
-        [data-theme="dark"] .leaflet-control-attribution { filter: invert(1) hue-rotate(180deg); }
+        /* ── Custom map ─────────────────────────────────────────────── */
+        #mapBg { position:absolute; inset:0; width:100%; height:100%; display:block; user-select:none; -webkit-user-drag:none; }
+        #mapPins { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+        #mapZoomCtrl { position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:4px; z-index:10; }
+        #mapZoomCtrl button { width:32px; height:32px; background:var(--card-bg); border:1px solid var(--card-border); border-radius:8px; font-size:18px; line-height:1; cursor:pointer; color:var(--text-primary); display:flex; align-items:center; justify-content:center; }
+        #mapZoomCtrl button:hover { background:var(--hover-bg); }
+        .cmap-pin { position:absolute; pointer-events:all; cursor:pointer; transform:translate(-50%,-100%); transition:transform .15s; }
+        .cmap-pin:hover { transform:translate(-50%,-100%) scale(1.15); z-index:5; }
+        .cmap-popup { position:absolute; z-index:20; pointer-events:all; transform:translate(-50%, calc(-100% - 36px)); min-width:250px; background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); box-shadow:0 8px 28px rgba(0,0,0,.18); }
+        .cmap-popup-close { position:absolute; top:8px; right:10px; background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-secondary); line-height:1; padding:0; }
 
         @media (max-width: 1100px) {
             .map-layout { grid-template-columns: 200px 1fr; }
@@ -419,7 +424,14 @@
                         <span>Заполните город в профиле производителя или добавьте координаты, и предприятие появится на карте.</span>
                     </div>
                 </div>
-                <div id="map"></div>
+                <div id="map" style="position:relative;overflow:hidden;cursor:grab;background:#e8eff5;">
+                    <img id="mapBg" alt="" draggable="false">
+                    <div id="mapPins"></div>
+                    <div id="mapZoomCtrl">
+                        <button onclick="cmapZoom(1)" title="Приблизить">+</button>
+                        <button onclick="cmapZoom(-1)" title="Отдалить">−</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Right: company list -->
@@ -512,174 +524,188 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const session = authGuard(null);
         initNotifications();
         initSidebarBadges();
 
-        // ── Map provider init ─────────────────────────────────────────
+        // ── Custom map (Yandex Static Maps + absolute-positioned markers) ──
         let mapAdapter = null;
-        let yandexPopupMarker = null;
         let currentFilteredProducers = [];
 
-        function loadExternalScript(src) {
-            return new Promise((resolve, reject) => {
-                const existing = [...document.scripts].find(script => script.src === src);
-                if (existing) return resolve();
-                const script = document.createElement('script');
-                script.src = src;
-                script.async = true;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        const CMAP = {
+            W: 650, H: 450,          // Yandex Static Maps max size
+            centerLat: 62, centerLon: 75, zoom: 4,
+            isDragging: false, dragStartX: 0, dragStartY: 0,
+            dragStartLat: 0, dragStartLon: 0,
+            openPopupId: null,
+        };
+
+        // Mercator world-pixel coordinate for a lat/lon at current zoom
+        function worldPx(lat, lon) {
+            const scale = 256 * Math.pow(2, CMAP.zoom);
+            const x = (lon + 180) / 360 * scale;
+            const sinLat = Math.sin(lat * Math.PI / 180);
+            const y = (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale;
+            return { x, y };
         }
 
-        async function getMapsConfig() {
-            try {
-                const response = await fetch(`${SERVER_URL}/config/maps`);
-                if (!response.ok) throw new Error('map config request failed');
-                return await response.json();
-            } catch {
-                return { provider: 'leaflet' };
-            }
+        // Inverse Mercator: world-pixel Y → latitude
+        function worldYToLat(wy) {
+            const scale = 256 * Math.pow(2, CMAP.zoom);
+            return Math.atan(Math.sinh((0.5 - wy / scale) * 2 * Math.PI)) * 180 / Math.PI;
         }
 
-        function createLeafletAdapter() {
-            const instance = L.map('map', { zoomControl: true }).setView([60, 75], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors', maxZoom: 18,
-            }).addTo(instance);
-            return {
-                provider: 'leaflet',
-                markerById: {},
-                markers: [],
-                clear() {
-                    this.markers.forEach(marker => instance.removeLayer(marker));
-                    this.markers = [];
-                    this.markerById = {};
-                },
-                addProducer(p) {
-                    const marker = L.marker([p.lat, p.lng], { icon: makeIcon(p) })
-                        .bindPopup(popupHtml(p), { maxWidth: 270, className: 'map-popup-wrap' });
-                    marker.on('click', () => selectProducer(p.id, false));
-                    marker.addTo(instance);
-                    this.markers.push(marker);
-                    this.markerById[p.id] = marker;
-                },
-                fit() {
-                    if (this.markers.length) {
-                        instance.fitBounds(this.markers.map(marker => marker.getLatLng()), { padding: [34, 34], maxZoom: 7 });
-                    } else {
-                        instance.setView([60, 75], 4);
-                    }
-                    this.invalidate();
-                },
-                flyTo(p) { instance.flyTo([p.lat, p.lng], 10, { duration: 0.8 }); },
-                openPopup(id) { if (this.markerById[id]) this.markerById[id].openPopup(); },
-                invalidate() { setTimeout(() => instance.invalidateSize(), 0); },
-            };
+        // Lat/lon → screen pixel position on the map container
+        function latLonToScreen(lat, lon) {
+            const el = document.getElementById('map');
+            const cw = el.clientWidth || CMAP.W;
+            const ch = el.clientHeight || CMAP.H;
+            const sx = cw / CMAP.W, sy = ch / CMAP.H;
+            const c = worldPx(CMAP.centerLat, CMAP.centerLon);
+            const p = worldPx(lat, lon);
+            return { x: (p.x - c.x) * sx + cw / 2, y: (p.y - c.y) * sy + ch / 2 };
         }
 
-        function createYandexMarkerElement(p) {
-            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
-            const wrap = document.createElement('div');
-            wrap.className = 'ymap-production-marker-wrap';
-            wrap.innerHTML = `<div class="map-marker ${p.verified ? 'verified' : ''}" style="background:${color}"><span>${letter}</span></div>`;
-            wrap.addEventListener('click', () => {
-                selectProducer(p.id);
-                openYandexPopup(p);
-            });
-            return wrap;
+        function cmapTileUrl() {
+            return `https://static-maps.yandex.ru/1.x/?lang=ru_RU&ll=${CMAP.centerLon.toFixed(4)},${CMAP.centerLat.toFixed(4)}&z=${CMAP.zoom}&size=${CMAP.W},${CMAP.H}&l=map`;
         }
 
-        function openYandexPopup(p) {
-            if (!mapAdapter || mapAdapter.provider !== 'yandex') return;
-            if (yandexPopupMarker) mapAdapter.instance.removeChild(yandexPopupMarker);
-            const popup = document.createElement('div');
-            popup.className = 'ymap-popup-card';
-            popup.innerHTML = popupHtml(p);
-            const close = document.createElement('button');
-            close.className = 'ymap-popup-close';
-            close.type = 'button';
-            close.textContent = '×';
-            close.addEventListener('click', event => {
-                event.stopPropagation();
-                if (yandexPopupMarker) mapAdapter.instance.removeChild(yandexPopupMarker);
-                yandexPopupMarker = null;
-            });
-            popup.appendChild(close);
-            yandexPopupMarker = new ymaps3.YMapMarker({ coordinates: [p.lng, p.lat], zIndex: 1000 }, popup);
-            mapAdapter.instance.addChild(yandexPopupMarker);
+        function cmapRefresh() {
+            document.getElementById('mapBg').src = cmapTileUrl();
+            cmapRenderPins();
         }
 
-        async function createYandexAdapter(apiKey) {
-            await loadExternalScript(`https://api-maps.yandex.ru/v3/?apikey=${encodeURIComponent(apiKey)}&lang=ru_RU`);
-            await ymaps3.ready;
-            const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker } = ymaps3;
-            const instance = new YMap(document.getElementById('map'), {
-                location: { center: [75, 60], zoom: 4 },
-                showScaleInCopyrights: true,
-            });
-            instance.addChild(new YMapDefaultSchemeLayer({}));
-            instance.addChild(new YMapDefaultFeaturesLayer({}));
-            return {
-                provider: 'yandex',
-                instance,
-                YMapMarker,
-                markerById: {},
-                markers: [],
-                clear() {
-                    this.markers.forEach(marker => instance.removeChild(marker));
-                    this.markers = [];
-                    this.markerById = {};
-                    if (yandexPopupMarker) instance.removeChild(yandexPopupMarker);
-                    yandexPopupMarker = null;
-                },
-                addProducer(p) {
-                    const marker = new YMapMarker({ coordinates: [p.lng, p.lat] }, createYandexMarkerElement(p));
-                    instance.addChild(marker);
-                    this.markers.push(marker);
-                    this.markerById[p.id] = marker;
-                },
-                fit() {
-                    if (currentFilteredProducers.length) {
-                        const lats = currentFilteredProducers.map(p => p.lat);
-                        const lngs = currentFilteredProducers.map(p => p.lng);
-                        instance.update({
-                            location: {
-                                bounds: [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
-                                duration: 350,
-                            },
-                        });
-                    } else {
-                        instance.update({ location: { center: [75, 60], zoom: 4, duration: 350 } });
-                    }
-                },
-                flyTo(p) { instance.update({ location: { center: [p.lng, p.lat], zoom: 10, duration: 800 } }); },
-                openPopup(id) {
-                    const p = allProducers.find(item => item.id === id);
-                    if (p) openYandexPopup(p);
-                },
-                invalidate() {},
-            };
-        }
+        function cmapRenderPins() {
+            const container = document.getElementById('mapPins');
+            const el = document.getElementById('map');
+            const cw = el.clientWidth || CMAP.W;
+            const ch = el.clientHeight || CMAP.H;
+            container.innerHTML = '';
 
-        async function initMapProvider() {
-            const config = await getMapsConfig();
-            if (config.provider === 'yandex' && config.yandexMapsApiKey) {
-                try {
-                    mapAdapter = await createYandexAdapter(config.yandexMapsApiKey);
-                    return;
-                } catch (error) {
-                    console.warn('Yandex Maps failed, falling back to Leaflet', error);
+            for (const p of currentFilteredProducers) {
+                const { x, y } = latLonToScreen(p.lat, p.lng);
+                if (x < -30 || x > cw + 30 || y < -30 || y > ch + 30) continue;
+
+                const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
+                const letter = p.company.replace(/[«»"ООО АОИПЗп]/g, '').trim().charAt(0).toUpperCase() || '?';
+
+                const pin = document.createElement('div');
+                pin.className = 'cmap-pin';
+                pin.style.cssText = `left:${x}px;top:${y}px;`;
+                pin.innerHTML = `<div class="map-marker ${p.verified ? 'verified' : ''}" style="background:${color}"><span>${letter}</span></div>`;
+                pin.addEventListener('click', () => { selectProducer(p.id, false); cmapOpenPopup(p); });
+                container.appendChild(pin);
+
+                if (CMAP.openPopupId === p.id) {
+                    const popup = document.createElement('div');
+                    popup.className = 'cmap-popup';
+                    popup.style.cssText = `left:${x}px;top:${y}px;`;
+                    popup.innerHTML = `<button class="cmap-popup-close" onclick="cmapClosePopup()">×</button>${popupHtml(p)}`;
+                    container.appendChild(popup);
                 }
             }
-            mapAdapter = createLeafletAdapter();
-            window.addEventListener('resize', () => mapAdapter.invalidate());
-            mapAdapter.invalidate();
+        }
+
+        function cmapOpenPopup(p) {
+            CMAP.openPopupId = p.id;
+            cmapRenderPins();
+        }
+
+        function cmapClosePopup() {
+            CMAP.openPopupId = null;
+            cmapRenderPins();
+        }
+
+        function cmapZoom(delta) {
+            CMAP.zoom = Math.max(2, Math.min(14, CMAP.zoom + delta));
+            cmapClosePopup();
+            cmapRefresh();
+        }
+
+        function cmapFitBounds(producers) {
+            if (!producers.length) {
+                CMAP.centerLat = 62; CMAP.centerLon = 75; CMAP.zoom = 4;
+            } else {
+                const lats = producers.map(p => p.lat);
+                const lons = producers.map(p => p.lng);
+                CMAP.centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+                CMAP.centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+                const spanLon = Math.max(...lons) - Math.min(...lons);
+                const spanLat = Math.max(...lats) - Math.min(...lats);
+                const span = Math.max(spanLon, spanLat * 1.5, 1);
+                CMAP.zoom = Math.max(2, Math.min(10, Math.floor(Math.log2(360 / span)) + 1));
+            }
+            cmapRefresh();
+        }
+
+        // Pan drag
+        (function setupPan() {
+            const el = document.getElementById('map');
+            el.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                CMAP.isDragging = true;
+                CMAP.dragStartX = e.clientX;
+                CMAP.dragStartY = e.clientY;
+                CMAP.dragStartLat = CMAP.centerLat;
+                CMAP.dragStartLon = CMAP.centerLon;
+                el.style.cursor = 'grabbing';
+            });
+            window.addEventListener('mousemove', e => {
+                if (!CMAP.isDragging) return;
+                const dx = e.clientX - CMAP.dragStartX;
+                const dy = e.clientY - CMAP.dragStartY;
+                const cw = el.clientWidth || CMAP.W;
+                const ch = el.clientHeight || CMAP.H;
+                const scale = 256 * Math.pow(2, CMAP.zoom);
+                const imgDx = -dx * CMAP.W / cw;
+                const imgDy = -dy * CMAP.H / ch;
+                const startCenter = worldPx(CMAP.dragStartLat, CMAP.dragStartLon);
+                CMAP.centerLon = CMAP.dragStartLon + (imgDx / scale) * 360;
+                const newWy = startCenter.y + imgDy;
+                CMAP.centerLat = worldYToLat(newWy);
+                cmapRenderPins();
+            });
+            window.addEventListener('mouseup', () => {
+                if (!CMAP.isDragging) return;
+                CMAP.isDragging = false;
+                el.style.cursor = 'grab';
+                cmapRefresh();
+            });
+            el.addEventListener('wheel', e => {
+                e.preventDefault();
+                cmapZoom(e.deltaY < 0 ? 1 : -1);
+            }, { passive: false });
+        })();
+
+        window.addEventListener('resize', () => cmapRenderPins());
+
+        function createCustomMapAdapter() {
+            cmapRefresh();
+            return {
+                provider: 'custom',
+                markerById: {},
+                markers: [],
+                clear() { this.markers = []; this.markerById = {}; CMAP.openPopupId = null; },
+                addProducer(p) { this.markers.push(p); this.markerById[p.id] = p; },
+                fit() { cmapFitBounds(currentFilteredProducers); },
+                flyTo(p) {
+                    CMAP.centerLat = p.lat; CMAP.centerLon = p.lng;
+                    CMAP.zoom = Math.min(10, CMAP.zoom + 2);
+                    cmapRefresh();
+                    setTimeout(() => cmapOpenPopup(p), 400);
+                },
+                openPopup(id) {
+                    const p = allProducers.find(x => x.id === id);
+                    if (p) cmapOpenPopup(p);
+                },
+                invalidate() { cmapRenderPins(); },
+            };
+        }
+
+        function initMapProvider() {
+            mapAdapter = createCustomMapAdapter();
+            return Promise.resolve();
         }
 
         // ── State ─────────────────────────────────────────────────────
@@ -779,18 +805,7 @@
             { id:12, company:'ООО «КазаньХимСнаб»',     city:'Казань',           lat:55.82, lng:49.20, specialization:'Химреагенты, ПАВ для нефтедобычи',     categories:['РТИ'],       verified:false, rating:3.9, deals:28, region:'Республика Татарстан' },
         ];
 
-        // ── Marker icon ───────────────────────────────────────────────
-        function makeIcon(p) {
-            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
-            return L.divIcon({
-                className: '',
-                html: `<div class="map-marker ${p.verified ? 'verified' : ''}" style="background:${color}"><span>${letter}</span></div>`,
-                iconSize: [34, 34], iconAnchor: [17, 30], popupAnchor: [0, -28],
-            });
-        }
-
-        function popupHtml(p) {
+function popupHtml(p) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
             const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
             const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Верифицирован</span>` : '';
