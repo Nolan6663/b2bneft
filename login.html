@@ -326,16 +326,16 @@ body {
 
       <div class="form-group">
         <label>Email</label>
-        <input type="email" placeholder="you@company.ru" autocomplete="email">
+        <input id="authEmail" type="email" placeholder="you@company.ru" autocomplete="email">
       </div>
 
       <div class="form-group">
         <label>Пароль</label>
-        <input type="password" placeholder="••••••••" autocomplete="current-password">
+        <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password">
         <a href="#" class="forgot-link">Забыли пароль?</a>
       </div>
 
-      <button class="btn-primary" onclick="handleLogin()">
+      <button id="btnSubmit" class="btn-primary" onclick="handleLogin()">
         Войти в аккаунт
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
@@ -480,8 +480,8 @@ function setLoading(btn, loading) {
 }
 
 async function handleLogin() {
-  const email = document.querySelector('#form-login input[type="email"]').value.trim();
-  const password = document.querySelector('#form-login input[type="password"]').value;
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
   clearError();
   if (!email || !password) { showError('Введите email и пароль'); return; }
 
