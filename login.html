@@ -497,7 +497,7 @@ async function handleLogin() {
     const data = await res.json();
     if (!res.ok) { showError(data.error || 'Ошибка входа'); return; }
     applyAuthSession(data);
-    window.location.href = data.role === 'producer' ? 'producer.html' : 'index.html';
+    window.location.href = data.role === 'admin' ? 'admin.html' : data.role === 'producer' ? 'producer.html' : 'index.html';
   } catch {
     showError('Нет соединения с сервером');
   } finally {
