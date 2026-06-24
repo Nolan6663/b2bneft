@@ -200,7 +200,9 @@ body {
 }
 .role-btn:hover { border-color: rgba(255,106,0,0.4); background: rgba(255,106,0,0.03); }
 .role-btn.selected { border-color: #FF6A00; background: rgba(255,106,0,0.05); }
-.role-btn .role-icon { font-size: 20px; margin-bottom: 2px; }
+.role-btn .role-icon { margin-bottom: 4px; line-height: 1; }
+.role-btn .role-icon svg { transition: stroke 0.15s; }
+.role-btn.selected .role-icon svg { stroke: #FF6A00; }
 .role-btn .role-name { font-weight: 700; font-size: 13.5px; color: #071B2A; }
 .role-btn .role-desc { font-size: 11.5px; color: #5B7184; font-weight: 500; }
 
@@ -395,12 +397,12 @@ body {
         </div>
         <div class="form-role">
           <button class="role-btn selected" onclick="selectRole(this)">
-            <div class="role-icon">🏭</div>
+            <div class="role-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
             <div class="role-name">Заказчик</div>
             <div class="role-desc">Размещаю закупки</div>
           </button>
           <button class="role-btn" onclick="selectRole(this)">
-            <div class="role-icon">⚙️</div>
+            <div class="role-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B7184" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h.01M11 8h.01M15 8h.01M7 11h4M15 11h2"/></svg></div>
             <div class="role-name">Производитель</div>
             <div class="role-desc">Выполняю заказы</div>
           </button>
