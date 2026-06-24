@@ -51,11 +51,13 @@ function isAllowedOrigin(origin) {
 }
 
 async function sendEmail(to, subject, html) {
-    if (!resend) { console.log(`[Email] To: ${to} | ${subject}`); return; }
+    if (!resend) { console.log(`[Email] No RESEND_API_KEY — skipping: ${to} | ${subject}`); return; }
     try {
-        await resend.emails.send({ from: `B2B Нефтесервис <${EMAIL_FROM}>`, to, subject, html });
+        const result = await resend.emails.send({ from: `B2B Нефтесервис <${EMAIL_FROM}>`, to, subject, html });
+        console.log(`[Email] Sent to ${to} | id: ${result?.id}`);
     } catch (e) {
-        console.error('Email error:', e.message);
+        console.error(`[Email] FAILED to ${to} | ${e.message}`, e);
+        throw e; // пробрасываем чтобы caller мог вернуть ошибку клиенту
     }
 }
 
