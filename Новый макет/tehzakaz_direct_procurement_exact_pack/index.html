@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Техзаказ — exact direct procurement landing</title>
+<style>
+  body{margin:0;background:#e9eef2;display:grid;place-items:center;min-height:100vh;font-family:Arial,sans-serif;}
+  .page{width:1280px;height:720px;background:#fff;box-shadow:0 24px 80px rgba(0,0,0,.25);position:relative;overflow:hidden}
+  .section{position:absolute;display:block}
+  @media (max-width:1280px){
+    .page{transform:scale(calc(100vw / 1280));transform-origin:top center;}
+    body{place-items:start center;height:calc(720px * (100vw / 1280));overflow-x:hidden;}
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <img class="section" src="assets/sections/01-header-brand.png" style="left:20px;top:20px;width:540px;" alt="Header brand" />
+    <img class="section" src="assets/sections/02-top-right-visual-strip.png" style="left:595px;top:20px;width:665px;" alt="Top right industrial strip" />
+    <img class="section" src="assets/sections/03-main-hero-left.png" style="left:20px;top:150px;width:655px;" alt="Hero left" />
+    <img class="section" src="assets/sections/04-flow-diagram.png" style="left:680px;top:155px;width:580px;" alt="Flow diagram" />
+    <img class="section" src="assets/sections/05-process-row.png" style="left:30px;top:425px;width:1222px;" alt="Process row" />
+    <img class="section" src="assets/sections/06-benefits-row.png" style="left:30px;top:570px;width:1225px;" alt="Benefits row" />
+  </main>
+</body>
+</html>

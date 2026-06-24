@@ -1,0 +1,1 @@
+Метод: GET /api/reports/{report_id}/downloadРезультат: файл в формате Excel (.xlsx)

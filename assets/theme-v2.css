@@ -3,7 +3,7 @@
    Подключается на переработанных страницах вместо theme.css
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /* ── ПЕРЕМЕННЫЕ: СВЕТЛАЯ ТЕМА (по умолчанию) ─────────────────────── */
 :root {
@@ -75,10 +75,9 @@
 
 
 /* ── БАЗОВЫЕ СТИЛИ ─────────────────────────────────────────────────── */
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
 
 html { color-scheme: light; }
-[data-theme="dark"] { color-scheme: dark; }
 html, body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
 body { display: flex; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
@@ -700,17 +699,13 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   background: var(--card-border); position: relative;
   cursor: pointer; transition: background .3s; flex: none;
 }
-html[data-theme="dark"] .theme-switch-wrap .theme-switch { background: var(--accent-cyan); }
 .theme-switch-knob {
   position: absolute; top: 2px; left: 2px;
   width: 20px; height: 20px; border-radius: 50%;
   background: #fff; transition: left .3s;
   box-shadow: 0 1px 3px rgba(0,0,0,.3);
 }
-html[data-theme="dark"] .theme-switch-knob { left: 20px; }
 .theme-switch-label { white-space: nowrap; transition: opacity .2s; }
-html:not([data-theme="dark"]) #themeLabelDark { opacity: .45; }
-html[data-theme="dark"] #themeLabelLight { opacity: .45; }
 
 /* Колокол */
 .theme-moon-btn {
@@ -1293,135 +1288,66 @@ table {
 }
 
 /* =======================================================================
-   New mockup skin: light B2B Nefteservice shell
+   ТЕХЗАКАЗ — оранжевая палитра (единственная тема)
    ======================================================================= */
 
 :root {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F8FBFF;
-  --bg-section: #F5F9FE;
-  --bg-soft-blue: #EAF7FF;
-  --card-bg: #FFFFFF;
-  --card-border: #DCE7F5;
-  --inner-bg: #F8FBFF;
-  --inner-border: #E4ECF7;
-  --table-header-bg: #F8FBFF;
-  --border-subtle: #EEF4FB;
-  --border-mid: #C8D7EA;
-  --text-primary: #071936;
-  --text-primary-alt: #071936;
-  --text-secondary: #5E7192;
-  --text-secondary-alt: #6D7F9F;
-  --text-tertiary: #354967;
-  --text-muted: #A0AEC4;
-  --accent-bright: #0B7CFF;
-  --accent-cyan: #00A9B8;
-  --accent-blue: #0B7CFF;
-  --accent-orange: #FF7A1A;
-  --accent-green: #12A866;
-  --accent-red: #EF4444;
-  --accent-purple: #8B5CF6;
-  --accent-gradient: linear-gradient(135deg, #00A9B8, #0B7CFF);
-  --accent-on-button: #FFFFFF;
-  --input-bg: #FFFFFF;
-  --input-border: #D8E4F2;
-  --secondary-btn-border: #D8E4F2;
-  --secondary-btn-text: #26405F;
-  --radius-card: 10px;
-  --radius-inner: 8px;
-  --radius-btn: 7px;
-  --radius-input: 7px;
-  --sidebar-width: 260px;
-  --shadow-card: 0 10px 30px rgba(13, 37, 76, .045), 0 1px 2px rgba(13, 37, 76, .04);
-  --shadow-modal: 0 22px 70px rgba(13, 37, 76, .18);
-  --sidebar-bg: #FFFFFF;
-  --sidebar-border: #E6EEF8;
-  --sidebar-inner: #EAFBFF;
-  --sidebar-text: #223D5E;
-  --sidebar-text-active: #071936;
-}
-
-/* ── ТЁМНАЯ ТЕМА ───────────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --bg-primary:    #0F172A;
-  --bg-secondary:  #1E293B;
-  --bg-section:    #162032;
-  --bg-soft-blue:  #1a2d42;
-
-  --card-bg:       #1E293B;
-  --card-border:   #334155;
-  --inner-bg:      #1E293B;
-  --inner-border:  #334155;
-  --table-header-bg:#1A2A3A;
-  --border-subtle: #243344;
-  --border-mid:    #334155;
-
-  --text-primary:      #F1F5F9;
-  --text-primary-alt:  #F1F5F9;
-  --text-secondary:    #94A3B8;
-  --text-secondary-alt:#94A3B8;
-  --text-tertiary:     #CBD5E1;
-  --text-muted:        #64748B;
-
-  --accent-bright:   #FF8533;
-  --accent-cyan:     #FF8533;
-  --accent-blue:     #FF6A00;
-  --accent-green:    #34D399;
-  --accent-orange:   #FB923C;
-  --accent-red:      #F87171;
-  --accent-purple:   #A78BFA;
-  --accent-gradient: linear-gradient(135deg, #FF8533, #FF6A00);
+  --bg-primary:    #F7FAFC;
+  --bg-secondary:  #EEF2F7;
+  --bg-section:    rgba(255,106,0,0.04);
+  --bg-soft-blue:  #E8F0F8;
+  --card-bg:       #FFFFFF;
+  --card-border:   rgba(7,27,42,0.10);
+  --inner-bg:      #F7FAFC;
+  --inner-border:  rgba(7,27,42,0.10);
+  --table-header-bg: #F1F5F9;
+  --border-subtle: rgba(7,27,42,0.06);
+  --border-mid:    rgba(7,27,42,0.14);
+  --text-primary:      #071B2A;
+  --text-primary-alt:  #071B2A;
+  --text-secondary:    #5B7184;
+  --text-secondary-alt:#5B7184;
+  --text-tertiary:     #3A4F61;
+  --text-muted:        #8C9DAD;
+  --accent-bright:  #FF6A00;
+  --accent-cyan:    #FF6A00;
+  --accent-blue:    #E55C00;
+  --accent-orange:  #FF6A00;
+  --accent-green:   #12A866;
+  --accent-red:     #EF4444;
+  --accent-purple:  #8B5CF6;
+  --accent-gradient:linear-gradient(135deg, #FF6A00, #E55C00);
   --accent-on-button:#FFFFFF;
-
-  --badge-producer-bg:    rgba(34,211,238,.12);
-  --badge-producer-text:  #67E8F9;
-  --badge-producer-border:rgba(34,211,238,.25);
-  --badge-customer-bg:    rgba(96,165,250,.12);
-  --badge-customer-text:  #93C5FD;
-  --badge-customer-border:rgba(96,165,250,.25);
-
-  --error: #F87171;
-
-  --input-bg:            #162032;
-  --input-border:        #334155;
-  --secondary-btn-border:#334155;
-  --secondary-btn-text:  #94A3B8;
-
-  --shadow-card:  0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
-  --shadow-modal: 0 24px 70px rgba(0,0,0,.5);
-
-  --sidebar-bg:          #1E293B;
-  --sidebar-border:      #334155;
-  --sidebar-inner:       #162032;
-  --sidebar-text:        #94A3B8;
-  --sidebar-text-active: #F1F5F9;
+  --input-bg:            #FFFFFF;
+  --input-border:        rgba(7,27,42,0.14);
+  --secondary-btn-border:rgba(7,27,42,0.14);
+  --secondary-btn-text:  #3A4F61;
+  --radius-card:  14px;
+  --radius-inner: 10px;
+  --radius-btn:   10px;
+  --radius-input: 10px;
+  --sidebar-width:260px;
+  --shadow-card:  0 8px 24px rgba(7,27,42,0.07), 0 1px 2px rgba(7,27,42,0.04);
+  --shadow-modal: 0 20px 60px rgba(7,27,42,0.18);
+  --sidebar-bg:          #FFFFFF;
+  --sidebar-border:      rgba(7,27,42,0.08);
+  --sidebar-inner:       rgba(255,106,0,0.06);
+  --sidebar-text:        #5B7184;
+  --sidebar-text-active: #071B2A;
 }
 
-html:not([data-theme="dark"]),
-html[data-theme="light"] {
-  background: #FFFFFF;
-  color-scheme: light;
+html {
+  background: var(--bg-primary);
 }
 
-html:not([data-theme="dark"]) body,
-html[data-theme="light"] body {
-  background:
-    radial-gradient(circle at 78% -10%, rgba(11, 124, 255, .045), transparent 28%),
-    linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
+body {
+  background: var(--bg-primary);
   color: var(--text-primary);
 }
 
-html:not([data-theme="dark"]) .main-content,
-html[data-theme="light"] .main-content {
+.main-content {
   background: transparent;
   animation: pageContentIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-html:not([data-theme="dark"]) .section,
-html:not([data-theme="dark"]) .chart-card,
-html[data-theme="light"] .section,
-html[data-theme="light"] .chart-card {
-  animation: none;
 }
 
 body {
@@ -1645,9 +1571,6 @@ body {
   box-shadow: 0 2px 5px rgba(13, 37, 76, .18);
 }
 
-html[data-theme="dark"] .theme-switch-knob {
-  left: 22px;
-}
 
 .bell-btn {
   width: 46px;

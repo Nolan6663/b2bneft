@@ -1,457 +1,454 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Техзаказ — Вход</title>
-    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');</script>
-    <style>html{background:#fff}[data-theme="dark"]{background:#0F172A}</style>
-    <link rel="stylesheet" href="assets/theme-v2.css">
-    <style>
-        body { display: flex; min-height: 100vh; overflow-x: hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ТЕХЗАКАЗ — Вход и регистрация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Manrope', sans-serif;
+  background: #F7FAFC;
+  color: #071B2A;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+}
 
-        .theme-toggle-fab {
-            position: fixed; top: 20px; right: 20px; width: 42px; height: 42px; border-radius: 12px;
-            background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-primary);
-            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: transform 0.15s ease, border-color 0.15s ease; z-index: 10;
-        }
-        .theme-toggle-fab:hover { transform: translateY(-1px); border-color: var(--secondary-btn-border); }
+/* ── LEFT PANEL ── */
+.auth-left {
+  background: linear-gradient(160deg, #0B2233, #071B2A);
+  padding: 48px 44px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.auth-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.auth-left::after {
+  content: '';
+  position: absolute;
+  top: -120px; right: -80px;
+  width: 360px; height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,106,0,0.12) 0%, transparent 70%);
+}
 
-        .auth-page { display: flex; width: 100%; min-width: 0; min-height: 100vh; overflow-x: hidden; }
+.left-inner { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
 
-        .auth-branding {
-            width: 380px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-            text-align: left;
-            padding: 60px 40px;
-            background: #0F1A24;
-            position: relative;
-            overflow: hidden;
-        }
-        .auth-branding::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 80% 20%, rgba(255,106,0,.06) 0%, transparent 55%);
-        }
-        .auth-branding-inner { position: relative; }
-        .auth-branding .brand-logo {
-            width: 48px; height: 48px; border-radius: 13px;
-            background: rgba(255,255,255,.2);
-            border: 1.5px solid rgba(255,255,255,.35);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; font-weight: 800; color: #fff;
-            margin-bottom: 22px;
-        }
-        .auth-branding .b2b-word { font-size: 28px; font-weight: 800; letter-spacing: 0.3px; color: #fff; }
-        .auth-branding .neft-word { font-size: 12px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,.7); margin-top: 4px; text-transform: uppercase; }
-        .auth-branding .tagline { font-size: 14px; color: rgba(255,255,255,.85); margin-top: 24px; max-width: 260px; line-height: 1.6; }
-        .auth-branding .auth-steps { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
-        .auth-branding .auth-step { display: flex; align-items: center; gap: 12px; }
-        .auth-branding .auth-step-dot { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; }
-        .auth-branding .auth-step-text { font-size: 13px; color: rgba(255,255,255,.85); font-weight: 500; }
-        .auth-branding .auth-footer { position: absolute; bottom: 28px; left: 40px; right: 40px; font-size: 11px; color: rgba(255,255,255,.45); }
-        .auth-branding .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: rgba(255,255,255,.7); text-decoration: none; margin-bottom: 28px; transition: color .15s; }
-        .auth-branding .back-link:hover { color: #fff; }
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500;
+  text-decoration: none; margin-bottom: 40px;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #fff; }
 
-        .auth-form-panel { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.brand {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 36px;
+}
+.brand-icon {
+  position: relative; width: 56px; height: 56px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-icon span { font-weight: 800; font-size: 30px; color: #fff; line-height: 1; }
+.brand-icon .tri {
+  position: absolute; right: 8px; bottom: 8px;
+  width: 14px; height: 14px;
+  background: #FF6A00;
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+.brand-name { font-weight: 800; font-size: 22px; letter-spacing: 0.3px; }
+.brand-name span:first-child { color: #fff; }
+.brand-name span:last-child { color: #FF6A00; }
+.brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
 
-        .auth-container { width: min(420px, 100%); max-width: 100%; min-width: 0; }
-        .auth-container h1 { font-size: 21px; font-weight: 800; color: var(--text-primary-alt); margin-bottom: 6px; }
-        .auth-container p.subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
+.left-headline {
+  font-weight: 800; font-size: 28px; line-height: 1.2;
+  color: #fff; letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.left-sub {
+  font-size: 14px; line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+  max-width: 300px;
+  margin-bottom: 40px;
+}
 
-        .tabs { display: flex; gap: 4px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-        .tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 9px; transition: background-color 0.2s ease, color 0.2s ease; }
-        .tab.active { background: var(--accent-gradient); color: var(--accent-on-button); }
+.perks { display: flex; flex-direction: column; gap: 16px; }
+.perk { display: flex; align-items: flex-start; gap: 14px; }
+.perk-dot {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: #FF6A00;
+}
+.perk-text { font-size: 13.5px; color: rgba(255,255,255,0.75); font-weight: 500; line-height: 1.4; padding-top: 6px; }
 
-        .form-row-between { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 18px; font-size: 12.5px; }
-        .forgot-link { color: var(--accent-bright); }
+.left-footer {
+  margin-top: auto;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3);
+}
 
-        .reg-only { display: none; }
+/* ── RIGHT PANEL ── */
+.auth-right {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 40px;
+  background: #F7FAFC;
+}
 
-        .security-note { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); margin: 4px 0 18px; }
-        .security-note svg { flex-shrink: 0; }
+.auth-box {
+  width: 100%; max-width: 480px;
+}
 
-        .forgot-panel { display: none; }
-        .forgot-panel.show { display: block; }
-        .forgot-back { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); cursor: pointer; margin-bottom: 20px; background: none; border: none; padding: 0; }
-        .forgot-back:hover { color: var(--text-primary); }
-        .forgot-result { font-size: 13px; color: var(--text-secondary); line-height: 1.6; padding: 14px 16px; background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; margin-top: 16px; display: none; }
-        .forgot-result.show { display: block; }
+/* Tabs */
+.auth-tabs {
+  display: flex; gap: 0;
+  border: 1px solid rgba(7,27,42,0.1);
+  border-radius: 12px;
+  padding: 4px;
+  background: #fff;
+  margin-bottom: 32px;
+}
+.auth-tab {
+  flex: 1; padding: 11px 0;
+  font-size: 14px; font-weight: 700;
+  color: #5B7184;
+  cursor: pointer; border: none; background: transparent;
+  border-radius: 9px;
+  transition: all 0.2s;
+}
+.auth-tab.active {
+  background: #071B2A;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(7,27,42,0.2);
+}
 
-        .inn-error { font-size: 11.5px; color: #e87a7a; margin-top: 4px; display: none; }
-        .inn-error.show { display: block; }
+/* Form */
+.auth-form { display: none; flex-direction: column; gap: 18px; }
+.auth-form.active { display: flex; }
 
-        .btn-auth {
-            width: 100%; height: var(--btn-height); background: var(--accent-gradient); color: var(--accent-on-button);
-            border: none; border-radius: var(--radius-btn); font-size: 14px; font-weight: 700; cursor: pointer;
-            margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .btn-auth:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(65, 189, 151, 0.28); }
-        .btn-auth:active { transform: translateY(0); }
+.form-title {
+  font-weight: 800; font-size: 26px; letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.form-subtitle {
+  font-size: 14px; color: #5B7184; font-weight: 500;
+  margin-bottom: 8px; line-height: 1.5;
+}
 
-        .form-group { margin-bottom: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-group label {
+  font-size: 13px; font-weight: 700; color: #3A4F61;
+}
+.form-group input {
+  height: 46px; padding: 0 16px;
+  border: 1.5px solid rgba(7,27,42,0.14);
+  border-radius: 10px;
+  background: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px; color: #071B2A;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-group input:focus {
+  border-color: #FF6A00;
+  box-shadow: 0 0 0 3px rgba(255,106,0,0.12);
+}
+.form-group input::placeholder { color: #8C9DAD; }
 
-        @media (max-width: 760px) {
-            .auth-page { flex-direction: column; }
-            .auth-branding { width: 100%; padding: 32px 24px; }
-            .auth-branding .auth-footer { position: static; margin-top: 18px; }
-            .auth-form-panel { padding: 32px 24px; width: 100%; max-width: 100vw; overflow-x: hidden; }
-            .auth-container,
-            .tabs,
-            .form-group,
-            .form-group input,
-            .btn-auth {
-                width: min(342px, calc(100vw - 48px)) !important;
-                max-width: min(342px, calc(100vw - 48px)) !important;
-            }
-            .form-row-between { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .forgot-link { margin-left: 0; }
-        }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-        @media (max-width: 420px) {
-            .theme-toggle-fab { top: 12px; right: 12px; }
-            .auth-branding { padding: 32px 24px 28px; }
-            .auth-branding .b2b-word { font-size: 26px; overflow-wrap: anywhere; }
-            .auth-form-panel { padding: 30px 24px 36px; max-width: 100vw; overflow-x: hidden; }
-        }
-    </style>
+.form-hint { font-size: 12px; color: #8C9DAD; font-weight: 500; }
+
+.form-role {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.role-btn {
+  padding: 14px 16px; border-radius: 10px;
+  border: 1.5px solid rgba(7,27,42,0.12);
+  background: #fff; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.role-btn:hover { border-color: rgba(255,106,0,0.4); background: rgba(255,106,0,0.03); }
+.role-btn.selected { border-color: #FF6A00; background: rgba(255,106,0,0.05); }
+.role-btn .role-icon { font-size: 20px; margin-bottom: 2px; }
+.role-btn .role-name { font-weight: 700; font-size: 13.5px; color: #071B2A; }
+.role-btn .role-desc { font-size: 11.5px; color: #5B7184; font-weight: 500; }
+
+.btn-primary {
+  height: 50px; border-radius: 12px;
+  background: #FF6A00; color: #fff;
+  border: none; cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 8px 20px rgba(255,106,0,0.28);
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+}
+.btn-primary:hover {
+  background: #E55C00;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(255,106,0,0.34);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  color: #8C9DAD; font-size: 13px; font-weight: 500;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(7,27,42,0.1);
+}
+
+.btn-oauth {
+  height: 46px; border-radius: 10px;
+  border: 1.5px solid rgba(7,27,42,0.12);
+  background: #fff; cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13.5px; font-weight: 600; color: #3A4F61;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-oauth:hover { border-color: rgba(7,27,42,0.25); background: #F7FAFC; }
+
+.form-footer {
+  text-align: center; font-size: 13px; color: #5B7184; font-weight: 500;
+}
+.form-footer a { color: #FF6A00; font-weight: 700; text-decoration: none; }
+.form-footer a:hover { text-decoration: underline; }
+
+.forgot-link {
+  font-size: 12.5px; color: #FF6A00; font-weight: 600;
+  text-decoration: none; align-self: flex-end; margin-top: -10px;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+.terms {
+  font-size: 12px; color: #8C9DAD; font-weight: 500;
+  text-align: center; line-height: 1.6;
+}
+.terms a { color: #5B7184; text-decoration: underline; }
+</style>
 </head>
 <body>
 
-    <button class="theme-toggle-fab" onclick="toggleTheme()" title="Переключить тему">
-        <span id="themeIcon">🌙</span>
-    </button>
+<!-- LEFT PANEL -->
+<div class="auth-left">
+  <div class="left-inner">
+    <a href="landing.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      На главную
+    </a>
 
-    <div class="auth-page">
-        <div class="auth-branding">
-            <div class="auth-branding-inner">
-                <a href="landing.html" class="back-link">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-                    На главную
-                </a>
-                <svg width="52" height="52" viewBox="0 0 162 120" fill="none" style="margin-bottom:22px;flex-shrink:0;"><path d="M20 16 H142 L134 38 H91 L67 104 H38 L62 38 H12 L20 16Z" fill="#FFFFFF"/><path d="M78 50 H126 L103 104 H56 L78 50Z" fill="#FF6A00"/></svg>
-                <div class="b2b-word">ТЕХЗАКАЗ</div>
-                <div class="neft-word">Платформа прямых закупок</div>
-                <div class="tagline">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</div>
-                <div class="auth-steps">
-                    <div class="auth-step">
-                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div>
-                        <div class="auth-step-text">Разместите закупку и получите КП за 24 часа</div>
-                    </div>
-                    <div class="auth-step">
-                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4V10l6 4V6l6 3v12z"/></svg></div>
-                        <div class="auth-step-text">Более 1200 верифицированных производителей</div>
-                    </div>
-                    <div class="auth-step">
-                        <div class="auth-step-dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg></div>
-                        <div class="auth-step-text">Безопасные сделки и верификация компаний</div>
-                    </div>
-                </div>
-            </div>
-            <div class="auth-footer">© 2026 Техзаказ. Платформа прямых промышленных закупок.</div>
-        </div>
-
-        <div class="auth-form-panel">
-            <div class="auth-container">
-                <h1 id="authTitle">Добро пожаловать</h1>
-                <p class="subtitle" id="authSubtitle">Войдите в свой аккаунт</p>
-
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTab('login')">Вход</div>
-                    <div class="tab" onclick="switchTab('register')">Регистрация</div>
-                </div>
-
-                <div class="forgot-panel" id="resetPanel">
-                    <h1>Новый пароль</h1>
-                    <p class="subtitle">Придумайте новый пароль для входа</p>
-                    <form onsubmit="handleReset(event)">
-                        <div class="form-group">
-                            <label>Новый пароль</label>
-                            <input type="password" id="resetPassword" required placeholder="Минимум 6 символов" minlength="6">
-                        </div>
-                        <div class="form-group">
-                            <label>Повторите пароль</label>
-                            <input type="password" id="resetPassword2" required placeholder="Повторите пароль">
-                        </div>
-                        <button type="submit" class="btn-auth" id="btnReset">
-                            Сохранить пароль
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eafaf4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-                        </button>
-                    </form>
-                    <div class="forgot-result" id="resetResult"></div>
-                </div>
-
-                <div class="forgot-panel" id="forgotPanel">
-                    <button class="forgot-back" onclick="showForgot(false)">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                        Назад к входу
-                    </button>
-                    <h1>Восстановление пароля</h1>
-                    <p class="subtitle">Введите email, который вы указывали при регистрации</p>
-                    <form onsubmit="handleForgot(event)">
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="forgotEmail" required placeholder="user@company.com">
-                        </div>
-                        <button type="submit" class="btn-auth" id="btnForgot">
-                            Восстановить доступ
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eafaf4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-                        </button>
-                    </form>
-                    <div class="forgot-result" id="forgotResult"></div>
-                </div>
-
-                <div id="mainAuthSection">
-                <form id="authForm" onsubmit="handleAuth(event)">
-                    <div class="form-group">
-                        <label>Email или логин</label>
-                        <input type="email" id="authEmail" required placeholder="user@company.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Пароль</label>
-                        <input type="password" id="authPassword" required placeholder="••••••••••••">
-                    </div>
-
-                    <div class="form-row-between login-only">
-                        <label class="checkbox-row"><input type="checkbox" id="rememberMe">Запомнить меня</label>
-                        <a href="#" class="forgot-link" onclick="showForgot(true); return false;">Забыли пароль?</a>
-                    </div>
-
-                    <div class="form-group reg-only">
-                        <label>Название компании</label>
-                        <input type="text" id="regCompany" placeholder="ООО «НефтьПром»">
-                    </div>
-
-                    <div class="form-group reg-only">
-                        <label>ИНН</label>
-                        <input type="text" id="regInn" placeholder="7701234567" oninput="validateInn(this)" inputmode="numeric" maxlength="12">
-                        <div class="inn-error" id="innError">ИНН должен содержать 10 цифр (юр. лицо) или 12 цифр (ИП)</div>
-                    </div>
-
-                    <div class="form-group reg-only">
-                        <label>Роль в системе</label>
-                        <select id="regRole" style="width:100%; height:var(--input-height); background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-input); color:var(--text-primary); padding:0 14px; font-size:13px; outline:none;">
-                            <option value="customer">Заказчик (Размещение тендеров)</option>
-                            <option value="producer">Производитель (Подача КП)</option>
-                        </select>
-                    </div>
-
-                    <div class="security-note reg-only">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5aa888" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-                        Данные защищены и не передаются третьим лицам
-                    </div>
-
-                    <button type="submit" class="btn-auth" id="btnSubmit">
-                        Войти в систему
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eafaf4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-                    </button>
-                </form>
-                </div><!-- #mainAuthSection -->
-            </div>
-        </div>
+    <div class="brand">
+      <div class="brand-icon">
+        <span>Т</span>
+        <div class="tri"></div>
+      </div>
+      <div>
+        <div class="brand-name"><span>ТЕХ</span><span>ЗАКАЗ</span></div>
+        <div class="brand-sub">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
+      </div>
     </div>
 
-    <script src="assets/app.js"></script>
-    <script src="assets/ui-animations.js"></script>
-    <script>
-        let currentMode = 'login';
+    <div class="left-headline">Прямые закупки<br>без посредников</div>
+    <div class="left-sub">Разместите чертёж или ТЗ и получайте коммерческие предложения напрямую от проверенных производителей.</div>
 
-        // Если пришли с лендинга по кнопке "Зарегистрироваться"
-        if (localStorage.getItem('landingRegister')) {
-            localStorage.removeItem('landingRegister');
-            document.addEventListener('DOMContentLoaded', () => switchTab('register'));
-        }
+    <div class="perks">
+      <div class="perk">
+        <div class="perk-dot">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>
+        </div>
+        <div class="perk-text">Загрузите чертёж или опишите задачу — мы найдём подходящих производителей</div>
+      </div>
+      <div class="perk">
+        <div class="perk-dot">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l6 3V9l6 3V5l6 3v13z"/><path d="M3 21h18"/></svg>
+        </div>
+        <div class="perk-text">1 200+ проверенных заводов — прямой доступ без наценок</div>
+      </div>
+      <div class="perk">
+        <div class="perk-dot">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h7l4 4v14H9z"/><path d="M4 7h5v14H4z"/></svg>
+        </div>
+        <div class="perk-text">Получите первые КП уже через 48 часов и сравните в одном окне</div>
+      </div>
+    </div>
 
-        // Если в URL есть ?verify=TOKEN — подтверждение email
-        const _verifyToken = new URLSearchParams(window.location.search).get('verify');
-        if (_verifyToken) {
-            document.addEventListener('DOMContentLoaded', async () => {
-                try {
-                    const response = await fetch(`${SERVER_URL}/auth/verify-email`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: _verifyToken }),
-                    });
-                    const data = await response.json().catch(() => ({}));
-                    if (response.ok) {
-                        localStorage.setItem('emailVerified', '1');
-                        showToast(data.message || 'Email подтверждён');
-                    } else {
-                        showToast(data.error || 'Ссылка недействительна', 'error');
-                    }
-                } catch {
-                    showToast('Сервер недоступен', 'error');
-                }
-                history.replaceState({}, '', 'login.html');
-            });
-        }
+    <div class="left-footer">© 2026 ТЕХЗАКАЗ · ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
+  </div>
+</div>
 
-        // Если в URL есть ?reset=TOKEN — показываем форму нового пароля
-        const _resetToken = new URLSearchParams(window.location.search).get('reset');
-        if (_resetToken) {
-            document.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('resetPanel').classList.add('show');
-                document.getElementById('mainAuthSection').style.display = 'none';
-                document.querySelector('.tabs').style.display = 'none';
-                document.getElementById('forgotPanel').style.display = 'none';
-                document.getElementById('authTitle').textContent = 'Новый пароль';
-                document.getElementById('authSubtitle').textContent = 'Придумайте новый пароль для входа';
-            });
-        }
+<!-- RIGHT PANEL -->
+<div class="auth-right">
+  <div class="auth-box">
 
-        async function handleReset(event) {
-            event.preventDefault();
-            const p1 = document.getElementById('resetPassword').value;
-            const p2 = document.getElementById('resetPassword2').value;
-            const result = document.getElementById('resetResult');
-            result.classList.remove('show');
-            if (p1 !== p2) { result.textContent = 'Пароли не совпадают'; result.classList.add('show'); return; }
-            const btn = document.getElementById('btnReset');
-            btn.disabled = true; btn.style.opacity = '.7';
-            const response = await fetch(`${SERVER_URL}/auth/reset-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: _resetToken, newPassword: p1 })
-            });
-            const data = await response.json();
-            btn.disabled = false; btn.style.opacity = '1';
-            if (!response.ok) { result.textContent = data.error || 'Ошибка'; result.classList.add('show'); return; }
-            result.textContent = 'Пароль успешно изменён! Перенаправляем...';
-            result.classList.add('show');
-            setTimeout(() => { window.location.href = 'login.html'; }, 1800);
-        }
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Войти</button>
+      <button class="auth-tab" onclick="switchTab('register')">Регистрация</button>
+    </div>
 
-        function showForgot(show) {
-            document.getElementById('forgotPanel').classList.toggle('show', show);
-            document.getElementById('mainAuthSection').style.display = show ? 'none' : '';
-            if (show) document.getElementById('forgotEmail').focus();
-        }
+    <!-- LOGIN FORM -->
+    <div class="auth-form active" id="form-login">
+      <div>
+        <div class="form-title">С возвращением</div>
+        <div class="form-subtitle">Введите данные вашего аккаунта</div>
+      </div>
 
-        async function handleForgot(event) {
-            event.preventDefault();
-            const email = document.getElementById('forgotEmail').value.trim();
-            const btn = document.getElementById('btnForgot');
-            btn.disabled = true;
-            btn.style.opacity = '.7';
-            try {
-                await fetch(`${SERVER_URL}/auth/forgot-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-            } catch {}
-            const result = document.getElementById('forgotResult');
-            result.textContent = 'Если этот email зарегистрирован — письмо со ссылкой для сброса пароля уже в пути. Проверьте папку «Спам», если не видите письма.';
-            result.classList.add('show');
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="you@company.ru" autocomplete="email">
+      </div>
 
-        function validateInn(input) {
-            const val = input.value.replace(/\D/g, '');
-            input.value = val;
-            const errEl = document.getElementById('innError');
-            if (val.length > 0 && val.length !== 10 && val.length !== 12) {
-                errEl.classList.add('show');
-            } else {
-                errEl.classList.remove('show');
-            }
-        }
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" placeholder="••••••••" autocomplete="current-password">
+        <a href="#" class="forgot-link">Забыли пароль?</a>
+      </div>
 
-        function switchTab(mode) {
-            currentMode = mode;
-            const tabs = document.querySelectorAll('.tab');
-            const regFields = document.querySelectorAll('.reg-only');
-            const loginFields = document.querySelectorAll('.login-only');
-            const btnSubmit = document.getElementById('btnSubmit');
-            const title = document.getElementById('authTitle');
-            const subtitle = document.getElementById('authSubtitle');
+      <button class="btn-primary" onclick="handleLogin()">
+        Войти в аккаунт
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
 
-            tabs.forEach(t => t.classList.remove('active'));
-            if (mode === 'login') {
-                tabs[0].classList.add('active');
-                regFields.forEach(f => f.style.display = 'none');
-                loginFields.forEach(f => f.style.display = 'flex');
-                btnSubmit.innerHTML = 'Войти в систему<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eafaf4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
-                title.innerText = 'Добро пожаловать';
-                subtitle.innerText = 'Войдите в свой аккаунт';
-                document.getElementById('regCompany').removeAttribute('required');
-                document.getElementById('regInn').removeAttribute('required');
-            } else {
-                tabs[1].classList.add('active');
-                regFields.forEach(f => f.style.display = 'flex');
-                loginFields.forEach(f => f.style.display = 'none');
-                btnSubmit.innerHTML = 'Зарегистрироваться<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#eafaf4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>';
-                title.innerText = 'Регистрация компании';
-                subtitle.innerText = 'Заполните данные для регистрации';
-                document.getElementById('regCompany').setAttribute('required', 'true');
-                document.getElementById('regInn').setAttribute('required', 'true');
-            }
-        }
+      <div class="divider">или</div>
 
-        async function handleAuth(event) {
-            event.preventDefault();
+      <button class="btn-oauth">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Войти через Google
+      </button>
 
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authPassword').value;
-            const submitBtn = document.getElementById('btnSubmit');
-            submitBtn.disabled = true;
-            submitBtn.style.opacity = '.75';
+      <div class="form-footer">
+        Нет аккаунта? <a href="#" onclick="switchTab('register'); return false;">Зарегистрироваться</a>
+      </div>
+    </div>
 
-            try {
-              if (currentMode === 'login') {
-                const response = await fetch(`${SERVER_URL}/auth/login`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) { showToast(data.error || 'Неверный логин или пароль'); return; }
-                applyAuthSession(data);
-                if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
-                window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
+    <!-- REGISTER FORM -->
+    <div class="auth-form" id="form-register">
+      <div>
+        <div class="form-title">Создать аккаунт</div>
+        <div class="form-subtitle">Начните размещать закупки уже сегодня</div>
+      </div>
 
-              } else {
-                const company = document.getElementById('regCompany').value.trim();
-                const inn = document.getElementById('regInn').value.trim();
-                const role = document.getElementById('regRole').value;
+      <div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>Вы регистрируетесь как</label>
+        </div>
+        <div class="form-role">
+          <button class="role-btn selected" onclick="selectRole(this)">
+            <div class="role-icon">🏭</div>
+            <div class="role-name">Заказчик</div>
+            <div class="role-desc">Размещаю закупки</div>
+          </button>
+          <button class="role-btn" onclick="selectRole(this)">
+            <div class="role-icon">⚙️</div>
+            <div class="role-name">Производитель</div>
+            <div class="role-desc">Выполняю заказы</div>
+          </button>
+        </div>
+      </div>
 
-                if (inn.length !== 10 && inn.length !== 12) {
-                    document.getElementById('innError').classList.add('show');
-                    document.getElementById('regInn').focus();
-                    return;
-                }
+      <div class="form-row">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" placeholder="Иван" autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input type="text" placeholder="Петров" autocomplete="family-name">
+        </div>
+      </div>
 
-                const response = await fetch(`${SERVER_URL}/auth/register`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, company, inn, role })
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) { showToast(data.error || 'Ошибка при регистрации'); return; }
-                applyAuthSession(data);
-                showToast(data.message || 'Аккаунт создан. Подтвердите email.');
-                if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
-                window.location.href = data.role === 'customer' ? 'index.html' : 'producer.html';
-              }
-            } catch (error) {
-                showToast('Сервер авторизации недоступен');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-            }
-        }
-    </script>
+      <div class="form-group">
+        <label>Название компании</label>
+        <input type="text" placeholder="ООО «Ваша компания»" autocomplete="organization">
+      </div>
+
+      <div class="form-group">
+        <label>Рабочий email</label>
+        <input type="email" placeholder="you@company.ru" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" placeholder="Минимум 8 символов" autocomplete="new-password">
+        <div class="form-hint">Используйте буквы, цифры и специальные символы</div>
+      </div>
+
+      <button class="btn-primary" onclick="handleRegister()">
+        Создать аккаунт
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+
+      <div class="terms">
+        Регистрируясь, вы соглашаетесь с <a href="#">условиями использования</a> и <a href="#">политикой конфиденциальности</a>
+      </div>
+
+      <div class="form-footer">
+        Уже есть аккаунт? <a href="#" onclick="switchTab('login'); return false;">Войти</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  });
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-register').classList.toggle('active', tab === 'register');
+}
+
+function selectRole(btn) {
+  btn.closest('.form-role').querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function handleLogin() {
+  const email = document.querySelector('#form-login input[type="email"]').value.trim();
+  if (!email) { alert('Введите email'); return; }
+  window.location.href = 'index.html';
+}
+
+function handleRegister() {
+  const email = document.querySelector('#form-register input[type="email"]').value.trim();
+  if (!email) { alert('Введите email'); return; }
+  window.location.href = 'index.html';
+}
+
+// Check hash for direct register link
+if (location.hash === '#register') switchTab('register');
+</script>
 </body>
 </html>

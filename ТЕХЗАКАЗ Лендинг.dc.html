@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ТЕХЗАКАЗ — Платформа прямых закупок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #e9eef2; display: grid; place-items: start center; }
+  @keyframes tz-dash { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -28; } }
+  @keyframes tz-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+</style>
+</head>
+<body>
+<div style="width:1440px; position:relative; background:#F7FAFC; font-family:'Manrope',sans-serif; color:#071B2A; overflow:hidden;">
+
+  <!-- Blueprint grid -->
+  <div style="position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(to right, rgba(7,27,42,0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(7,27,42,0.035) 1px, transparent 1px);
+    background-size:48px 48px;"></div>
+
+  <div style="position:relative; z-index:1;">
+
+    <!-- ═══ HEADER ═══ -->
+    <header style="display:flex; align-items:center; justify-content:space-between; padding:26px 64px 22px; border-bottom:1px solid rgba(7,27,42,0.08);">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div style="position:relative; width:56px; height:56px; border-radius:12px; background:linear-gradient(150deg,#0B2233,#071B2A); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(7,27,42,0.22);">
+          <span style="font-weight:800; font-size:30px; color:#fff; letter-spacing:-1px; line-height:1;">Т</span>
+          <div style="position:absolute; right:8px; bottom:8px; width:18px; height:18px; background:#FF6A00; clip-path:polygon(0 100%,100% 0,100% 100%);"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:3px;">
+          <div style="font-weight:800; font-size:23px; letter-spacing:0.5px; line-height:1;">
+            <span style="color:#071B2A;">ТЕХ</span><span style="color:#FF6A00;">ЗАКАЗ</span>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:2.2px; color:#5B7184;">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
+          <div style="font-size:11px; color:#3A4F61; font-weight:500;">От чертежа до исполнителя.</div>
+        </div>
+      </div>
+      <nav style="display:flex; align-items:center; gap:32px;">
+        <a href="#" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Как это работает</a>
+        <a href="#" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Производителям</a>
+        <a href="#" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Тарифы</a>
+        <div style="width:1px; height:26px; background:rgba(7,27,42,0.12);"></div>
+        <a href="#" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#071B2A; font-size:14px; font-weight:700;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+          Войти
+        </a>
+        <a href="#" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#FF6A00; color:#fff; font-size:14px; font-weight:700; padding:13px 22px; border-radius:10px; box-shadow:0 6px 16px rgba(255,106,0,0.28);">Регистрация
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </nav>
+    </header>
+
+    <!-- ═══ HERO ═══ -->
+    <section style="display:grid; grid-template-columns:540px 1fr; gap:56px; padding:54px 64px 60px; align-items:center;">
+
+      <!-- LEFT -->
+      <div style="display:flex; flex-direction:column; gap:0;">
+        <div style="display:inline-flex; align-items:center; gap:10px; align-self:flex-start; padding:8px 14px; border:1px solid rgba(7,27,42,0.12); border-radius:999px; margin-bottom:26px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#FF6A00;"></span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:#3A4F61;">ПРЯМЫЕ ЗАКУПКИ · БЕЗ ПОСРЕДНИКОВ</span>
+        </div>
+
+        <h1 style="margin:0; font-weight:800; font-size:64px; line-height:1.02; letter-spacing:-1.5px; color:#071B2A;">Прямые закупки<br>без посредников</h1>
+
+        <p style="margin:26px 0 0; font-size:19px; line-height:1.5; color:#3A4F61; max-width:480px; font-weight:500;">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
+
+        <div style="display:flex; gap:14px; margin-top:36px;">
+          <a href="#" style="text-decoration:none; display:inline-flex; align-items:center; gap:10px; background:#FF6A00; color:#fff; font-size:16px; font-weight:700; padding:17px 28px; border-radius:12px; box-shadow:0 10px 24px rgba(255,106,0,0.3);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Разместить чертёж
+          </a>
+          <a href="#" style="text-decoration:none; display:inline-flex; align-items:center; gap:10px; background:#fff; color:#071B2A; font-size:16px; font-weight:700; padding:17px 26px; border-radius:12px; border:1px solid rgba(7,27,42,0.14);">Как это работает</a>
+        </div>
+
+        <div style="display:flex; gap:40px; margin-top:46px; padding-top:30px; border-top:1px solid rgba(7,27,42,0.08);">
+          <div>
+            <div style="font-weight:800; font-size:28px; color:#071B2A;">1 200+</div>
+            <div style="font-size:13px; color:#5B7184; font-weight:500;">проверенных заводов</div>
+          </div>
+          <div>
+            <div style="font-weight:800; font-size:28px; color:#071B2A;">0%</div>
+            <div style="font-size:13px; color:#5B7184; font-weight:500;">наценок посредников</div>
+          </div>
+          <div>
+            <div style="font-weight:800; font-size:28px; color:#071B2A;">48 ч</div>
+            <div style="font-size:13px; color:#5B7184; font-weight:500;">до первых КП</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:flex; flex-direction:column; gap:22px;">
+
+        <!-- Industrial collage -->
+        <div style="position:relative; padding:18px 20px 20px; border-radius:16px; overflow:hidden; background:linear-gradient(155deg,#0B2233,#071B2A); box-shadow:0 18px 40px rgba(7,27,42,0.22);">
+          <div style="position:absolute; inset:0; background-image:linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px),linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px); background-size:30px 30px; pointer-events:none;"></div>
+          <div style="position:absolute; top:0; right:0; width:30%; height:100%; background:linear-gradient(135deg,rgba(255,106,0,0),rgba(255,106,0,0.16)); clip-path:polygon(45% 0,100% 0,100% 100%,0 100%); pointer-events:none;"></div>
+
+          <div style="position:relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:2px; color:rgba(255,255,255,0.55);">ОТ ФАЙЛА ДО ГОТОВОЙ ДЕТАЛИ</span>
+            <span style="display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#FF6A00;">
+              <span style="width:6px; height:6px; border-radius:50%; background:#FF6A00;"></span>ПРОМЫШЛЕННОЕ ПРОИЗВОДСТВО
+            </span>
+          </div>
+
+          <div style="position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+            <!-- Чертёж -->
+            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:14px;">
+              <svg width="100%" height="74" viewBox="0 0 120 74" fill="none">
+                <rect x="14" y="12" width="78" height="44" rx="2" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/>
+                <line x1="14" y1="30" x2="92" y2="30" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+                <line x1="46" y1="12" x2="46" y2="56" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+                <circle cx="70" cy="40" r="9" stroke="#FF6A00" stroke-width="1.4"/>
+                <line x1="14" y1="66" x2="92" y2="66" stroke="#FF6A00" stroke-width="1.2"/>
+                <line x1="14" y1="62" x2="14" y2="70" stroke="#FF6A00" stroke-width="1.2"/>
+                <line x1="92" y1="62" x2="92" y2="70" stroke="#FF6A00" stroke-width="1.2"/>
+              </svg>
+              <div style="margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; color:#fff;">ЧЕРТЁЖ · DWG / STEP</div>
+            </div>
+            <!-- Фланец -->
+            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:14px;">
+              <svg width="100%" height="74" viewBox="0 0 120 74" fill="none">
+                <circle cx="60" cy="34" r="26" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/>
+                <circle cx="60" cy="34" r="11" stroke="#FF6A00" stroke-width="1.6"/>
+                <circle cx="60" cy="13" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="60" cy="55" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="39" cy="34" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="81" cy="34" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="45" cy="19" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="75" cy="19" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="45" cy="49" r="2.4" fill="rgba(255,255,255,0.7)"/>
+                <circle cx="75" cy="49" r="2.4" fill="rgba(255,255,255,0.7)"/>
+              </svg>
+              <div style="margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; color:#fff;">ДЕТАЛЬ · ФЛАНЕЦ</div>
+            </div>
+            <!-- ЧПУ -->
+            <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:14px;">
+              <svg width="100%" height="74" viewBox="0 0 120 74" fill="none">
+                <rect x="20" y="46" width="80" height="10" rx="1.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/>
+                <rect x="50" y="10" width="20" height="14" rx="2" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/>
+                <line x1="60" y1="24" x2="60" y2="46" stroke="#FF6A00" stroke-width="2"/>
+                <circle cx="60" cy="46" r="3" fill="#FF6A00"/>
+                <line x1="54" y1="62" x2="66" y2="62" stroke="#FF6A00" stroke-width="1.2"/>
+                <line x1="48" y1="62" x2="44" y2="62" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+                <line x1="72" y1="62" x2="76" y2="62" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+              </svg>
+              <div style="margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; color:#fff;">ЧПУ · ЛАЗЕРНАЯ РЕЗКА</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badge -->
+        <div style="display:inline-flex; align-self:flex-start; align-items:center; gap:9px; background:#071B2A; color:#fff; padding:9px 16px; border-radius:999px; font-size:13px; font-weight:700;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#FF6A00;"></span>
+          Напрямую от заказчика к производителю
+        </div>
+
+        <!-- Flow schema -->
+        <div style="position:relative; width:720px; height:444px; max-width:100%; background:linear-gradient(180deg,#fff,#fbfcfe); border:1px solid rgba(7,27,42,0.08); border-radius:18px; box-shadow:0 16px 40px rgba(7,27,42,0.08);">
+          <div style="position:absolute; inset:0; border-radius:18px; pointer-events:none; background-image:linear-gradient(to right, rgba(7,27,42,0.025) 1px, transparent 1px),linear-gradient(to bottom, rgba(7,27,42,0.025) 1px, transparent 1px); background-size:36px 36px;"></div>
+
+          <svg viewBox="0 0 720 444" width="720" height="444" style="position:absolute; inset:0; width:100%; height:100%;" preserveAspectRatio="none">
+            <defs>
+              <marker id="tz-navy" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#0B2233"/></marker>
+              <marker id="tz-or" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#FF6A00"/></marker>
+            </defs>
+            <line x1="150" y1="223" x2="262" y2="223" stroke="#0B2233" stroke-width="2.4" marker-end="url(#tz-navy)"/>
+            <path d="M440,223 C492,223 500,82 544,82" fill="none" stroke="#FF6A00" stroke-width="2.2" marker-end="url(#tz-or)"/>
+            <line x1="440" y1="223" x2="544" y2="220" stroke="#FF6A00" stroke-width="2.2" marker-end="url(#tz-or)"/>
+            <path d="M440,223 C492,223 500,358 544,358" fill="none" stroke="#FF6A00" stroke-width="2.2" marker-end="url(#tz-or)"/>
+            <path d="M560,410 L75,410 L75,281" fill="none" stroke="#FF6A00" stroke-width="2.2" stroke-dasharray="11 8" marker-end="url(#tz-or)" style="animation:tz-dash 1.4s linear infinite"/>
+          </svg>
+
+          <!-- Заказчик -->
+          <div style="position:absolute; left:0; top:175px; width:150px; height:96px; background:#fff; border:1px solid rgba(7,27,42,0.12); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 14px rgba(7,27,42,0.06);">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+            <span style="font-weight:700; font-size:14px;">Заказчик</span>
+          </div>
+
+          <!-- ТЕХЗАКАЗ hub -->
+          <div style="position:absolute; left:270px; top:165px; width:170px; height:116px; background:linear-gradient(155deg,#0B2233,#071B2A); border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; box-shadow:0 16px 32px rgba(7,27,42,0.28);">
+            <div style="position:relative; width:38px; height:38px; border-radius:9px; background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center;">
+              <span style="font-weight:800; font-size:21px; color:#fff;">Т</span>
+              <div style="position:absolute; right:6px; bottom:6px; width:12px; height:12px; background:#FF6A00; clip-path:polygon(0 100%,100% 0,100% 100%);"></div>
+            </div>
+            <div style="font-weight:800; font-size:14px; letter-spacing:0.5px;"><span style="color:#fff;">ТЕХ</span><span style="color:#FF6A00;">ЗАКАЗ</span></div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:1.5px; color:rgba(255,255,255,0.5);">ПОДБОР · РАССЫЛКА</div>
+          </div>
+
+          <!-- Производители -->
+          <div style="position:absolute; left:552px; top:40px; width:168px; height:84px; background:#fff; border:1px solid rgba(7,27,42,0.12); border-radius:13px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:0 6px 14px rgba(7,27,42,0.06);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l6 3V9l6 3V5l6 3v13z"/><path d="M3 21h18"/></svg>
+            <span style="font-weight:700; font-size:13px;">Производитель 1</span>
+          </div>
+          <div style="position:absolute; left:552px; top:178px; width:168px; height:84px; background:#fff; border:1px solid rgba(7,27,42,0.12); border-radius:13px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:0 6px 14px rgba(7,27,42,0.06);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l6 3V9l6 3V5l6 3v13z"/><path d="M3 21h18"/></svg>
+            <span style="font-weight:700; font-size:13px;">Производитель 2</span>
+          </div>
+          <div style="position:absolute; left:552px; top:316px; width:168px; height:84px; background:#fff; border:1px solid rgba(7,27,42,0.12); border-radius:13px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; box-shadow:0 6px 14px rgba(7,27,42,0.06);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l6 3V9l6 3V5l6 3v13z"/><path d="M3 21h18"/></svg>
+            <span style="font-weight:700; font-size:13px;">Производитель 3</span>
+          </div>
+
+          <!-- Labels -->
+          <div style="position:absolute; left:158px; top:196px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#0B2233; background:#fff; padding:2px 6px;">ЗАПРОС</div>
+          <div style="position:absolute; left:300px; top:392px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#FF6A00; background:#fff; padding:2px 6px;">ПРЕДЛОЖЕНИЯ (КП)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PROCESS ═══ -->
+    <section style="padding:8px 64px 64px;">
+      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px;">
+        <h2 style="margin:0; font-weight:800; font-size:34px; letter-spacing:-0.8px;">Как проходит закупка</h2>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; color:#5B7184;">ЧЕРТЁЖ → ПРОИЗВОДИТЕЛИ → КП → ВЫБОР</div>
+      </div>
+
+      <div style="display:flex; align-items:stretch; gap:0;">
+
+        <!-- Step 1 -->
+        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
+          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+          <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
+            <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">1</div>
+            <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3v5h5"/>
+                <path d="M7 21V3h7l5 5v13z"/>
+                <path d="M12 17v-5M9.5 14l2.5-2.5 2.5 2.5" stroke="#FF6A00"/>
+              </svg>
+            </div>
+          </div>
+          <h3 style="position:relative; margin:24px 0 10px; font-weight:800; font-size:19px; line-height:1.2;">Разместите чертёж или ТЗ</h3>
+          <p style="position:relative; margin:0; font-size:14px; line-height:1.45; color:rgba(255,255,255,0.66); font-weight:500;">PDF, DWG, STEP или описание задачи</p>
+        </div>
+
+        <div style="width:52px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
+          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+          <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
+            <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">2</div>
+            <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21V9l6 3V9l6 3V5l6 3v13z"/>
+                <path d="M3 21h18" stroke="#FF6A00"/>
+              </svg>
+            </div>
+          </div>
+          <h3 style="position:relative; margin:24px 0 10px; font-weight:800; font-size:19px; line-height:1.2;">Запрос уходит производителям</h3>
+          <p style="position:relative; margin:0; font-size:14px; line-height:1.45; color:rgba(255,255,255,0.66); font-weight:500;">Платформа подбирает подходящие заводы</p>
+        </div>
+
+        <div style="width:52px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <!-- Step 3 -->
+        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
+          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+          <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
+            <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">3</div>
+            <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 3h7l4 4v14H9z"/>
+                <path d="M4 7h5v14H4z" stroke="#FF6A00"/>
+                <path d="M12 9h5M12 13h5M12 17h3"/>
+              </svg>
+            </div>
+          </div>
+          <h3 style="position:relative; margin:24px 0 10px; font-weight:800; font-size:19px; line-height:1.2;">Получите и сравните КП</h3>
+          <p style="position:relative; margin:0; font-size:14px; line-height:1.45; color:rgba(255,255,255,0.66); font-weight:500;">Цена, сроки, условия — в одном окне</p>
+        </div>
+
+        <div style="width:52px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <!-- Step 4 -->
+        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
+          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+          <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
+            <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">4</div>
+            <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 7L10 17l-5-5" stroke="#FF6A00"/>
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.35"/>
+              </svg>
+            </div>
+          </div>
+          <h3 style="position:relative; margin:24px 0 10px; font-weight:800; font-size:19px; line-height:1.2;">Выберите исполнителя напрямую</h3>
+          <p style="position:relative; margin:0; font-size:14px; line-height:1.45; color:rgba(255,255,255,0.66); font-weight:500;">Без посредников и лишних звеньев</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══ ADVANTAGES ═══ -->
+    <section style="padding:0 64px 72px;">
+      <div style="background:#fff; border:1px solid rgba(7,27,42,0.08); border-radius:18px; display:grid; grid-template-columns:repeat(4,1fr); box-shadow:0 10px 30px rgba(7,27,42,0.05);">
+
+        <!-- Perk 1 -->
+        <div style="padding:34px 30px; border-left:1px solid rgba(7,27,42,0.07);">
+          <div style="width:50px; height:50px; border-radius:12px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="8" r="3"/>
+              <path d="M3 20c0-3 2.5-5 6-5s6 2 6 5"/>
+              <path d="M16 8a3 3 0 0 1 0 6M21 20c0-2.5-1.5-4-3.5-4.7" stroke="#FF6A00"/>
+            </svg>
+          </div>
+          <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Прямой доступ к производителям</h3>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Работайте напрямую с заводами без посредников и наценок.</p>
+        </div>
+
+        <!-- Perk 2 -->
+        <div style="padding:34px 30px; border-left:1px solid rgba(7,27,42,0.07);">
+          <div style="width:50px; height:50px; border-radius:12px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" stroke="#FF6A00"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>
+            </svg>
+          </div>
+          <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Меньше ручной работы</h3>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Автоматический подбор производителей и рассылка запросов.</p>
+        </div>
+
+        <!-- Perk 3 -->
+        <div style="padding:34px 30px; border-left:1px solid rgba(7,27,42,0.07);">
+          <div style="width:50px; height:50px; border-radius:12px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"/>
+              <rect x="5" y="11" width="3" height="8"/>
+              <rect x="10.5" y="7" width="3" height="12" stroke="#FF6A00"/>
+              <rect x="16" y="13" width="3" height="6"/>
+            </svg>
+          </div>
+          <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Прозрачное сравнение КП</h3>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Сравнивайте предложения по цене, срокам и условиям в одном окне.</p>
+        </div>
+
+        <!-- Perk 4 -->
+        <div style="padding:34px 30px; border-left:1px solid rgba(7,27,42,0.07);">
+          <div style="width:50px; height:50px; border-radius:12px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B2233" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19a9 9 0 1 1 16 0"/>
+              <path d="M3.5 19h17"/>
+              <path d="M12 16l5-6" stroke="#FF6A00"/>
+              <circle cx="12" cy="16" r="1.6" fill="#FF6A00" stroke="#FF6A00"/>
+              <path d="M6.5 14.5l1 .6M17.5 14.5l-1 .6M12 8v1.2" stroke-opacity="0.55"/>
+            </svg>
+          </div>
+          <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Быстрее запуск закупки</h3>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Сократите время от запроса до выбора исполнителя.</p>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>
