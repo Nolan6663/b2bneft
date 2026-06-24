@@ -544,8 +544,6 @@
         let currentFilteredProducers = [];
         let mlMap = null;
 
-        const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71','#f59e0b'];
-
         function createMarkerEl(p, animate) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
             const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
