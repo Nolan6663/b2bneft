@@ -1340,16 +1340,7 @@
                 renderFunnel(MOCK);
                 renderInsights(MOCK);
 
-                // Show indicator that some data is real
-                const hdr = document.querySelector('.an-kpi-row');
-                if (hdr && !document.getElementById('realDataBadge')) {
-                    const badge = document.createElement('div');
-                    badge.id = 'realDataBadge';
-                    badge.title = 'Часть показателей загружена из базы данных';
-                    Object.assign(badge.style, { fontSize:'11px', color:'#12A866', fontWeight:'600', gridColumn:'1/-1', display:'flex', alignItems:'center', gap:'5px', paddingBottom:'4px' });
-                    badge.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#12A866"/></svg> Часть данных — из БД';
-                    hdr.before(badge);
-                }
+
             } catch { /* молча, моки остаются */ }
         }
 
