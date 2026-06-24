@@ -579,13 +579,51 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 @media (max-width: 1024px) {
   .main-content { padding: 24px 20px 32px; }
 }
+/* ── Hamburger button ──────────────────────────────────────────────── */
+.burger-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: none; border: 1px solid var(--card-border);
+  border-radius: 9px; cursor: pointer; color: var(--text-primary);
+  flex-shrink: 0;
+}
+.burger-btn:hover { background: var(--hover-bg); }
+
+/* Sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(7,27,42,.45);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.visible { display: block; }
+
 @media (max-width: 768px) {
-  .sidebar { position: fixed; left: -100%; z-index: 200; transition: left .25s; height: 100vh; }
+  .burger-btn { display: flex; }
+  .sidebar {
+    position: fixed; left: -100%; z-index: 200;
+    transition: left .25s ease; height: 100vh;
+    box-shadow: 4px 0 24px rgba(7,27,42,.18);
+  }
   .sidebar.open { left: 0; }
   .main-content { padding: 20px 14px 28px; }
   .modal-content { padding: 20px; width: 94vw; }
   .modal-actions { flex-wrap: wrap; }
   .modal-actions button { flex: 1; }
+  /* Header: keep burger + bell visible, compress user pill */
+  .header { gap: 8px; }
+  .header-right { gap: 8px; }
+  .user-info-block { display: none; }
+  .user-menu-caret { display: none; }
+  /* Tables scroll horizontally */
+  .table-wrap, .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* KPI cards wrap */
+  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Deals filter row wraps */
+  .orders-controls { flex-wrap: wrap; gap: 8px; }
+  .orders-search { min-width: 0; flex: 1 1 100%; }
 }
 
 /* =======================================================================

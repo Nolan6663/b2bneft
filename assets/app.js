@@ -1,4 +1,4 @@
-﻿/* =====================================================================
+/* =====================================================================
    ТЕХЗАКАЗ — общие JS-утилиты (тема, уведомления, чат, select, auth)
    Подключается на каждой странице ДО page-specific <script>:
    <script src="assets/app.js"></script>
@@ -684,6 +684,25 @@ function initHeaderRight() {
   const _dark = document.documentElement.getAttribute('data-theme') === 'dark';
   const _moonSvg = '<path d="M21 13A8.5 8.5 0 1 1 11 3a6.5 6.5 0 0 0 10 10z"/>';
   const _sunSvg  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
+
+  // Burger (mobile)
+  const burger = document.createElement('button');
+  burger.className = 'burger-btn';
+  burger.setAttribute('aria-label', 'Меню');
+  burger.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  burger.addEventListener('click', () => {
+    const sb = document.querySelector('.sidebar');
+    let ov = document.getElementById('sidebarOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.className = 'sidebar-overlay'; ov.id = 'sidebarOverlay';
+      ov.addEventListener('click', () => { sb && sb.classList.remove('open'); ov.classList.remove('visible'); });
+      document.body.appendChild(ov);
+    }
+    const opened = sb && sb.classList.toggle('open');
+    ov.classList.toggle('visible', !!opened);
+  });
+  header.insertBefore(burger, header.firstChild);
 
   const right = document.createElement('div');
   right.className = 'header-right';

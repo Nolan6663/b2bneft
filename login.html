@@ -257,6 +257,33 @@ body {
   text-align: center; line-height: 1.6;
 }
 .terms a { color: #5B7184; text-decoration: underline; }
+
+/* ── Responsive ── */
+@media (max-width: 820px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-left {
+    padding: 28px 28px 24px;
+    min-height: unset;
+  }
+  .auth-left::after { top: -60px; right: -40px; width: 200px; height: 200px; }
+  .left-headline { font-size: 22px; margin-bottom: 10px; }
+  .left-sub { font-size: 13px; margin-bottom: 20px; }
+  .perks { gap: 10px; }
+  .left-footer { display: none; }
+  .auth-right { padding: 28px 20px 36px; align-items: flex-start; }
+}
+@media (max-width: 540px) {
+  .auth-left { padding: 20px 16px 18px; }
+  .back-link { margin-bottom: 20px; }
+  .brand { margin-bottom: 18px; }
+  .left-headline { font-size: 20px; }
+  .left-sub { display: none; }
+  .perks { display: none; }
+  .auth-right { padding: 20px 16px 28px; }
+  .auth-box { max-width: 100%; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-role { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
