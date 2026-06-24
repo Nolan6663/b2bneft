@@ -1652,6 +1652,98 @@ app.post('/api/auth/login', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ===================== ЯНДЕКС OAUTH =====================
+
+const YANDEX_CLIENT_ID     = process.env.YANDEX_CLIENT_ID     || '';
+const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET || '';
+
+app.get('/api/auth/yandex', (req, res) => {
+    if (!YANDEX_CLIENT_ID) return res.status(503).json({ error: 'Яндекс OAuth не настроен' });
+    const redirectUri = process.env.YANDEX_REDIRECT_URI || `${APP_URL}/api/auth/yandex/callback`;
+    const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: YANDEX_CLIENT_ID,
+        redirect_uri: redirectUri,
+        force_confirm: 'yes',
+    });
+    res.redirect(`https://oauth.yandex.ru/authorize?${params}`);
+});
+
+app.get('/api/auth/yandex/callback', async (req, res) => {
+    const { code, error } = req.query;
+    if (error || !code) return res.redirect('/login.html?error=oauth_denied');
+    if (!YANDEX_CLIENT_ID) return res.redirect('/login.html?error=oauth_not_configured');
+
+    try {
+        const redirectUri = process.env.YANDEX_REDIRECT_URI || `${APP_URL}/api/auth/yandex/callback`;
+
+        // Обмен кода на токен
+        const tokenRes = await fetch('https://oauth.yandex.ru/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                client_id: YANDEX_CLIENT_ID,
+                client_secret: YANDEX_CLIENT_SECRET,
+                redirect_uri: redirectUri,
+            }),
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) {
+            console.error('Yandex token error:', tokenData);
+            return res.redirect('/login.html?error=oauth_token');
+        }
+
+        // Получение данных пользователя
+        const infoRes = await fetch('https://login.yandex.ru/info?format=json', {
+            headers: { Authorization: `OAuth ${tokenData.access_token}` },
+        });
+        const info = await infoRes.json();
+
+        const email = info.default_email || (info.emails && info.emails[0]);
+        if (!email) return res.redirect('/login.html?error=oauth_no_email');
+
+        // Поиск или создание пользователя
+        let { rows: [user] } = await pool.query(
+            'SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]
+        );
+        if (!user) {
+            const company = info.real_name || info.display_name || info.login || email.split('@')[0];
+            await withTransaction(async (client) => {
+                const { rows: [u] } = await client.query(
+                    "INSERT INTO users (email, password, role, company, inn) VALUES ($1,$2,'customer',$3,'') RETURNING *",
+                    [email, hashPassword(crypto.randomBytes(32).toString('hex')), company]
+                );
+                const { rows: [exists] } = await client.query(
+                    'SELECT 1 FROM companies WHERE company=$1 AND role=$2', [company, 'customer']
+                );
+                if (!exists) {
+                    await client.query(
+                        "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,'','customer','','На проверке')",
+                        [company]
+                    );
+                }
+                user = u;
+            });
+        }
+
+        const { accessToken, refreshToken } = generateTokens(user);
+        await pool.query(
+            "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1,$2,NOW() + INTERVAL '30 days')",
+            [user.id, refreshToken]
+        );
+        setAuthCookies(res, accessToken, refreshToken);
+
+        // Редирект на login.html — он подхватит параметры и установит localStorage
+        const ev = user.email_verified ? '1' : '0';
+        res.redirect(`/login.html?oauth_ok=1&role=${encodeURIComponent(user.role)}&company=${encodeURIComponent(user.company)}&ev=${ev}`);
+    } catch (e) {
+        console.error('Yandex OAuth callback error:', e);
+        res.redirect('/login.html?error=oauth_error');
+    }
+});
+
 // ===================== СООБЩЕНИЯ =====================
 
 app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
