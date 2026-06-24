@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
    ТЕХЗАКАЗ — дизайн-система v2 (светлая тема, Inter)
    Подключается на переработанных страницах вместо theme.css
    ===================================================================== */
@@ -266,9 +266,9 @@ button { font-family: inherit; }
   padding: 0 22px; height: 42px; border-radius: var(--radius-btn);
   font-size: 13px; font-weight: 700; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  box-shadow: 0 4px 14px rgba(8,145,178,.2);
+  box-shadow: 0 4px 14px rgba(255,106,0,.2);
 }
-.btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(8,145,178,.3); }
+.btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,106,0,.3); }
 .btn-primary:active  { transform: translateY(0); }
 .btn-primary:disabled, .btn-respond:disabled { background: var(--inner-bg); color: var(--text-muted); box-shadow: none; cursor: not-allowed; transform: none; }
 
@@ -336,7 +336,7 @@ button { font-family: inherit; }
 }
 .form-group input::placeholder, .search-input::placeholder { color: var(--text-secondary); }
 .form-group textarea { height: auto; padding: 12px 14px; min-height: 90px; resize: vertical; }
-.form-group input:focus, .form-group textarea:focus, .search-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(8,145,178,.1); }
+.form-group input:focus, .form-group textarea:focus, .search-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(255,106,0,.1); }
 
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-tertiary); }
 .checkbox-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent-cyan); }
@@ -363,8 +363,8 @@ button { font-family: inherit; }
 }
 .custom-select.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); }
 .custom-option { padding: 11px 18px; font-size: 13px; color: var(--text-primary); cursor: pointer; }
-.custom-option:hover { background: rgba(8,145,178,.08); color: var(--accent-cyan); }
-.custom-option.selected { background: rgba(8,145,178,.1); color: var(--accent-cyan); font-weight: 600; }
+.custom-option:hover { background: rgba(255,106,0,.08); color: var(--accent-cyan); }
+.custom-option.selected { background: rgba(255,106,0,.1); color: var(--accent-cyan); font-weight: 600; }
 
 /* ── TABLES ────────────────────────────────────────────────────────── */
 table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -468,14 +468,14 @@ tbody tr:hover { background: var(--bg-section); }
 
 .platform-verified-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(8,145,178,.1); border: 1px solid rgba(8,145,178,.25);
+  background: rgba(255,106,0,.1); border: 1px solid rgba(255,106,0,.25);
   color: var(--accent-cyan); font-size: 11.5px; font-weight: 700;
   padding: 4px 12px; border-radius: 20px;
 }
 
 .capabilities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 4px; }
 .capability-card { border: 1px solid var(--inner-border); border-radius: var(--radius-inner); padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--inner-bg); opacity: .4; position: relative; }
-.capability-card.active { opacity: 1; border-color: rgba(8,145,178,.35); background: rgba(8,145,178,.06); }
+.capability-card.active { opacity: 1; border-color: rgba(255,106,0,.35); background: rgba(255,106,0,.06); }
 .cap-icon { font-size: 22px; line-height: 1; }
 .cap-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); text-align: center; }
 .capability-card.active .cap-label { color: var(--text-primary); }
@@ -493,7 +493,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 
 .cert-tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .cert-tag.iso { background: rgba(37,99,235,.1); border: 1px solid rgba(37,99,235,.2); color: #1D4ED8; }
-.cert-tag.quality { background: rgba(8,145,178,.1); border: 1px solid rgba(8,145,178,.2); color: var(--accent-cyan); }
+.cert-tag.quality { background: rgba(255,106,0,.1); border: 1px solid rgba(255,106,0,.2); color: var(--accent-cyan); }
 .cert-tag button { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; line-height: 1; padding: 0 0 0 2px; opacity: .6; }
 .cert-tag button:hover { opacity: 1; }
 
@@ -513,7 +513,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 10px;
   transition: box-shadow .2s, transform .2s, border-color .2s;
 }
-.catalog-card:hover { box-shadow: 0 8px 24px rgba(8,145,178,.12); transform: translateY(-2px); border-color: var(--accent-cyan); }
+.catalog-card:hover { box-shadow: 0 8px 24px rgba(255,106,0,.12); transform: translateY(-2px); border-color: var(--accent-cyan); }
 
 /* ── LEGACY MODAL (совместимость с app.js) ─────────────────────────── */
 .modal {
@@ -542,7 +542,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 .cmp-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .cmp-icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--inner-bg); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
 .cmp-icon-btn:hover { background: var(--inner-border); color: var(--text-primary); }
-.cmp-icon-btn.goto:hover { color: var(--accent-bright); background: rgba(8,145,178,.1); }
+.cmp-icon-btn.goto:hover { color: var(--accent-bright); background: rgba(255,106,0,.1); }
 .cmp-messages { height: 360px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-secondary); }
 .cmp-messages::-webkit-scrollbar { width: 4px; }
 .cmp-messages::-webkit-scrollbar-track { background: transparent; }
@@ -612,7 +612,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse at 25% 70%, rgba(8,145,178,.3) 0%, transparent 55%),
+    radial-gradient(ellipse at 25% 70%, rgba(255,106,0,.3) 0%, transparent 55%),
     radial-gradient(ellipse at 75% 25%, rgba(37,99,235,.18) 0%, transparent 50%);
 }
 .sidebar-promo-img::after {
@@ -985,7 +985,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 .widget-map-dot-circle {
   width: 10px; height: 10px; border-radius: 50%;
   background: var(--accent-cyan); opacity: .8;
-  box-shadow: 0 0 0 3px rgba(8,145,178,.2);
+  box-shadow: 0 0 0 3px rgba(255,106,0,.2);
 }
 .widget-map-dot-label {
   font-size: 9px; font-family: 'JetBrains Mono', monospace;
@@ -1404,7 +1404,7 @@ body {
 }
 
 .sidebar a.active {
-  background: linear-gradient(90deg, rgba(0, 169, 184, .12), rgba(11, 124, 255, .04));
+  background: linear-gradient(90deg, rgba(0, 169, 184, .12), rgba(255,106,0, .04));
   color: var(--accent-cyan);
   border-left-color: var(--accent-cyan);
 }
@@ -1675,11 +1675,11 @@ body {
   opacity: .9;
   background-repeat: no-repeat;
   background-size: 130px 42px;
-  background-image: url("data:image/svg+xml,%3Csvg width='130' height='42' viewBox='0 0 130 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 34 L15 29 L26 31 L38 24 L50 21 L62 13 L73 28 L84 20 L95 24 L108 16 L128 18' fill='none' stroke='%230B7CFF' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='130' height='42' viewBox='0 0 130 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 34 L15 29 L26 31 L38 24 L50 21 L62 13 L73 28 L84 20 L95 24 L108 16 L128 18' fill='none' stroke='%23FF6A00' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 .kpi-card:nth-child(2)::after {
-  background-image: url("data:image/svg+xml,%3Csvg width='130' height='42' viewBox='0 0 130 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 33 L12 25 L25 28 L36 20 L48 18 L61 12 L73 10 L84 24 L96 20 L108 27 L120 17 L128 19' fill='none' stroke='%2300A9B8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='130' height='42' viewBox='0 0 130 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 33 L12 25 L25 28 L36 20 L48 18 L61 12 L73 10 L84 24 L96 20 L108 27 L120 17 L128 19' fill='none' stroke='%23FF6A00' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 .kpi-card:nth-child(3)::after {
   background-image: url("data:image/svg+xml,%3Csvg width='130' height='42' viewBox='0 0 130 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 22 L13 19 L25 25 L37 18 L48 21 L60 16 L72 28 L84 23 L96 29 L108 21 L120 26 L128 22' fill='none' stroke='%23FF7A1A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -1723,11 +1723,11 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: #EEF6FF;
-  color: #0B7CFF;
+  background: #FFF1E8;
+  color: #FF6A00;
 }
 
-.kpi-card:nth-child(2) .kpi-icon { background: #EAFBF8; color: #00A9B8; }
+.kpi-card:nth-child(2) .kpi-icon { background: #FFF4EC; color: #FF6A00; }
 .kpi-card:nth-child(3) .kpi-icon { background: #FFF2E8; color: #FF7A1A; }
 .kpi-card:nth-child(4) .kpi-icon { background: #EAF9EF; color: #12A866; }
 
@@ -1740,8 +1740,8 @@ body {
 .btn-modal-submit {
   height: 42px;
   border-radius: 7px;
-  background: linear-gradient(135deg, #00A9B8, #0B7CFF);
-  box-shadow: 0 8px 18px rgba(11, 124, 255, .16);
+  background: linear-gradient(135deg, #FF6A00, #FF6A00);
+  box-shadow: 0 8px 18px rgba(255,106,0, .16);
   font-weight: 800;
 }
 
@@ -1820,7 +1820,7 @@ tbody tr:hover {
 
 .badge.waiting,
 .badge.customer {
-  color: #0B7CFF;
+  color: #FF6A00;
 }
 
 .badge.loose,
@@ -1864,12 +1864,12 @@ tbody tr:hover {
 }
 
 .proc-list-tab.active {
-  color: #0B7CFF;
+  color: #FF6A00;
 }
 
 .proc-list-tab.active::after {
   height: 3px;
-  background: #0B7CFF;
+  background: #FF6A00;
 }
 
 .proc-grid-head {
@@ -1991,7 +1991,7 @@ tbody tr:hover {
 
   .sidebar a.active,
   .sidebar.collapsed a.active {
-    box-shadow: inset 0 -3px 0 #00A9B8;
+    box-shadow: inset 0 -3px 0 #FF6A00;
   }
 }
 
@@ -2068,7 +2068,7 @@ tbody tr:hover {
 .cs-trigger:hover { border-color: var(--accent-cyan); }
 .cs-open .cs-trigger {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(8,145,178,.12);
+  box-shadow: 0 0 0 3px rgba(255,106,0,.12);
 }
 .cs-val { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 .cs-arrow {
