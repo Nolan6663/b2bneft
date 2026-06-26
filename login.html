@@ -495,9 +495,6 @@ function showError(msg) {
   }
   el.textContent = msg;
   el.style.display = 'block';
-  // toastContainer alias for e2e tests
-  const toast = document.getElementById('toastContainer');
-  if (toast) { toast.textContent = msg; toast.style.display = 'block'; }
 }
 
 function clearError() {
