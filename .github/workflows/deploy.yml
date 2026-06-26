@@ -21,4 +21,4 @@ jobs:
             npm install --production
             pm2 stop neft || true
             pm2 delete neft || true
-            pm2 start ecosystem.config.js
+            env $(cat .env | grep -v '^#' | xargs) pm2 start ecosystem.config.js
