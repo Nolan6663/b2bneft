@@ -16,7 +16,7 @@ const multer = require('multer');
 const http = require('http');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
 const storage = require('./storage');
@@ -34,8 +34,15 @@ function htmlEscape(str) {
 }
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'info.texzakaz@mail.ru';
+const smtpTransport = (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+    ? nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 465,
+        secure: true,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    })
+    : null;
 const APP_URL = process.env.APP_URL || 'https://texzakaz.ru';
 const ALLOWED_ORIGINS = new Set(
     [APP_URL, ...(process.env.CORS_ORIGIN || '').split(',')]
@@ -51,13 +58,13 @@ function isAllowedOrigin(origin) {
 }
 
 async function sendEmail(to, subject, html) {
-    if (!resend) { console.log(`[Email] No RESEND_API_KEY — skipping: ${to} | ${subject}`); return; }
+    if (!smtpTransport) { console.log(`[Email] No SMTP config — skipping: ${to} | ${subject}`); return; }
     try {
-        const result = await resend.emails.send({ from: `ТехЗаказ <${EMAIL_FROM}>`, to, subject, html });
-        console.log(`[Email] Sent to ${to} | id: ${result?.id}`);
+        const info = await smtpTransport.sendMail({ from: `ТехЗаказ <${EMAIL_FROM}>`, to, subject, html });
+        console.log(`[Email] Sent to ${to} | id: ${info.messageId}`);
     } catch (e) {
         console.error(`[Email] FAILED to ${to} | ${e.message}`, e);
-        throw e; // пробрасываем чтобы caller мог вернуть ошибку клиенту
+        throw e;
     }
 }
 
