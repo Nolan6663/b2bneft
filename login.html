@@ -362,7 +362,7 @@ body {
       <div class="form-group">
         <label>Пароль</label>
         <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password">
-        <a href="#" class="forgot-link">Забыли пароль?</a>
+        <a href="#" class="forgot-link" onclick="openForgot(); return false;">Забыли пароль?</a>
       </div>
 
       <button id="btnSubmit" class="btn-primary" onclick="handleLogin()">
@@ -450,6 +450,40 @@ body {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Модал: Забыли пароль -->
+<div id="forgotOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:32px;width:100%;max-width:400px;margin:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <h3 id="forgotTitle" style="margin:0 0 8px;font-size:18px;color:var(--text-primary,#111);">Восстановление пароля</h3>
+    <p id="forgotDesc" style="margin:0 0 20px;font-size:13.5px;color:var(--text-secondary,#666);">Введите email аккаунта — отправим ссылку для сброса пароля.</p>
+    <div id="forgotEmailStep">
+      <input id="forgotEmail" type="email" placeholder="you@company.ru" style="width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--input-border,#ddd);background:var(--input-bg,#f5f5f5);font-size:14px;color:var(--text-primary,#111);box-sizing:border-box;outline:none;">
+      <div id="forgotError" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;color:#DC2626;font-size:13px;"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button onclick="closeForgot()" style="flex:1;height:42px;border-radius:10px;border:1px solid var(--inner-border,#ddd);background:transparent;color:var(--text-secondary,#666);font-size:13.5px;cursor:pointer;">Отмена</button>
+        <button onclick="handleForgot()" id="forgotBtn" style="flex:2;height:42px;border-radius:10px;border:none;background:linear-gradient(135deg,#FF6A00,#FF8C00);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;">Отправить ссылку</button>
+      </div>
+    </div>
+    <div id="forgotSuccessStep" style="display:none;text-align:center;padding:8px 0;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#41bd97" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+      <p style="font-size:14px;font-weight:600;color:var(--text-primary,#111);margin:0 0 6px;">Письмо отправлено!</p>
+      <p style="font-size:13px;color:var(--text-secondary,#666);margin:0 0 20px;">Проверьте почту и перейдите по ссылке в письме.</p>
+      <button onclick="closeForgot()" style="width:100%;height:42px;border-radius:10px;border:none;background:linear-gradient(135deg,#FF6A00,#FF8C00);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: Новый пароль (по ссылке из письма) -->
+<div id="resetOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg,#fff);border-radius:16px;padding:32px;width:100%;max-width:400px;margin:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <h3 style="margin:0 0 8px;font-size:18px;color:var(--text-primary,#111);">Новый пароль</h3>
+    <p style="margin:0 0 20px;font-size:13.5px;color:var(--text-secondary,#666);">Придумайте новый пароль — минимум 8 символов.</p>
+    <input id="resetPassword" type="password" placeholder="Новый пароль" style="width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--input-border,#ddd);background:var(--input-bg,#f5f5f5);font-size:14px;color:var(--text-primary,#111);box-sizing:border-box;outline:none;margin-bottom:10px;">
+    <input id="resetPassword2" type="password" placeholder="Повторите пароль" style="width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--input-border,#ddd);background:var(--input-bg,#f5f5f5);font-size:14px;color:var(--text-primary,#111);box-sizing:border-box;outline:none;">
+    <div id="resetError" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;color:#DC2626;font-size:13px;"></div>
+    <button onclick="handleReset()" id="resetBtn" style="width:100%;height:42px;border-radius:10px;border:none;background:linear-gradient(135deg,#FF6A00,#FF8C00);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:16px;">Сохранить пароль</button>
   </div>
 </div>
 
@@ -586,6 +620,75 @@ document.addEventListener('keydown', e => {
 })();
 
 if (location.hash === '#register') switchTab('register');
+
+function openForgot() {
+  document.getElementById('forgotOverlay').style.display = 'flex';
+  document.getElementById('forgotEmailStep').style.display = 'block';
+  document.getElementById('forgotSuccessStep').style.display = 'none';
+  document.getElementById('forgotError').style.display = 'none';
+  document.getElementById('forgotEmail').value = document.getElementById('authEmail').value || '';
+}
+
+function closeForgot() {
+  document.getElementById('forgotOverlay').style.display = 'none';
+}
+
+async function handleForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const errEl = document.getElementById('forgotError');
+  const btn = document.getElementById('forgotBtn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Введите email'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Отправляем...';
+  try {
+    await fetch(`${SERVER_URL}/auth/forgot-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    document.getElementById('forgotEmailStep').style.display = 'none';
+    document.getElementById('forgotSuccessStep').style.display = 'block';
+  } catch {
+    errEl.textContent = 'Ошибка соединения. Попробуйте ещё раз.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Отправить ссылку';
+  }
+}
+
+async function handleReset() {
+  const token = new URLSearchParams(location.search).get('reset');
+  const pass = document.getElementById('resetPassword').value;
+  const pass2 = document.getElementById('resetPassword2').value;
+  const errEl = document.getElementById('resetError');
+  const btn = document.getElementById('resetBtn');
+  errEl.style.display = 'none';
+  if (pass.length < 8) { errEl.textContent = 'Пароль — минимум 8 символов'; errEl.style.display = 'block'; return; }
+  if (pass !== pass2) { errEl.textContent = 'Пароли не совпадают'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Сохраняем...';
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/reset-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error || 'Ошибка'; errEl.style.display = 'block'; return; }
+    document.getElementById('resetOverlay').style.display = 'none';
+    showError('');
+    alert('Пароль изменён! Войдите с новым паролем.');
+    history.replaceState({}, '', location.pathname);
+  } catch {
+    errEl.textContent = 'Ошибка соединения.'; errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Сохранить пароль';
+  }
+}
+
+(function () {
+  const p = new URLSearchParams(location.search);
+  if (p.get('reset')) {
+    document.getElementById('resetOverlay').style.display = 'flex';
+  }
+})();
 </script>
 </body>
 </html>
