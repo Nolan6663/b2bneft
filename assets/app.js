@@ -207,7 +207,7 @@ function showEmailVerificationBanner() {
   if (document.getElementById('emailVerifyBanner')) return;
   const bar = document.createElement('div');
   bar.id = 'emailVerifyBanner';
-  bar.style.cssText = 'background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.35);padding:10px 16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999;background:rgba(245,158,11,.95);border-top:1px solid rgba(245,158,11,.5);padding:10px 20px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;color:#7c4a00;';
   bar.innerHTML = '<span>Подтвердите email, чтобы размещать заявки и откликаться на закупки.</span>'
     + '<button type="button" class="btn-secondary" style="font-size:12px;padding:6px 12px;">Отправить письмо повторно</button>';
   bar.querySelector('button').addEventListener('click', resendVerificationEmail);
