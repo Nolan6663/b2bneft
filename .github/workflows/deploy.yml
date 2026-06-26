@@ -19,4 +19,6 @@ jobs:
             cd /var/www/neft
             git pull origin main
             npm install --production
-            pm2 restart neft
+            pm2 stop neft || true
+            pm2 delete neft || true
+            pm2 start ecosystem.config.js
