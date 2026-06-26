@@ -621,6 +621,28 @@ document.addEventListener('keydown', e => {
 
 if (location.hash === '#register') switchTab('register');
 
+(async function () {
+  const p = new URLSearchParams(location.search);
+  const verifyToken = p.get('verify');
+  if (!verifyToken) return;
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/verify-email`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: verifyToken })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('emailVerified', '1');
+      alert('Email подтверждён! Теперь войдите в аккаунт.');
+    } else {
+      alert(data.error || 'Ссылка недействительна или истекла.');
+    }
+  } catch {
+    alert('Ошибка соединения.');
+  }
+  history.replaceState({}, '', location.pathname);
+})();
+
 function openForgot() {
   document.getElementById('forgotOverlay').style.display = 'flex';
   document.getElementById('forgotEmailStep').style.display = 'block';
