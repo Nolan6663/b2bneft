@@ -36,7 +36,7 @@ function htmlEscape(str) {
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const APP_URL = process.env.APP_URL || 'https://b2bneft.onrender.com';
+const APP_URL = process.env.APP_URL || 'https://texzakaz.ru';
 const ALLOWED_ORIGINS = new Set(
     [APP_URL, ...(process.env.CORS_ORIGIN || '').split(',')]
         .map(v => String(v || '').trim())
@@ -53,7 +53,7 @@ function isAllowedOrigin(origin) {
 async function sendEmail(to, subject, html) {
     if (!resend) { console.log(`[Email] No RESEND_API_KEY — skipping: ${to} | ${subject}`); return; }
     try {
-        const result = await resend.emails.send({ from: `B2B Нефтесервис <${EMAIL_FROM}>`, to, subject, html });
+        const result = await resend.emails.send({ from: `ТехЗаказ <${EMAIL_FROM}>`, to, subject, html });
         console.log(`[Email] Sent to ${to} | id: ${result?.id}`);
     } catch (e) {
         console.error(`[Email] FAILED to ${to} | ${e.message}`, e);
@@ -439,7 +439,7 @@ async function geocodeCity(city) {
     try {
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city.trim() + ', Россия')}&format=json&limit=1&countrycodes=ru`;
         const res = await fetch(url, {
-            headers: { 'User-Agent': 'B2BNeft/1.0 (b2bneft)' },
+            headers: { 'User-Agent': 'TechZakaz/1.0 (texzakaz)' },
             signal: AbortSignal.timeout(8000),
         });
         const data = await res.json();
@@ -553,7 +553,7 @@ async function sendVerificationEmail(user) {
         [user.id, token]
     );
     const link = `${APP_URL}/login.html?verify=${token}`;
-    await sendEmail(user.email, 'Подтвердите email — B2B Нефтесервис', `
+    await sendEmail(user.email, 'Подтвердите email — ТехЗаказ', `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a2332">
           <h2 style="color:#41bd97">Подтверждение email</h2>
           <p>Здравствуйте! Подтвердите адрес <strong>${htmlEscape(user.email)}</strong>, чтобы размещать заявки и откликаться на закупки.</p>
@@ -1339,7 +1339,7 @@ app.post('/api/ai-search', requireAuth, async (req, res, next) => {
             `[${i}] ${p.company} | ${p.city || '—'} | ${p.specialization || '—'} | Возможности: ${(p.capabilities || []).join(', ') || '—'} | ${p.about || ''}`
         ).join('\n');
 
-        const prompt = `Ты — ассистент B2B маркетплейса нефтесервисного оборудования России.
+        const prompt = `Ты — ассистент B2B платформы прямых закупок ТехЗаказ (Россия).
 Пользователь ищет: "${query.trim()}"
 
 Каталог производителей (формат: [индекс] название | город | специализация | возможности | описание):
@@ -1902,7 +1902,7 @@ app.post('/api/auth/forgot-password', async (req, res, next) => {
                 [user.id, token]
             );
             const link = `${APP_URL}/login.html?reset=${token}`;
-            await sendEmail(user.email, 'Восстановление пароля — B2B Нефтесервис', `
+            await sendEmail(user.email, 'Восстановление пароля — ТехЗаказ', `
                 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a2332">
                   <h2 style="color:#41bd97">Восстановление пароля</h2>
                   <p>Поступил запрос на сброс пароля для аккаунта <strong>${user.email}</strong>.</p>
@@ -2251,10 +2251,10 @@ app.post('/api/verification/:id/approve', requireAuth, requireRole('admin'), asy
         if (companyRow) {
             await addNotification(companyRow.company, 'Ваша компания успешно верифицирована платформой!');
             const email = await getCompanyEmail(companyRow.company);
-            if (email) await sendEmail(email, 'Верификация пройдена — B2B Нефтесервис',
+            if (email) await sendEmail(email, 'Верификация пройдена — ТехЗаказ',
                 `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
                   <h3 style="color:#41bd97">Компания верифицирована!</h3>
-                  <p>Ваша компания <strong>${companyRow.company}</strong> успешно прошла верификацию на платформе B2B Нефтесервис.</p>
+                  <p>Ваша компания <strong>${companyRow.company}</strong> успешно прошла верификацию на платформе ТехЗаказ.</p>
                   <p>Теперь рядом с вашим профилем отображается знак верификации.</p>
                   <a href="${APP_URL}/company-profile.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть профиль</a>
                 </div>`
@@ -2279,7 +2279,7 @@ app.post('/api/verification/:id/reject', requireAuth, requireRole('admin'), asyn
         if (rejectCompany) {
             await addNotification(rejectCompany.company, `Заявка на верификацию отклонена.${comment ? ' Причина: ' + comment : ''}`);
             const email = await getCompanyEmail(rejectCompany.company);
-            if (email) await sendEmail(email, 'Заявка на верификацию отклонена — B2B Нефтесервис',
+            if (email) await sendEmail(email, 'Заявка на верификацию отклонена — ТехЗаказ',
                 `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
                   <h3 style="color:#e07070">Заявка на верификацию отклонена</h3>
                   <p>Заявка компании <strong>${rejectCompany.company}</strong> была рассмотрена и отклонена.</p>

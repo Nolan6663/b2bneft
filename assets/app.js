@@ -625,7 +625,7 @@ function initSidebarExtra() {
   promo.className = 'sidebar-promo';
   promo.innerHTML = `
     <div class="sidebar-promo-img"></div>
-    <div class="sidebar-promo-text">Автоматизация закупок<br>для нефтегазовой отрасли</div>
+    <div class="sidebar-promo-text">Платформа прямых<br>закупок ТехЗаказ</div>
     <a href="#" class="sidebar-promo-btn">Подробнее</a>`;
   sidebar.appendChild(promo);
 
