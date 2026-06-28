@@ -233,6 +233,24 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
+const generalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много запросов. Подождите минуту.' }
+});
+app.use('/api/', generalLimiter);
+
+const aiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много AI-запросов. Подождите минуту.' }
+});
+app.use('/api/ai-search', aiLimiter);
+
 // ===================== WEBSOCKET =====================
 let Server = null;
 try { Server = require('socket.io').Server; }
