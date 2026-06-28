@@ -488,19 +488,36 @@
                 kpList.innerHTML = `<div style="font-size:13px;color:var(--text-secondary);padding:16px 0;text-align:center;">Предложений пока нет</div>`;
             }
 
-            // mini bar chart
-            const bars = [40,55,48,62,70,58];
-            document.getElementById('ddpBars').innerHTML = bars.map(h =>
-                `<div class="ddp-mini-bar" style="height:${h}%;"></div>`).join('');
-            document.getElementById('ddpAnalytics').style.display = '';
+            // mini bar chart — proposal prices for this order
+            if (d.proposals && d.proposals.length) {
+                const prices = d.proposals.map(p => p.price || 0);
+                const maxP = Math.max(...prices) || 1;
+                document.getElementById('ddpBars').innerHTML = prices.map(p =>
+                    `<div class="ddp-mini-bar" style="height:${Math.max(8, Math.round(p/maxP*100))}%;" title="${fmtPrice(p)}"></div>`).join('');
+                document.getElementById('ddpAnalytics').style.display = '';
+            } else {
+                document.getElementById('ddpAnalytics').style.display = 'none';
+            }
 
-            // top suppliers
-            document.getElementById('ddpSupplierList').innerHTML = [
-                ['ООО «НефтеПромСнаб»','87%'],
-                ['ООО «АктивСнаб»','72%'],
-                ['АО «РегионСнаб»','94%'],
-            ].map(([name,score]) => `<div class="ddp-supplier-row"><span class="ddp-supplier-name">${name}</span><span class="ddp-supplier-score">${score}</span></div>`).join('');
-            document.getElementById('ddpSuppliers').style.display = '';
+            // proposals as "suppliers" list with price deviation
+            if (d.proposals && d.proposals.length) {
+                const prices = d.proposals.map(p => p.price || 0).filter(Boolean);
+                const avgP   = prices.length ? prices.reduce((a,b) => a+b, 0) / prices.length : 0;
+                document.getElementById('ddpSupplierList').innerHTML = d.proposals
+                    .slice(0, 5)
+                    .map(p => {
+                        const dev = avgP > 0 ? Math.round((1 - (p.price||0)/avgP) * 100) : 0;
+                        const col = dev > 0 ? '#12A866' : dev < 0 ? '#e07070' : 'var(--text-secondary)';
+                        const tag = dev !== 0 ? `<span style="color:${col};font-size:11px;">${dev>0?'−'+dev:'+'+(Math.abs(dev))}%</span>` : '';
+                        return `<div class="ddp-supplier-row">
+                            <span class="ddp-supplier-name" style="font-size:12px;">${escapeHtml(p.supplier)}</span>
+                            <span class="ddp-supplier-score">${fmtPrice(p.price)} ${tag}</span>
+                        </div>`;
+                    }).join('');
+                document.getElementById('ddpSuppliers').style.display = '';
+            } else {
+                document.getElementById('ddpSuppliers').style.display = 'none';
+            }
 
             // Delivery tracking button
             const trackBtn  = document.getElementById('ddpTrackBtn');

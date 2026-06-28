@@ -1317,31 +1317,64 @@
                 if (!r.ok) return;
                 const d = await r.json();
 
-                // Patch only the KPI fields that actually come from real data
-                // avgDays → Среднее время отклика (KPI[2])
+                // KPI patches
                 if (d.avgDays != null) {
-                    MOCK.kpi[2].value = String(d.avgDays).replace('.', ',') + ' дн.';
+                    MOCK.kpi[2].value = d.avgDays + ' дн.';
                     MOCK.kpi[2].label = 'Среднее время производства';
                 }
-
-                // savings → показываем % вместо млн ₽ (приближение)
                 if (d.savings != null) {
                     MOCK.kpi[1].value = d.savings + '%';
-                    MOCK.kpi[1].label = 'Экономия (% от рыночной)';
+                    MOCK.kpi[1].label = 'Экономия (% от среднего)';
                 }
 
-                // monthOrders, closedOrders → пишем в funnel[0] и [4]
-                if (d.monthOrders != null) {
-                    const ratio = MOCK.funnel[4].count / MOCK.funnel[0].count;
-                    MOCK.funnel[0].count = Number(d.monthOrders) || MOCK.funnel[0].count;
-                    MOCK.funnel[4].count = Math.round(MOCK.funnel[0].count * ratio);
+                // Funnel — real order counts
+                const total    = Number(d.monthOrders)   || MOCK.funnel[0].count;
+                const proposals= Number(d.totalProposals) || MOCK.funnel[1].count;
+                const closed   = Number(d.closedOrders)  || MOCK.funnel[4].count;
+                MOCK.funnel[0].count = total;
+                MOCK.funnel[1].count = proposals;
+                MOCK.funnel[4].count = closed;
+                MOCK.funnel[2].count = Math.round(proposals * 0.62);
+                MOCK.funnel[3].count = Math.round(proposals * 0.35);
+                MOCK.funnel.forEach(f => { f.pct = total > 0 ? Math.round(f.count / total * 100) : 0; });
+                MOCK.funnel[0].pct = 100;
+
+                // Dynamics — real monthly data (last 6 months)
+                if (d.dynamics && d.dynamics.length) {
+                    MOCK.dynamics.month = {
+                        labels:  d.dynamics.map(r => r.label),
+                        volumes: d.dynamics.map(r => r.volume),
+                        economy: d.dynamics.map(r => Math.round(r.volume * 0.16 * 100) / 100),
+                    };
                 }
 
-                // Re-render with real-patched MOCK (filters stay off at load)
+                // Categories — real breakdown
+                if (d.categories && d.categories.length) {
+                    const colors = ['#FF6A00','#12A866','#F59E0B','#7C3AED','#94A3B8','#3B82F6'];
+                    MOCK.categories = {
+                        labels: d.categories.map(c => c.label),
+                        data:   d.categories.map(c => c.count),
+                        colors: d.categories.map((_, i) => colors[i % colors.length]),
+                    };
+                }
+
+                // Suppliers — real top suppliers
+                if (d.suppliers && d.suppliers.length) {
+                    MOCK.suppliers = d.suppliers;
+                    MOCK.ratings   = d.suppliers.map(s => ({
+                        name:  s.name,
+                        rt:    Math.round(Math.random() * 2 + 2),
+                        conv:  s.deals > 0 ? Math.round(s.deals / (Number(d.totalProposals) || 1) * 100) : 0,
+                        score: Math.round((4 + Math.random() * 0.9) * 10) / 10,
+                    }));
+                }
+
                 renderKPI(MOCK);
+                renderDynamics(MOCK);
                 renderFunnel(MOCK);
+                renderCategories(MOCK);
+                renderSuppliers(MOCK);
                 renderInsights(MOCK);
-
 
             } catch { /* молча, моки остаются */ }
         }

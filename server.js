@@ -1664,28 +1664,109 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
             { rows: [{ n: monthOrders }] },
             { rows: [{ n: activeOrders }] },
             { rows: [{ n: closedOrders }] },
+            { rows: [{ n: totalProposals }] },
             { rows: [{ avg: avgDays }] },
             { rows: savingsRows },
+            { rows: dynamicsRows },
+            { rows: categoryRows },
+            { rows: supplierRows },
         ] = await Promise.all([
-            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND created_at >= date_trunc('month', NOW())", [company]),
-            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND status = 'Активный'", [company]),
-            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND status = 'Закрыта'", [company]),
-            pool.query(`SELECT ROUND(AVG(p.days)) AS avg
-                FROM proposals p JOIN orders o ON o.id = p.order_id
-                WHERE o.company = $1 AND p.status = 'Выигран'`, [company]),
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company=$1 AND created_at>=date_trunc('month',NOW())", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company=$1 AND status='Активный'", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM orders WHERE company=$1 AND status='Закрыта'", [company]),
+            pool.query("SELECT COUNT(*) AS n FROM proposals p JOIN orders o ON o.id=p.order_id WHERE o.company=$1", [company]),
+            pool.query(`SELECT ROUND(AVG(p.days)) AS avg FROM proposals p JOIN orders o ON o.id=p.order_id WHERE o.company=$1 AND p.status='Выигран'`, [company]),
             pool.query(`SELECT
-                    (SELECT price FROM proposals WHERE order_id = o.id AND status = 'Выигран' LIMIT 1) AS win_price,
-                    (SELECT AVG(price) FROM proposals WHERE order_id = o.id) AS avg_price
-                FROM orders o WHERE o.company = $1 AND o.status = 'Закрыта'`, [company]),
+                    (SELECT price FROM proposals WHERE order_id=o.id AND status='Выигран' LIMIT 1) AS win_price,
+                    (SELECT AVG(price) FROM proposals WHERE order_id=o.id) AS avg_price
+                FROM orders o WHERE o.company=$1 AND o.status='Закрыта'`, [company]),
+            // Monthly dynamics: last 6 months
+            pool.query(`SELECT
+                    to_char(date_trunc('month', o.created_at), 'Mon YYYY') AS label,
+                    date_trunc('month', o.created_at) AS month_dt,
+                    COUNT(o.id) AS order_count,
+                    COALESCE(SUM(p.price) FILTER (WHERE p.status='Выигран'), 0) AS volume
+                FROM orders o
+                LEFT JOIN proposals p ON p.order_id = o.id AND p.status='Выигран'
+                WHERE o.company=$1 AND o.created_at >= NOW()-INTERVAL '6 months'
+                GROUP BY date_trunc('month',o.created_at)
+                ORDER BY month_dt`, [company]),
+            // Category breakdown
+            pool.query(`SELECT category, COUNT(*) AS cnt
+                FROM orders WHERE company=$1
+                GROUP BY category ORDER BY cnt DESC LIMIT 6`, [company]),
+            // Top suppliers by won deal value
+            pool.query(`SELECT p.company, COUNT(*) AS deals, SUM(p.price) AS total
+                FROM proposals p JOIN orders o ON o.id=p.order_id
+                WHERE o.company=$1 AND p.status='Выигран'
+                GROUP BY p.company ORDER BY total DESC LIMIT 5`, [company]),
         ]);
+
         const validRows = savingsRows.filter(r => r.win_price && r.avg_price && r.avg_price > 0);
         const savings = validRows.length > 0
             ? Math.round(validRows.reduce((s, r) => s + (1 - r.win_price / r.avg_price), 0) / validRows.length * 100)
             : null;
+
+        const totalSupply = supplierRows.reduce((s, r) => s + Number(r.total || 0), 0);
+
         res.json({
-            monthOrders, activeOrders, closedOrders,
-            avgDays: avgDays ? Math.round(avgDays) : null,
+            monthOrders:   Number(monthOrders),
+            activeOrders:  Number(activeOrders),
+            closedOrders:  Number(closedOrders),
+            totalProposals:Number(totalProposals),
+            avgDays:       avgDays ? Math.round(avgDays) : null,
             savings,
+            dynamics: dynamicsRows.map(r => ({
+                label:      r.label,
+                orderCount: Number(r.order_count),
+                volume:     Math.round(Number(r.volume) / 1e6 * 100) / 100,
+            })),
+            categories: categoryRows.map(r => ({ label: r.category, count: Number(r.cnt) })),
+            suppliers: supplierRows.map(r => ({
+                name:   r.company,
+                deals:  Number(r.deals),
+                amount: Math.round(Number(r.total) / 1e6 * 100) / 100,
+                share:  totalSupply > 0 ? Math.round(Number(r.total) / totalSupply * 1000) / 10 : 0,
+            })),
+        });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/messages/stats', requireAuth, async (req, res, next) => {
+    try {
+        const { role, company } = req.user;
+        const whereClause = role === 'producer' ? 'm.company=$1' : 'o.company=$1';
+        const todayStart  = "date_trunc('day', NOW())";
+
+        const [{ rows: [convRow] }, { rows: [todayRow] }, { rows: [avgRow] }] = await Promise.all([
+            pool.query(`SELECT
+                COUNT(DISTINCT (m.order_id, m.company)) AS total_convs,
+                SUM(CASE WHEN m.sender!=$2 AND m.read=false THEN 1 ELSE 0 END) AS unread
+                FROM messages m JOIN orders o ON o.id=m.order_id WHERE ${whereClause}`,
+                [company, role]),
+            pool.query(`SELECT COUNT(*) AS n FROM messages m JOIN orders o ON o.id=m.order_id
+                WHERE ${whereClause} AND m.sender!=$2 AND m.created_at>=${todayStart}`,
+                [company, role]),
+            // avg response time in hours (time between customer msg and next producer msg)
+            pool.query(`SELECT ROUND(AVG(EXTRACT(EPOCH FROM (reply.created_at - orig.created_at))/3600)::numeric, 1) AS avg_h
+                FROM messages orig
+                JOIN messages reply ON reply.order_id=orig.order_id AND reply.company=orig.company
+                    AND reply.sender!=orig.sender AND reply.created_at>orig.created_at
+                JOIN orders o ON o.id=orig.order_id
+                WHERE ${whereClause} AND orig.sender=$2
+                    AND reply.created_at = (
+                        SELECT MIN(created_at) FROM messages
+                        WHERE order_id=orig.order_id AND company=orig.company
+                            AND sender!=orig.sender AND created_at>orig.created_at
+                    )`,
+                [company, role]),
+        ]);
+
+        res.json({
+            totalConversations: Number(convRow.total_convs || 0),
+            unread:             Number(convRow.unread || 0),
+            repliesToday:       Number(todayRow.n || 0),
+            avgResponseHours:   avgRow.avg_h ? Number(avgRow.avg_h) : null,
         });
     } catch (e) { next(e); }
 });

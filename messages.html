@@ -139,10 +139,10 @@
         </div>
 
         <div class="kpi-row">
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Непрочитанные чаты</div><div class="kpi-icon">✉</div></div><div class="kpi-value" id="msgKpiUnread">12</div><div class="kpi-delta positive">↑ 20%</div><div class="kpi-sub">к вчерашнему дню</div></div>
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Активные обсуждения</div><div class="kpi-icon">☏</div></div><div class="kpi-value" id="msgKpiActive">28</div><div class="kpi-delta positive">↑ 12%</div><div class="kpi-sub">в работе</div></div>
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Ответы поставщиков сегодня</div><div class="kpi-icon">☷</div></div><div class="kpi-value">17</div><div class="kpi-delta positive">↑ 31%</div><div class="kpi-sub">к вчерашнему дню</div></div>
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Среднее время ответа</div><div class="kpi-icon">◷</div></div><div class="kpi-value">2,4 ч</div><div class="kpi-delta negative">↓ 8%</div><div class="kpi-sub">к вчерашнему дню</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Непрочитанные чаты</div><div class="kpi-icon">✉</div></div><div class="kpi-value" id="msgKpiUnread">—</div><div class="kpi-sub">требуют внимания</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Активные обсуждения</div><div class="kpi-icon">☏</div></div><div class="kpi-value" id="msgKpiActive">—</div><div class="kpi-sub">всего переписок</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Ответов сегодня</div><div class="kpi-icon">☷</div></div><div class="kpi-value" id="msgKpiToday">—</div><div class="kpi-sub">от контрагентов</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Среднее время ответа</div><div class="kpi-icon">◷</div></div><div class="kpi-value" id="msgKpiAvg">—</div><div class="kpi-sub">часов</div></div>
         </div>
 
         <div class="messages-layout">
@@ -230,6 +230,7 @@ function msgToast(msg) {
             initNotifications();
             initSidebarBadges();
             loadConversations();
+            loadMsgStats();
         });
 
         // ── Conversations list ──────────────────────────────────────────
@@ -419,6 +420,21 @@ function msgToast(msg) {
             ]);
             markRead(conv);
             scrollToBottom();
+        }
+
+        // ── KPI stats ───────────────────────────────────────────────────────
+
+        async function loadMsgStats() {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/messages/stats`);
+                if (!r.ok) return;
+                const s = await r.json();
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+                set('msgKpiUnread', s.unread ?? '0');
+                set('msgKpiActive', s.totalConversations ?? '0');
+                set('msgKpiToday',  s.repliesToday ?? '0');
+                set('msgKpiAvg',    s.avgResponseHours != null ? s.avgResponseHours.toString().replace('.', ',') + ' ч' : '—');
+            } catch {}
         }
 
         // ── Side panel ──────────────────────────────────────────────────────
