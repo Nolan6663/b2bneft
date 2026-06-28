@@ -571,21 +571,33 @@ function _setBadge(id, count) {
   else el.style.display = 'none';
 }
 
+function _applyBadgeCounts(counts, role) {
+  if (role === 'producer') {
+    _setBadge('navBadgeOrders',    counts.activeOrders);
+    _setBadge('navBadgeProposals', counts.pendingProposals);
+  } else {
+    _setBadge('navBadgeOrders',    counts.myActiveOrders);
+    _setBadge('navBadgeProposals', counts.newResponses);
+  }
+  _setBadge('navBadgeMessages', counts.unreadMessages);
+}
+
 async function initSidebarBadges() {
   const role = localStorage.getItem('userRole');
   if (!hasSession()) return;
+
+  // Показываем прошлые значения из кеша мгновенно — без ожидания API
+  const cached = localStorage.getItem('_badgeCache');
+  if (cached) {
+    try { _applyBadgeCounts(JSON.parse(cached), role); } catch { /* ignore */ }
+  }
+
   try {
     const r = await apiFetch(`${SERVER_URL}/dashboard/counts`);
     if (!r.ok) return;
     const counts = await r.json();
-    if (role === 'producer') {
-      _setBadge('navBadgeOrders',    counts.activeOrders);
-      _setBadge('navBadgeProposals', counts.pendingProposals);
-    } else {
-      _setBadge('navBadgeOrders',    counts.myActiveOrders);
-      _setBadge('navBadgeProposals', counts.newResponses);
-    }
-    _setBadge('navBadgeMessages', counts.unreadMessages);
+    localStorage.setItem('_badgeCache', JSON.stringify(counts));
+    _applyBadgeCounts(counts, role);
   } catch { /* сервер недоступен — тихо */ }
 }
 
