@@ -401,24 +401,24 @@ app.get('/robots.txt', (req, res) => {
     res.send(
         'User-agent: *\n' +
         'Allow: /\n' +
-        'Allow: /landing.html\n' +
-        'Allow: /map.html\n' +
-        'Allow: /zakupki.html\n' +
+        'Allow: /zakupki\n' +
+        'Allow: /map\n' +
+        'Allow: /dlya-postavshchikov\n' +
         'Disallow: /api/\n' +
-        'Disallow: /admin.html\n' +
-        'Disallow: /analytics.html\n' +
-        'Disallow: /catalog.html\n' +
-        'Disallow: /company-profile.html\n' +
-        'Disallow: /deals.html\n' +
-        'Disallow: /deliveries.html\n' +
-        'Disallow: /delivery.html\n' +
-        'Disallow: /favorites.html\n' +
-        'Disallow: /index.html\n' +
-        'Disallow: /messages.html\n' +
-        'Disallow: /partners.html\n' +
-        'Disallow: /proposals.html\n' +
-        'Disallow: /settings.html\n' +
-        'Disallow: /tariff.html\n' +
+        'Disallow: /admin\n' +
+        'Disallow: /analytics\n' +
+        'Disallow: /catalog\n' +
+        'Disallow: /company-profile\n' +
+        'Disallow: /deals\n' +
+        'Disallow: /deliveries\n' +
+        'Disallow: /delivery\n' +
+        'Disallow: /favorites\n' +
+        'Disallow: /login\n' +
+        'Disallow: /messages\n' +
+        'Disallow: /partners\n' +
+        'Disallow: /proposals\n' +
+        'Disallow: /settings\n' +
+        'Disallow: /tariff\n' +
         `Sitemap: ${process.env.APP_URL || 'https://texzakaz.ru'}/sitemap.xml\n`
     );
 });
@@ -427,10 +427,10 @@ app.get('/sitemap.xml', (req, res) => {
     const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
     const today = new Date().toISOString().slice(0, 10);
     const pages = [
-        { url: '/',                         priority: '1.0', changefreq: 'weekly' },
-        { url: '/zakupki.html',             priority: '0.9', changefreq: 'hourly' },
-        { url: '/dlya-postavshchikov.html', priority: '0.8', changefreq: 'weekly' },
-        { url: '/map.html',                 priority: '0.7', changefreq: 'weekly' },
+        { url: '/',                    priority: '1.0', changefreq: 'weekly' },
+        { url: '/zakupki',             priority: '0.9', changefreq: 'hourly' },
+        { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
+        { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
     ];
     const urls = pages.map(p =>
         `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
