@@ -79,6 +79,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRggOxSuXd.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap"></noscript>
 <style>
@@ -126,7 +127,7 @@
 </style>
 </head>
 <body>
-<div id="lp-root" style="width:100%; max-width:1440px; position:relative; background:#F7FAFC; font-family:'Manrope',sans-serif; color:#071B2A; overflow:hidden;">
+<main id="lp-root" style="width:100%; max-width:1440px; position:relative; background:#F7FAFC; font-family:'Manrope',sans-serif; color:#071B2A; overflow:hidden;">
 
   <!-- Blueprint grid -->
   <div style="position:absolute; inset:0; pointer-events:none; z-index:0;
@@ -148,15 +149,15 @@
           <div style="font-weight:800; font-size:23px; letter-spacing:0.5px; line-height:1;">
             <span style="color:#071B2A;">ТЕХ</span><span style="color:#FF6A00;">ЗАКАЗ</span>
           </div>
-          <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:2.2px; color:#5B7184;">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
-          <div style="font-size:11px; color:#3A4F61; font-weight:500;">От чертежа до исполнителя.</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:2.2px; color:#4A5D6E;">ПЛАТФОРМА ПРЯМЫХ ЗАКУПОК</div>
+          <div style="font-size:11px; color:#2E4259; font-weight:500;">От чертежа до исполнителя.</div>
         </div>
       </div>
       <nav style="display:flex; align-items:center; gap:32px;">
-        <a class="lp-nv" href="#lp-process" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Как это работает</a>
-        <a class="lp-nv" href="producer.html" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Производителям</a>
-        <a class="lp-nv" href="tariff.html" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Тарифы</a>
-        <a class="lp-nv" href="zakupki.html" style="text-decoration:none; color:#3A4F61; font-size:14px; font-weight:600;">Закупки</a>
+        <a class="lp-nv" href="#lp-process" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Как это работает</a>
+        <a class="lp-nv" href="producer.html" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Производителям</a>
+        <a class="lp-nv" href="tariff.html" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Тарифы</a>
+        <a class="lp-nv" href="zakupki.html" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Закупки</a>
         <div class="lp-nv" style="width:1px; height:26px; background:rgba(7,27,42,0.12);"></div>
         <a href="login.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#071B2A; font-size:14px; font-weight:700;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
@@ -175,12 +176,12 @@
       <div style="display:flex; flex-direction:column; gap:0;">
         <div style="display:inline-flex; align-items:center; gap:10px; align-self:flex-start; padding:8px 14px; border:1px solid rgba(7,27,42,0.12); border-radius:999px; margin-bottom:26px;">
           <span style="width:8px; height:8px; border-radius:50%; background:#FF6A00;"></span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:#3A4F61;">ПРЯМЫЕ ЗАКУПКИ · БЕЗ ПОСРЕДНИКОВ</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:#2E4259;">ПРЯМЫЕ ЗАКУПКИ · БЕЗ ПОСРЕДНИКОВ</span>
         </div>
 
         <h1 id="lp-h1" style="margin:0; font-weight:800; font-size:64px; line-height:1.02; letter-spacing:-1.5px; color:#071B2A;">Прямые закупки<br>без посредников</h1>
 
-        <p style="margin:26px 0 0; font-size:19px; line-height:1.5; color:#3A4F61; max-width:480px; font-weight:500;">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
+        <p style="margin:26px 0 0; font-size:19px; line-height:1.5; color:#2E4259; max-width:480px; font-weight:500;">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
 
         <div id="lp-ctas" style="display:flex; gap:14px; margin-top:36px;">
           <a href="login.html#register" style="text-decoration:none; display:inline-flex; align-items:center; gap:10px; background:#FF6A00; color:#fff; font-size:16px; font-weight:700; padding:17px 28px; border-radius:12px; box-shadow:0 10px 24px rgba(255,106,0,0.3);">
@@ -188,7 +189,7 @@
             Разместить чертёж
           </a>
           <a href="#process" style="text-decoration:none; display:inline-flex; align-items:center; gap:10px; background:#fff; color:#071B2A; font-size:16px; font-weight:700; padding:17px 26px; border-radius:12px; border:1px solid rgba(7,27,42,0.14);">Как это работает</a>
-          <a href="zakupki.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#3A4F61; font-size:15px; font-weight:600; padding:17px 20px; border-radius:12px; border:1px solid rgba(7,27,42,0.10);">
+          <a href="zakupki.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#2E4259; font-size:15px; font-weight:600; padding:17px 20px; border-radius:12px; border:1px solid rgba(7,27,42,0.10);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Смотреть закупки
           </a>
@@ -197,15 +198,15 @@
         <div id="lp-stats" style="display:flex; gap:40px; margin-top:46px; padding-top:30px; border-top:1px solid rgba(7,27,42,0.08);">
           <div>
             <div style="font-weight:800; font-size:28px; color:#071B2A;">1 200+</div>
-            <div style="font-size:13px; color:#5B7184; font-weight:500;">проверенных заводов</div>
+            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">проверенных заводов</div>
           </div>
           <div>
             <div style="font-weight:800; font-size:28px; color:#071B2A;">0%</div>
-            <div style="font-size:13px; color:#5B7184; font-weight:500;">наценок посредников</div>
+            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">наценок посредников</div>
           </div>
           <div>
             <div style="font-weight:800; font-size:28px; color:#071B2A;">48 ч</div>
-            <div style="font-size:13px; color:#5B7184; font-weight:500;">до первых КП</div>
+            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">до первых КП</div>
           </div>
         </div>
       </div>
@@ -334,7 +335,7 @@
     <section id="lp-process" style="padding:8px 64px 64px;">
       <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px;">
         <h2 style="margin:0; font-weight:800; font-size:34px; letter-spacing:-0.8px;">Как проходит закупка</h2>
-        <div class="lp-process-sub" style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; color:#5B7184;">ЧЕРТЁЖ → ПРОИЗВОДИТЕЛИ → КП → ВЫБОР</div>
+        <div class="lp-process-sub" style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:2px; color:#4A5D6E;">ЧЕРТЁЖ → ПРОИЗВОДИТЕЛИ → КП → ВЫБОР</div>
       </div>
 
       <div id="lp-steps" style="display:flex; align-items:stretch; gap:0;">
@@ -434,7 +435,7 @@
             </svg>
           </div>
           <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Прямой доступ к производителям</h3>
-          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Работайте напрямую с заводами без посредников и наценок.</p>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#4A5D6E; font-weight:500;">Работайте напрямую с заводами без посредников и наценок.</p>
         </div>
 
         <!-- Perk 2 -->
@@ -446,7 +447,7 @@
             </svg>
           </div>
           <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Меньше ручной работы</h3>
-          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Автоматический подбор производителей и рассылка запросов.</p>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#4A5D6E; font-weight:500;">Автоматический подбор производителей и рассылка запросов.</p>
         </div>
 
         <!-- Perk 3 -->
@@ -460,7 +461,7 @@
             </svg>
           </div>
           <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Прозрачное сравнение КП</h3>
-          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Сравнивайте предложения по цене, срокам и условиям в одном окне.</p>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#4A5D6E; font-weight:500;">Сравнивайте предложения по цене, срокам и условиям в одном окне.</p>
         </div>
 
         <!-- Perk 4 -->
@@ -475,13 +476,13 @@
             </svg>
           </div>
           <h3 style="margin:0 0 10px; font-weight:800; font-size:17px; line-height:1.25;">Быстрее запуск закупки</h3>
-          <p style="margin:0; font-size:14px; line-height:1.5; color:#5B7184; font-weight:500;">Сократите время от запроса до выбора исполнителя.</p>
+          <p style="margin:0; font-size:14px; line-height:1.5; color:#4A5D6E; font-weight:500;">Сократите время от запроса до выбора исполнителя.</p>
         </div>
 
       </div>
     </section>
 
   </div>
-</div>
+</main>
 </body>
 </html>
