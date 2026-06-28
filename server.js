@@ -388,6 +388,19 @@ PUBLIC_PAGES.forEach(page => {
         res.sendFile(path.join(__dirname, page));
     });
 });
+const CAT_PAGES = [
+    { slug: 'metall',   file: 'metall.html' },
+    { slug: 'armatura', file: 'armatura.html' },
+    { slug: 'elektro',  file: 'elektro.html' },
+    { slug: 'rti',      file: 'rti.html' },
+];
+CAT_PAGES.forEach(({ slug, file }) => {
+    app.get(`/zakupki/${slug}`, (req, res) => {
+        res.setHeader('Cache-Control', 'no-cache');
+        res.sendFile(path.join(__dirname, 'zakupki', file));
+    });
+});
+
 app.get('/favicon.svg', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
     res.sendFile(path.join(__dirname, 'favicon.svg'));
@@ -429,6 +442,10 @@ app.get('/sitemap.xml', (req, res) => {
     const pages = [
         { url: '/',                    priority: '1.0', changefreq: 'weekly' },
         { url: '/zakupki',             priority: '0.9', changefreq: 'hourly' },
+        { url: '/zakupki/metall',      priority: '0.8', changefreq: 'daily'  },
+        { url: '/zakupki/armatura',    priority: '0.8', changefreq: 'daily'  },
+        { url: '/zakupki/elektro',     priority: '0.8', changefreq: 'daily'  },
+        { url: '/zakupki/rti',         priority: '0.8', changefreq: 'daily'  },
         { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
         { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
     ];

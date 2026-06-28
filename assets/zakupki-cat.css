@@ -1,0 +1,79 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; min-height: 100vh; }
+
+/* Header */
+.zc-header { background: #0B2233; padding: 0 64px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+.zc-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.zc-logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(150deg,#0B2233,#071B2A); border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+.zc-logo-icon span { font-weight: 800; font-size: 19px; color: #fff; }
+.zc-logo-icon::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px; background: #FF6A00; clip-path: polygon(0 100%,100% 0,100% 100%); }
+.zc-logo-text { font-size: 17px; font-weight: 800; color: #fff; }
+.zc-nav { display: flex; align-items: center; gap: 28px; }
+.zc-nav a { color: rgba(255,255,255,.65); text-decoration: none; font-size: 14px; font-weight: 600; transition: color .18s; }
+.zc-nav a:hover { color: #fff; }
+.zc-cta { background: #FF6A00; color: #fff; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+/* Hero */
+.zc-hero { background: linear-gradient(135deg,#071B2A 0%,#0B2233 100%); padding: 48px 64px 52px; }
+.zc-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; }
+.zc-breadcrumb a { color: rgba(255,255,255,.5); text-decoration: none; transition: color .18s; }
+.zc-breadcrumb a:hover { color: rgba(255,255,255,.8); }
+.zc-breadcrumb span { color: rgba(255,255,255,.3); }
+.zc-breadcrumb span:last-child { color: rgba(255,255,255,.7); }
+.zc-h1 { font-size: clamp(26px,3.5vw,40px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 16px; }
+.zc-desc { font-size: 16px; line-height: 1.6; color: rgba(255,255,255,.6); font-weight: 500; max-width: 640px; margin-bottom: 28px; }
+.zc-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.zc-tag { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 100px; padding: 5px 14px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.6); }
+
+/* Content */
+.zc-content { padding: 32px 64px 48px; }
+.zc-cats-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.zc-cat-link { background: #fff; border: 1px solid rgba(7,27,42,.1); border-radius: 100px; padding: 8px 18px; font-size: 13px; font-weight: 600; color: #4A5D6E; text-decoration: none; transition: all .18s; }
+.zc-cat-link:hover { border-color: #FF6A00; color: #FF6A00; }
+.zc-cat-link.active { background: #FF6A00; border-color: #FF6A00; color: #fff; }
+
+/* Grid */
+.zc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.zc-skeleton { height: 180px; background: linear-gradient(90deg,#e8edf1 25%,#f3f6f8 50%,#e8edf1 75%); background-size: 200% 100%; animation: zc-shimmer 1.4s infinite; border-radius: 14px; }
+@keyframes zc-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Card */
+.zc-card { background: #fff; border: 1px solid rgba(7,27,42,.07); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow .2s; }
+.zc-card:hover { box-shadow: 0 6px 24px rgba(7,27,42,.09); }
+.zc-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.zc-badge { background: #F1F5F9; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: #4A5D6E; }
+.zc-status { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #16a34a; }
+.zc-status::before { content:''; width:6px; height:6px; border-radius:50%; background:#16a34a; }
+.zc-card-title { font-size: 15px; font-weight: 700; line-height: 1.4; color: #071B2A; flex: 1; }
+.zc-card-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.zc-card-meta span { font-size: 12px; font-weight: 500; color: #4A5D6E; background: #F7FAFC; border-radius: 6px; padding: 3px 10px; }
+.zc-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(7,27,42,.06); }
+.zc-company { font-size: 13px; font-weight: 600; color: #071B2A; filter: blur(4px); user-select: none; }
+.zc-respond { background: #FF6A00; color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+/* CTA Banner */
+.zc-cta-banner { margin: 0 64px 64px; border-radius: 18px; background: linear-gradient(135deg,#071B2A,#0B2233); padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+.zc-cta-banner h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+.zc-cta-banner p { font-size: 14px; color: rgba(255,255,255,.6); font-weight: 500; }
+.zc-cta-btn { background: #FF6A00; color: #fff; border-radius: 10px; padding: 14px 24px; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+
+/* Footer */
+.zc-footer { background: #0B2233; padding: 36px 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.zc-footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+.zc-footer-links a { color: rgba(255,255,255,.45); text-decoration: none; font-size: 13px; font-weight: 500; transition: color .18s; }
+.zc-footer-links a:hover { color: rgba(255,255,255,.75); }
+.zc-footer-copy { font-size: 13px; color: rgba(255,255,255,.3); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .zc-header { padding: 0 24px; }
+  .zc-nav { display: none; }
+  .zc-hero { padding: 32px 24px 36px; }
+  .zc-content { padding: 24px 24px 36px; }
+  .zc-grid { grid-template-columns: 1fr 1fr; }
+  .zc-cta-banner { margin: 0 24px 40px; padding: 32px 28px; flex-direction: column; align-items: flex-start; }
+  .zc-footer { padding: 28px 24px; flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .zc-grid { grid-template-columns: 1fr; }
+}
