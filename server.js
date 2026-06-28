@@ -784,7 +784,7 @@ async function notifyCompanyEmail(company, notifText, emailSubject, emailBodyHtm
     await addNotification(company, notifText);
     const email = await getCompanyEmail(company);
     if (email && emailSubject) {
-        await sendEmail(email, emailSubject, emailWrap(emailSubject, emailBodyHtml)).catch(() => {});
+        await sendEmail(email, emailSubject, emailWrap(emailSubject, emailBodyHtml)).catch(e => console.error('[email:notify]', e.message));
     }
 }
 
@@ -3381,7 +3381,7 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
                             <a href="https://texzakaz.ru/messages.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть переписку →</a>
                         </div>`);
                 }
-            } catch {}
+            } catch (e) { console.error('[email:chat]', e.message); }
         })();
 
         res.status(201).json(msg);
@@ -3973,7 +3973,7 @@ function startDigestCron() {
             if (!orders.length) return;
             for (const p of producers) {
                 await sendEmail(p.email, `Новые заявки на ТехЗаказ — ${new Date().toLocaleDateString('ru-RU')}`,
-                    buildDigestHtml(orders, p.company)).catch(() => {});
+                    buildDigestHtml(orders, p.company)).catch(e => console.error('[email:digest:daily]', e.message));
             }
             console.log(`[digest:daily] sent to ${producers.length} producers, ${orders.length} orders`);
         } catch (e) { console.error('[digest:daily]', e.message); }
@@ -3994,7 +3994,7 @@ function startDigestCron() {
             if (!orders.length) return;
             for (const p of producers) {
                 await sendEmail(p.email, `Заявки за неделю — ТехЗаказ`,
-                    buildDigestHtml(orders, p.company)).catch(() => {});
+                    buildDigestHtml(orders, p.company)).catch(e => console.error('[email:digest:weekly]', e.message));
             }
             console.log(`[digest:weekly] sent to ${producers.length} producers`);
         } catch (e) { console.error('[digest:weekly]', e.message); }
