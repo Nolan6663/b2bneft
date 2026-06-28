@@ -668,6 +668,8 @@ function initSidebarExtra() {
   if (localStorage.getItem('sidebarCollapsed') === '1') {
     sidebar.classList.add('collapsed');
   }
+
+  requestAnimationFrame(() => sidebar.classList.add('ready'));
 }
 
 /* ---------------------------------------------------------------------
