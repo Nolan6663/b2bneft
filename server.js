@@ -368,8 +368,51 @@ const PUBLIC_PAGES = [
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
 ];
-PUBLIC_PAGES.forEach(page => app.get('/' + page, (req, res) => res.sendFile(path.join(__dirname, page))));
-app.get('/', (req, res) => res.redirect('/landing.html'));
+PUBLIC_PAGES.forEach(page => {
+    const slug = '/' + page.replace('.html', '');
+    app.get('/' + page, (req, res) => res.redirect(301, slug === '/landing' ? '/' : slug));
+    app.get(slug === '/landing' ? '/' : slug, (req, res) => res.sendFile(path.join(__dirname, page)));
+});
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(
+        'User-agent: *\n' +
+        'Allow: /\n' +
+        'Allow: /landing.html\n' +
+        'Allow: /map.html\n' +
+        'Disallow: /api/\n' +
+        'Disallow: /admin.html\n' +
+        'Disallow: /analytics.html\n' +
+        'Disallow: /catalog.html\n' +
+        'Disallow: /company-profile.html\n' +
+        'Disallow: /deals.html\n' +
+        'Disallow: /deliveries.html\n' +
+        'Disallow: /delivery.html\n' +
+        'Disallow: /favorites.html\n' +
+        'Disallow: /index.html\n' +
+        'Disallow: /messages.html\n' +
+        'Disallow: /partners.html\n' +
+        'Disallow: /proposals.html\n' +
+        'Disallow: /settings.html\n' +
+        'Disallow: /tariff.html\n' +
+        `Sitemap: ${process.env.APP_URL || 'https://texzakaz.ru'}/sitemap.xml\n`
+    );
+});
+
+app.get('/sitemap.xml', (req, res) => {
+    const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+    const today = new Date().toISOString().slice(0, 10);
+    const pages = [
+        { url: '/',         priority: '1.0', changefreq: 'weekly' },
+        { url: '/map.html', priority: '0.7', changefreq: 'weekly' },
+    ];
+    const urls = pages.map(p =>
+        `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
+    ).join('\n');
+    res.type('application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+});
+
 app.get('/api/health', async (req, res) => {
     try {
         await pool.query('SELECT 1');

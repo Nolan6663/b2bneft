@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Техзаказ — Карта заводов</title>
-    
-    
+    <title>Техзаказ — Карта промышленных предприятий России</title>
+    <meta name="description" content="Интерактивная карта промышленных предприятий и заводов России. Находите поставщиков и производителей в вашем регионе на платформе ТЕХЗАКАЗ.">
+    <link rel="canonical" href="https://texzakaz.ru/map.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://texzakaz.ru/map.html">
+    <meta property="og:title" content="Карта промышленных предприятий России — ТЕХЗАКАЗ">
+    <meta property="og:description" content="Интерактивная карта промышленных предприятий и заводов России. Находите поставщиков и производителей в вашем регионе.">
+    <meta property="og:locale" content="ru_RU">
+    <meta name="robots" content="index, follow">
     <link rel="stylesheet" href="assets/theme-v2.css">
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css">
     <style>
@@ -350,11 +356,11 @@
         <!-- Header -->
         <div class="header">
             <div style="display:flex;align-items:center;gap:16px;">
-                <h2>Карта</h2>
+                <h1 style="font-size:inherit;font-weight:inherit;margin:0;">Карта промышленных предприятий</h1>
                 <input class="map-search-inp" id="mapSearch" type="text" placeholder="Поиск по городу или компании..." style="width:260px;">
             </div>
             <button class="bell-btn" onclick="openNotificationsModal()">
-                <img src="assets/icons_svg/bell.svg" alt="" style="width:18px;height:18px;">
+                <img src="assets/icons_svg/bell.svg" alt="Уведомления" style="width:18px;height:18px;">
                 <span class="bell-badge" id="bellBadge">0</span>
             </button>
         </div>
