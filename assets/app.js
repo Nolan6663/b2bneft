@@ -605,14 +605,18 @@ async function initSidebarBadges() {
    Sidebar extras — промо-виджет, блок поддержки, кнопка сворачивания
    --------------------------------------------------------------------- */
 function toggleSidebar() {
-  const collapsed = document.documentElement.getAttribute('data-sidebar-collapsed') === '1';
+  const root = document.documentElement;
+  root.classList.add('sidebar-resizing');
+  const collapsed = root.getAttribute('data-sidebar-collapsed') === '1';
   if (collapsed) {
-    document.documentElement.removeAttribute('data-sidebar-collapsed');
+    root.removeAttribute('data-sidebar-collapsed');
     localStorage.setItem('sidebarCollapsed', '0');
   } else {
-    document.documentElement.setAttribute('data-sidebar-collapsed', '1');
+    root.setAttribute('data-sidebar-collapsed', '1');
     localStorage.setItem('sidebarCollapsed', '1');
   }
+  clearTimeout(toggleSidebar._t);
+  toggleSidebar._t = setTimeout(() => root.classList.remove('sidebar-resizing'), 220);
 }
 
 function initSidebarExtra() {
@@ -911,4 +915,11 @@ function renderPriceBenchmark(b) {
     ${current}
     <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">Анонимная статистика по закрытым прямым закупкам на платформе</div>`;
 }
+
+(function applySidebarBadgesEarly() {
+  if (!hasSession()) return;
+  const cached = localStorage.getItem('_badgeCache');
+  if (!cached) return;
+  try { _applyBadgeCounts(JSON.parse(cached), localStorage.getItem('userRole')); } catch (_) {}
+})();
 

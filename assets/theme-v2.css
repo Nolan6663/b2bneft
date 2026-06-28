@@ -81,20 +81,31 @@
 /* ── БАЗОВЫЕ СТИЛИ ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
 
-@view-transition { navigation: auto; }
-
-html { color-scheme: light; scrollbar-gutter: stable; }
-html, body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-body { display: flex; -webkit-font-smoothing: antialiased; overflow-y: scroll; }
+html { color-scheme: light; }
+html, body { background: var(--bg-primary); color: var(--text-primary); }
+body {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
 
-/* плавные переходы только для цветовых свойств */
+/* плавные переходы только для цветовых свойств (сайдбар исключён — иначе дёргается при MPA-навигации) */
 *, *::before, *::after {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: .2s;
   transition-timing-function: ease;
 }
+.sidebar,
+.sidebar *,
+.sidebar::before,
+.sidebar::after {
+  transition: none !important;
+}
+html[data-user-role="customer"] #navProposals { display: none !important; }
 
 @keyframes pageFadeIn  { from { opacity:0; } to { opacity:1; } }
 @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
@@ -115,10 +126,17 @@ button { font-family: inherit; }
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
   scrollbar-width: none;
+  -ms-overflow-style: none;
+  contain: layout style;
+  transition: none;
 }
-.sidebar::-webkit-scrollbar { display: none; }
+.sidebar::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 .sidebar-logo {
   display: flex; align-items: center; gap: 10px;
@@ -140,7 +158,6 @@ button { font-family: inherit; }
   font-size: 13.5px;
   font-weight: 500;
   border-left: 3px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; flex-shrink: 0; }
 .sidebar a .nav-label { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
@@ -148,7 +165,6 @@ button { font-family: inherit; }
 .sidebar a.active {
   color: var(--accent-cyan);
   background: var(--sidebar-inner);
-  /* font-weight намеренно не меняем — изменение ширины текста вызывает прыжок */
   border-left-color: var(--accent-cyan);
 }
 
@@ -200,11 +216,19 @@ button { font-family: inherit; }
 }
 
 .main-content {
-  flex: 1; padding: 28px 32px 40px;
-  display: flex; flex-direction: column; gap: 20px;
-  overflow-y: scroll; /* всегда резервируем место под скроллбар — убирает прыжок */
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  padding: 28px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--bg-secondary);
   animation: pageContentIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-mid) transparent;
 }
 
 /* скрываем полосу, но оставляем gutter зарезервированным */
@@ -634,7 +658,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 /* =======================================================================
    SIDEBAR EXTRAS — промо-виджет, поддержка, кнопка сворачивания
    ======================================================================= */
-.sidebar { transition: width .2s ease; }
+html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 
 .sidebar-spacer { flex: 1; min-height: 8px; }
 
@@ -1151,10 +1175,13 @@ table {
   html,
   body {
     overflow-x: hidden;
+    height: auto;
+    min-height: 100vh;
   }
 
   body {
     display: block;
+    overflow-y: auto;
   }
 
   .main-content {
@@ -1401,7 +1428,6 @@ body {
 .sidebar {
   padding: 28px 16px 24px;
   gap: 4px;
-  box-shadow: 10px 0 30px rgba(13, 37, 76, .025);
 }
 
 .sidebar-logo {
@@ -1448,7 +1474,7 @@ body {
 }
 
 .sidebar a.active {
-  background: linear-gradient(90deg, rgba(0, 169, 184, .12), rgba(255,106,0, .04));
+  background: var(--sidebar-inner);
   color: var(--accent-cyan);
   border-left-color: var(--accent-cyan);
 }

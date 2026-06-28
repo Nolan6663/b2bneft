@@ -135,30 +135,8 @@ function initRipple(root) {
     });
 }
 
-// ── Sidebar sliding indicator ────────────────────────────────────────────
-function initSidebarIndicator() {
-    const sidebar = document.querySelector('.sidebar');
-    if (!sidebar) return;
-    const active = sidebar.querySelector('a.active');
-    if (!active) return;
-
-    // sidebar is position:sticky — already a containing block, no override needed
-    const ind = document.createElement('div');
-    ind.className = 'sidebar-pill-indicator';
-    sidebar.insertBefore(ind, sidebar.firstChild);
-
-    function moveTo(el) {
-        ind.style.top    = el.offsetTop + 'px';
-        ind.style.height = el.offsetHeight + 'px';
-    }
-
-    moveTo(active);
-
-    sidebar.querySelectorAll('a').forEach(a => {
-        a.addEventListener('mouseenter', () => moveTo(a));
-        a.addEventListener('mouseleave', () => moveTo(active));
-    });
-}
+// Pill-indicator отключён: дублировал border-left у .sidebar a.active
+function initSidebarIndicator() {}
 
 // ── Modal pop-in animation ───────────────────────────────────────────────
 function initModalAnimations() {
