@@ -29,8 +29,9 @@ Backend:
   - Multer (загрузка файлов — чертежи, фото)
   - AWS S3 / Cloudflare R2 (хранение файлов в production)
   - Speakeasy + QRCode (TOTP 2FA)
-  - node-cron (email дайджест для поставщиков)
+  - node-cron (email дайджест для поставщиков; автозакрытие заявок по deadline)
   - ExcelJS (экспорт .xlsx)
+  - pdfkit (экспорт .pdf)
   - googleapis (Google Search Console — SEO sync)
   - @sentry/node (мониторинг ошибок)
   - @google/generative-ai (Gemini — AI поиск поставщиков, пока не работает)
@@ -57,6 +58,7 @@ CI/CD:
 СТРУКТУРА ФАЙЛОВ
 ----------------
 server.js          — весь бэкенд (Express роуты, Socket.io, логика)
+export-pdf.js      — генерация PDF-отчётов (закупки, КП)
 db.js              — инициализация БД, CREATE TABLE, ALTER TABLE, seed данные
 storage.js         — абстракция хранения файлов (локально / S3)
 package.json       — зависимости
@@ -312,9 +314,18 @@ Auth:
   DELETE /api/integrations/:provider
 
 Экспорт:
-  GET /api/export/orders.xlsx    — Excel закупок (заказчик)
-  GET /api/export/proposals.xlsx — Excel КП (заказчик или поставщик)
-  GET /api/export/1c/:proposalId — CommerceML XML для 1С
+  GET /api/export/orders.xlsx     — Excel закупок (заказчик)
+  GET /api/export/proposals.xlsx  — Excel КП (заказчик или поставщик)
+  GET /api/export/orders.pdf      — PDF закупок (заказчик)
+  GET /api/export/proposals.pdf   — PDF КП (заказчик или поставщик)
+  GET /api/export/1c/:proposalId  — CommerceML XML для 1С
+
+Закупки (доп.):
+  GET /api/orders/:orderId/matched-suppliers  — match-score поставщиков для заявки
+  GET /api/orders/:orderId/price-benchmark    — бенчмарк цен по категории (6 мес.)
+
+Риск (без UI):
+  GET /api/risk/:inn              — базовая проверка по ЕГРЮЛ
 
 Аналитика:
   GET /api/customer/analytics    — KPI, динамика, категории, топ поставщики
@@ -370,6 +381,15 @@ SEO (admin.html):
   [x] Подача КП с файлом
   [x] Принятие/отклонение с email уведомлениями
   [x] Автоматический тригер интеграций при принятии КП
+  [x] Сравнение КП в одной таблице (index.html, deals.html)
+  [x] Preview чертежей PDF/изображений в браузере (?inline=1)
+
+Закупки (доп.):
+  [x] Match-score для заказчика + блок «Кому подходит закупка»
+  [x] Бенчмарк цен по платформе (медиана / диапазон по категории)
+  [x] Автозакрытие заявок по deadline (cron 08:00 МСК) + email
+  [x] Напоминание заказчику за 3 дня до дедлайна
+  [x] Email поставщику о новой подходящей закупке (match ≥ 50%)
 
 Переписка:
   [x] Real-time чат через Socket.io
@@ -382,6 +402,7 @@ SEO (admin.html):
   [x] Трекинг этапов поставки
   [x] Экспорт в 1С (CommerceML 2.09 XML)
   [x] Экспорт в Excel (.xlsx, стилизованные заголовки)
+  [x] Экспорт в PDF (.pdf) — закупки и КП
   [x] Отзывы после завершения сделки (1-5 звёзд + текст)
 
 Аналитика:
@@ -430,6 +451,9 @@ SEO:
   [x] SEO аудит (score, issues) в БД
   [x] Снапшоты из Google Search Console и Yandex Webmaster
   [x] Классификация поисковых интентов через AI
+  [x] Брендинг «ТехЗаказ» в title / og / schema.org
+  [x] Терминология: «прямые закупки» вместо «тендер» по публичным страницам
+  [x] /favicon.ico → favicon.svg
 
 Прочее:
   [x] AI-поиск поставщиков (Gemini — требует рабочий GEMINI_API_KEY)
@@ -441,16 +465,43 @@ SEO:
 ЧТО НЕ РЕАЛИЗОВАНО / В ПЛАНАХ
 -------------------------------
   [ ] AI-помощник для составления ТЗ (Gemini не работает — проблема с ключом)
-  [ ] Сравнение КП в одной таблице (side-by-side)
-  [ ] Проверка риска поставщика (ЕГРЮЛ, арбитраж — открытые данные)
+  [ ] UI-карточка риска поставщика (API /api/risk/:inn уже есть)
   [ ] Обратный аукцион для прямых закупок (reverse auction)
   [ ] Тарифы / оплата (страница tariff.html есть; биллинг не подключён)
   [ ] Мобильное приложение (долгосрочно)
   [ ] Web Push уведомления (UI-заглушка есть, логика не реализована)
+  [ ] Telegram-бот
+  [ ] .env.example, чистка legacy SVG/docs
+
+
+ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (23.06.2026)
+----------------------------------
+  См. также update.txt — подробный журнал.
+
+  Фичи:
+    • PDF-экспорт закупок и КП (export-pdf.js, pdfkit)
+    • Автозакрытие заявок по deadline + cron 08:00 МСК
+    • Email: подходящая закупка поставщику, напоминание −3 дня, автозакрытие
+    • Бенчмарк цен по категории (API + UI в index.html)
+    • Match-score / «Кому подходит закупка» для заказчика
+    • Сравнение КП, preview чертежей в браузере
+
+  SEO / брендинг:
+    • «ТехЗаказ», «прямые закупки», favicon.svg
+
+  UI (частично, сайдбар — см. известные проблемы):
+    • Убрана двойная оранжевая полоска active (ui-animations.js)
+    • Упрощены стили sidebar, scroll только в .main-content
+    • Попытка убрать дёрганье при переходах между страницами — не помогло
 
 
 ИЗВЕСТНЫЕ ПРОБЛЕМЫ
 ------------------
+  - Сайдбар дёргается при переходе между HTML-страницами (MPA).
+    Пробовали: убрать @view-transition, отключить transition на sidebar,
+    раннее скрытие пунктов по роли, кеш бейджей — на prod эффекта нет.
+    Нужен отдельный разбор (возможно SPA-обёртка или единый layout).
+
   - GEMINI_API_KEY: ключ формата AQ.* даёт 401 Unauthorized.
     Нужен ключ формата AIzaSy... из Google AI Studio с настроенным биллингом.
     До решения AI-поиск возвращает 503.
@@ -492,5 +543,6 @@ SEO:
   nano /var/www/neft/.env   (добавить/изменить строку KEY=value)
   pm2 restart all
 ================================================================================
-Обновлено: 23.06.2026 — сверка с кодом (API paths, env, deploy, структура файлов)
+Обновлено: 29.06.2026 — quick fixes: rate limit, password, email logging, cache headers
+Подробности: update.txt
 ================================================================================
