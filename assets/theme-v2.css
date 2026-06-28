@@ -96,7 +96,7 @@ button { font-family: inherit; }
 @keyframes modalScaleIn{ from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
 @keyframes badgePop    { 0%{ transform:scale(.4);opacity:0; } 60%{ transform:scale(1.15);opacity:1; } 100%{ transform:scale(1); } }
 
-.main-content, .auth-page { animation: pageFadeIn .32s ease; }
+.sidebar, .main-content, .auth-page { animation: pageFadeIn .2s ease; }
 .kpi-row { animation: fadeUp .45s ease both; }
 .section, .chart-card { animation: fadeUp .5s ease both; animation-delay: .05s; }
 .proc-layout { animation: fadeUp .5s ease both; animation-delay: .08s; }

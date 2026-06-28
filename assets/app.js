@@ -82,7 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initNotifications();
     initSidebarBadges();
   }
+  initPageTransitions();
 });
+
+function initPageTransitions() {
+  document.querySelectorAll('.sidebar a[href]').forEach(link => {
+    link.addEventListener('click', e => {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript') || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      e.preventDefault();
+      document.body.style.transition = 'opacity 0.12s ease';
+      document.body.style.opacity = '0';
+      setTimeout(() => { window.location.href = href; }, 120);
+    });
+  });
+}
 
 /* ---------------------------------------------------------------------
    Универсальное закрытие модалок: клик по фону или Escape
