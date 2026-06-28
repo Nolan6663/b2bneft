@@ -2011,6 +2011,96 @@ async function pushToAmoCRM(config, proposal, order) {
     }
 }
 
+// ── SAP Business One (Service Layer) ──────────────────────────────────────
+
+async function sapB1Login(config) {
+    const { serverUrl, companyDB, username, password } = config;
+    const r = await fetch(`${serverUrl}/b1s/v1/Login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ CompanyDB: companyDB, UserName: username, Password: password }),
+    });
+    if (!r.ok) throw new Error(`SAP B1 login failed: ${r.status}`);
+    const cookie = r.headers.get('set-cookie') || '';
+    const sessionMatch = cookie.match(/B1SESSION=([^;]+)/);
+    if (!sessionMatch) throw new Error('SAP B1: no session cookie');
+    return sessionMatch[1];
+}
+
+async function pushToSapB1(config, proposal, order) {
+    try {
+        const session = await sapB1Login(config);
+        const dateStr = new Date().toISOString().split('T')[0];
+        await fetch(`${config.serverUrl}/b1s/v1/PurchaseOrders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': `B1SESSION=${session}`,
+            },
+            body: JSON.stringify({
+                DocDate:   dateStr,
+                DocDueDate: dateStr,
+                Comments:  `ТЕХЗАКАЗ #${order.id}: ${order.title}. Поставщик: ${proposal.company}. Срок: ${proposal.days} дн.`,
+                DocumentLines: [{
+                    ItemDescription: order.title,
+                    Quantity:        order.quantity || 1,
+                    UnitPrice:       proposal.price || 0,
+                    Currency:        'RUB',
+                    WarehouseCode:   config.warehouseCode || '01',
+                }],
+            }),
+        });
+    } catch (e) {
+        console.error('[sap-b1 push]', e.message);
+    }
+}
+
+// ── SAP S/4HANA (OData v2) ────────────────────────────────────────────────
+
+async function pushToSapS4(config, proposal, order) {
+    const { host, username, password, companyCode } = config;
+    try {
+        const auth = Buffer.from(`${username}:${password}`).toString('base64');
+        const base = `${host}/sap/opu/odata/sap/API_PURCHASEORDER_PROCESS_SRV`;
+
+        // Fetch CSRF token
+        const tokenRes = await fetch(`${base}/$metadata`, {
+            headers: { 'Authorization': `Basic ${auth}`, 'x-csrf-token': 'fetch' },
+        });
+        const csrfToken = tokenRes.headers.get('x-csrf-token') || '';
+        const cookies   = tokenRes.headers.get('set-cookie') || '';
+
+        await fetch(`${base}/A_PurchaseOrder`, {
+            method: 'POST',
+            headers: {
+                'Authorization':   `Basic ${auth}`,
+                'Content-Type':    'application/json',
+                'Accept':          'application/json',
+                'x-csrf-token':    csrfToken,
+                'Cookie':          cookies,
+            },
+            body: JSON.stringify({
+                PurchaseOrderType:       'NB',
+                CompanyCode:             companyCode || '1000',
+                PurchasingOrganization:  config.purchasingOrg || '1000',
+                PurchasingGroup:         config.purchasingGroup || '001',
+                Supplier:                config.defaultVendor || '',
+                to_PurchaseOrderItem: { results: [{
+                    PurchaseOrderItem:     '00010',
+                    PurchaseOrderItemText: order.title.slice(0, 40),
+                    Plant:                 config.plant || '1000',
+                    OrderQuantity:         String(order.quantity || 1),
+                    PurchaseOrderQuantityUnit: 'PC',
+                    NetPriceAmount:        String(proposal.price || 0),
+                    NetPriceCurrency:      'RUB',
+                }]},
+            }),
+        });
+    } catch (e) {
+        console.error('[sap-s4 push]', e.message);
+    }
+}
+
 async function triggerIntegrations(customerCompany, proposal, order) {
     try {
         const { rows } = await pool.query(
@@ -2020,6 +2110,8 @@ async function triggerIntegrations(customerCompany, proposal, order) {
         await Promise.all(rows.map(row => {
             if (row.provider === 'bitrix24') return pushToBitrix24(row.config, proposal, order);
             if (row.provider === 'amocrm')   return pushToAmoCRM(row.config, proposal, order);
+            if (row.provider === 'sap-b1')   return pushToSapB1(row.config, proposal, order);
+            if (row.provider === 'sap-s4')   return pushToSapS4(row.config, proposal, order);
         }));
     } catch (e) {
         console.error('[integrations trigger]', e.message);
@@ -2048,14 +2140,16 @@ function previewConfig(provider, config) {
         const url = config.webhookUrl || '';
         return url ? url.replace(/\/rest\/.*/, '/rest/…') : '';
     }
-    if (provider === 'amocrm') return config.subdomain ? `${config.subdomain}.amocrm.ru` : '';
+    if (provider === 'amocrm')  return config.subdomain  ? `${config.subdomain}.amocrm.ru` : '';
+    if (provider === 'sap-b1')  return config.serverUrl  ? `${config.serverUrl} / ${config.companyDB}` : '';
+    if (provider === 'sap-s4')  return config.host       ? config.host.replace(/^https?:\/\//, '') : '';
     return '';
 }
 
 app.post('/api/integrations/:provider', requireAuth, async (req, res, next) => {
     try {
         const { provider } = req.params;
-        if (!['bitrix24', 'amocrm'].includes(provider))
+        if (!['bitrix24', 'amocrm', 'sap-b1', 'sap-s4'].includes(provider))
             return res.status(400).json({ error: 'Неизвестный провайдер' });
 
         let config = {};
@@ -2071,6 +2165,29 @@ app.post('/api/integrations/:provider', requireAuth, async (req, res, next) => {
             if (!subdomain?.trim() || !accessToken?.trim())
                 return res.status(400).json({ error: 'Укажите поддомен и токен доступа' });
             config = { subdomain: subdomain.trim().replace(/\.amocrm\.ru$/, ''), accessToken: accessToken.trim() };
+        }
+        if (provider === 'sap-b1') {
+            const { serverUrl, companyDB, username, password, warehouseCode } = req.body;
+            if (!serverUrl?.trim() || !companyDB?.trim() || !username?.trim() || !password?.trim())
+                return res.status(400).json({ error: 'Укажите URL сервера, базу данных, логин и пароль' });
+            try { new URL(serverUrl.trim()); } catch { return res.status(400).json({ error: 'Неверный URL сервера' }); }
+            config = { serverUrl: serverUrl.trim().replace(/\/$/, ''), companyDB: companyDB.trim(), username: username.trim(), password: password.trim(), warehouseCode: warehouseCode?.trim() || '01' };
+        }
+        if (provider === 'sap-s4') {
+            const { host, username, password, companyCode, purchasingOrg, purchasingGroup, plant, defaultVendor } = req.body;
+            if (!host?.trim() || !username?.trim() || !password?.trim())
+                return res.status(400).json({ error: 'Укажите хост, логин и пароль' });
+            try { new URL(host.trim()); } catch { return res.status(400).json({ error: 'Неверный URL хоста' }); }
+            config = {
+                host:           host.trim().replace(/\/$/, ''),
+                username:       username.trim(),
+                password:       password.trim(),
+                companyCode:    companyCode?.trim()    || '1000',
+                purchasingOrg:  purchasingOrg?.trim()  || '1000',
+                purchasingGroup:purchasingGroup?.trim() || '001',
+                plant:          plant?.trim()           || '1000',
+                defaultVendor:  defaultVendor?.trim()   || '',
+            };
         }
 
         await pool.query(
@@ -2107,6 +2224,29 @@ app.post('/api/integrations/:provider/test', requireAuth, async (req, res, next)
             const data = await r.json().catch(() => ({}));
             if (!r.ok) return res.status(400).json({ error: data.detail || 'Ошибка соединения с AmoCRM' });
             return res.json({ ok: true, info: data.name || subdomain });
+        }
+        if (provider === 'sap-b1') {
+            try {
+                const session = await sapB1Login(row.config);
+                const r = await fetch(`${row.config.serverUrl}/b1s/v1/CompanyService_GetAdminInfo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Cookie': `B1SESSION=${session}` },
+                    body: '{}',
+                });
+                const data = await r.json().catch(() => ({}));
+                return res.json({ ok: true, info: data.CompanyName || row.config.companyDB });
+            } catch (e) {
+                return res.status(400).json({ error: e.message });
+            }
+        }
+        if (provider === 'sap-s4') {
+            const { host, username, password } = row.config;
+            const auth = Buffer.from(`${username}:${password}`).toString('base64');
+            const r = await fetch(`${host}/sap/opu/odata/sap/API_PURCHASEORDER_PROCESS_SRV/$metadata`, {
+                headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/xml' },
+            });
+            if (!r.ok) return res.status(400).json({ error: `HTTP ${r.status} — проверьте хост и учётные данные` });
+            return res.json({ ok: true, info: host.replace(/^https?:\/\//, '') });
         }
         res.status(400).json({ error: 'Тест не поддерживается' });
     } catch (e) { next(e); }

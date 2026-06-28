@@ -830,6 +830,107 @@
                             <div id="amo-test-result" style="margin-top:10px;font-size:12px;"></div>
                         </div>
                     </div>
+
+                    <!-- Modal: SAP Business One -->
+                    <div id="modal-sap-b1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center;overflow-y:auto;">
+                        <div style="background:var(--card-bg);border-radius:14px;padding:24px;width:460px;max-width:calc(100vw - 32px);box-shadow:0 16px 48px rgba(0,0,0,.25);margin:auto;">
+                            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">SAP Business One</div>
+                            <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+                                Укажите URL вашего SAP B1 сервера (Service Layer), базу данных и учётные данные. При принятии КП — автоматически создаётся заказ на поставку.
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                                <div style="grid-column:1/-1;">
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">URL сервера</label>
+                                    <input id="sapb1-server" type="url" placeholder="https://sapserver:50000"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">База данных</label>
+                                    <input id="sapb1-db" type="text" placeholder="SBO_COMPANY"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Склад (код)</label>
+                                    <input id="sapb1-warehouse" type="text" placeholder="01"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Логин</label>
+                                    <input id="sapb1-user" type="text" placeholder="manager"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Пароль</label>
+                                    <input id="sapb1-pass" type="password" placeholder="••••••••"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:6px;">
+                                <button onclick="closeIntegrationModal('sap-b1')" class="btn-secondary" style="flex:1;">Отмена</button>
+                                <button onclick="testIntegration('sap-b1')" class="btn-secondary" style="flex:1;">Проверить</button>
+                                <button onclick="saveIntegration('sap-b1')" class="btn-settings-save" style="flex:1;">Сохранить</button>
+                            </div>
+                            <div id="sap-b1-test-result" style="margin-top:10px;font-size:12px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Modal: SAP S/4HANA -->
+                    <div id="modal-sap-s4" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center;overflow-y:auto;">
+                        <div style="background:var(--card-bg);border-radius:14px;padding:24px;width:460px;max-width:calc(100vw - 32px);box-shadow:0 16px 48px rgba(0,0,0,.25);margin:auto;">
+                            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">SAP S/4HANA</div>
+                            <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+                                Подключение через OData API (Basic Auth). При принятии КП создаётся заказ на поставку через API_PURCHASEORDER_PROCESS_SRV.
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                                <div style="grid-column:1/-1;">
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Хост S/4HANA</label>
+                                    <input id="saps4-host" type="url" placeholder="https://my.s4hana.company.com"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Логин</label>
+                                    <input id="saps4-user" type="text" placeholder="S4H_API_USER"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Пароль</label>
+                                    <input id="saps4-pass" type="password" placeholder="••••••••"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Код компании</label>
+                                    <input id="saps4-cc" type="text" placeholder="1000"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Орг. закупок</label>
+                                    <input id="saps4-porg" type="text" placeholder="1000"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Группа закупок</label>
+                                    <input id="saps4-pg" type="text" placeholder="001"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Завод</label>
+                                    <input id="saps4-plant" type="text" placeholder="1000"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Код поставщика (SAP)</label>
+                                    <input id="saps4-vendor" type="text" placeholder="VENDOR001 (необязательно)"
+                                        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:6px;">
+                                <button onclick="closeIntegrationModal('sap-s4')" class="btn-secondary" style="flex:1;">Отмена</button>
+                                <button onclick="testIntegration('sap-s4')" class="btn-secondary" style="flex:1;">Проверить</button>
+                                <button onclick="saveIntegration('sap-s4')" class="btn-settings-save" style="flex:1;">Сохранить</button>
+                            </div>
+                            <div id="sap-s4-test-result" style="margin-top:10px;font-size:12px;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -952,10 +1053,11 @@
         // ── Integrations ──────────────────────────────────────────────────────
 
         const INTEGRATION_META = {
-            '1c':       { name: '1С: Предприятие', sub: 'ERP-система',  type: 'export' },
-            'bitrix24': { name: 'Битрикс24',        sub: 'CRM',          type: 'webhook' },
-            'amocrm':   { name: 'AmoCRM',           sub: 'CRM',          type: 'oauth' },
-            'sap':      { name: 'SAP ERP',          sub: 'ERP-система',  type: 'soon' },
+            '1c':       { name: '1С: Предприятие',    sub: 'ERP-система',  type: 'export'  },
+            'bitrix24': { name: 'Битрикс24',           sub: 'CRM',          type: 'webhook' },
+            'amocrm':   { name: 'AmoCRM',              sub: 'CRM',          type: 'oauth'   },
+            'sap-b1':   { name: 'SAP Business One',    sub: 'ERP-система',  type: 'webhook' },
+            'sap-s4':   { name: 'SAP S/4HANA',         sub: 'ERP-система',  type: 'webhook' },
         };
 
         let integrationsState = {};
@@ -1014,14 +1116,25 @@
             document.getElementById(`modal-${provider}`).style.display = 'none';
         }
 
+        function collectIntegrationBody(provider) {
+            if (provider === 'bitrix24') return { webhookUrl: document.getElementById('bitrix-webhook-url').value.trim() };
+            if (provider === 'amocrm')   return { subdomain: document.getElementById('amo-subdomain').value.trim(), accessToken: document.getElementById('amo-token').value.trim() };
+            if (provider === 'sap-b1')   return { serverUrl: document.getElementById('sapb1-server').value.trim(), companyDB: document.getElementById('sapb1-db').value.trim(), username: document.getElementById('sapb1-user').value.trim(), password: document.getElementById('sapb1-pass').value.trim(), warehouseCode: document.getElementById('sapb1-warehouse').value.trim() };
+            if (provider === 'sap-s4')   return { host: document.getElementById('saps4-host').value.trim(), username: document.getElementById('saps4-user').value.trim(), password: document.getElementById('saps4-pass').value.trim(), companyCode: document.getElementById('saps4-cc').value.trim(), purchasingOrg: document.getElementById('saps4-porg').value.trim(), purchasingGroup: document.getElementById('saps4-pg').value.trim(), plant: document.getElementById('saps4-plant').value.trim(), defaultVendor: document.getElementById('saps4-vendor').value.trim() };
+            return {};
+        }
+
+        function testResultElId(provider) {
+            return { 'bitrix24': 'bitrix-test-result', 'amocrm': 'amo-test-result', 'sap-b1': 'sap-b1-test-result', 'sap-s4': 'sap-s4-test-result' }[provider] || '';
+        }
+
         async function saveIntegration(provider) {
-            let body = {};
+            let body = collectIntegrationBody(provider);
             if (provider === 'bitrix24') {
-                body.webhookUrl = document.getElementById('bitrix-webhook-url').value.trim();
+                // keep existing field reads for compatibility
             }
             if (provider === 'amocrm') {
-                body.subdomain   = document.getElementById('amo-subdomain').value.trim();
-                body.accessToken = document.getElementById('amo-token').value.trim();
+                // keep existing
             }
             const r = await apiFetch(`${SERVER_URL}/integrations/${provider}`, {
                 method: 'POST',
@@ -1039,13 +1152,11 @@
         }
 
         async function testIntegration(provider) {
-            const resultEl = document.getElementById(`${provider === 'bitrix24' ? 'bitrix' : 'amo'}-test-result`);
+            const resultEl = document.getElementById(testResultElId(provider));
             resultEl.textContent = 'Проверяем...';
             resultEl.style.color = 'var(--text-secondary)';
 
-            let body = {};
-            if (provider === 'bitrix24') body.webhookUrl = document.getElementById('bitrix-webhook-url').value.trim();
-            if (provider === 'amocrm')   { body.subdomain = document.getElementById('amo-subdomain').value.trim(); body.accessToken = document.getElementById('amo-token').value.trim(); }
+            let body = collectIntegrationBody(provider);
 
             // Save first, then test
             const saveR = await apiFetch(`${SERVER_URL}/integrations/${provider}`, {
