@@ -126,7 +126,8 @@ button { font-family: inherit; }
 .sidebar a {
   display: flex;
   align-items: center;
-  padding: 10px 12px 10px 9px;
+  position: relative;
+  padding: 10px 36px 10px 9px;
   border-radius: 10px;
   color: var(--sidebar-text);
   text-decoration: none;
@@ -178,7 +179,8 @@ button { font-family: inherit; }
 
 /* Бейджи на пунктах меню */
 .nav-badge {
-  margin-left: auto; background: var(--accent-cyan); color: #fff;
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: var(--accent-cyan); color: #fff;
   font-size: 10px; font-weight: 700; border-radius: 10px;
   padding: 2px 7px; min-width: 18px; text-align: center;
   display: none; line-height: 1.5; flex-shrink: 0;
