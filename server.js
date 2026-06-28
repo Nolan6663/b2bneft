@@ -249,7 +249,7 @@ const aiLimiter = rateLimit({
     legacyHeaders: false,
     message: { error: 'Слишком много AI-запросов. Подождите минуту.' }
 });
-app.use('/api/ai-search', aiLimiter);
+app.post('/api/ai-search', aiLimiter);
 
 // ===================== WEBSOCKET =====================
 let Server = null;
