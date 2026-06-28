@@ -411,6 +411,11 @@ CAT_PAGES.forEach(({ slug, file }) => {
     });
 });
 
+app.get('/favicon.ico', (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.type('image/svg+xml');
+    res.sendFile(path.join(__dirname, 'favicon.svg'));
+});
 app.get('/favicon.svg', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
     res.sendFile(path.join(__dirname, 'favicon.svg'));
@@ -1144,7 +1149,7 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
         const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [proposalRow.order_id]);
         if (!orderRow) return res.status(404).json({ error: 'Связанная заявка не найдена' });
         if (orderRow.company && orderRow.company !== req.user.company) return res.status(403).json({ error: 'Принимать предложения может только владелец закупки' });
-        if (orderRow.status === 'Закрыта') return res.status(400).json({ error: 'Этот тендер уже завершен' });
+        if (orderRow.status === 'Закрыта') return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
 
         const title = plainTitle(orderRow.title);
         const notifs = [];
@@ -1186,7 +1191,7 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
                 </div>`
             );
         }));
-        res.json({ message: 'Победитель успешно определен, тендер закрыт' });
+        res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
     } catch (e) { next(e); }
 });
 

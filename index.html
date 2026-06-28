@@ -942,7 +942,7 @@
 
         async function acceptProposalFromCompare(proposalId, supplier) {
             if (!proposalId) { showToast('Нет ID предложения (демо-данные)', 'warn'); return; }
-            if (!confirm(`Выбрать «${supplier}» победителем? Тендер будет закрыт.`)) return;
+            if (!confirm(`Выбрать «${supplier}» победителем? Прямая закупка будет закрыта.`)) return;
             document.getElementById('compareModal').style.display = 'none';
             try {
                 const r = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });

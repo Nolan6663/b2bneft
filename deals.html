@@ -655,7 +655,7 @@
 
         function openCompareModal() {
             if (!currentDeal || !currentDeal.proposals || currentDeal.proposals.length < 2) {
-                showToast('Сравнение доступно на странице закупок для активных тендеров', 'warn');
+                showToast('Сравнение доступно на странице закупок для активных прямых закупок', 'warn');
                 return;
             }
             document.getElementById('compareOrderTitle').textContent = currentDeal.title || '';
@@ -728,7 +728,7 @@
 
         async function acceptKp(proposalId, orderId, supplier) {
             if (!proposalId) { window.location.href = 'index.html'; return; }
-            if (!confirm(`Выбрать поставщика «${supplier}» победителем? Тендер будет закрыт.`)) return;
+            if (!confirm(`Выбрать поставщика «${supplier}» победителем? Прямая закупка будет закрыта.`)) return;
             try {
                 const r = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });
                 const data = await r.json();
