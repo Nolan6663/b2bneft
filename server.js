@@ -350,7 +350,17 @@ function deleteDrawingFile(drawing) {
 }
 
 // ===================== СТАТИКА =====================
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+    setHeaders(res, filePath) {
+        if (/\.(woff2|woff|ttf|otf)$/.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else if (/\.(png|jpg|jpeg|webp|gif|svg|ico)$/.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=604800');
+        } else if (/\.(css|js)$/.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+    }
+}));
 app.get('/uploads/:filename', requireAuth, async (req, res, next) => {
     try {
         const filename = path.basename(req.params.filename);
@@ -367,11 +377,23 @@ const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
+    'zakupki.html',
 ];
 PUBLIC_PAGES.forEach(page => {
     const slug = '/' + page.replace('.html', '');
     app.get('/' + page, (req, res) => res.redirect(301, slug === '/landing' ? '/' : slug));
-    app.get(slug === '/landing' ? '/' : slug, (req, res) => res.sendFile(path.join(__dirname, page)));
+    app.get(slug === '/landing' ? '/' : slug, (req, res) => {
+        res.setHeader('Cache-Control', 'no-cache');
+        res.sendFile(path.join(__dirname, page));
+    });
+});
+app.get('/favicon.svg', (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'favicon.svg'));
+});
+app.get('/landing-hero.png', (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(path.join(__dirname, 'landing-hero.png'));
 });
 app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
