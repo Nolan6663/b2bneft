@@ -142,10 +142,16 @@
         <div class="section proc-list-panel" style="min-width:0;">
             <div class="proc-list-head-row">
                 <h3>Список размещённых закупок</h3>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-secondary" onclick="exportOrders()">
+                <div style="display:flex; gap:8px;flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="exportOrders()" title="CSV в браузере">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
-                        <span class="nav-label">Экспорт</span>
+                        <span class="nav-label">CSV</span>
+                    </button>
+                    <button class="btn-secondary" onclick="window.location.href=SERVER_URL+'/export/orders.xlsx'" title="Excel с сервера">
+                        <span class="nav-label">Excel</span>
+                    </button>
+                    <button class="btn-secondary" onclick="window.location.href=SERVER_URL+'/export/orders.pdf'" title="PDF с сервера">
+                        <span class="nav-label">PDF</span>
                     </button>
                     <button class="btn-secondary" onclick="openTemplatesModal()" style="margin-right:6px;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
@@ -203,6 +209,11 @@
             <div id="detPanelChart" style="display:none;margin-top:14px;padding:12px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
                 <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;">Аналитика цен</div>
                 <div id="detPanelBars" style="display:flex;align-items:flex-end;gap:6px;height:60px;"></div>
+            </div>
+
+            <div id="detPanelBenchmark" style="display:none;margin-top:14px;padding:12px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">📊 Бенчмарк по платформе</div>
+                <div id="detPanelBenchmarkBody"></div>
             </div>
 
 
@@ -875,6 +886,7 @@
                     }
                 }
                 loadAuctionForOrder(order.id);
+                loadPriceBenchmark(order.id);
                 return;
             }
 
@@ -910,9 +922,27 @@
                         <div style="font-size:9px;color:var(--text-secondary);text-align:center;white-space:nowrap;overflow:hidden;max-width:48px;">${escapeHtml(label)}</div>
                     </div>`;
                 }).join('');
+            } else {
+                document.getElementById('detPanelChart').style.display = 'none';
             }
 
+            loadPriceBenchmark(order.id);
             loadAuctionForOrder(order.id);
+        }
+
+        async function loadPriceBenchmark(orderId) {
+            const block = document.getElementById('detPanelBenchmark');
+            const body = document.getElementById('detPanelBenchmarkBody');
+            if (!block || !body) return;
+            block.style.display = 'block';
+            body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Загрузка…</div>';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/orders/${orderId}/price-benchmark`);
+                const data = r.ok ? await r.json() : null;
+                body.innerHTML = renderPriceBenchmark(data);
+            } catch {
+                body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Не удалось загрузить бенчмарк</div>';
+            }
         }
 
         function viewAllProposals() {

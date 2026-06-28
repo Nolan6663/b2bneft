@@ -24,6 +24,7 @@ const speakeasy = require('speakeasy');
 const QRCode    = require('qrcode');
 const cron      = require('node-cron');
 const ExcelJS   = require('exceljs');
+const { buildOrdersPdf, buildProposalsPdf } = require('./export-pdf');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -735,6 +736,70 @@ async function getCompanyEmail(companyName) {
     return u ? u.email : null;
 }
 
+function parseDeadlineDate(deadline) {
+    if (!deadline) return null;
+    const s = String(deadline).trim();
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function emailWrap(title, bodyHtml) {
+    return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+        <h2 style="color:#1E3A5F;margin:0 0 12px;font-size:18px;">${htmlEscape(title)}</h2>
+        ${bodyHtml}
+        <p style="color:#aaa;font-size:11px;margin-top:24px;text-align:center;">
+            <a href="${APP_URL}" style="color:#FF6A00;">Открыть ТехЗаказ</a>
+        </p>
+    </div>`;
+}
+
+async function notifyCompanyEmail(company, notifText, emailSubject, emailBodyHtml) {
+    if (!company) return;
+    await addNotification(company, notifText);
+    const email = await getCompanyEmail(company);
+    if (email && emailSubject) {
+        await sendEmail(email, emailSubject, emailWrap(emailSubject, emailBodyHtml)).catch(() => {});
+    }
+}
+
+async function computePriceBenchmark(category, excludeOrderId) {
+    const { rows } = await pool.query(
+        `SELECT p.price::numeric AS price
+         FROM proposals p
+         JOIN orders o ON o.id = p.order_id
+         WHERE o.category = $1
+           AND o.status = 'Закрыта'
+           AND p.status = 'Выигран'
+           AND p.price IS NOT NULL AND p.price > 0
+           AND ($2::int = 0 OR o.id != $2)
+           AND o.created_at > NOW() - INTERVAL '6 months'`,
+        [category, excludeOrderId || 0]
+    );
+    const prices = rows.map(r => Number(r.price)).filter(v => v > 0).sort((a, b) => a - b);
+    if (prices.length < 3) {
+        return { enough: false, sampleSize: prices.length, category };
+    }
+    const mid = Math.floor(prices.length / 2);
+    const median = prices.length % 2 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+    return {
+        enough: true,
+        sampleSize: prices.length,
+        category,
+        median: Math.round(median),
+        min: prices[0],
+        max: prices[prices.length - 1],
+        periodMonths: 6,
+    };
+}
+
 async function addNotification(company, text) {
     if (!company) return;
     const { rows } = await pool.query(
@@ -946,8 +1011,17 @@ app.post('/api/orders', requireAuth, requireRole('customer'), requireVerifiedEma
 
         const MATCH_NOTIFY_THRESHOLD = 50;
         const matched = await matchedProducers(newOrder, MATCH_NOTIFY_THRESHOLD);
+        const orderTitle = plainTitle(newOrder.title);
         await Promise.all(matched.map(m =>
-            addNotification(m.company, `🧩 Новая подходящая закупка (${m.score}% совпадение): «${plainTitle(newOrder.title)}»`)
+            notifyCompanyEmail(
+                m.company,
+                `🧩 Новая подходящая прямая закупка (${m.score}% совпадение): «${orderTitle}»`,
+                `Новая прямая закупка (${m.score}% совп.) — ТехЗаказ`,
+                `<p style="color:#444;font-size:14px;line-height:1.5;">Появилась закупка, которая подходит вашему профилю на <strong>${m.score}%</strong>:</p>
+                 <p style="font-size:15px;font-weight:600;color:#1E3A5F;">«${htmlEscape(orderTitle)}»</p>
+                 <p style="color:#666;font-size:13px;">Категория: ${htmlEscape(newOrder.category || '—')}</p>
+                 <p style="margin-top:16px;"><a href="${APP_URL}/producer.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть заявки →</a></p>`
+            )
         ));
 
         res.status(201).json(newOrder);
@@ -1137,6 +1211,31 @@ app.get('/api/orders/:orderId/matched-suppliers', requireAuth, async (req, res, 
         const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 8));
         const matched = await matchedProducers(orderObj, minScore, true);
         res.json(matched.slice(0, limit));
+    } catch (e) { next(e); }
+});
+
+app.get('/api/orders/:orderId/price-benchmark', requireAuth, async (req, res, next) => {
+    try {
+        const orderId = Number(req.params.orderId);
+        const orderRow = await getOrderAccessRow(orderId);
+        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
+        if (req.user.role !== 'admin' && orderRow.company !== req.user.company) {
+            return res.status(403).json({ error: 'Нет доступа к этой закупке' });
+        }
+        const orderObj = rowToOrder(orderRow);
+        const benchmark = await computePriceBenchmark(orderObj.category, orderId);
+
+        const { rows: currentProps } = await pool.query(
+            `SELECT price FROM proposals WHERE order_id = $1 AND price IS NOT NULL AND price > 0`,
+            [orderId]
+        );
+        const currentPrices = currentProps.map(r => Number(r.price)).filter(v => v > 0);
+        if (currentPrices.length) {
+            benchmark.currentMin = Math.min(...currentPrices);
+            benchmark.currentMax = Math.max(...currentPrices);
+        }
+
+        res.json(benchmark);
     } catch (e) { next(e); }
 });
 
@@ -2267,6 +2366,44 @@ app.get('/api/export/proposals.xlsx', requireAuth, async (req, res, next) => {
         res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''%D0%9A%D0%9F-${Date.now()}.xlsx`);
         await wb.xlsx.write(res);
         res.end();
+    } catch (e) { next(e); }
+});
+
+app.get('/api/export/orders.pdf', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT o.id, o.title, o.category, o.status, o.created_at, o.deadline,
+                    COUNT(p.id) AS proposals,
+                    MIN(p.price) FILTER (WHERE p.status='Выигран') AS won_price,
+                    MIN(p.company) FILTER (WHERE p.status='Выигран') AS won_supplier
+             FROM orders o LEFT JOIN proposals p ON p.order_id=o.id
+             WHERE o.company=$1
+             GROUP BY o.id ORDER BY o.created_at DESC`,
+            [req.user.company]
+        );
+        buildOrdersPdf(rows, res);
+    } catch (e) { next(e); }
+});
+
+app.get('/api/export/proposals.pdf', requireAuth, async (req, res, next) => {
+    try {
+        const isProducer = req.user.role === 'producer';
+        const { rows } = isProducer
+            ? await pool.query(
+                `SELECT p.id, o.title AS order_title, o.category, p.price, p.days,
+                        p.status, p.created_at, o.company AS customer
+                 FROM proposals p JOIN orders o ON o.id=p.order_id
+                 WHERE p.company=$1 ORDER BY p.created_at DESC`,
+                [req.user.company]
+              )
+            : await pool.query(
+                `SELECT p.id, o.title AS order_title, o.category, p.company AS supplier,
+                        p.price, p.days, p.status, p.created_at
+                 FROM proposals p JOIN orders o ON o.id=p.order_id
+                 WHERE o.company=$1 ORDER BY p.created_at DESC`,
+                [req.user.company]
+              );
+        buildProposalsPdf(rows, res, isProducer);
     } catch (e) { next(e); }
 });
 
@@ -3714,6 +3851,90 @@ function buildDigestHtml(orders, producerName) {
     </div>`;
 }
 
+async function closeExpiredOrders() {
+    try {
+        const { rows } = await pool.query(
+            "SELECT * FROM orders WHERE status = 'Активный' AND deadline IS NOT NULL AND TRIM(deadline) != ''"
+        );
+        const today = startOfDay(new Date());
+        let closed = 0;
+        for (const row of rows) {
+            const dl = parseDeadlineDate(row.deadline);
+            if (!dl || startOfDay(dl) >= today) continue;
+
+            const order = rowToOrder(row);
+            const title = plainTitle(order.title);
+
+            await pool.query("UPDATE orders SET status = 'Закрыта' WHERE id = $1", [order.id]);
+
+            const { rows: pending } = await pool.query(
+                "SELECT company FROM proposals WHERE order_id = $1 AND status = 'Ожидает ответа'",
+                [order.id]
+            );
+
+            await notifyCompanyEmail(
+                order.company,
+                `⏱ Дедлайн прямой закупки «${title}» истёк — закупка закрыта автоматически.`,
+                `Дедлайн истёк — «${title}»`,
+                `<p style="color:#444;font-size:14px;">Истёк срок приёма предложений по закупке <strong>«${htmlEscape(title)}»</strong>.</p>
+                 <p style="color:#666;font-size:13px;">Закупка закрыта автоматически. Если победитель ещё не выбран — откройте отклики и примите КП вручную или создайте новую закупку.</p>`
+            );
+
+            for (const p of pending) {
+                await notifyCompanyEmail(
+                    p.company,
+                    `Дедлайн закупки «${title}» истёк — приём предложений завершён.`,
+                    `Дедлайн закупки истёк — «${title}»`,
+                    `<p style="color:#444;font-size:14px;">Заказчик закрыл приём предложений по закупке <strong>«${htmlEscape(title)}»</strong> (истёк дедлайн).</p>`
+                );
+            }
+            closed += 1;
+        }
+        if (closed) console.log(`[cron:close-expired-orders] closed ${closed} order(s)`);
+    } catch (e) { console.error('[cron:close-expired-orders]', e.message); }
+}
+
+async function sendDeadlineReminders() {
+    try {
+        const { rows } = await pool.query("SELECT * FROM orders WHERE status = 'Активный'");
+        const today = startOfDay(new Date());
+        const remindDay = new Date(today);
+        remindDay.setDate(remindDay.getDate() + 3);
+        let sent = 0;
+
+        for (const row of rows) {
+            const dl = parseDeadlineDate(row.deadline);
+            if (!dl || startOfDay(dl).getTime() !== remindDay.getTime()) continue;
+
+            const title = plainTitle(row.title);
+            const { rows: countRows } = await pool.query(
+                "SELECT COUNT(*)::int AS count FROM proposals WHERE order_id = $1 AND status = 'Ожидает ответа'",
+                [row.id]
+            );
+            const count = countRows[0]?.count ?? 0;
+
+            await notifyCompanyEmail(
+                row.company,
+                `⏳ До дедлайна закупки «${title}» осталось 3 дня.`,
+                `Напоминание: дедлайн через 3 дня — «${title}»`,
+                `<p style="color:#444;font-size:14px;">По закупке <strong>«${htmlEscape(title)}»</strong> дедлайн через <strong>3 дня</strong>.</p>
+                 <p style="color:#666;font-size:13px;">Откликов на рассмотрении: ${count}. Сравните КП и выберите поставщика, пока закупка активна.</p>
+                 <p style="margin-top:14px;"><a href="${APP_URL}/index.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
+            );
+            sent += 1;
+        }
+        if (sent) console.log(`[cron:deadline-reminders] sent ${sent} reminder(s)`);
+    } catch (e) { console.error('[cron:deadline-reminders]', e.message); }
+}
+
+function startOrderMaintenanceCron() {
+    // 08:00 Moscow (05:00 UTC)
+    cron.schedule('0 5 * * *', async () => {
+        await sendDeadlineReminders();
+        await closeExpiredOrders();
+    });
+}
+
 function startAuctionCron() {
     cron.schedule('* * * * *', closeExpiredAuctions); // every minute
 }
@@ -3772,6 +3993,7 @@ async function start() {
     }
     startDigestCron();
     startAuctionCron();
+    startOrderMaintenanceCron();
     return httpServer;
 }
 

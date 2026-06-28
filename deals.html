@@ -350,10 +350,12 @@
                         <span class="nav-label">Оставить отзыв</span>
                     </button>
                 </div>
-                <div style="margin-top:8px;">
+                <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
                     <button class="btn-secondary" style="width:100%;font-size:12px;" onclick="window.location.href=`${SERVER_URL}/export/orders.xlsx`">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        <span class="nav-label">Экспорт в Excel</span>
+                        <span class="nav-label">Excel</span>
+                    </button>
+                    <button class="btn-secondary" style="width:100%;font-size:12px;" onclick="window.location.href=`${SERVER_URL}/export/orders.pdf`">
+                        <span class="nav-label">PDF</span>
                     </button>
                 </div>
             </div>

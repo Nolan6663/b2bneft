@@ -890,3 +890,25 @@ function renderMatchedSuppliersList(items) {
   }).join('');
 }
 
+function renderPriceBenchmark(b) {
+  if (!b || !b.enough) {
+    const n = b && b.sampleSize ? b.sampleSize : 0;
+    return `<div style="font-size:12px;color:var(--text-secondary);line-height:1.45;">Недостаточно закрытых сделок в категории «${escapeHtml(b?.category || '—')}» для бенчмарка (нужно ≥3, сейчас ${n}).</div>`;
+  }
+  const fmt = v => new Intl.NumberFormat('ru-RU').format(v);
+  let current = '';
+  if (b.currentMin != null && b.currentMax != null) {
+    current = `<div style="margin-top:8px;font-size:12px;color:var(--text-primary);">Ваши КП: <strong>${fmt(b.currentMin)}–${fmt(b.currentMax)} ₽</strong></div>`;
+  }
+  return `
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+      За ${b.periodMonths || 6} мес. по категории «${escapeHtml(b.category)}» (${b.sampleSize} сделок):
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;">
+      <div><span style="color:var(--text-secondary);">Медиана</span><br><strong style="font-family:'JetBrains Mono',monospace;color:var(--accent-green);">${fmt(b.median)} ₽</strong></div>
+      <div><span style="color:var(--text-secondary);">Диапазон</span><br><strong style="font-family:'JetBrains Mono',monospace;">${fmt(b.min)}–${fmt(b.max)} ₽</strong></div>
+    </div>
+    ${current}
+    <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">Анонимная статистика по закрытым прямым закупкам на платформе</div>`;
+}
+

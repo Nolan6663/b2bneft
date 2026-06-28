@@ -136,11 +136,13 @@
         </div>
 
         <div class="section">
-            <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:14px;">
                 <button class="btn-secondary" onclick="exportProposals()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
-                    <span class="nav-label">Экспорт КП</span>
+                    <span class="nav-label">CSV</span>
                 </button>
+                <button class="btn-secondary" onclick="window.location.href=SERVER_URL+'/export/proposals.xlsx'"><span class="nav-label">Excel</span></button>
+                <button class="btn-secondary" onclick="window.location.href=SERVER_URL+'/export/proposals.pdf'"><span class="nav-label">PDF</span></button>
             </div>
             <div class="table-wrapper">
                 <table>
