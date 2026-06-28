@@ -378,6 +378,7 @@ const PUBLIC_PAGES = [
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
     'zakupki.html',
+    'dlya-postavshchikov.html',
 ];
 PUBLIC_PAGES.forEach(page => {
     const slug = '/' + page.replace('.html', '');
@@ -426,9 +427,10 @@ app.get('/sitemap.xml', (req, res) => {
     const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
     const today = new Date().toISOString().slice(0, 10);
     const pages = [
-        { url: '/',               priority: '1.0', changefreq: 'weekly' },
-        { url: '/zakupki.html',   priority: '0.9', changefreq: 'hourly' },
-        { url: '/map.html',       priority: '0.7', changefreq: 'weekly' },
+        { url: '/',                         priority: '1.0', changefreq: 'weekly' },
+        { url: '/zakupki.html',             priority: '0.9', changefreq: 'hourly' },
+        { url: '/dlya-postavshchikov.html', priority: '0.8', changefreq: 'weekly' },
+        { url: '/map.html',                 priority: '0.7', changefreq: 'weekly' },
     ];
     const urls = pages.map(p =>
         `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
