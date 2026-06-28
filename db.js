@@ -188,6 +188,8 @@ async function initDb() {
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS responses INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
     `);
 
     await pool.query(`

@@ -20,6 +20,8 @@ const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
 const storage = require('./storage');
+const speakeasy = require('speakeasy');
+const QRCode   = require('qrcode');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -1776,6 +1778,18 @@ app.post('/api/auth/login', async (req, res, next) => {
             await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashPassword(password), user.id]);
         }
 
+        if (user.totp_enabled) {
+            const { totpCode } = req.body;
+            if (!totpCode) return res.status(200).json({ require2fa: true });
+            const valid = speakeasy.totp.verify({
+                secret:   user.totp_secret,
+                encoding: 'base32',
+                token:    String(totpCode).replace(/\s/g, ''),
+                window:   1,
+            });
+            if (!valid) return res.status(401).json({ error: 'Неверный код 2FA' });
+        }
+
         const { accessToken, refreshToken } = generateTokens(user);
         await pool.query(
             "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
@@ -1788,7 +1802,62 @@ app.post('/api/auth/login', async (req, res, next) => {
             role: user.role,
             company: user.company,
             emailVerified: Boolean(user.email_verified),
+            totpEnabled:   Boolean(user.totp_enabled),
         });
+    } catch (e) { next(e); }
+});
+
+// ── 2FA setup ─────────────────────────────────────────────────────────────
+
+app.post('/api/auth/2fa/setup', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+        if (user.totp_enabled) return res.status(400).json({ error: '2FA уже включена' });
+
+        const secret = speakeasy.generateSecret({ name: `ТЕХЗАКАЗ (${user.email})`, issuer: 'ТЕХЗАКАЗ', length: 20 });
+        await pool.query('UPDATE users SET totp_secret = $1 WHERE id = $2', [secret.base32, user.id]);
+
+        const qrDataUrl = await QRCode.toDataURL(secret.otpauth_url);
+        res.json({ qr: qrDataUrl, secret: secret.base32 });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/auth/2fa/confirm', requireAuth, async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+        if (!user.totp_secret) return res.status(400).json({ error: 'Сначала выполните /api/auth/2fa/setup' });
+        if (user.totp_enabled) return res.status(400).json({ error: '2FA уже включена' });
+
+        const valid = speakeasy.totp.verify({
+            secret:   user.totp_secret,
+            encoding: 'base32',
+            token:    String(code).replace(/\s/g, ''),
+            window:   1,
+        });
+        if (!valid) return res.status(400).json({ error: 'Неверный код — попробуйте ещё раз' });
+
+        await pool.query('UPDATE users SET totp_enabled = true WHERE id = $1', [user.id]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/auth/2fa/disable', requireAuth, async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+        if (!user.totp_enabled) return res.status(400).json({ error: '2FA не включена' });
+
+        const valid = speakeasy.totp.verify({
+            secret:   user.totp_secret,
+            encoding: 'base32',
+            token:    String(code).replace(/\s/g, ''),
+            window:   1,
+        });
+        if (!valid) return res.status(400).json({ error: 'Неверный код' });
+
+        await pool.query('UPDATE users SET totp_enabled = false, totp_secret = NULL WHERE id = $1', [user.id]);
+        res.json({ ok: true });
     } catch (e) { next(e); }
 });
 
@@ -2180,13 +2249,17 @@ app.post('/api/auth/logout', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
-app.get('/api/auth/me', requireAuth, (req, res) => {
-    res.json({
-        email: req.user.email,
-        role: req.user.role,
-        company: req.user.company,
-        emailVerified: Boolean(req.user.email_verified),
-    });
+app.get('/api/auth/me', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [user] } = await pool.query('SELECT totp_enabled FROM users WHERE id = $1', [req.user.id]);
+        res.json({
+            email:        req.user.email,
+            role:         req.user.role,
+            company:      req.user.company,
+            emailVerified: Boolean(req.user.email_verified),
+            totpEnabled:  Boolean(user?.totp_enabled),
+        });
+    } catch (e) { next(e); }
 });
 
 app.post('/api/auth/verify-email', async (req, res, next) => {

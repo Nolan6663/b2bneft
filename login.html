@@ -367,6 +367,23 @@ body {
         <a href="#" class="forgot-link" onclick="openForgot(); return false;">Забыли пароль?</a>
       </div>
 
+      <!-- 2FA step (shown when server returns require2fa) -->
+      <div id="twofa-step" style="display:none;">
+        <div class="form-group">
+          <label>Код из приложения-аутентификатора</label>
+          <input id="totpInput" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+            style="font-size:24px;font-family:'JetBrains Mono',monospace;letter-spacing:6px;text-align:center;"
+            oninput="this.value=this.value.replace(/\D/g,'')"
+            onkeydown="if(event.key==='Enter')handleLogin()">
+        </div>
+        <button class="btn-primary" onclick="handleLogin()">
+          Подтвердить
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <button style="background:none;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;margin-top:8px;width:100%;" onclick="cancel2faStep()">← Назад</button>
+      </div>
+
+      <div id="login-main-btns">
       <button id="btnSubmit" class="btn-primary" onclick="handleLogin()">
         Войти в аккаунт
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -384,6 +401,7 @@ body {
       <div class="form-footer">
         Нет аккаунта? <a href="#" onclick="switchTab('register'); return false;">Зарегистрироваться</a>
       </div>
+      </div><!-- #login-main-btns -->
     </div>
 
     <!-- REGISTER FORM -->
@@ -545,21 +563,34 @@ function setLoading(btn, loading) {
 }
 
 async function handleLogin() {
-  const email = document.getElementById('authEmail').value.trim();
+  const email    = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
+  const totpCode = document.getElementById('totpInput')?.value.trim() || '';
   clearError();
   if (!email || !password) { showError('Введите email и пароль'); return; }
 
-  const btn = document.querySelector('#form-login .btn-primary');
+  const btn = document.querySelector('#form-login .btn-primary:not([style*="none"])');
   setLoading(btn, true);
   try {
+    const body = { email, password };
+    if (totpCode) body.totpCode = totpCode;
+
     const res = await fetch(`${SERVER_URL}/auth/login`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
+
+    if (res.ok && data.require2fa) {
+      document.getElementById('twofa-step').style.display = '';
+      document.getElementById('login-main-btns').style.display = 'none';
+      document.getElementById('totpInput').value = '';
+      setTimeout(() => document.getElementById('totpInput').focus(), 50);
+      return;
+    }
+
     if (!res.ok) { showError(data.error || 'Ошибка входа'); return; }
     applyAuthSession(data);
     window.location.href = data.role === 'admin' ? 'admin.html' : data.role === 'producer' ? 'producer.html' : 'index.html';
@@ -568,6 +599,13 @@ async function handleLogin() {
   } finally {
     setLoading(btn, false);
   }
+}
+
+function cancel2faStep() {
+  document.getElementById('twofa-step').style.display = 'none';
+  document.getElementById('login-main-btns').style.display = '';
+  document.getElementById('totpInput').value = '';
+  clearError();
 }
 
 async function handleRegister() {

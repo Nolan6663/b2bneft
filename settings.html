@@ -660,15 +660,43 @@
                     <div><div class="settings-card-title">Двухфакторная аутентификация</div><div class="settings-card-subtitle">Дополнительная защита вашего аккаунта</div></div>
                 </div>
                 <div class="settings-card-body">
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-                        <div>
-                            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#dc2626;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px;">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                Не активирована
-                            </div>
-                            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;max-width:400px;">Включите 2FA через приложение Google Authenticator или Яндекс.Ключ — это защитит аккаунт даже если пароль окажется скомпрометирован.</div>
+                    <div id="twofa-status-block">
+                        <!-- rendered by load2faStatus() -->
+                        <div style="color:var(--text-secondary);font-size:13px;">Загрузка...</div>
+                    </div>
+
+                    <!-- Setup flow (hidden by default) -->
+                    <div id="twofa-setup-flow" style="display:none;margin-top:16px;">
+                        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;">
+                            Отсканируйте QR-код в приложении <strong>Google Authenticator</strong> или <strong>Яндекс.Ключ</strong>, затем введите 6-значный код для подтверждения.
                         </div>
-                        <button class="btn-settings-save" onclick="showToast('2FA будет доступна в следующем обновлении')">Настроить 2FA</button>
+                        <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+                            <img id="twofa-qr" src="" alt="QR код" style="width:160px;height:160px;border-radius:10px;border:1px solid var(--card-border);">
+                            <div style="flex:1;min-width:200px;">
+                                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Или введите ключ вручную:</div>
+                                <div id="twofa-secret-text" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-primary);background:var(--inner-bg);border:1px solid var(--card-border);border-radius:6px;padding:6px 10px;word-break:break-all;margin-bottom:16px;"></div>
+                                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Код из приложения</div>
+                                <input id="twofa-code-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+                                    style="width:140px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:20px;font-family:'JetBrains Mono',monospace;letter-spacing:4px;text-align:center;box-sizing:border-box;"
+                                    oninput="this.value=this.value.replace(/\D/g,'')">
+                                <div style="display:flex;gap:8px;margin-top:12px;">
+                                    <button class="btn-secondary" onclick="cancel2faSetup()">Отмена</button>
+                                    <button class="btn-settings-save" onclick="confirm2fa()">Подтвердить</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disable flow (hidden by default) -->
+                    <div id="twofa-disable-flow" style="display:none;margin-top:16px;">
+                        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Введите текущий код из приложения, чтобы отключить 2FA.</div>
+                        <input id="twofa-disable-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000"
+                            style="width:140px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:20px;font-family:'JetBrains Mono',monospace;letter-spacing:4px;text-align:center;box-sizing:border-box;"
+                            oninput="this.value=this.value.replace(/\D/g,'')">
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <button class="btn-secondary" onclick="cancel2faDisable()">Отмена</button>
+                            <button class="btn-settings-save" style="background:#dc2626;" onclick="disable2fa()">Отключить 2FA</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -883,11 +911,114 @@
         const myCompany = localStorage.getItem('userCompany');
 
 
+        // ── 2FA ──────────────────────────────────────────────────────────────
+
+        async function load2faStatus() {
+            const block = document.getElementById('twofa-status-block');
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/me`);
+                const data = r.ok ? await r.json() : {};
+                const enabled = Boolean(data.totpEnabled);
+                block.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                        <div>
+                            ${enabled
+                                ? `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);color:#059669;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px;">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Активирована
+                                  </div>`
+                                : `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#dc2626;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px;">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    Не активирована
+                                  </div>`
+                            }
+                            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.5;max-width:400px;">
+                                ${enabled
+                                    ? 'Аккаунт защищён двухфакторной аутентификацией через приложение-аутентификатор.'
+                                    : 'Включите 2FA через Google Authenticator или Яндекс.Ключ — защита даже при компрометации пароля.'
+                                }
+                            </div>
+                        </div>
+                        ${enabled
+                            ? `<button class="btn-settings-save" style="background:#dc2626;" onclick="show2faDisableFlow()">Отключить 2FA</button>`
+                            : `<button class="btn-settings-save" onclick="start2faSetup()">Настроить 2FA</button>`
+                        }
+                    </div>`;
+            } catch {
+                block.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">Не удалось загрузить статус 2FA</div>';
+            }
+        }
+
+        async function start2faSetup() {
+            const r = await apiFetch(`${SERVER_URL}/auth/2fa/setup`, { method: 'POST' });
+            if (!r.ok) { showToast((await r.json().catch(()=>({}))).error || 'Ошибка', 'error'); return; }
+            const { qr, secret } = await r.json();
+            document.getElementById('twofa-qr').src              = qr;
+            document.getElementById('twofa-secret-text').textContent = secret;
+            document.getElementById('twofa-code-input').value    = '';
+            document.getElementById('twofa-setup-flow').style.display = 'block';
+            document.getElementById('twofa-status-block').style.display = 'none';
+            setTimeout(() => document.getElementById('twofa-code-input').focus(), 100);
+        }
+
+        function cancel2faSetup() {
+            document.getElementById('twofa-setup-flow').style.display = 'none';
+            document.getElementById('twofa-status-block').style.display = '';
+        }
+
+        async function confirm2fa() {
+            const code = document.getElementById('twofa-code-input').value.trim();
+            if (code.length !== 6) { showToast('Введите 6-значный код', 'warn'); return; }
+            const r = await apiFetch(`${SERVER_URL}/auth/2fa/confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+            if (r.ok) {
+                cancel2faSetup();
+                showToast('2FA успешно включена');
+                load2faStatus();
+            } else {
+                showToast((await r.json().catch(()=>({}))).error || 'Неверный код', 'error');
+            }
+        }
+
+        function show2faDisableFlow() {
+            document.getElementById('twofa-disable-code').value = '';
+            document.getElementById('twofa-disable-flow').style.display = 'block';
+            document.getElementById('twofa-status-block').style.display = 'none';
+            setTimeout(() => document.getElementById('twofa-disable-code').focus(), 100);
+        }
+
+        function cancel2faDisable() {
+            document.getElementById('twofa-disable-flow').style.display = 'none';
+            document.getElementById('twofa-status-block').style.display = '';
+        }
+
+        async function disable2fa() {
+            const code = document.getElementById('twofa-disable-code').value.trim();
+            if (code.length !== 6) { showToast('Введите 6-значный код', 'warn'); return; }
+            const r = await apiFetch(`${SERVER_URL}/auth/2fa/disable`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+            if (r.ok) {
+                cancel2faDisable();
+                showToast('2FA отключена');
+                load2faStatus();
+            } else {
+                showToast((await r.json().catch(()=>({}))).error || 'Неверный код', 'error');
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
             const navProposals = document.getElementById('navProposals');
             if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
+
+            load2faStatus();
 
             let userEmail = '';
 
