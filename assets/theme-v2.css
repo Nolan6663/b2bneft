@@ -139,7 +139,7 @@ button { font-family: inherit; }
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; flex-shrink: 0; }
-.sidebar a .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sidebar a .nav-label { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
 .sidebar a:hover { color: var(--sidebar-text-active); background: var(--bg-secondary); }
 .sidebar a.active {
   color: var(--accent-cyan);
@@ -182,11 +182,11 @@ button { font-family: inherit; }
 
 /* Бейджи на пунктах меню */
 .nav-badge {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  position: absolute !important; right: 10px; top: 50%; transform: translateY(-50%);
   background: var(--accent-cyan); color: #fff;
   font-size: 10px; font-weight: 700; border-radius: 10px;
   padding: 2px 7px; min-width: 18px; text-align: center;
-  display: none; line-height: 1.5; flex-shrink: 0;
+  display: none; line-height: 1.5;
 }
 
 /* ── LAYOUT / HEADER ───────────────────────────────────────────────── */
