@@ -314,6 +314,7 @@
                 verificationStatus = vsResp.ok ? await vsResp.json() : { status: 'none' };
                 renderProfile(currentData);
                 renderPhotoGallery(currentData.photos);
+                loadReviews(currentData.company);
             } catch (error) {
                 document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Не удалось загрузить профиль</div>';
             }
@@ -504,6 +505,14 @@
 
                 ${producerSections}
 
+                <div class="section" id="reviewsSection">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <h3 style="margin:0;">Отзывы</h3>
+                        <span id="reviewsAvgBadge" style="font-size:13px;color:var(--accent-bright);font-weight:700;"></span>
+                    </div>
+                    <div id="reviewsList"><div style="color:var(--text-secondary);font-size:13px;">Загрузка…</div></div>
+                </div>
+
                 <div class="section" id="photoSection">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
                         <h3 style="margin:0;">Фотографии</h3>
@@ -517,6 +526,36 @@
                     ${(!c.photos || c.photos.length === 0) ? `<p class="empty-hint" id="photoEmptyHint">Фотографии не добавлены</p>` : ''}
                 </div>
             `;
+        }
+
+        async function loadReviews(company) {
+            try {
+                const r = await fetch(`${SERVER_URL}/reviews/company/${encodeURIComponent(company)}`);
+                if (!r.ok) return;
+                const { reviews, avg, count } = await r.json();
+
+                const badge = document.getElementById('reviewsAvgBadge');
+                if (badge) badge.textContent = avg ? `★ ${avg.toString().replace('.',',')} (${count})` : '';
+
+                const list = document.getElementById('reviewsList');
+                if (!list) return;
+                if (!reviews.length) {
+                    list.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">Отзывов пока нет</div>';
+                    return;
+                }
+                list.innerHTML = reviews.map(rv => {
+                    const stars = '★'.repeat(rv.score) + '☆'.repeat(5 - rv.score);
+                    const dt    = new Date(rv.created_at).toLocaleDateString('ru-RU');
+                    return `<div style="border-bottom:1px solid var(--inner-border);padding:12px 0;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                            <span style="font-size:15px;color:#FF6A00;letter-spacing:1px;">${stars}</span>
+                            <span style="font-size:12px;font-weight:600;color:var(--text-primary);">${escapeHtml(rv.from_company)}</span>
+                            <span style="font-size:11px;color:var(--text-secondary);margin-left:auto;">${dt}</span>
+                        </div>
+                        ${rv.text ? `<div style="font-size:13px;color:var(--text-tertiary);line-height:1.5;">${escapeHtml(rv.text)}</div>` : ''}
+                    </div>`;
+                }).join('');
+            } catch {}
         }
 
         async function toggleFavorite() {

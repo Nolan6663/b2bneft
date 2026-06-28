@@ -648,15 +648,36 @@
                     </div>
                 </div>
             </div>
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
-                    <div><div class="settings-card-title">Push-уведомления</div><div class="settings-card-subtitle">Уведомления в браузере</div></div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div class="settings-card" id="digestCard" style="display:none;">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                        <div><div class="settings-card-title">Дайджест новых заявок</div><div class="settings-card-subtitle">Получайте подборку активных закупок на почту</div></div>
+                    </div>
+                    <div class="settings-card-body">
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            ${['daily','weekly','never'].map(v => {
+                                const labels = {daily:'Ежедневно (в 9:00)', weekly:'Еженедельно (по понедельникам)', never:'Не получать'};
+                                return `<label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                                    <input type="radio" name="digestFreq" value="${v}" style="accent-color:#FF6A00;" onchange="saveDigestFrequency('${v}')">
+                                    <span style="font-size:13.5px;color:var(--text-primary);">${labels[v]}</span>
+                                </label>`;
+                            }).join('')}
+                        </div>
+                        <div id="digestSaveStatus" style="font-size:12px;color:var(--accent-green);margin-top:10px;display:none;">Сохранено</div>
+                    </div>
                 </div>
-                <div class="settings-card-body">
-                    <div style="display:flex;align-items:center;gap:14px;justify-content:space-between;">
-                        <div><div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Разрешить push-уведомления</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Мгновенные оповещения даже когда сайт закрыт</div></div>
-                        <button class="btn-settings-save" onclick="requestPushPermission()">Разрешить</button>
+
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+                        <div><div class="settings-card-title">Push-уведомления</div><div class="settings-card-subtitle">Уведомления в браузере</div></div>
+                    </div>
+                    <div class="settings-card-body">
+                        <div style="display:flex;align-items:center;gap:14px;justify-content:space-between;">
+                            <div><div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Разрешить push-уведомления</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Мгновенные оповещения даже когда сайт закрыт</div></div>
+                            <button class="btn-settings-save" onclick="requestPushPermission()">Разрешить</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1300,6 +1321,34 @@
             }
         }
 
+        // ── Digest frequency (producers only) ───────────────────────────────
+
+        async function loadDigestSettings() {
+            if (userRole !== 'producer') return;
+            const card = document.getElementById('digestCard');
+            if (card) card.style.display = '';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/me`);
+                if (!r.ok) return;
+                const d = await r.json();
+                const freq = d.digest_frequency || 'daily';
+                const radio = document.querySelector(`input[name="digestFreq"][value="${freq}"]`);
+                if (radio) radio.checked = true;
+            } catch {}
+        }
+
+        async function saveDigestFrequency(freq) {
+            try {
+                await apiFetch(`${SERVER_URL}/auth/digest`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frequency: freq }),
+                });
+                const el = document.getElementById('digestSaveStatus');
+                if (el) { el.style.display = ''; setTimeout(() => { el.style.display='none'; }, 2000); }
+            } catch {}
+        }
+
         // ── Team management ─────────────────────────────────────────────────
 
         const TEAM_ROLE_META = {
@@ -1421,6 +1470,7 @@
             load2faStatus();
             loadIntegrations();
             loadTeamMembers();
+            loadDigestSettings();
 
             let userEmail = '';
 

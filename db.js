@@ -199,6 +199,26 @@ async function initDb() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days'
         );
+        CREATE TABLE IF NOT EXISTS reviews (
+            id           SERIAL      PRIMARY KEY,
+            order_id     INTEGER     NOT NULL,
+            from_company TEXT        NOT NULL,
+            to_company   TEXT        NOT NULL,
+            score        INTEGER     NOT NULL CHECK (score BETWEEN 1 AND 5),
+            text         TEXT        NOT NULL DEFAULT '',
+            created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(order_id, from_company, to_company)
+        );
+        CREATE TABLE IF NOT EXISTS order_templates (
+            id            SERIAL      PRIMARY KEY,
+            company       TEXT        NOT NULL,
+            title         TEXT        NOT NULL,
+            category      TEXT        NOT NULL DEFAULT '',
+            description   TEXT        NOT NULL DEFAULT '',
+            quantity      INTEGER,
+            deadline_days INTEGER,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
@@ -212,6 +232,7 @@ async function initDb() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS team_role TEXT NOT NULL DEFAULT 'admin';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS digest_frequency TEXT NOT NULL DEFAULT 'daily';
     `);
 
     await pool.query(`

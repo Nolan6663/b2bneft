@@ -21,7 +21,9 @@ const rateLimit = require('express-rate-limit');
 const { pool, initDb } = require('./db');
 const storage = require('./storage');
 const speakeasy = require('speakeasy');
-const QRCode   = require('qrcode');
+const QRCode    = require('qrcode');
+const cron      = require('node-cron');
+const ExcelJS   = require('exceljs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -1771,6 +1773,208 @@ app.get('/api/messages/stats', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ===================== РЕЙТИНГИ И ОТЗЫВЫ =====================
+
+app.post('/api/reviews', requireAuth, async (req, res, next) => {
+    try {
+        const { orderId, toCompany, score, text = '' } = req.body;
+        if (!orderId || !toCompany || !score) return res.status(400).json({ error: 'Заполните все поля' });
+        const s = Number(score);
+        if (s < 1 || s > 5) return res.status(400).json({ error: 'Оценка от 1 до 5' });
+
+        const { rows: [deal] } = await pool.query(
+            `SELECT 1 FROM proposals p JOIN orders o ON o.id=p.order_id
+             WHERE p.order_id=$1 AND p.company=$2 AND p.status='Выигран' AND o.company=$3`,
+            [orderId, toCompany, req.user.company]
+        );
+        if (!deal) return res.status(403).json({ error: 'Отзыв доступен только после завершения сделки' });
+
+        await pool.query(
+            `INSERT INTO reviews (order_id,from_company,to_company,score,text)
+             VALUES ($1,$2,$3,$4,$5)
+             ON CONFLICT (order_id,from_company,to_company) DO UPDATE SET score=$4, text=$5`,
+            [orderId, req.user.company, toCompany, s, text.slice(0, 1000)]
+        );
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/reviews/company/:name', async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT from_company, score, text, created_at FROM reviews
+             WHERE to_company=$1 ORDER BY created_at DESC LIMIT 30`,
+            [req.params.name]
+        );
+        const avg = rows.length ? Math.round(rows.reduce((s, r) => s + r.score, 0) / rows.length * 10) / 10 : null;
+        res.json({ reviews: rows, avg, count: rows.length });
+    } catch (e) { next(e); }
+});
+
+// Check if current user already reviewed a specific deal
+app.get('/api/reviews/check/:orderId/:toCompany', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [row] } = await pool.query(
+            'SELECT score, text FROM reviews WHERE order_id=$1 AND from_company=$2 AND to_company=$3',
+            [req.params.orderId, req.user.company, req.params.toCompany]
+        );
+        res.json(row || null);
+    } catch (e) { next(e); }
+});
+
+// ===================== ШАБЛОНЫ ЗАКУПОК =====================
+
+app.get('/api/templates', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT * FROM order_templates WHERE company=$1 ORDER BY created_at DESC',
+            [req.user.company]
+        );
+        res.json(rows);
+    } catch (e) { next(e); }
+});
+
+app.post('/api/templates', requireAuth, async (req, res, next) => {
+    try {
+        const { title, category, description, quantity, deadlineDays } = req.body;
+        if (!title) return res.status(400).json({ error: 'Укажите название шаблона' });
+        const { rows: [row] } = await pool.query(
+            `INSERT INTO order_templates (company,title,category,description,quantity,deadline_days)
+             VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+            [req.user.company, title, category || '', description || '', quantity || null, deadlineDays || null]
+        );
+        res.status(201).json(row);
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/templates/:id', requireAuth, async (req, res, next) => {
+    try {
+        await pool.query('DELETE FROM order_templates WHERE id=$1 AND company=$2', [req.params.id, req.user.company]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+// ===================== ЭКСПОРТ EXCEL =====================
+
+app.get('/api/export/orders.xlsx', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT o.id, o.title, o.category, o.status, o.created_at, o.deadline,
+                    COUNT(p.id) AS proposals,
+                    MIN(p.price) FILTER (WHERE p.status='Выигран') AS won_price,
+                    MIN(p.company) FILTER (WHERE p.status='Выигран') AS won_supplier
+             FROM orders o LEFT JOIN proposals p ON p.order_id=o.id
+             WHERE o.company=$1
+             GROUP BY o.id ORDER BY o.created_at DESC`,
+            [req.user.company]
+        );
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'ТехЗаказ';
+        const ws = wb.addWorksheet('Закупки');
+        ws.columns = [
+            { header:'№',                  key:'id',           width:8  },
+            { header:'Наименование',        key:'title',        width:40 },
+            { header:'Категория',           key:'category',     width:22 },
+            { header:'Статус',              key:'status',       width:16 },
+            { header:'Дедлайн',             key:'deadline',     width:14 },
+            { header:'Откликов',            key:'proposals',    width:12 },
+            { header:'Цена договора, ₽',   key:'won_price',    width:18 },
+            { header:'Поставщик',           key:'won_supplier', width:32 },
+            { header:'Дата создания',       key:'created_at',   width:18 },
+        ];
+        ws.getRow(1).font  = { bold:true, color:{ argb:'FFFFFFFF' } };
+        ws.getRow(1).fill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF1E3A5F' } };
+        ws.getRow(1).alignment = { vertical:'middle' };
+
+        rows.forEach(r => ws.addRow({
+            id:           r.id,
+            title:        r.title,
+            category:     r.category,
+            status:       r.status,
+            deadline:     r.deadline || '—',
+            proposals:    Number(r.proposals),
+            won_price:    r.won_price ? Number(r.won_price) : '',
+            won_supplier: r.won_supplier || '—',
+            created_at:   new Date(r.created_at).toLocaleDateString('ru-RU'),
+        }));
+
+        ws.getColumn('won_price').numFmt = '#,##0';
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''%D0%97%D0%B0%D0%BA%D1%83%D0%BF%D0%BA%D0%B8-${Date.now()}.xlsx`);
+        await wb.xlsx.write(res);
+        res.end();
+    } catch (e) { next(e); }
+});
+
+app.get('/api/export/proposals.xlsx', requireAuth, async (req, res, next) => {
+    try {
+        const isProducer = req.user.role === 'producer';
+        const { rows } = isProducer
+            ? await pool.query(
+                `SELECT p.id, o.title AS order_title, o.category, p.price, p.days,
+                        p.status, p.created_at, o.company AS customer
+                 FROM proposals p JOIN orders o ON o.id=p.order_id
+                 WHERE p.company=$1 ORDER BY p.created_at DESC`,
+                [req.user.company]
+              )
+            : await pool.query(
+                `SELECT p.id, o.title AS order_title, o.category, p.company AS supplier,
+                        p.price, p.days, p.status, p.created_at
+                 FROM proposals p JOIN orders o ON o.id=p.order_id
+                 WHERE o.company=$1 ORDER BY p.created_at DESC`,
+                [req.user.company]
+              );
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'ТехЗаказ';
+        const ws = wb.addWorksheet('КП');
+        ws.columns = isProducer ? [
+            { header:'Заявка',      key:'order_title', width:40 },
+            { header:'Категория',   key:'category',    width:22 },
+            { header:'Заказчик',    key:'customer',    width:30 },
+            { header:'Цена, ₽',    key:'price',       width:16 },
+            { header:'Срок, дн',   key:'days',        width:12 },
+            { header:'Статус',      key:'status',      width:18 },
+            { header:'Дата',        key:'created_at',  width:16 },
+        ] : [
+            { header:'Заявка',      key:'order_title', width:40 },
+            { header:'Категория',   key:'category',    width:22 },
+            { header:'Поставщик',   key:'supplier',    width:30 },
+            { header:'Цена, ₽',    key:'price',       width:16 },
+            { header:'Срок, дн',   key:'days',        width:12 },
+            { header:'Статус',      key:'status',      width:18 },
+            { header:'Дата',        key:'created_at',  width:16 },
+        ];
+        ws.getRow(1).font = { bold:true, color:{ argb:'FFFFFFFF' } };
+        ws.getRow(1).fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFF6A00' } };
+
+        rows.forEach(r => ws.addRow({
+            ...r,
+            price:      Number(r.price),
+            created_at: new Date(r.created_at).toLocaleDateString('ru-RU'),
+        }));
+        ws.getColumn('price').numFmt = '#,##0';
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''%D0%9A%D0%9F-${Date.now()}.xlsx`);
+        await wb.xlsx.write(res);
+        res.end();
+    } catch (e) { next(e); }
+});
+
+// ===================== НАСТРОЙКА ДАЙДЖЕСТА =====================
+
+app.patch('/api/auth/digest', requireAuth, async (req, res, next) => {
+    try {
+        const { frequency } = req.body;
+        if (!['daily','weekly','never'].includes(frequency)) return res.status(400).json({ error: 'Недопустимое значение' });
+        await pool.query('UPDATE users SET digest_frequency=$1 WHERE id=$2', [frequency, req.user.id]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
 // ===================== КОМАНДА / ПРИГЛАШЕНИЯ =====================
 
 app.get('/api/team/members', requireAuth, async (req, res, next) => {
@@ -2825,13 +3029,15 @@ app.post('/api/auth/logout', async (req, res, next) => {
 
 app.get('/api/auth/me', requireAuth, async (req, res, next) => {
     try {
-        const { rows: [user] } = await pool.query('SELECT totp_enabled FROM users WHERE id = $1', [req.user.id]);
+        const { rows: [user] } = await pool.query('SELECT totp_enabled, digest_frequency, id FROM users WHERE id = $1', [req.user.id]);
         res.json({
-            email:        req.user.email,
-            role:         req.user.role,
-            company:      req.user.company,
-            emailVerified: Boolean(req.user.email_verified),
-            totpEnabled:  Boolean(user?.totp_enabled),
+            id:               user?.id,
+            email:            req.user.email,
+            role:             req.user.role,
+            company:          req.user.company,
+            emailVerified:    Boolean(req.user.email_verified),
+            totpEnabled:      Boolean(user?.totp_enabled),
+            digest_frequency: user?.digest_frequency || 'daily',
         });
     } catch (e) { next(e); }
 });
@@ -3174,6 +3380,77 @@ app.use((err, req, res, next) => {
 
 // ===================== ЗАПУСК =====================
 
+function buildDigestHtml(orders, producerName) {
+    const rows = orders.map(o => `
+        <tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;color:#1E3A5F;">${o.title}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;color:#666;">${o.category}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;color:#666;">${o.deadline || '—'}</td>
+        </tr>`).join('');
+    return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+        <h2 style="color:#1E3A5F;margin:0 0 6px;">Новые заявки на ТехЗаказ</h2>
+        <p style="color:#666;font-size:13px;margin:0 0 20px;">Здравствуйте, ${htmlEscape(producerName)}! За последние сутки появились новые закупки:</p>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">
+            <thead><tr style="background:#1E3A5F;">
+                <th style="padding:10px 12px;text-align:left;color:#fff;font-size:12px;">Наименование</th>
+                <th style="padding:10px 12px;text-align:left;color:#fff;font-size:12px;">Категория</th>
+                <th style="padding:10px 12px;text-align:left;color:#fff;font-size:12px;">Дедлайн</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:20px;text-align:center;">
+            <a href="https://texzakaz.ru/zakupki.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть все заявки →</a>
+        </div>
+        <p style="color:#aaa;font-size:11px;margin-top:24px;text-align:center;">
+            Управление уведомлениями — <a href="https://texzakaz.ru/settings.html" style="color:#aaa;">Настройки</a>
+        </p>
+    </div>`;
+}
+
+function startDigestCron() {
+    // Daily at 09:00 Moscow time (UTC+3 → 06:00 UTC)
+    cron.schedule('0 6 * * *', async () => {
+        try {
+            const { rows: producers } = await pool.query(
+                `SELECT DISTINCT u.email, u.company FROM users u
+                 WHERE u.role='producer' AND u.digest_frequency='daily'`
+            );
+            const { rows: orders } = await pool.query(
+                `SELECT title, category, deadline FROM orders
+                 WHERE status='Активный' AND created_at > NOW()-INTERVAL '24 hours'
+                 ORDER BY created_at DESC LIMIT 10`
+            );
+            if (!orders.length) return;
+            for (const p of producers) {
+                await sendEmail(p.email, `Новые заявки на ТехЗаказ — ${new Date().toLocaleDateString('ru-RU')}`,
+                    buildDigestHtml(orders, p.company)).catch(() => {});
+            }
+            console.log(`[digest:daily] sent to ${producers.length} producers, ${orders.length} orders`);
+        } catch (e) { console.error('[digest:daily]', e.message); }
+    });
+
+    // Weekly on Monday at 09:00 Moscow time
+    cron.schedule('0 6 * * 1', async () => {
+        try {
+            const { rows: producers } = await pool.query(
+                `SELECT DISTINCT u.email, u.company FROM users u
+                 WHERE u.role='producer' AND u.digest_frequency='weekly'`
+            );
+            const { rows: orders } = await pool.query(
+                `SELECT title, category, deadline FROM orders
+                 WHERE status='Активный' AND created_at > NOW()-INTERVAL '7 days'
+                 ORDER BY created_at DESC LIMIT 15`
+            );
+            if (!orders.length) return;
+            for (const p of producers) {
+                await sendEmail(p.email, `Заявки за неделю — ТехЗаказ`,
+                    buildDigestHtml(orders, p.company)).catch(() => {});
+            }
+            console.log(`[digest:weekly] sent to ${producers.length} producers`);
+        } catch (e) { console.error('[digest:weekly]', e.message); }
+    });
+}
+
 async function start() {
     await initDb();
     httpServer.listen(PORT, () => {
@@ -3182,6 +3459,7 @@ async function start() {
     if (process.env.GEOCODE_ON_START !== 'false') {
         setTimeout(geocodeExisting, 5000);
     }
+    startDigestCron();
     return httpServer;
 }
 

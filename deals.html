@@ -304,11 +304,47 @@
                         Выгрузить в 1С (XML)
                     </button>
                 </div>
+                <div id="ddpReviewBtn" style="display:none;margin-top:8px;">
+                    <button class="btn-secondary" style="width:100%;" id="ddpReviewBtnInner" onclick="openReviewModal()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Оставить отзыв
+                    </button>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn-secondary" style="width:100%;font-size:12px;" onclick="window.location.href=`${SERVER_URL}/export/orders.xlsx`">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Экспорт в Excel
+                    </button>
+                </div>
             </div>
 
         </div><!-- /orders-wrap -->
 
     </div><!-- /main-content -->
+
+    <!-- Review modal -->
+    <div id="reviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg);border-radius:16px;padding:28px;width:420px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Оставить отзыв</div>
+            <div id="reviewSupplierName" style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;"></div>
+            <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Оценка</div>
+                <div id="reviewStars" style="display:flex;gap:6px;">
+                    ${[1,2,3,4,5].map(i => `<span data-val="${i}" onclick="setReviewStar(${i})" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>`).join('')}
+                </div>
+            </div>
+            <div style="margin-bottom:18px;">
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Комментарий (необязательно)</div>
+                <textarea id="reviewText" rows="3" placeholder="Качество, сроки, коммуникация…"
+                    style="width:100%;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+            </div>
+            <div id="reviewResult" style="min-height:18px;font-size:13px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-primary" onclick="submitReview()" style="flex:1;">Отправить</button>
+                <button class="btn-secondary" onclick="closeReviewModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width:440px;">
@@ -541,7 +577,81 @@
                 }
             }
 
+            // Review button — show for completed deals
+            const reviewBtn = document.getElementById('ddpReviewBtn');
+            if (reviewBtn) {
+                if (d.status === 'completed' && d.supplier) {
+                    reviewBtn.style.display = '';
+                    // Check if already reviewed
+                    apiFetch(`${SERVER_URL}/reviews/check/${d.id}/${encodeURIComponent(d.supplier)}`)
+                        .then(r => r.ok ? r.json() : null)
+                        .then(existing => {
+                            const inner = document.getElementById('ddpReviewBtnInner');
+                            if (existing) {
+                                inner.textContent = `Ваш отзыв: ${'★'.repeat(existing.score)}`;
+                                inner.style.color = '#FF6A00';
+                            } else {
+                                inner.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Оставить отзыв`;
+                                inner.style.color = '';
+                            }
+                        }).catch(() => {});
+                } else {
+                    reviewBtn.style.display = 'none';
+                }
+            }
+
             renderTable();
+        }
+
+        // ── Review modal ────────────────────────────────────────────────────
+        let _reviewStar = 0;
+
+        function openReviewModal() {
+            if (!currentDeal) return;
+            _reviewStar = 0;
+            document.getElementById('reviewSupplierName').textContent = currentDeal.supplier || '';
+            document.getElementById('reviewText').value = '';
+            document.getElementById('reviewResult').textContent = '';
+            document.querySelectorAll('#reviewStars span').forEach(s => s.style.color = '#CBD5E1');
+            document.getElementById('reviewModal').style.display = 'flex';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+
+        function setReviewStar(val) {
+            _reviewStar = val;
+            document.querySelectorAll('#reviewStars span').forEach(s => {
+                s.style.color = Number(s.dataset.val) <= val ? '#FF6A00' : '#CBD5E1';
+            });
+        }
+
+        async function submitReview() {
+            if (!currentDeal) return;
+            if (!_reviewStar) { document.getElementById('reviewResult').style.color='#e07070'; document.getElementById('reviewResult').textContent='Выберите оценку'; return; }
+            const resultEl = document.getElementById('reviewResult');
+            resultEl.style.color = 'var(--text-secondary)';
+            resultEl.textContent = 'Отправляем…';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/reviews`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        orderId:   currentDeal.id,
+                        toCompany: currentDeal.supplier,
+                        score:     _reviewStar,
+                        text:      document.getElementById('reviewText').value.trim(),
+                    }),
+                });
+                const d = await r.json();
+                if (!r.ok) { resultEl.style.color='#e07070'; resultEl.textContent=d.error||'Ошибка'; return; }
+                resultEl.style.color='var(--accent-green)'; resultEl.textContent='Отзыв сохранён!';
+                setTimeout(closeReviewModal, 900);
+                // Update button
+                const inner = document.getElementById('ddpReviewBtnInner');
+                if (inner) { inner.textContent=`Ваш отзыв: ${'★'.repeat(_reviewStar)}`; inner.style.color='#FF6A00'; }
+            } catch { resultEl.style.color='#e07070'; resultEl.textContent='Ошибка сети'; }
         }
 
         async function acceptKp(proposalId, orderId, supplier) {
