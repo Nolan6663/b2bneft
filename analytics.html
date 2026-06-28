@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");</script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -234,9 +235,14 @@
 
         <!-- Header -->
         <div class="header">
+            <button class="burger-btn" aria-label="Меню" onclick="(function(){var sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebarOverlay');if(!ov){ov=document.createElement('div');ov.className='sidebar-overlay';ov.id='sidebarOverlay';ov.addEventListener('click',function(){sb&&sb.classList.remove('open');ov.classList.remove('visible')});document.body.appendChild(ov)}var opened=sb&&sb.classList.toggle('open');ov.classList.toggle('visible',!!opened)})()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div style="display:flex;align-items:center;gap:10px;">
                 <h2>Аналитика</h2>
                 <button id="starBtn" onclick="toggleStar()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:0;" title="В избранное">☆</button>
+            </div>
+            <div class="header-right">
+                <button class="bell-btn" onclick="openNotificationsModal()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>
+                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">ТЗ</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Загрузка…</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">Настройки</a><a href="company-profile.html" class="user-dropdown-item">Профиль компании</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Выйти из аккаунта</button></div></div>
             </div>
         </div>
 

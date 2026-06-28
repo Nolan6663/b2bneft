@@ -619,7 +619,6 @@ function initSidebarExtra() {
   if (localStorage.getItem('sidebarCollapsed') === '1') {
     sidebar.classList.add('collapsed');
   }
-  requestAnimationFrame(() => sidebar.classList.add('ready'));
 }
 
 /* ---------------------------------------------------------------------
@@ -632,76 +631,20 @@ function toggleUserMenu(e) {
 }
 
 function initHeaderRight() {
-  const header = document.querySelector('.header') || document.querySelector('.msg-header');
-  if (!header) return;
-
-  const oldBell = header.querySelector('.bell-btn');
-  if (oldBell) oldBell.remove();
-
   const company   = localStorage.getItem('userCompany') || '';
   const role      = localStorage.getItem('userRole') || '';
   const roleLabel = role === 'customer' ? 'Заказчик'
                   : role === 'producer' ? 'Производитель'
                   : role === 'admin'    ? 'Администратор' : '';
-
   const clean    = company.replace(/[«»""']/g, '').replace(/^(ООО|АО|ЗАО|ИП|ПАО)\s+/i, '').trim();
-  const initials = (clean || company).slice(0, 2).toUpperCase() || 'ББ';
+  const initials = (clean || company).slice(0, 2).toUpperCase() || 'ТЗ';
 
-  const _dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const _moonSvg = '<path d="M21 13A8.5 8.5 0 1 1 11 3a6.5 6.5 0 0 0 10 10z"/>';
-  const _sunSvg  = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
-
-  // Burger (mobile)
-  const burger = document.createElement('button');
-  burger.className = 'burger-btn';
-  burger.setAttribute('aria-label', 'Меню');
-  burger.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
-  burger.addEventListener('click', () => {
-    const sb = document.querySelector('.sidebar');
-    let ov = document.getElementById('sidebarOverlay');
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.className = 'sidebar-overlay'; ov.id = 'sidebarOverlay';
-      ov.addEventListener('click', () => { sb && sb.classList.remove('open'); ov.classList.remove('visible'); });
-      document.body.appendChild(ov);
-    }
-    const opened = sb && sb.classList.toggle('open');
-    ov.classList.toggle('visible', !!opened);
-  });
-  header.insertBefore(burger, header.firstChild);
-
-  const right = document.createElement('div');
-  right.className = 'header-right';
-  right.innerHTML = `
-    <button class="bell-btn" onclick="openNotificationsModal()">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span class="bell-badge" id="bellBadge" style="display:none;"></span>
-    </button>
-    <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
-      <div class="user-avatar-pill">${escapeHtml(initials)}</div>
-      <div class="user-info-block">
-        <div class="user-company-name">${escapeHtml(company || 'Гость')}</div>
-        <div class="user-role-name">${escapeHtml(roleLabel || 'Иванов И.И.')}</div>
-      </div>
-      <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      <div class="user-dropdown" id="userDropdown">
-        <a href="settings.html" class="user-dropdown-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Настройки
-        </a>
-        <a href="company-profile.html" class="user-dropdown-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Профиль компании
-        </a>
-        <div class="user-dropdown-sep"></div>
-        <button class="user-dropdown-item danger" onclick="logout()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Выйти из аккаунта
-        </button>
-      </div>
-    </div>`;
-
-  header.appendChild(right);
+  const elInitials = document.getElementById('headerInitials');
+  const elCompany  = document.getElementById('headerCompany');
+  const elRole     = document.getElementById('headerRole');
+  if (elInitials) elInitials.textContent = initials;
+  if (elCompany)  elCompany.textContent  = company || 'Гость';
+  if (elRole)     elRole.textContent     = roleLabel;
 
   document.addEventListener('click', e => {
     const menu = document.getElementById('userMenu');
@@ -711,3 +654,4 @@ function initHeaderRight() {
     }
   });
 }
+
