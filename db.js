@@ -168,6 +168,16 @@ async function initDb() {
             expires_at TIMESTAMPTZ NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS tasks (
+            id         SERIAL      PRIMARY KEY,
+            order_id   INTEGER     NOT NULL,
+            company    TEXT        NOT NULL,
+            title      TEXT        NOT NULL,
+            due_date   DATE,
+            status     TEXT        NOT NULL DEFAULT 'open',
+            created_by TEXT        NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`

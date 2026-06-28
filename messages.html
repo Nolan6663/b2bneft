@@ -164,32 +164,31 @@
                 </div>
             </div>
 
-            <aside class="message-side-panel">
-                <div class="side-card">
-                    <h3>Связанная закупка</h3>
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><strong>КО-50-16-01</strong><span class="badge win">В работе</span></div>
-                    <div class="side-row"><span>№ закупки</span><strong>2025-06-017</strong></div>
-                    <div class="side-row"><span>Объём</span><strong>120 тн</strong></div>
-                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='deals.html'">Открыть закупку ↗</button>
-                </div>
-                <div class="side-card">
-                    <h3>Поставщик</h3>
-                    <div style="font-weight:850;color:var(--text-primary);margin-bottom:8px;">ООО «НефтеПромСнаб»</div>
-                    <div class="side-row"><span>ИНН</span><strong>7701234567</strong></div>
-                    <div class="side-row"><span>Контакт</span><strong>Петров Игорь</strong></div>
-                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='company-profile.html'">Перейти в карточку</button>
-                </div>
-                <div class="side-card">
-                    <h3>Файлы в переписке</h3>
-                    <div class="file-row"><span>📄 КП_НКТ_73мм.pdf<br><small>PDF · 1.2 МБ</small></span><button class="proc-row-btn" onclick="msgToast('Файл будет доступен после подписания договора')">↓</button></div>
-                    <div class="file-row"><span>📄 Техническое описание.pdf<br><small>PDF · 0.8 МБ</small></span><button class="proc-row-btn" onclick="msgToast('Файл будет доступен после подписания договора')">↓</button></div>
-                </div>
-                <div class="side-card">
-                    <h3>Действия</h3>
-                    <button class="btn-secondary" style="width:100%;margin-bottom:8px;" onclick="msgToast('Создание задач доступно в следующем обновлении')">Создать задачу</button>
-                    <button class="btn-secondary" style="width:100%;" onclick="msgToast('Функция будет доступна в следующем обновлении')">Зафиксировать договорённость</button>
-                </div>
+            <aside class="message-side-panel" id="sidePanelAside">
+                <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:32px 16px;">Выберите переписку</div>
             </aside>
+
+            <!-- Task modal -->
+            <div id="taskModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+                <div style="background:var(--card-bg);border-radius:14px;padding:24px;width:360px;max-width:calc(100vw - 32px);box-shadow:0 16px 48px rgba(0,0,0,.25);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <div style="font-weight:700;font-size:15px;color:var(--text-primary);">Новая задача</div>
+                        <button onclick="closeTaskModal()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:20px;line-height:1;">×</button>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Название задачи *</label>
+                        <input id="taskTitle" type="text" placeholder="Например: запросить счёт на оплату" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                    </div>
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Срок выполнения</label>
+                        <input id="taskDue" type="date" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;">
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="closeTaskModal()" class="btn-secondary" style="flex:1;">Отмена</button>
+                        <button onclick="submitTask()" class="btn-primary" style="flex:1;">Создать</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -413,10 +412,171 @@ function msgToast(msg) {
                 });
             }
 
-            // Load messages
-            await fetchMessages(conv);
+            // Load messages and side panel in parallel
+            await Promise.all([
+                fetchMessages(conv),
+                updateSidePanel(conv),
+            ]);
             markRead(conv);
             scrollToBottom();
+        }
+
+        // ── Side panel ──────────────────────────────────────────────────────
+
+        let sidePanelConv = null;
+
+        async function updateSidePanel(conv) {
+            sidePanelConv = conv;
+            const aside = document.getElementById('sidePanelAside');
+            if (!aside) return;
+
+            aside.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:24px;">Загрузка...</div>';
+
+            try {
+                const [ctxRes, tasksRes] = await Promise.all([
+                    apiFetch(`${SERVER_URL}/conversation-context/${conv.orderId}/${encodeURIComponent(conv.company)}`),
+                    apiFetch(`${SERVER_URL}/tasks?orderId=${conv.orderId}&company=${encodeURIComponent(conv.company)}`),
+                ]);
+                const ctx   = ctxRes.ok   ? await ctxRes.json()   : {};
+                const tasks = tasksRes.ok ? await tasksRes.json()  : [];
+                renderSidePanel(conv, ctx, tasks);
+            } catch {
+                renderSidePanel(conv, {}, []);
+            }
+        }
+
+        function renderSidePanel(conv, ctx, tasks) {
+            const aside = document.getElementById('sidePanelAside');
+            if (!aside) return;
+
+            const { order, proposal, supplier } = ctx;
+            const priceFmt = v => v != null ? Number(v).toLocaleString('ru-RU') + ' ₽' : '—';
+            const dateFmt  = v => v ? new Date(v).toLocaleDateString('ru-RU') : '—';
+
+            const statusBadge = order
+                ? `<span class="badge ${order.status === 'Активный' ? 'win' : order.status === 'Закрыта' ? 'cancel' : 'proc'}">${order.status}</span>`
+                : '';
+
+            const proposalStatusMap = { 'Принято': 'win', 'Отклонено': 'cancel', 'Ожидает ответа': 'proc' };
+            const proposalBadge = proposal
+                ? `<span class="badge ${proposalStatusMap[proposal.status] || 'proc'}">${proposal.status}</span>`
+                : '';
+
+            const kpBlock = proposal?.kpFile
+                ? `<div class="file-row">
+                    <span>📄 ${escapeHtml(proposal.kpFile.originalName)}</span>
+                    <button class="proc-row-btn" onclick="downloadKp(${proposal.id})" title="Скачать">↓</button>
+                  </div>`
+                : '<div style="font-size:12px;color:var(--text-secondary);padding:4px 0;">КП не прикреплено</div>';
+
+            const tasksHtml = tasks.length
+                ? tasks.map(t => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--card-border);">
+                        <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleTask(${t.id}, this.checked)" style="flex-shrink:0;cursor:pointer;">
+                        <span style="flex:1;font-size:12.5px;color:var(--text-primary);${t.status === 'done' ? 'text-decoration:line-through;opacity:.5;' : ''}">${escapeHtml(t.title)}</span>
+                        ${t.dueDate ? `<span style="font-size:11px;color:var(--text-secondary);">${dateFmt(t.dueDate)}</span>` : ''}
+                    </div>`).join('')
+                : '<div style="font-size:12px;color:var(--text-secondary);padding:4px 0;">Задач пока нет</div>';
+
+            const confirmBtn = proposal && proposal.status === 'Ожидает ответа'
+                ? `<button class="btn-secondary" style="width:100%;" onclick="confirmDeal(${proposal.id})">Зафиксировать договорённость</button>`
+                : proposal && proposal.status === 'Принято'
+                    ? `<button class="btn-secondary" style="width:100%;opacity:.6;cursor:default;" disabled>✓ Договорённость зафиксирована</button>`
+                    : `<button class="btn-secondary" style="width:100%;opacity:.6;cursor:default;" disabled>КП не получено</button>`;
+
+            aside.innerHTML = `
+                <div class="side-card">
+                    <h3>Связанная закупка</h3>
+                    ${order ? `
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <strong style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">${escapeHtml(order.title)}</strong>
+                            ${statusBadge}
+                        </div>
+                        ${order.deadline ? `<div class="side-row"><span>Срок</span><strong>${dateFmt(order.deadline)}</strong></div>` : ''}
+                        ${order.quantity ? `<div class="side-row"><span>Количество</span><strong>${order.quantity}</strong></div>` : ''}
+                    ` : '<div style="font-size:12px;color:var(--text-secondary);">—</div>'}
+                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='deals.html'">Открыть закупку ↗</button>
+                </div>
+
+                <div class="side-card">
+                    <h3>Поставщик</h3>
+                    <div style="font-weight:700;color:var(--text-primary);margin-bottom:8px;font-size:13.5px;">${escapeHtml(conv.company)}</div>
+                    ${supplier?.inn ? `<div class="side-row"><span>ИНН</span><strong>${escapeHtml(supplier.inn)}</strong></div>` : ''}
+                    ${supplier?.director ? `<div class="side-row"><span>Директор</span><strong>${escapeHtml(supplier.director)}</strong></div>` : ''}
+                    ${supplier?.phone ? `<div class="side-row"><span>Телефон</span><strong>${escapeHtml(supplier.phone)}</strong></div>` : ''}
+                    ${proposal ? `<div class="side-row"><span>КП</span><div style="display:flex;align-items:center;gap:6px;">${proposalBadge}${proposal.price ? `<strong>${priceFmt(proposal.price)}</strong>` : ''}</div></div>` : ''}
+                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='company-profile.html${supplier?.id ? '?id='+supplier.id : ''}'">Перейти в карточку</button>
+                </div>
+
+                <div class="side-card">
+                    <h3>Файлы в переписке</h3>
+                    ${kpBlock}
+                </div>
+
+                <div class="side-card">
+                    <h3>Задачи</h3>
+                    <div id="tasksList">${tasksHtml}</div>
+                    <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="openTaskModal()">+ Создать задачу</button>
+                </div>
+
+                <div class="side-card">
+                    <h3>Действия</h3>
+                    ${confirmBtn}
+                </div>`;
+        }
+
+        async function downloadKp(proposalId) {
+            window.open(`${SERVER_URL}/proposals/${proposalId}/file`, '_blank');
+        }
+
+        async function confirmDeal(proposalId) {
+            const r = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });
+            if (r.ok) {
+                msgToast('Договорённость зафиксирована');
+                if (sidePanelConv) updateSidePanel(sidePanelConv);
+            } else {
+                const err = await r.json().catch(() => ({}));
+                msgToast(err.error || 'Ошибка при подтверждении');
+            }
+        }
+
+        function openTaskModal() {
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDue').value = '';
+            document.getElementById('taskModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('taskTitle').focus(), 50);
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').style.display = 'none';
+        }
+
+        async function submitTask() {
+            const title   = document.getElementById('taskTitle').value.trim();
+            const dueDate = document.getElementById('taskDue').value || null;
+            if (!title) { document.getElementById('taskTitle').focus(); return; }
+            if (!sidePanelConv) return;
+
+            const r = await apiFetch(`${SERVER_URL}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: sidePanelConv.orderId, company: sidePanelConv.company, title, dueDate }),
+            });
+            if (r.ok) {
+                closeTaskModal();
+                updateSidePanel(sidePanelConv);
+            } else {
+                msgToast('Не удалось создать задачу');
+            }
+        }
+
+        async function toggleTask(taskId, done) {
+            await apiFetch(`${SERVER_URL}/tasks/${taskId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: done ? 'done' : 'open' }),
+            });
+            if (sidePanelConv) updateSidePanel(sidePanelConv);
         }
 
         async function fetchMessages(conv) {
