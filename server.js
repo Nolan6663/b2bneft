@@ -1163,6 +1163,36 @@ app.delete('/api/proposals/:proposalId', requireAuth, requireRole('producer'), a
 
 // ===================== COMPANIES =====================
 
+app.get('/api/top-suppliers', async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+                c.id,
+                c.company,
+                c.specialization,
+                c.city,
+                c.verified_by_platform,
+                COUNT(p.id)                                           AS total_proposals,
+                COUNT(p.id) FILTER (WHERE p.status = 'Принято')      AS won_deals
+            FROM companies c
+            LEFT JOIN proposals p ON p.company = c.company
+            WHERE c.role = 'producer'
+            GROUP BY c.id
+            ORDER BY won_deals DESC, total_proposals DESC
+            LIMIT 5
+        `);
+        res.json(rows.map(r => ({
+            id:         r.id,
+            company:    r.company,
+            spec:       r.specialization || '',
+            city:       r.city || '',
+            verified:   r.verified_by_platform,
+            deals:      Number(r.won_deals),
+            proposals:  Number(r.total_proposals),
+        })));
+    } catch (e) { next(e); }
+});
+
 app.get('/api/companies', optionalAuth, async (req, res, next) => {
     try {
         const ownerCompany = req.user ? req.user.company : null;
