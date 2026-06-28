@@ -91,15 +91,9 @@ button { font-family: inherit; }
 }
 
 @keyframes pageFadeIn  { from { opacity:0; } to { opacity:1; } }
-@keyframes fadeUp      { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes modalScaleIn{ from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
 @keyframes badgePop    { 0%{ transform:scale(.4);opacity:0; } 60%{ transform:scale(1.15);opacity:1; } 100%{ transform:scale(1); } }
-
-.main-content, .auth-page { animation: pageFadeIn .2s ease; }
-.kpi-row { animation: fadeUp .45s ease both; }
-.section, .chart-card { animation: fadeUp .5s ease both; animation-delay: .05s; }
-.proc-layout { animation: fadeUp .5s ease both; animation-delay: .08s; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
