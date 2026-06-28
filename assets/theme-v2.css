@@ -111,7 +111,7 @@ button { font-family: inherit; }
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-gutter: stable;
 }
 
 .sidebar-logo {
