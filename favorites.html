@@ -151,78 +151,10 @@
 
                 <!-- Right: panels -->
                 <div class="fav-right">
-                    <!-- Что нового -->
-                    <div class="fav-widget">
-                        <div class="fav-widget-title">Что нового</div>
-                        <div class="fav-activity-item">
-                            <div class="fav-activity-dot" style="background:var(--accent-green);"></div>
-                            <div class="fav-activity-text">НефтеПромСнаб опубликовал новые мощности</div>
-                            <div class="fav-activity-time">2ч</div>
-                        </div>
-                        <div class="fav-activity-item">
-                            <div class="fav-activity-dot" style="background:var(--accent-cyan);"></div>
-                            <div class="fav-activity-text">Завод РТИ снизил цены на уплотнения</div>
-                            <div class="fav-activity-time">5ч</div>
-                        </div>
-                        <div class="fav-activity-item">
-                            <div class="fav-activity-dot" style="background:#f59e0b;"></div>
-                            <div class="fav-activity-text">АктивСнаб обновил каталог продукции</div>
-                            <div class="fav-activity-time">1д</div>
-                        </div>
-                        <div class="fav-activity-item">
-                            <div class="fav-activity-dot" style="background:var(--accent-blue);"></div>
-                            <div class="fav-activity-text">РегионСнаб: новый сертификат ISO 9001</div>
-                            <div class="fav-activity-time">2д</div>
-                        </div>
-                    </div>
-
-                    <!-- Динамика -->
-                    <div class="fav-widget">
-                        <div class="fav-widget-title">Динамика добавлений</div>
-                        <div class="fav-mini-bars">
-                            <div class="fav-mini-bar" style="height:40%;"></div>
-                            <div class="fav-mini-bar" style="height:60%;"></div>
-                            <div class="fav-mini-bar" style="height:50%;"></div>
-                            <div class="fav-mini-bar" style="height:80%;"></div>
-                            <div class="fav-mini-bar" style="height:70%;"></div>
-                            <div class="fav-mini-bar" style="height:90%;"></div>
-                            <div class="fav-mini-bar" style="height:100%;"></div>
-                        </div>
-                        <div class="fav-bar-labels">
-                            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
-                        </div>
-                        <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">
-                            Среднее: <strong style="color:var(--text-primary);">2,1 новых компании/неделю</strong>
-                        </div>
-                    </div>
-
-                    <!-- Рекомендации -->
+                    <!-- Рекомендации из каталога -->
                     <div class="fav-widget">
                         <div class="fav-widget-title">Рекомендации</div>
-                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
-                            <div class="fav-rec-avatar">П</div>
-                            <div class="fav-rec-info">
-                                <div class="fav-rec-name">ООО «ПромМаш»</div>
-                                <div class="fav-rec-spec">Насосы, Компрессоры</div>
-                            </div>
-                            <div class="fav-rec-score">94%</div>
-                        </div>
-                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
-                            <div class="fav-rec-avatar">М</div>
-                            <div class="fav-rec-info">
-                                <div class="fav-rec-name">АО «Металл-Сервис»</div>
-                                <div class="fav-rec-spec">Металл, Поковки</div>
-                            </div>
-                            <div class="fav-rec-score">87%</div>
-                        </div>
-                        <div class="fav-rec-item" onclick="window.location.href='catalog.html'">
-                            <div class="fav-rec-avatar">У</div>
-                            <div class="fav-rec-info">
-                                <div class="fav-rec-name">ПК «УралПолимер»</div>
-                                <div class="fav-rec-spec">Полимер, Трубы</div>
-                            </div>
-                            <div class="fav-rec-score">81%</div>
-                        </div>
+                        <div id="favRecommendations"><div style="font-size:12.5px;color:var(--text-secondary);">Загрузка…</div></div>
                         <button class="btn-secondary" style="width:100%;margin-top:10px;height:30px;font-size:12px;" onclick="window.location.href='catalog.html'">Смотреть каталог →</button>
                     </div>
                 </div>
@@ -318,6 +250,7 @@
             initNotifications();
             initSidebarBadges();
             loadFavorites();
+            loadFavRecommendations();
         });
 
         const MOCK_FAVS = [
@@ -374,6 +307,31 @@
             document.getElementById('tabSuppliers').style.display = tab === 'suppliers' ? '' : 'none';
             document.getElementById('tabOrders').style.display    = tab === 'orders'    ? '' : 'none';
             document.getElementById('tabLists').style.display     = tab === 'lists'     ? '' : 'none';
+        }
+
+        async function loadFavRecommendations() {
+            const el = document.getElementById('favRecommendations');
+            if (!el) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/companies?role=producer&limit=3&sort=rating`);
+                const companies = r.ok ? await r.json() : [];
+                const list = Array.isArray(companies) ? companies : (companies.companies || companies.items || []);
+                if (!list.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">Нет данных</div>'; return; }
+                el.innerHTML = list.slice(0, 3).map(c => {
+                    const letter = (c.company || c.name || '?').replace(/[«»"ООО АОИПп]/g,'').trim().charAt(0).toUpperCase();
+                    const score = c.rating ? Math.round(parseFloat(c.rating) / 5 * 100) + '%' : '—';
+                    return `<div class="fav-rec-item" onclick="window.location.href='company-profile.html?id=${c.id}'">
+                        <div class="fav-rec-avatar">${escapeHtml(letter)}</div>
+                        <div class="fav-rec-info">
+                            <div class="fav-rec-name">${escapeHtml(c.company || c.name || '—')}</div>
+                            <div class="fav-rec-spec">${escapeHtml(c.specialization || c.spec || '')}</div>
+                        </div>
+                        <div class="fav-rec-score">${escapeHtml(score)}</div>
+                    </div>`;
+                }).join('');
+            } catch {
+                el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">Нет данных</div>';
+            }
         }
 
         async function loadFavorites() {
