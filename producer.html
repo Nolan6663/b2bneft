@@ -213,6 +213,7 @@
             <div class="tabs">
                 <button class="tab active" id="tabOrdersBtn" onclick="switchProducerTab('orders')">Прямые закупки (<span id="tabOrdersCount">0</span>)</button>
                 <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">Направленные предложения (<span id="tabProposalsCount">0</span>)</button>
+                <button class="tab" id="tabAuctionsBtn" onclick="switchProducerTab('auctions')">⚡ Аукционы (<span id="tabAuctionsCount">0</span>)</button>
             </div>
             <button class="refresh-btn" onclick="refreshActiveTab()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
@@ -255,6 +256,28 @@
                     <tbody id="myResponsesTable"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="tab-panel" id="tabAuctions">
+            <div id="auctionsListWrap" style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">
+                <div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Загрузка аукционов…</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bid modal -->
+    <div class="modal" id="bidModal" style="display:none;">
+        <div class="modal-content" style="width:400px;max-width:96vw;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                <h3 style="margin:0;font-size:16px;">Сделать ставку</h3>
+                <button onclick="closeBidModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary);">✕</button>
+            </div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;" id="bidModalDesc"></div>
+            <div style="font-size:13px;margin-bottom:16px;">Текущая лучшая цена: <strong id="bidModalCurrent" style="color:#FF6A00;font-family:'JetBrains Mono',monospace;"></strong></div>
+            <label style="font-size:13px;font-weight:600;">Ваша ставка (₽)
+                <input id="bidPriceInput" type="number" min="1" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;font-size:14px;background:var(--inner-bg);color:var(--text-primary);font-family:inherit;box-sizing:border-box;" placeholder="Введите сумму ниже текущей">
+            </label>
+            <button onclick="submitBid()" style="width:100%;margin-top:18px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Сделать ставку</button>
         </div>
     </div>
 
@@ -348,20 +371,22 @@
             loadOrdersForProducers();
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals(); loadCrmStats(); }
+            if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
         });
 
         function switchProducerTab(tab) {
             document.getElementById('tabOrdersBtn').classList.toggle('active', tab === 'orders');
             document.getElementById('tabProposalsBtn').classList.toggle('active', tab === 'proposals');
+            document.getElementById('tabAuctionsBtn').classList.toggle('active', tab === 'auctions');
             document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
             document.getElementById('tabProposals').classList.toggle('active', tab === 'proposals');
+            document.getElementById('tabAuctions').classList.toggle('active', tab === 'auctions');
         }
 
         function refreshActiveTab() {
             loadOrdersForProducers();
-            if (!isGuest) loadMyProposals();
+            if (!isGuest) { loadMyProposals(); loadActiveAuctions(); }
         }
 
         async function loadCompanyInfo() {
@@ -601,6 +626,118 @@
             } catch {
                 showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
             }
+        }
+        /* ══ AUCTIONS ══════════════════════════════════════════════════════════ */
+        let _bidAuctionId = null;
+        let _bidAuctionIntervals = {};
+
+        async function loadActiveAuctions() {
+            const wrap = document.getElementById('auctionsListWrap');
+            if (!wrap) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auctions`);
+                if (!r.ok) throw new Error();
+                const list = await r.json();
+                document.getElementById('tabAuctionsCount').textContent = list.length;
+
+                if (!list.length) {
+                    wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Активных аукционов нет</div>';
+                    return;
+                }
+
+                wrap.innerHTML = list.map(a => {
+                    const fmtPrice = v => v != null ? new Intl.NumberFormat('ru-RU').format(v) + ' ₽' : '—';
+                    return `<div style="padding:16px 18px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
+                            <div>
+                                <div style="font-size:14px;font-weight:700;margin-bottom:3px;">${escapeHtml(a.title)}</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(a.category)} · ${escapeHtml(a.customer_company)}</div>
+                            </div>
+                            <div id="auction-timer-${a.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#FF6A00;white-space:nowrap;flex:none;"></div>
+                        </div>
+                        <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;">
+                            <div>
+                                <span style="color:var(--text-secondary);">Лучшая ставка:</span>
+                                <span id="auction-best-${a.id}" style="font-weight:700;font-family:'JetBrains Mono',monospace;margin-left:6px;color:#FF6A00;">${fmtPrice(a.current_best || a.start_price)}</span>
+                            </div>
+                            <div>
+                                <span style="color:var(--text-secondary);">Ставок:</span>
+                                <span style="font-weight:600;margin-left:6px;">${a.bid_count}</span>
+                            </div>
+                        </div>
+                        <button onclick="openBidModal(${a.id}, ${a.current_best || a.start_price}, '${escapeHtml(a.title).replace(/'/g,"\\'")}', '${escapeHtml(a.description||'').slice(0,80).replace(/'/g,"\\'")}', '${a.end_time}')"
+                            style="padding:9px 18px;background:#FF6A00;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+                            ⚡ Сделать ставку
+                        </button>
+                    </div>`;
+                }).join('');
+
+                list.forEach(a => {
+                    startProducerAuctionTimer(a.id, a.end_time);
+                    joinAuctionRoom(a.id);
+                });
+            } catch {
+                wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Не удалось загрузить аукционы</div>';
+            }
+        }
+
+        function startProducerAuctionTimer(auctionId, endTime) {
+            if (_bidAuctionIntervals[auctionId]) clearInterval(_bidAuctionIntervals[auctionId]);
+            const el = document.getElementById(`auction-timer-${auctionId}`);
+            const tick = () => {
+                if (!el) return;
+                const diff = new Date(endTime) - new Date();
+                if (diff <= 0) { el.textContent = 'Завершён'; clearInterval(_bidAuctionIntervals[auctionId]); return; }
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            };
+            tick();
+            _bidAuctionIntervals[auctionId] = setInterval(tick, 1000);
+        }
+
+        function joinAuctionRoom(auctionId) {
+            if (typeof socket !== 'undefined' && socket) {
+                socket.emit('join-auction', auctionId);
+                socket.on('auction:bid', data => {
+                    if (data.auctionId !== auctionId) return;
+                    const el = document.getElementById(`auction-best-${auctionId}`);
+                    if (el) el.textContent = new Intl.NumberFormat('ru-RU').format(data.price) + ' ₽';
+                    showToast(`Новая лучшая ставка: ${new Intl.NumberFormat('ru-RU').format(data.price)} ₽`, 'info');
+                });
+            }
+        }
+
+        function openBidModal(auctionId, currentBest, title, desc, endTime) {
+            _bidAuctionId = auctionId;
+            document.getElementById('bidModal').style.display = 'flex';
+            document.getElementById('bidModalDesc').textContent = title + (desc ? ` — ${desc}` : '');
+            document.getElementById('bidModalCurrent').textContent = new Intl.NumberFormat('ru-RU').format(currentBest) + ' ₽';
+            document.getElementById('bidPriceInput').value = '';
+            document.getElementById('bidPriceInput').max = currentBest - 1;
+        }
+
+        function closeBidModal() {
+            document.getElementById('bidModal').style.display = 'none';
+            _bidAuctionId = null;
+        }
+
+        async function submitBid() {
+            if (!_bidAuctionId) return;
+            const price = Number(document.getElementById('bidPriceInput').value);
+            if (!price || price <= 0) { showToast('Введите цену', 'error'); return; }
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auctions/${_bidAuctionId}/bid`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price })
+                });
+                if (!r.ok) { const e = await r.json(); showToast(e.error || 'Ошибка', 'error'); return; }
+                showToast('Ставка принята!', 'success');
+                closeBidModal();
+                loadActiveAuctions();
+            } catch { showToast('Ошибка при отправке ставки', 'error'); }
         }
     </script>
 </body>

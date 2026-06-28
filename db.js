@@ -219,6 +219,23 @@ async function initDb() {
             deadline_days INTEGER,
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS auctions (
+            id            SERIAL      PRIMARY KEY,
+            order_id      INTEGER     NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+            start_price   NUMERIC     NOT NULL,
+            current_best  NUMERIC,
+            end_time      TIMESTAMPTZ NOT NULL,
+            status        TEXT        NOT NULL DEFAULT 'active',
+            winner_company TEXT,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS auction_bids (
+            id            SERIAL      PRIMARY KEY,
+            auction_id    INTEGER     NOT NULL REFERENCES auctions(id) ON DELETE CASCADE,
+            company       TEXT        NOT NULL,
+            price         NUMERIC     NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`

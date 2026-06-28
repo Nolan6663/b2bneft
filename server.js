@@ -265,6 +265,12 @@ if (io) {
         socket.on('join-company', (company) => {
             if (company && company === socket.user.company) socket.join(company);
         });
+        socket.on('join-auction', (auctionId) => {
+            if (auctionId) socket.join(`auction:${auctionId}`);
+        });
+        socket.on('leave-auction', (auctionId) => {
+            if (auctionId) socket.leave(`auction:${auctionId}`);
+        });
         socket.on('join-chat', async ({ orderId, company }, ack) => {
             try {
                 if (orderId == null || !company) return;
@@ -1798,6 +1804,117 @@ app.post('/api/reviews', requireAuth, async (req, res, next) => {
         res.json({ ok: true });
     } catch (e) { next(e); }
 });
+
+// ── Auctions ─────────────────────────────────────────────────────────────────
+
+// Create auction (customer only)
+app.post('/api/auctions', requireAuth, async (req, res, next) => {
+    try {
+        if (req.user.role !== 'customer') return res.status(403).json({ error: 'Только заказчики могут создавать аукционы' });
+        const { orderId, startPrice, durationHours = 24 } = req.body;
+        if (!orderId || !startPrice) return res.status(400).json({ error: 'orderId и startPrice обязательны' });
+
+        const { rows: [order] } = await pool.query('SELECT * FROM orders WHERE id = $1 AND company = $2', [orderId, req.user.company]);
+        if (!order) return res.status(404).json({ error: 'Заявка не найдена' });
+
+        const { rows: [existing] } = await pool.query("SELECT id FROM auctions WHERE order_id = $1 AND status = 'active'", [orderId]);
+        if (existing) return res.status(409).json({ error: 'Аукцион по этой заявке уже активен' });
+
+        const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+        const { rows: [auction] } = await pool.query(
+            'INSERT INTO auctions (order_id, start_price, current_best, end_time) VALUES ($1,$2,$2,$3) RETURNING *',
+            [orderId, startPrice, endTime]
+        );
+        io.emit('auction:created', { auctionId: auction.id, orderId, startPrice, endTime });
+        res.json(auction);
+    } catch (e) { next(e); }
+});
+
+// List active auctions (for producers)
+app.get('/api/auctions', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT a.*, o.title, o.category, o.description, o.quantity, o.company as customer_company,
+                   (SELECT COUNT(*) FROM auction_bids WHERE auction_id = a.id) as bid_count,
+                   (SELECT company FROM auction_bids WHERE auction_id = a.id ORDER BY price ASC LIMIT 1) as leader_company
+            FROM auctions a
+            JOIN orders o ON o.id = a.order_id
+            WHERE a.status = 'active' AND a.end_time > NOW()
+            ORDER BY a.end_time ASC
+        `);
+        res.json(rows);
+    } catch (e) { next(e); }
+});
+
+// Get single auction with bids
+app.get('/api/auctions/:id', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [auction] } = await pool.query(`
+            SELECT a.*, o.title, o.category, o.description, o.quantity, o.company as customer_company
+            FROM auctions a JOIN orders o ON o.id = a.order_id WHERE a.id = $1
+        `, [req.params.id]);
+        if (!auction) return res.status(404).json({ error: 'Аукцион не найден' });
+
+        const { rows: bids } = await pool.query(
+            'SELECT * FROM auction_bids WHERE auction_id = $1 ORDER BY price ASC, created_at ASC',
+            [req.params.id]
+        );
+        res.json({ ...auction, bids });
+    } catch (e) { next(e); }
+});
+
+// Submit bid (producer only)
+app.post('/api/auctions/:id/bid', requireAuth, async (req, res, next) => {
+    try {
+        if (req.user.role !== 'producer') return res.status(403).json({ error: 'Только поставщики могут делать ставки' });
+        const { price } = req.body;
+        if (!price || isNaN(price)) return res.status(400).json({ error: 'Укажите цену' });
+
+        const { rows: [auction] } = await pool.query(
+            "SELECT * FROM auctions WHERE id = $1 AND status = 'active' AND end_time > NOW()", [req.params.id]
+        );
+        if (!auction) return res.status(404).json({ error: 'Аукцион не найден или завершён' });
+        if (Number(price) >= Number(auction.current_best)) {
+            return res.status(400).json({ error: `Ставка должна быть ниже текущей лучшей: ${auction.current_best} ₽` });
+        }
+
+        const { rows: [bid] } = await pool.query(
+            'INSERT INTO auction_bids (auction_id, company, price) VALUES ($1,$2,$3) RETURNING *',
+            [req.params.id, req.user.company, price]
+        );
+        await pool.query('UPDATE auctions SET current_best = $1, winner_company = $2 WHERE id = $3', [price, req.user.company, req.params.id]);
+
+        io.to(`auction:${req.params.id}`).emit('auction:bid', {
+            auctionId: Number(req.params.id), company: req.user.company, price: Number(price), bidId: bid.id, createdAt: bid.created_at
+        });
+        res.json(bid);
+    } catch (e) { next(e); }
+});
+
+// My auctions (customer — see auctions for own orders)
+app.get('/api/auctions/my/customer', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT a.*, o.title, o.category,
+                   (SELECT COUNT(*) FROM auction_bids WHERE auction_id = a.id) as bid_count
+            FROM auctions a JOIN orders o ON o.id = a.order_id
+            WHERE o.company = $1 ORDER BY a.created_at DESC
+        `, [req.user.company]);
+        res.json(rows);
+    } catch (e) { next(e); }
+});
+
+// Auto-close expired auctions (called by cron)
+async function closeExpiredAuctions() {
+    try {
+        const { rows } = await pool.query(
+            "UPDATE auctions SET status = 'closed' WHERE status = 'active' AND end_time <= NOW() RETURNING id, winner_company, order_id"
+        );
+        for (const a of rows) {
+            io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company });
+        }
+    } catch {}
+}
 
 // ── Risk assessment ─────────────────────────────────────────────────────────
 async function fetchEgrulData(inn) {
@@ -3516,6 +3633,10 @@ function buildDigestHtml(orders, producerName) {
     </div>`;
 }
 
+function startAuctionCron() {
+    cron.schedule('* * * * *', closeExpiredAuctions); // every minute
+}
+
 function startDigestCron() {
     // Daily at 09:00 Moscow time (UTC+3 → 06:00 UTC)
     cron.schedule('0 6 * * *', async () => {
@@ -3569,6 +3690,7 @@ async function start() {
         setTimeout(geocodeExisting, 5000);
     }
     startDigestCron();
+    startAuctionCron();
     return httpServer;
 }
 
