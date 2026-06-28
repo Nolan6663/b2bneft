@@ -1378,7 +1378,7 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
         }));
         // Push: уведомить поставщика о принятом КП
         getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => sendPush(id, 'КП принято!', `Ваше предложение по заявке «${orderRow.title}» принято`, `${APP_URL}/deals`))
+            ids.forEach(id => sendPush(id, 'КП принято!', `Ваше предложение по заявке «${title}» принято`, `${APP_URL}/deals`))
         ).catch(() => {});
         res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
     } catch (e) { next(e); }
@@ -1408,7 +1408,7 @@ app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer
         );
         // Push: уведомить поставщика об отклонённом КП
         getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => sendPush(id, 'КП отклонено', `Предложение по заявке «${orderRow.title}» отклонено`, `${APP_URL}/proposals`))
+            ids.forEach(id => sendPush(id, 'КП отклонено', `Предложение по заявке «${rejectTitle}» отклонено`, `${APP_URL}/proposals`))
         ).catch(() => {});
         const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
         res.json(rowToProposal(updated));
