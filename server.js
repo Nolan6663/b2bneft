@@ -1799,6 +1799,115 @@ app.post('/api/reviews', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ── Risk assessment ─────────────────────────────────────────────────────────
+async function fetchEgrulData(inn) {
+    return new Promise((resolve) => {
+        const https = require('https');
+        const body = `query=${encodeURIComponent(inn)}&page=1&cnt=&vpagesz=10`;
+        const options = {
+            hostname: 'egrul.nalog.ru',
+            path: '/search.do',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) },
+            timeout: 5000,
+        };
+        const req2 = https.request(options, (r) => {
+            let data = '';
+            r.on('data', chunk => data += chunk);
+            r.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    const row = (json.rows || [])[0];
+                    if (!row) return resolve(null);
+                    const isLiquidated = !!(row.e || (row.g && row.g !== ''));
+                    const regDate = row.r ? row.r.split('.').reverse().join('-') : null;
+                    resolve({ name: row.n, active: !isLiquidated, regDate, ogrn: row.o });
+                } catch { resolve(null); }
+            });
+        });
+        req2.on('error', () => resolve(null));
+        req2.on('timeout', () => { req2.destroy(); resolve(null); });
+        req2.write(body);
+        req2.end();
+    });
+}
+
+app.get('/api/risk/:inn', async (req, res, next) => {
+    try {
+        const { inn } = req.params;
+        if (!/^\d{10,12}$/.test(inn)) return res.status(400).json({ error: 'Неверный формат ИНН' });
+
+        const checks = [];
+        let score = 0;
+
+        // 1. EGRUL check
+        const egrul = await fetchEgrulData(inn);
+        if (egrul) {
+            if (egrul.active) {
+                checks.push({ name: 'Статус ЕГРЮЛ', status: 'ok', detail: 'Компания действующая' });
+                score += 35;
+            } else {
+                checks.push({ name: 'Статус ЕГРЮЛ', status: 'fail', detail: 'Компания ликвидирована или в процессе ликвидации' });
+            }
+            if (egrul.regDate) {
+                const ageMs = Date.now() - new Date(egrul.regDate).getTime();
+                const ageYears = ageMs / (1000 * 60 * 60 * 24 * 365.25);
+                if (ageYears >= 3) {
+                    checks.push({ name: 'Возраст компании', status: 'ok', detail: `${Math.floor(ageYears)} лет на рынке` });
+                    score += 25;
+                } else if (ageYears >= 1) {
+                    const months = Math.floor(ageYears * 12);
+                    checks.push({ name: 'Возраст компании', status: 'warn', detail: `${months} мес. на рынке — молодая компания` });
+                    score += 12;
+                } else {
+                    checks.push({ name: 'Возраст компании', status: 'fail', detail: 'Менее года на рынке' });
+                }
+            }
+        } else {
+            checks.push({ name: 'ЕГРЮЛ', status: 'neutral', detail: 'Не удалось получить данные ФНС' });
+        }
+
+        // 2. Platform verification
+        const { rows: compRows } = await pool.query(
+            'SELECT verified_by_platform, name FROM companies WHERE inn = $1 LIMIT 1', [inn]
+        );
+        const comp = compRows[0];
+        if (comp && comp.verified_by_platform) {
+            checks.push({ name: 'Верификация платформы', status: 'ok', detail: 'Компания проверена командой ТехЗаказ' });
+            score += 20;
+        } else {
+            checks.push({ name: 'Верификация платформы', status: 'warn', detail: 'Компания не верифицирована платформой' });
+        }
+
+        // 3. Reviews
+        if (comp) {
+            const { rows: revRows } = await pool.query(
+                `SELECT AVG(score)::numeric(3,1) as avg, COUNT(*) as cnt FROM reviews WHERE to_company = $1`, [comp.name]
+            );
+            const rv = revRows[0];
+            if (rv && parseInt(rv.cnt) > 0) {
+                const avg = parseFloat(rv.avg);
+                const cnt = parseInt(rv.cnt);
+                if (avg >= 4.0) {
+                    checks.push({ name: 'Отзывы на платформе', status: 'ok', detail: `Средняя оценка ${avg} (${cnt} отзывов)` });
+                    score += 20;
+                } else if (avg >= 3.0) {
+                    checks.push({ name: 'Отзывы на платформе', status: 'warn', detail: `Средняя оценка ${avg} (${cnt} отзывов)` });
+                    score += 10;
+                } else {
+                    checks.push({ name: 'Отзывы на платформе', status: 'fail', detail: `Низкие оценки: ${avg} (${cnt} отзывов)` });
+                }
+            } else {
+                checks.push({ name: 'Отзывы на платформе', status: 'neutral', detail: 'Нет отзывов на платформе' });
+                score += 5;
+            }
+        }
+
+        const level = score >= 65 ? 'low' : score >= 35 ? 'medium' : 'high';
+        res.json({ inn, level, score, checks });
+    } catch (e) { next(e); }
+});
+
 app.get('/api/reviews/company/:name', async (req, res, next) => {
     try {
         const { rows } = await pool.query(

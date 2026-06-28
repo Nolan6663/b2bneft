@@ -250,6 +250,17 @@
         </div>
     </div>
 
+    <!-- Risk modal -->
+    <div class="modal" id="riskModal" onclick="if(event.target===this)closeRiskModal()">
+        <div class="modal-content" style="width:500px;">
+            <h3>Проверка надёжности поставщика</h3>
+            <div id="riskModalBody"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeRiskModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width: 440px;">
             <h3>Уведомления платформы</h3>
@@ -315,6 +326,7 @@
                 renderProfile(currentData);
                 renderPhotoGallery(currentData.photos);
                 loadReviews(currentData.company);
+                if (currentData.inn) loadRisk(currentData.inn);
             } catch (error) {
                 document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Не удалось загрузить профиль</div>';
             }
@@ -473,7 +485,8 @@
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
-                        <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
+                        <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start;">
+                            ${c.inn ? `<div id="riskBadgeWrap" onclick="openRiskModal()" style="cursor:pointer;" title="Проверка надёжности"><span id="riskBadge" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;background:var(--inner-bg);border:1px solid var(--card-border);color:var(--text-secondary);">⏳ Проверка…</span></div>` : ''}
                             ${!isOwn ? `<button class="btn-secondary ${c.isFavorite ? 'active' : ''}" id="favoriteToggleBtn" onclick="toggleFavorite()">${c.isFavorite ? '★ В избранном' : '☆ В избранное'}</button>` : ''}
                             ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
                             ${isOwn && !c.verifiedByPlatform ? renderVerifyBtn() : ''}
@@ -526,6 +539,69 @@
                     ${(!c.photos || c.photos.length === 0) ? `<p class="empty-hint" id="photoEmptyHint">Фотографии не добавлены</p>` : ''}
                 </div>
             `;
+        }
+
+        // ── Risk assessment ──────────────────────────────────────────────────
+        let _riskData = null;
+
+        async function loadRisk(inn) {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/risk/${inn}`);
+                if (!r.ok) return;
+                _riskData = await r.json();
+                const badge = document.getElementById('riskBadge');
+                if (!badge) return;
+                const cfg = {
+                    low:    { label: 'Риск: Низкий',    color: '#12A866', bg: 'rgba(18,168,102,.12)', icon: '✓' },
+                    medium: { label: 'Риск: Средний',   color: '#F59E0B', bg: 'rgba(245,158,11,.12)', icon: '⚠' },
+                    high:   { label: 'Риск: Высокий',   color: '#ef4444', bg: 'rgba(239,68,68,.12)',  icon: '✗' },
+                }[_riskData.level] || { label: 'Риск неизвестен', color: 'var(--text-secondary)', bg: 'var(--inner-bg)', icon: '?' };
+                badge.style.background = cfg.bg;
+                badge.style.border = `1px solid ${cfg.color}`;
+                badge.style.color = cfg.color;
+                badge.textContent = `${cfg.icon} ${cfg.label}`;
+            } catch {}
+        }
+
+        function openRiskModal() {
+            if (!_riskData) return;
+            const { level, score, checks } = _riskData;
+            const levelCfg = {
+                low:    { label: 'Низкий',  color: '#12A866', desc: 'Компания прошла проверку без серьёзных замечаний' },
+                medium: { label: 'Средний', color: '#F59E0B', desc: 'Есть отдельные факторы риска — рекомендуем уточнить детали' },
+                high:   { label: 'Высокий', color: '#ef4444', desc: 'Обнаружены серьёзные факторы риска — работайте с осторожностью' },
+            }[level] || { label: '—', color: '#94A3B8', desc: '' };
+
+            const statusIcon = { ok: '✓', warn: '⚠', fail: '✗', neutral: '–' };
+            const statusColor = { ok: '#12A866', warn: '#F59E0B', fail: '#ef4444', neutral: '#94A3B8' };
+
+            const checksHtml = checks.map(c => `
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--inner-border);">
+                    <span style="width:22px;height:22px;border-radius:50%;background:${statusColor[c.status]}22;color:${statusColor[c.status]};font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${statusIcon[c.status]}</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:2px;">${escapeHtml(c.name)}</div>
+                        <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(c.detail)}</div>
+                    </div>
+                </div>`).join('');
+
+            document.getElementById('riskModalBody').innerHTML = `
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:16px;background:${levelCfg.color}12;border-radius:12px;border:1px solid ${levelCfg.color}44;">
+                    <div style="font-size:32px;font-weight:900;color:${levelCfg.color};min-width:48px;text-align:center;">${score}</div>
+                    <div>
+                        <div style="font-size:15px;font-weight:700;color:${levelCfg.color};">Уровень риска: ${levelCfg.label}</div>
+                        <div style="font-size:12.5px;color:var(--text-secondary);margin-top:3px;">${levelCfg.desc}</div>
+                    </div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Проверки</div>
+                ${checksHtml}
+                <div style="margin-top:14px;font-size:11.5px;color:var(--text-secondary);line-height:1.5;">
+                    Данные: ЕГРЮЛ ФНС России, платформа ТехЗаказ. Оценка носит информационный характер.
+                </div>`;
+            document.getElementById('riskModal').style.display = 'flex';
+        }
+
+        function closeRiskModal() {
+            document.getElementById('riskModal').style.display = 'none';
         }
 
         async function loadReviews(company) {
