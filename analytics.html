@@ -1312,9 +1312,9 @@
         /* SERVER_URL берётся из app.js */
 
         async function tryLoadReal() {
+            const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
+            if (!r.ok) throw new Error('analytics api failed');
             try {
-                const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
-                if (!r.ok) return;
                 const d = await r.json();
 
                 // KPI patches
@@ -1363,9 +1363,9 @@
                     MOCK.suppliers = d.suppliers;
                     MOCK.ratings   = d.suppliers.map(s => ({
                         name:  s.name,
-                        rt:    Math.round(Math.random() * 2 + 2),
+                        rt:    s.deals || 0,
                         conv:  s.deals > 0 ? Math.round(s.deals / (Number(d.totalProposals) || 1) * 100) : 0,
-                        score: Math.round((4 + Math.random() * 0.9) * 10) / 10,
+                        score: s.avgScore || null,
                     }));
                 }
 
@@ -1374,24 +1374,35 @@
                 renderFunnel(MOCK);
                 renderCategories(MOCK);
                 renderSuppliers(MOCK);
+                renderRatings(MOCK);
+                renderHeatmap(MOCK);
                 renderInsights(MOCK);
 
-            } catch { /* молча, моки остаются */ }
+            } catch (e) { throw e; }
         }
 
         /* ══ INIT ══ */
-        window.addEventListener('DOMContentLoaded', () => {
-            renderKPI(MOCK);
-            renderDynamics(MOCK);
-            renderFunnel(MOCK);
-            renderCategories(MOCK);
-            renderSuppliers(MOCK);
-            renderCycle();
-            renderRatings(MOCK);
-            renderHeatmap(MOCK);
-            renderInsights(MOCK);
+        function renderSkeleton() {
+            const skl = `<div style="height:18px;border-radius:6px;background:var(--inner-border);width:60%;margin-bottom:8px;animation:pulse 1.5s infinite;"></div>`;
+            document.querySelectorAll('.kpi-card-value').forEach(el => el.innerHTML = skl);
+        }
 
-            tryLoadReal(); // тихо пробуем реальные данные поверх
+        window.addEventListener('DOMContentLoaded', async () => {
+            renderCycle();
+            try {
+                await tryLoadReal();
+            } catch {
+                if (shouldUseMockData()) {
+                    renderKPI(MOCK);
+                    renderDynamics(MOCK);
+                    renderFunnel(MOCK);
+                    renderCategories(MOCK);
+                    renderSuppliers(MOCK);
+                    renderRatings(MOCK);
+                    renderHeatmap(MOCK);
+                    renderInsights(MOCK);
+                }
+            }
         });
     </script>
 </body>
