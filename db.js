@@ -236,6 +236,12 @@ async function initDb() {
             price         NUMERIC     NOT NULL,
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id            SERIAL      PRIMARY KEY,
+            user_id       INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            subscription  JSONB       NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
@@ -250,6 +256,10 @@ async function initDb() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS team_role TEXT NOT NULL DEFAULT 'admin';
         ALTER TABLE users ADD COLUMN IF NOT EXISTS digest_frequency TEXT NOT NULL DEFAULT 'daily';
+    `);
+
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
     `);
 
     await pool.query(`
