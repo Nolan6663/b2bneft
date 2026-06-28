@@ -111,8 +111,10 @@ button { font-family: inherit; }
   flex-direction: column;
   gap: 2px;
   flex-shrink: 0;
-  position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-gutter: stable;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  scrollbar-width: none;
 }
+.sidebar::-webkit-scrollbar { display: none; }
 
 .sidebar-logo {
   display: flex; align-items: center; gap: 10px;
