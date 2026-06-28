@@ -40,7 +40,6 @@
     "nodemailer": "^9.0.1",
     "pg": "^8.21.0",
     "qrcode": "^1.5.4",
-    "resend": "^4.5.2",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0"
   }

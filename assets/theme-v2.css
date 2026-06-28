@@ -2180,3 +2180,17 @@ tbody tr:hover {
   border-radius: var(--radius-card); padding: 20px 22px;
   display: flex; flex-direction: column; gap: 14px;
 }
+
+.drawing-link-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 10px; border-radius: 7px;
+  font-size: 11.5px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--inner-border); background: var(--card-bg);
+  color: var(--text-primary); cursor: pointer; white-space: nowrap;
+}
+.drawing-link-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.drawing-link-btn-primary {
+  background: rgba(255,106,0,.08); border-color: rgba(255,106,0,.35);
+  color: var(--accent-cyan);
+}
+.drawing-link-btn-primary:hover { background: rgba(255,106,0,.14); }

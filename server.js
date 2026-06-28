@@ -535,6 +535,38 @@ function computeMatchScore(order, producer) {
     return Math.min(100, score);
 }
 
+function computeMatchReasons(order, producer) {
+    const text = [
+        producer.specialization || '',
+        (producer.equipment || []).join(' '),
+        (producer.capabilities || []).join(' '),
+        producer.about || '',
+    ].join(' ').toLowerCase();
+    if (!text.trim()) return [];
+
+    const reasons = [];
+    const keywords = CATEGORY_KEYWORDS[order.category] || [];
+    const catHits = keywords.filter(k => text.includes(k)).slice(0, 3);
+    if (catHits.length) {
+        reasons.push(`Категория «${order.category}»: ${catHits.join(', ')}`);
+    }
+
+    const orderText = `${plainTitle(order.title || '')} ${order.description || ''}`.toLowerCase();
+    const orderWords = [...new Set(orderText.split(/[^a-zа-яё0-9]+/).filter(w => w.length > 4))];
+    const wordHits = orderWords.filter(w => text.includes(stem(w))).slice(0, 2);
+    if (wordHits.length) {
+        reasons.push(`По описанию заявки: ${wordHits.join(', ')}`);
+    }
+
+    const cap = producer.freeCapacity || [];
+    if (cap.length > 0) {
+        const avgFree = cap.reduce((s, c) => s + (c.percent || 0), 0) / cap.length;
+        if (avgFree >= 30) reasons.push(`Свободные мощности ~${Math.round(avgFree)}%`);
+    }
+
+    return reasons;
+}
+
 // ===================== ГЕОКОДИРОВАНИЕ =====================
 
 async function geocodeCity(city) {
@@ -616,10 +648,15 @@ async function geocodeExisting() {
     } catch {}
 }
 
-async function matchedProducers(order, minScore = 0) {
+async function matchedProducers(order, minScore = 0, withReasons = false) {
     const { rows } = await pool.query("SELECT * FROM companies WHERE role = 'producer'");
     return rows.map(rowToCompany)
-        .map(c => ({ company: c.company, score: computeMatchScore(order, c) }))
+        .map(c => {
+            const score = computeMatchScore(order, c);
+            const item = { company: c.company, score };
+            if (withReasons) item.reasons = computeMatchReasons(order, c);
+            return item;
+        })
         .filter(m => m.score >= minScore)
         .sort((a, b) => b.score - a.score);
 }
@@ -884,7 +921,8 @@ app.get('/api/orders/:orderId/drawing', requireAuth, async (req, res, next) => {
         if (!storage.isRemote() && !storage.existsLocally(drawing.storedName)) {
             return res.status(404).json({ error: 'Файл был удалён с сервера' });
         }
-        await storage.streamToResponse(drawing.storedName, res, drawing.originalName);
+        const inline = req.query.inline === '1';
+        await storage.streamToResponse(drawing.storedName, res, drawing.originalName, { inline });
     } catch (e) { next(e); }
 });
 
@@ -1043,10 +1081,10 @@ app.get('/api/proposals', requireAuth, async (req, res, next) => {
 app.get('/api/order-proposals/:orderId', requireAuth, async (req, res, next) => {
     try {
         const orderId = Number(req.params.orderId);
-        const order = await getOrderAccessRow(orderId);
-        if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
+        const orderRow = await getOrderAccessRow(orderId);
+        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
         let rows;
-        if (req.user.role === 'admin' || order.company === req.user.company) {
+        if (req.user.role === 'admin' || orderRow.company === req.user.company) {
             ({ rows } = await pool.query('SELECT * FROM proposals WHERE order_id = $1', [orderId]));
         } else if (req.user.role === 'producer') {
             ({ rows } = await pool.query(
@@ -1056,7 +1094,44 @@ app.get('/api/order-proposals/:orderId', requireAuth, async (req, res, next) => 
         } else {
             return res.status(403).json({ error: 'Нет доступа к предложениям этой закупки' });
         }
-        res.json(rows.map(rowToProposal));
+
+        const orderObj = rowToOrder(orderRow);
+        const withMatch = (req.user.role === 'customer' || req.user.role === 'admin') && rows.length > 0;
+        let producerByName = null;
+        if (withMatch) {
+            const companies = rows.map(r => r.company);
+            const { rows: prodRows } = await pool.query(
+                "SELECT * FROM companies WHERE role = 'producer' AND company = ANY($1::text[])",
+                [companies]
+            );
+            producerByName = new Map(prodRows.map(r => [r.company, rowToCompany(r)]));
+        }
+
+        res.json(rows.map(r => {
+            const p = rowToProposal(r);
+            if (withMatch) {
+                const producer = producerByName.get(p.company);
+                p.matchScore = producer ? computeMatchScore(orderObj, producer) : 0;
+                p.matchReasons = producer ? computeMatchReasons(orderObj, producer) : [];
+            }
+            return p;
+        }));
+    } catch (e) { next(e); }
+});
+
+app.get('/api/orders/:orderId/matched-suppliers', requireAuth, async (req, res, next) => {
+    try {
+        const orderId = Number(req.params.orderId);
+        const orderRow = await getOrderAccessRow(orderId);
+        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
+        if (req.user.role !== 'admin' && orderRow.company !== req.user.company) {
+            return res.status(403).json({ error: 'Нет доступа к этой закупке' });
+        }
+        const orderObj = rowToOrder(orderRow);
+        const minScore = Math.max(0, Math.min(100, Number(req.query.min) || 30));
+        const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 8));
+        const matched = await matchedProducers(orderObj, minScore, true);
+        res.json(matched.slice(0, limit));
     } catch (e) { next(e); }
 });
 
@@ -2996,6 +3071,7 @@ app.get('/api/conversation-context/:orderId/:company', requireAuth, async (req, 
                 status:   order.status,
                 quantity: order.quantity,
                 deadline: order.deadline,
+                drawing:  order.drawing ? JSON.parse(order.drawing) : null,
             } : null,
             proposal: proposal ? {
                 id:     proposal.id,

@@ -653,3 +653,240 @@ function initHeaderRight() {
   });
 }
 
+/* ---------------------------------------------------------------------
+   Просмотр чертежей (PDF, PNG, JPG) в модальном окне
+   --------------------------------------------------------------------- */
+const DRAWING_PREVIEW_EXT = new Set(['.pdf', '.png', '.jpg', '.jpeg']);
+
+function drawingFileExt(fileName) {
+  if (!fileName) return '';
+  const i = String(fileName).lastIndexOf('.');
+  return i >= 0 ? String(fileName).slice(i).toLowerCase() : '';
+}
+
+function isDrawingPreviewable(fileName) {
+  return DRAWING_PREVIEW_EXT.has(drawingFileExt(fileName));
+}
+
+function drawingDownloadUrl(orderId) {
+  return `${SERVER_URL}/orders/${orderId}/drawing`;
+}
+
+function drawingPreviewUrl(orderId) {
+  return `${drawingDownloadUrl(orderId)}?inline=1`;
+}
+
+function buildDrawingLinksHtml(orderId, drawing) {
+  if (!drawing || !drawing.originalName) return '';
+  const rawName = drawing.originalName;
+  const name = /^[\x20-\x7E\u0400-\u04FF\s._\-()]+$/.test(rawName) ? rawName : 'Вложение';
+  const safeName = escapeHtml(name);
+  const previewable = isDrawingPreviewable(name);
+  const previewBtn = previewable
+    ? `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="openDrawingPreview(${orderId}, ${JSON.stringify(name)})">Просмотр</button>`
+    : '';
+  const hint = previewable ? '' : '<span style="font-size:11px;color:var(--text-secondary);">Просмотр в браузере: PDF или изображение</span>';
+  return `<div class="drawing-links" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent-cyan);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span style="font-size:12px;font-weight:600;color:var(--text-primary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${safeName}">${safeName}</span>
+    ${previewBtn}
+    <a href="${drawingDownloadUrl(orderId)}" class="drawing-link-btn" target="_blank" rel="noopener">Скачать</a>
+    ${hint}
+  </div>`;
+}
+
+function ensureDrawingPreviewModal() {
+  if (document.getElementById('drawingPreviewModal')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'drawingPreviewModal';
+  wrap.style.cssText = 'display:none;position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.72);align-items:center;justify-content:center;padding:20px 12px;';
+  wrap.onclick = (e) => { if (e.target === wrap) closeDrawingPreview(); };
+  wrap.innerHTML = `
+    <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;width:min(960px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:var(--shadow-modal);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--inner-border);">
+        <div id="drawingPreviewTitle" style="font-size:14px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Чертёж</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <a id="drawingPreviewDownload" href="#" target="_blank" rel="noopener" class="drawing-link-btn">Скачать</a>
+          <button type="button" onclick="closeDrawingPreview()" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text-secondary);padding:0 4px;">×</button>
+        </div>
+      </div>
+      <div id="drawingPreviewBody" style="flex:1;min-height:320px;background:var(--inner-bg);display:flex;align-items:center;justify-content:center;overflow:auto;"></div>
+    </div>`;
+  document.body.appendChild(wrap);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawingPreview();
+  });
+}
+
+function openDrawingPreview(orderId, fileName) {
+  if (!hasSession()) {
+    showToast('Войдите, чтобы просмотреть чертёж', 'warn');
+    return;
+  }
+  if (!isDrawingPreviewable(fileName)) {
+    window.open(drawingDownloadUrl(orderId), '_blank', 'noopener');
+    return;
+  }
+  ensureDrawingPreviewModal();
+  const modal = document.getElementById('drawingPreviewModal');
+  const body = document.getElementById('drawingPreviewBody');
+  const title = document.getElementById('drawingPreviewTitle');
+  const download = document.getElementById('drawingPreviewDownload');
+  if (!modal || !body || !title || !download) return;
+
+  title.textContent = fileName || 'Чертёж';
+  download.href = drawingDownloadUrl(orderId);
+  body.innerHTML = '<div style="padding:40px;color:var(--text-secondary);font-size:13px;">Загрузка…</div>';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  const url = drawingPreviewUrl(orderId);
+  const ext = drawingFileExt(fileName);
+  if (ext === '.pdf') {
+    body.innerHTML = `<iframe src="${url}" title="${escapeHtml(fileName)}" style="width:100%;height:min(75vh,720px);border:none;background:#fff;"></iframe>`;
+  } else {
+    body.innerHTML = `<img src="${url}" alt="${escapeHtml(fileName)}" style="max-width:100%;max-height:min(75vh,720px);object-fit:contain;display:block;margin:0 auto;">`;
+  }
+}
+
+function closeDrawingPreview() {
+  const modal = document.getElementById('drawingPreviewModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+  const body = document.getElementById('drawingPreviewBody');
+  if (body) body.innerHTML = '';
+}
+
+/* ---------------------------------------------------------------------
+   Match-score и сравнение КП
+   --------------------------------------------------------------------- */
+function matchScoreBadge(score, reasons) {
+  if (score == null || score <= 0) return '';
+  const style = score >= 70
+    ? 'background:rgba(5,150,105,.12);color:#059669;border:1px solid rgba(5,150,105,.25);'
+    : score >= 40
+      ? 'background:rgba(255,106,0,.1);color:#C45000;border:1px solid rgba(255,106,0,.25);'
+      : 'background:var(--inner-bg);color:var(--text-secondary);border:1px solid var(--inner-border);';
+  const tip = Array.isArray(reasons) && reasons.length
+    ? reasons.join(' · ')
+    : 'Совпадение профиля поставщика с закупкой';
+  return `<span style="display:inline-flex;align-items:center;gap:3px;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;${style}" title="${escapeHtml(tip)}">🧩 ${score}%</span>`;
+}
+
+function normalizeProposalForCompare(p) {
+  return {
+    ...p,
+    _name: p.company || p.companyName || p.supplier || '—',
+    _price: Number(p.price) || 0,
+    _days: Number(p.leadTime != null ? p.leadTime : p.days) || 0,
+    _match: p.matchScore != null ? Number(p.matchScore) : null,
+    _matchReasons: Array.isArray(p.matchReasons) ? p.matchReasons : [],
+  };
+}
+
+function renderKpCompareTable(proposals, options = {}) {
+  const props = (proposals || []).map(normalizeProposalForCompare);
+  if (props.length < 2) {
+    return '<p style="color:var(--text-secondary);font-size:13px;margin:0;">Нужно минимум 2 КП для сравнения.</p>';
+  }
+
+  const priceFmt = v => v ? new Intl.NumberFormat('ru-RU').format(v) + ' ₽' : '—';
+  const prices = props.map(p => p._price).filter(v => v > 0);
+  const days = props.map(p => p._days).filter(v => v > 0);
+  const minP = prices.length ? Math.min(...prices) : 0;
+  const maxP = prices.length ? Math.max(...prices) : 0;
+  const minD = days.length ? Math.min(...days) : 0;
+  const maxD = days.length ? Math.max(...days) : 0;
+  const showMatch = props.some(p => p._match > 0);
+  const acceptFn = options.acceptFn || 'acceptProposalFromCompare';
+  const showAccept = options.showAccept !== false;
+
+  const scored = props.map(p => {
+    const ps = maxP > minP ? (p._price - minP) / (maxP - minP) : 0;
+    const ds = maxD > minD ? (p._days - minD) / (maxD - minD) : 0;
+    return { ...p, _rankScore: ps * 0.5 + ds * 0.5 };
+  }).sort((a, b) => a._rankScore - b._rankScore);
+
+  const bestPrice = scored.find(p => p._price === minP)?._name || '—';
+  const fastest = scored.find(p => p._days === minD)?._name || '—';
+  const summaryHtml = [
+    { icon: '💰', label: 'Лучшая цена', val: escapeHtml(bestPrice), color: '#12A866' },
+    { icon: '⚡', label: 'Быстрее всех', val: escapeHtml(fastest), color: '#3B82F6' },
+    { icon: '🏆', label: 'Рекомендуем', val: escapeHtml(scored[0]?._name || '—'), color: '#FF6A00' },
+  ].map(b => `<div style="background:var(--inner-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;flex:1;min-width:140px;">
+    <div style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">${b.icon} ${b.label}</div>
+    <div style="font-size:13px;font-weight:700;color:${b.color};">${b.val}</div>
+  </div>`).join('');
+
+  const thStyle = 'padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:var(--text-secondary);border-bottom:2px solid var(--card-border);white-space:nowrap;';
+  const rowsHtml = scored.map((p, rank) => {
+    const isBP = p._price === minP && minP > 0;
+    const isWP = p._price === maxP && props.length > 1 && maxP > minP;
+    const isBD = p._days === minD && minD > 0;
+    const isWD = p._days === maxD && props.length > 1 && maxD > minD;
+    const pDev = minP > 0 && !isBP ? `<span style="color:#e07070;font-size:11px;"> +${Math.round((p._price - minP) / minP * 100)}%</span>` : '';
+    const dDev = minD > 0 && !isBD ? `<span style="color:#94A3B8;font-size:11px;"> +${Math.round((p._days - minD) / minD * 100)}%</span>` : '';
+    const stars = rank === 0 ? '★★★' : rank === 1 ? '★★☆' : '★☆☆';
+    const starColor = rank === 0 ? '#FF6A00' : rank === 1 ? '#F59E0B' : '#94A3B8';
+    const priceBg = isBP ? 'background:rgba(18,168,102,.1);' : isWP ? 'background:rgba(224,112,112,.07);' : '';
+    const daysBg = isBD ? 'background:rgba(59,130,246,.1);' : isWD ? 'background:rgba(224,112,112,.07);' : '';
+    const acceptCell = showAccept
+      ? `<button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="${acceptFn}(${p.id || 0}, ${JSON.stringify(p._name)})">Выбрать</button>`
+      : '';
+    return `<tr style="${rank === 0 ? 'background:rgba(255,106,0,.04);' : ''}border-bottom:1px solid var(--inner-border);">
+      <td style="padding:11px 12px;font-weight:700;color:var(--text-secondary);">${rank + 1}</td>
+      <td style="padding:11px 12px;">
+        <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(p._name)}</div>
+        ${rank === 0 ? '<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;">✓ Рекомендуется</div>' : ''}
+      </td>
+      ${showMatch ? `<td style="padding:11px 12px;">${matchScoreBadge(p._match, p._matchReasons)}</td>` : ''}
+      <td style="padding:11px 12px;font-weight:700;font-family:'JetBrains Mono',monospace;${priceBg}">${priceFmt(p._price)}${isBP ? '<span style="color:#12A866;font-size:11px;"> лучшая</span>' : pDev}</td>
+      <td style="padding:11px 12px;${daysBg}">${p._days ? p._days + ' дн.' : '—'}${isBD ? '<span style="color:#3B82F6;font-size:11px;"> быстрее</span>' : dDev}</td>
+      <td style="padding:11px 12px;color:${starColor};font-size:14px;letter-spacing:2px;">${stars}</td>
+      ${showAccept ? `<td style="padding:11px 12px;">${acceptCell}</td>` : ''}
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">${summaryHtml}</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:var(--inner-bg);">
+          <th style="${thStyle}">#</th>
+          <th style="${thStyle}">Поставщик</th>
+          ${showMatch ? `<th style="${thStyle}">Профиль</th>` : ''}
+          <th style="${thStyle}">Цена</th>
+          <th style="${thStyle}">Срок</th>
+          <th style="${thStyle}">Рейтинг</th>
+          ${showAccept ? `<th style="${thStyle}">Действие</th>` : ''}
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(18,168,102,.15);border:1px solid #12A866;"></div>Лучшая цена</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,.15);border:1px solid #3B82F6;"></div>Лучший срок</div>
+      ${showMatch ? '<div style="font-size:11px;color:var(--text-secondary);">🧩 — совпадение специализации с закупкой</div>' : ''}
+    </div>`;
+}
+
+function renderMatchedSuppliersList(items) {
+  if (!items || !items.length) {
+    return '<div style="font-size:12px;color:var(--text-secondary);">Пока нет подходящих поставщиков в каталоге</div>';
+  }
+  return items.map(m => {
+    const reasonsHtml = Array.isArray(m.reasons) && m.reasons.length
+      ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;line-height:1.35;">${m.reasons.map(r => escapeHtml(r)).join(' · ')}</div>`
+      : '';
+    return `
+    <div style="padding:8px 0;border-bottom:1px solid var(--inner-border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;">
+        <span style="font-weight:600;color:var(--text-primary);">${escapeHtml(m.company)}</span>
+        ${matchScoreBadge(m.score, m.reasons)}
+      </div>
+      ${reasonsHtml}
+    </div>`;
+  }).join('');
+}
+

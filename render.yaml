@@ -10,7 +10,7 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: RESEND_API_KEY
+      - key: SMTP_HOST
         sync: false
       - key: NODE_ENV
         value: production

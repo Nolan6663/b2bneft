@@ -532,6 +532,7 @@ function msgToast(msg) {
                         </div>
                         ${order.deadline ? `<div class="side-row"><span>Срок</span><strong>${dateFmt(order.deadline)}</strong></div>` : ''}
                         ${order.quantity ? `<div class="side-row"><span>Количество</span><strong>${order.quantity}</strong></div>` : ''}
+                        ${order.drawing ? buildDrawingLinksHtml(order.id, order.drawing) : ''}
                     ` : '<div style="font-size:12px;color:var(--text-secondary);">—</div>'}
                     <button class="btn-secondary" style="width:100%;margin-top:10px;" onclick="window.location.href='deals.html'">Открыть закупку ↗</button>
                 </div>

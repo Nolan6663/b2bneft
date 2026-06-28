@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Техзаказ — Страница не найдена</title>
-    <script>if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <link rel="stylesheet" href="assets/theme.css">
+    <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="stylesheet" href="assets/theme-v2.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .nf-wrap { text-align: center; max-width: 420px; padding: 40px 24px; }
@@ -60,9 +60,8 @@
     <script src="assets/ui-animations.js"></script>
     <script>
         const role = localStorage.getItem('userRole');
-        const token = localStorage.getItem('authToken');
         const homeLink = document.getElementById('homeLink');
-        if (!token) homeLink.href = 'login.html';
+        if (!hasSession()) homeLink.href = 'login.html';
         else if (role === 'admin') homeLink.href = 'admin.html';
         else homeLink.href = role === 'customer' ? 'index.html' : 'producer.html';
     </script>

@@ -87,9 +87,25 @@ async function deleteStored(storedName) {
     }
 }
 
-async function streamToResponse(storedName, res, downloadName) {
+function mimeFromName(name) {
+    const ext = path.extname(String(name || '')).toLowerCase();
+    const map = {
+        '.pdf': 'application/pdf',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml',
+    };
+    return map[ext] || null;
+}
+
+async function streamToResponse(storedName, res, downloadName, options = {}) {
+    const inline = Boolean(options.inline);
     const prefix = resolvePrefix(storedName);
     const key = objectKey(prefix, storedName);
+    const label = downloadName || storedName;
 
     if (USE_S3) {
         const { GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -97,10 +113,12 @@ async function streamToResponse(storedName, res, downloadName) {
             Bucket: process.env.S3_BUCKET,
             Key: key,
         }));
+        const mime = result.ContentType || mimeFromName(label);
+        if (mime) res.setHeader('Content-Type', mime);
         if (downloadName) {
-            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
+            const disp = inline ? 'inline' : 'attachment';
+            res.setHeader('Content-Disposition', `${disp}; filename="${encodeURIComponent(downloadName)}"`);
         }
-        if (result.ContentType) res.setHeader('Content-Type', result.ContentType);
         result.Body.pipe(res);
         return;
     }
@@ -111,11 +129,15 @@ async function streamToResponse(storedName, res, downloadName) {
         res.status(404).json({ error: 'Файл не найден' });
         return;
     }
+    const mime = mimeFromName(label);
+    if (mime) res.setHeader('Content-Type', mime);
     if (downloadName) {
-        res.download(filepath, downloadName);
-    } else {
+        const disp = inline ? 'inline' : 'attachment';
+        res.setHeader('Content-Disposition', `${disp}; filename="${encodeURIComponent(downloadName)}"`);
         res.sendFile(filepath);
+        return;
     }
+    res.sendFile(filepath);
 }
 
 function existsLocally(storedName) {

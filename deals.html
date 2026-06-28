@@ -373,40 +373,7 @@
             </div>
             <div id="compareOrderTitle" style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;"></div>
 
-            <!-- Summary badges -->
-            <div id="compareSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;"></div>
-
-            <!-- Table -->
-            <div style="overflow-x:auto;">
-                <table id="compareTable" style="width:100%;border-collapse:collapse;font-size:13.5px;">
-                    <thead>
-                        <tr style="background:var(--inner-bg);border-bottom:2px solid var(--card-border);">
-                            <th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">#</th>
-                            <th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--text-secondary);">Поставщик</th>
-                            <th style="text-align:right;padding:10px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">Цена</th>
-                            <th style="text-align:right;padding:10px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">vs мин. цены</th>
-                            <th style="text-align:right;padding:10px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">Срок, дн.</th>
-                            <th style="text-align:right;padding:10px 12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;">vs мин. срока</th>
-                            <th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--text-secondary);">Рейтинг</th>
-                            <th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--text-secondary);">Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody id="compareTableBody"></tbody>
-                </table>
-            </div>
-
-            <!-- Legend -->
-            <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
-                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-                    <div style="width:12px;height:12px;border-radius:3px;background:rgba(18,168,102,.15);border:1px solid #12A866;"></div>Лучший показатель
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-                    <div style="width:12px;height:12px;border-radius:3px;background:rgba(224,112,112,.12);border:1px solid #e07070;"></div>Худший показатель
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);">
-                    <span style="font-size:14px;">★</span>Рейтинг = 50% цена + 50% срок (1 = лучший)
-                </div>
-            </div>
+            <div id="compareTableWrap"></div>
         </div>
     </div>
 
@@ -483,6 +450,7 @@
                 : (d.deliveryStage && d.deliveryStage !== 'КП принят' ? 'inwork' : 'active');
             return {
                 id: d.proposalId,
+                orderId: d.orderId,
                 proposalId: d.proposalId,
                 num: 'КП-' + d.proposalId,
                 title: d.title || '',
@@ -581,9 +549,9 @@
             document.getElementById('ddpMeta').innerHTML = meta.map(([k,v]) =>
                 `<tr><td>${k}</td><td>${escapeHtml(String(v||'—'))}</td></tr>`).join('');
 
-            // Show/hide compare button
+            // Сравнение КП — на странице закупок (index), здесь только выигранные сделки
             const compareBtn = document.getElementById('ddpCompareBtn');
-            if (compareBtn) compareBtn.style.display = d.proposals && d.proposals.length >= 2 ? '' : 'none';
+            if (compareBtn) compareBtn.style.display = 'none';
 
             const kpList = document.getElementById('ddpKPList');
             if (d.proposals && d.proposals.length) {
@@ -686,81 +654,21 @@
         // ── Compare KP modal ────────────────────────────────────────────────
 
         function openCompareModal() {
-            if (!currentDeal || !currentDeal.proposals || currentDeal.proposals.length</span> < 2) return;
-            const props = currentDeal.proposals;
-
+            if (!currentDeal || !currentDeal.proposals || currentDeal.proposals.length < 2) {
+                showToast('Сравнение доступно на странице закупок для активных тендеров', 'warn');
+                return;
+            }
             document.getElementById('compareOrderTitle').textContent = currentDeal.title || '';
+            document.getElementById('compareTableWrap').innerHTML = renderKpCompareTable(currentDeal.proposals, {
+                acceptFn: 'acceptKpFromCompare',
+                showAccept: currentDeal.status === 'active',
+            });
             document.getElementById('compareModal').style.display = 'flex';
+        }
 
-            const prices = props.map(p => p.price || 0).filter(Boolean);
-            const days   = props.map(p => p.days  || 0).filter(Boolean);
-            const minP   = Math.min(...prices);
-            const maxP   = Math.max(...prices);
-            const minD   = Math.min(...days);
-            const maxD   = Math.max(...days);
-
-            // Score: 0–1 (lower = better), 50% price + 50% days
-            const scored = props.map(p => {
-                const priceScore = maxP > minP ? (p.price - minP) / (maxP - minP) : 0;
-                const daysScore  = maxD > minD ? (p.days  - minD) / (maxD - minD) : 0;
-                return { ...p, score: (priceScore * 0.5 + daysScore * 0.5) };
-            }).sort((a, b) => a.score - b.score);
-
-            // Summary badges
-            const bestPrice    = scored.find(p => p.price === minP);
-            const fastestDelivery = scored.find(p => p.days === minD);
-            document.getElementById('compareSummary').innerHTML = [
-                { icon:'💰', label:'Лучшая цена',    val: escapeHtml(bestPrice?.supplier || '—'),    color:'#12A866' },
-                { icon:'⚡', label:'Быстрее всех',   val: escapeHtml(fastestDelivery?.supplier || '—'), color:'#3B82F6' },
-                { icon:'🏆', label:'Рекомендуем',    val: escapeHtml(scored[0]?.supplier || '—'),    color:'#FF6A00' },
-            ].map(b => `
-                <div style="background:var(--inner-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;min-width:180px;">
-                    <div style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">${b.icon} ${b.label}</div>
-                    <div style="font-size:13.5px;font-weight:700;color:${b.color};">${b.val}</div>
-                </div>`).join('');
-
-            // Table rows
-            const isActive = currentDeal.status === 'active';
-            document.getElementById('compareTableBody').innerHTML = scored.map((kp, rank) => {
-                const isBestP  = kp.price === minP;
-                const isWorstP = kp.price === maxP && props.length > 1;
-                const isBestD  = kp.days  === minD;
-                const isWorstD = kp.days  === maxD && props.length > 1;
-
-                const priceDev = minP > 0 ? Math.round((kp.price - minP) / minP * 100) : 0;
-                const daysDev  = minD > 0 ? Math.round((kp.days  - minD) / minD * 100) : 0;
-
-                const priceCell = `background:${isBestP ? 'rgba(18,168,102,.1)' : isWorstP ? 'rgba(224,112,112,.08)' : 'transparent'}`;
-                const daysCell  = `background:${isBestD ? 'rgba(59,130,246,.1)' : isWorstD ? 'rgba(224,112,112,.08)' : 'transparent'}`;
-
-                const stars = rank === 0 ? '★★★' : rank === 1 ? '★★☆' : '★☆☆';
-                const starColor = rank === 0 ? '#FF6A00' : rank === 1 ? '#F59E0B' : '#94A3B8';
-
-                const rowBg = rank === 0 ? 'background:rgba(255,106,0,.04);' : '';
-
-                return `<tr style="${rowBg}border-bottom:1px solid var(--inner-border);">
-                    <td style="padding:12px 12px;font-weight:700;color:var(--text-secondary);font-size:13px;">${rank + 1}</td>
-                    <td style="padding:12px 12px;">
-                        <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(kp.supplier)}</div>
-                        ${rank === 0 ? '<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;">✓ Рекомендуется</div>' : ''}
-                    </td>
-                    <td style="padding:12px 12px;text-align:right;font-weight:700;color:var(--text-primary);${priceCell};">${fmtPrice(kp.price)}</td>
-                    <td style="padding:12px 12px;text-align:right;font-size:12px;${priceCell};">
-                        ${isBestP ? '<span style="color:#12A866;font-weight:600;">— лучшая</span>' : `<span style="color:#e07070;">+${priceDev}%</span>`}
-                    </td>
-                    <td style="padding:12px 12px;text-align:right;font-weight:700;color:var(--text-primary);${daysCell};">${kp.days}</td>
-                    <td style="padding:12px 12px;text-align:right;font-size:12px;${daysCell};">
-                        ${isBestD ? '<span style="color:#3B82F6;font-weight:600;">— быстрее всех</span>' : `<span style="color:#94A3B8;">+${daysDev}%</span>`}
-                    </td>
-                    <td style="padding:12px 12px;text-align:center;color:${starColor};font-size:15px;letter-spacing:2px;">${stars}</td>
-                    <td style="padding:12px 12px;text-align:center;">
-                        ${isActive
-                            ? `<button class="btn-primary" style="font-size:12px;padding:6px 14px;" onclick="closeCompareModal();acceptKp(${kp.id||0},${currentDeal.id},'${escapeHtml(kp.supplier).replace(/'/g,"\\'")}')">Выбрать</button>`
-                            : `<button class="btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="window.location.href='messages.html?orderId=${currentDeal.id}&company=${encodeURIComponent(kp.supplier)}&title=${encodeURIComponent(currentDeal.title)}'">Чат</button>`
-                        }
-                    </td>
-                </tr>`;
-            }).join('');
+        function acceptKpFromCompare(proposalId, supplier) {
+            if (!proposalId || !currentDeal) return;
+            acceptKp(proposalId, currentDeal.orderId || currentDeal.id, supplier);
         }
 
         function closeCompareModal() {

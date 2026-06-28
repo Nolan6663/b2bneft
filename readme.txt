@@ -67,7 +67,7 @@ assets/
   app.js           — общий JS для всех страниц (apiFetch, escapeHtml,
                      showToast, initNotifications, shouldUseMockData и др.)
   theme-v2.css     — глобальные стили (тёмная/светлая тема)
-  theme.css, zakupki-cat.css, fonts.css, ui-animations.js
+  zakupki-cat.css, fonts.css, ui-animations.js
 
 seo/               — GSC, Yandex Webmaster, SEO-аудит, интенты (auditor.js, gsc.js…)
 scripts/           — static-checks.js, mvp-api-smoke.js
@@ -458,7 +458,7 @@ SEO:
   - shouldUseMockData() = true на localhost → часть данных моковая в dev
     (намеренное поведение, в production моки не показываются).
 
-  - Пакет resend в package.json не используется — email только через SMTP.
+  - Пакет resend удалён из зависимостей — email только через SMTP.
 
 
 ВАЖНЫЕ УТИЛИТЫ (assets/app.js)

@@ -185,6 +185,11 @@
 
             <div style="display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);" id="detPanelMeta"></div>
 
+            <div id="detPanelMatched" style="display:none;margin-top:14px;padding:14px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Кому подходит закупка</div>
+                <div id="detPanelMatchedList"></div>
+            </div>
+
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:10px;">
                 <span style="font-size:13px;font-weight:700;">Поступившие КП</span>
                 <div style="display:flex;align-items:center;gap:10px;">
@@ -377,13 +382,17 @@
     </div>
 
     <div class="modal" id="proposalsModal">
-        <div class="modal-content" style="width: 650px; max-width: 90vw;">
-            <h3 id="proposalsModalTitle">Входящие предложения</h3>
+        <div class="modal-content" style="width: 720px; max-width: 90vw;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+                <h3 id="proposalsModalTitle" style="margin:0;">Входящие предложения</h3>
+                <button id="proposalsCompareBtn" type="button" style="display:none;background:none;border:1px solid var(--accent-bright);color:var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;" onclick="compareFromProposalsModal()">⇄ Сравнить</button>
+            </div>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
                         <tr>
                             <th>Поставщик</th>
+                            <th>Совпадение</th>
                             <th>Цена</th>
                             <th>Срок</th>
                             <th>Статус</th>
@@ -673,7 +682,8 @@
             const existingEl = document.getElementById('orderFileExisting');
             if (order.drawing) {
                 existingEl.style.display = 'block';
-                existingEl.innerText = `Текущий файл: ${order.drawing.originalName} (выберите новый, чтобы заменить)`;
+                existingEl.innerHTML = buildDrawingLinksHtml(order.id, order.drawing)
+                    + '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">Выберите новый файл ниже, чтобы заменить</div>';
             } else {
                 existingEl.style.display = 'none';
             }
@@ -826,6 +836,10 @@
                     <span style="${style}">${val}</span>
                 </div>`).join('');
 
+            if (order.drawing) {
+                meta.innerHTML += `<div style="margin-top:4px;">${buildDrawingLinksHtml(order.id, order.drawing)}</div>`;
+            }
+
             const proposalsEl = document.getElementById('detPanelProposals');
             const kpCount = document.getElementById('detPanelKpCount');
             proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Загрузка…</div>';
@@ -847,16 +861,35 @@
             if (!proposals.length) {
                 proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Пока нет предложений</div>';
                 document.getElementById('detPanelChart').style.display = 'none';
+                const matchedEl = document.getElementById('detPanelMatched');
+                const matchedList = document.getElementById('detPanelMatchedList');
+                if (matchedEl && matchedList) {
+                    matchedEl.style.display = 'block';
+                    matchedList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Загрузка…</div>';
+                    try {
+                        const mr = await apiFetch(`${SERVER_URL}/orders/${order.id}/matched-suppliers`);
+                        const items = mr.ok ? await mr.json() : [];
+                        matchedList.innerHTML = renderMatchedSuppliersList(items);
+                    } catch {
+                        matchedList.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Не удалось загрузить</div>';
+                    }
+                }
+                loadAuctionForOrder(order.id);
                 return;
             }
+
+            const matchedEl = document.getElementById('detPanelMatched');
+            if (matchedEl) matchedEl.style.display = 'none';
 
             proposalsEl.innerHTML = proposals.map((p, i) => {
                 const price = p.price ? new Intl.NumberFormat('ru-RU').format(p.price) + ' ₽' : '—';
                 const best = i === 0 ? '<span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">Лучшая</span>' : '';
+                const match = matchScoreBadge(p.matchScore, p.matchReasons);
                 return `<div class="proc-proposal-row" onclick="openGlobalChat(${order.id}, '${escapeHtml(order.title).replace(/'/g,"\\'")}', '${escapeHtml(p.company||p.companyName||'').replace(/'/g,"\\'")}')">
                     <div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;">${escapeHtml(p.company||p.companyName||'—')}${best}</div>
+                    <div style="flex-shrink:0;">${match}</div>
                     <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;white-space:nowrap;">${escapeHtml(price)}</div>
-                    ${p.leadTime ? `<div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;">${p.leadTime} дн.</div>` : ''}
+                    ${p.days ? `<div style="font-size:11.5px;color:var(--text-secondary);white-space:nowrap;">${p.days} дн.</div>` : ''}
                     <span style="color:var(--text-secondary);">›</span>
                 </div>`;
             }).join('');
@@ -887,87 +920,24 @@
         }
 
         function compareKp() {
-            if (!currentProposalsOrderId || !currentProposalsList.length) {
-                showToast('Выберите закупку с предложениями для сравнения', 'warn');
+            if (!currentProposalsOrderId || currentProposalsList.length < 2) {
+                showToast('Нужно минимум 2 КП для сравнения', 'warn');
                 return;
             }
-            const props = currentProposalsList;
-            const ordTitle = currentProposalsOrderTitle;
-            document.getElementById('compareModalTitle').textContent = `Сравнение КП — ${ordTitle}`;
-
-            const priceFmt = v => v ? new Intl.NumberFormat('ru-RU').format(v) + ' ₽' : '—';
-
-            const prices = props.map(p => p.price || 0).filter(Boolean);
-            const days   = props.map(p => p.leadTime || p.days || 0).filter(Boolean);
-            const minP = Math.min(...prices), maxP = Math.max(...prices);
-            const minD = Math.min(...days),   maxD = Math.max(...days);
-
-            // Score 0–1 (lower = better): 50% price + 50% days
-            const scored = props.map(p => {
-                const pr = p.price || 0, dr = p.leadTime || p.days || 0;
-                const ps = maxP > minP ? (pr - minP) / (maxP - minP) : 0;
-                const ds = maxD > minD ? (dr - minD) / (maxD - minD) : 0;
-                return { ...p, _name: p.company || p.companyName || '—', _score: ps * 0.5 + ds * 0.5 };
-            }).sort((a, b) => a._score - b._score);
-
-            // Summary badges
-            const bestPriceSupplier = scored.find(p => (p.price || 0) === minP)?._name || '—';
-            const fastestSupplier   = scored.find(p => (p.leadTime || p.days || 0) === minD)?._name || '—';
-            const summaryHtml = [
-                { icon:'💰', label:'Лучшая цена',  val: escapeHtml(bestPriceSupplier), color:'#12A866' },
-                { icon:'⚡', label:'Быстрее всех', val: escapeHtml(fastestSupplier),   color:'#3B82F6' },
-                { icon:'🏆', label:'Рекомендуем',  val: escapeHtml(scored[0]?._name || '—'), color:'#FF6A00' },
-            ].map(b => `<div style="background:var(--inner-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;flex:1;min-width:140px;">
-                <div style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">${b.icon} ${b.label}</div>
-                <div style="font-size:13px;font-weight:700;color:${b.color};">${b.val}</div>
-            </div>`).join('');
-
-            const thStyle = `padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:var(--text-secondary);border-bottom:2px solid var(--card-border);white-space:nowrap;`;
-            const trStyle = (rank) => rank === 0 ? 'background:rgba(255,106,0,.04);' : '';
-
-            const rowsHtml = scored.map((p, rank) => {
-                const pr = p.price || 0, dr = p.leadTime || p.days || 0;
-                const isBP = pr === minP, isWP = pr === maxP && props.length > 1;
-                const iBD = dr === minD, isWD = dr === maxD && props.length > 1;
-                const pDev = minP > 0 && !isBP ? `<span style="color:#e07070;font-size:11px;"> +${Math.round((pr-minP)/minP*100)}%</span>` : '';
-                const dDev = minD > 0 && !iBD ? `<span style="color:#94A3B8;font-size:11px;"> +${Math.round((dr-minD)/minD*100)}%</span>` : '';
-                const stars = rank === 0 ? '★★★' : rank === 1 ? '★★☆' : '★☆☆';
-                const starColor = rank === 0 ? '#FF6A00' : rank === 1 ? '#F59E0B' : '#94A3B8';
-                const priceBg = isBP ? 'background:rgba(18,168,102,.1);' : isWP ? 'background:rgba(224,112,112,.07);' : '';
-                const daysBg  = iBD ? 'background:rgba(59,130,246,.1);'  : isWD ? 'background:rgba(224,112,112,.07);' : '';
-                return `<tr style="${trStyle(rank)}border-bottom:1px solid var(--inner-border);">
-                    <td style="padding:11px 12px;font-weight:700;color:var(--text-secondary);">${rank+1}</td>
-                    <td style="padding:11px 12px;">
-                        <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(p._name)}</div>
-                        ${rank===0 ? '<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;">✓ Рекомендуется</div>' : ''}
-                    </td>
-                    <td style="padding:11px 12px;font-weight:700;font-family:'JetBrains Mono',monospace;${priceBg}">${priceFmt(pr)}${isBP ? '<span style="color:#12A866;font-size:11px;"> лучшая</span>' : pDev}</td>
-                    <td style="padding:11px 12px;${daysBg}">${dr ? dr + ' дн.' : '—'}${iBD ? '<span style="color:#3B82F6;font-size:11px;"> быстрее</span>' : dDev}</td>
-                    <td style="padding:11px 12px;color:${starColor};font-size:14px;letter-spacing:2px;">${stars}</td>
-                    <td style="padding:11px 12px;"><button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="acceptProposalFromCompare(${p.id||0}, '${escapeHtml(p._name).replace(/'/g,"\\'")}')">Выбрать</button></td>
-                </tr>`;
-            }).join('');
-
-            document.getElementById('compareTableWrap').innerHTML = `
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">${summaryHtml}</div>
-                <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                    <thead><tr style="background:var(--inner-bg);">
-                        <th style="${thStyle}">#</th>
-                        <th style="${thStyle}">Поставщик</th>
-                        <th style="${thStyle}">Цена</th>
-                        <th style="${thStyle}">Срок</th>
-                        <th style="${thStyle}">Рейтинг</th>
-                        <th style="${thStyle}">Действие</th>
-                    </tr></thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table></div>
-                <div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;">
-                    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(18,168,102,.15);border:1px solid #12A866;"></div>Лучшая цена</div>
-                    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,.15);border:1px solid #3B82F6;"></div>Лучший срок</div>
-                    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(224,112,112,.1);border:1px solid #e07070;"></div>Наихудший</div>
-                </div>`;
+            document.getElementById('compareModalTitle').textContent = `Сравнение КП — ${currentProposalsOrderTitle}`;
+            document.getElementById('compareTableWrap').innerHTML = renderKpCompareTable(currentProposalsList, {
+                acceptFn: 'acceptProposalFromCompare',
+            });
             document.getElementById('compareModal').style.display = 'flex';
+        }
+
+        function compareFromProposalsModal() {
+            if (currentProposalsList.length < 2) {
+                showToast('Нужно минимум 2 КП для сравнения', 'warn');
+                return;
+            }
+            document.getElementById('proposalsModal').style.display = 'none';
+            compareKp();
         }
 
         async function acceptProposalFromCompare(proposalId, supplier) {
@@ -1019,7 +989,7 @@
             currentProposalsOrderTitle = orderTitle;
             document.getElementById('proposalsModalTitle').innerText = `Отклики на: ${orderTitle}`;
             const tableBody = document.getElementById('proposals-table-body');
-            if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Загрузка...</td></tr>';
+            if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Загрузка...</td></tr>';
             document.getElementById('proposalsModal').style.display = 'flex';
 
             try {
@@ -1030,11 +1000,15 @@
                 const response = await apiFetch(`${SERVER_URL}/order-proposals/${orderId}`);
                 let proposals = response.ok ? await response.json() : [];
                 if (!Array.isArray(proposals)) proposals = [];
+                currentProposalsList = proposals;
                 proposals.sort((a, b) => a.price - b.price);
+
+                const proposalsCompareBtn = document.getElementById('proposalsCompareBtn');
+                if (proposalsCompareBtn) proposalsCompareBtn.style.display = proposals.length >= 2 ? '' : 'none';
 
                 tableBody.innerHTML = '';
                 if (proposals.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
                 } else {
                     proposals.forEach(prop => {
                         let icon = '✓', cls = 'win';
@@ -1072,6 +1046,7 @@
                                 <div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div>
                                 ${fileLink}
                             </td>
+                            <td>${matchScoreBadge(prop.matchScore, prop.matchReasons)}</td>
                             <td>${prop.price != null ? prop.price : '—'} ₽/шт</td>
                             <td>${prop.days != null ? prop.days : '—'} дней</td>
                             <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>

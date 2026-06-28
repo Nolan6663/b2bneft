@@ -19,16 +19,28 @@ function checkJavaScriptSyntax() {
   }
 }
 
+function isExecutableScript(openTag) {
+  const typeMatch = openTag.match(/\btype\s*=\s*["']([^"']+)["']/i);
+  if (!typeMatch) return true;
+  const type = typeMatch[1].trim().toLowerCase();
+  return type === 'text/javascript'
+    || type === 'application/javascript'
+    || type === 'module';
+}
+
 function checkInlineScripts() {
   let count = 0;
+  const scriptRe = /<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi;
   for (const file of htmlFiles) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
-    const scripts = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)]
-      .map(match => match[1]);
-    scripts.forEach((script, index) => {
-      new vm.Script(script, { filename: `${file}#script${index + 1}` });
-    });
-    count += scripts.length;
+    let match;
+    let index = 0;
+    while ((match = scriptRe.exec(html)) !== null) {
+      if (!isExecutableScript(match[1])) continue;
+      index += 1;
+      new vm.Script(match[2], { filename: `${file}#script${index}` });
+      count += 1;
+    }
   }
   return count;
 }
