@@ -786,11 +786,49 @@
                     <div><div class="settings-card-title">Доступные интеграции</div><div class="settings-card-subtitle">Подключите внешние сервисы</div></div>
                 </div>
                 <div class="settings-card-body">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">1С: Предприятие</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">SAP ERP</div><div style="font-size:12px;color:var(--text-secondary);">ERP-система</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">Битрикс24</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
-                        <div style="background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div><div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">AmoCRM</div><div style="font-size:12px;color:var(--text-secondary);">CRM</div></div><button style="background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;" onclick="showToast('Интеграция будет доступна в следующем обновлении')">Подключить</button></div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;" id="integrations-grid">
+                        <div style="color:var(--text-secondary);font-size:13px;padding:12px;">Загрузка...</div>
+                    </div>
+
+                    <!-- Modal: Bitrix24 -->
+                    <div id="modal-bitrix24" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center;">
+                        <div style="background:var(--card-bg);border-radius:14px;padding:24px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 16px 48px rgba(0,0,0,.25);">
+                            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">Битрикс24</div>
+                            <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+                                В Битрикс24 перейдите в <strong>Приложения → Вебхуки → Входящий вебхук</strong>, добавьте права на CRM и скопируйте URL.
+                            </div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Webhook URL</label>
+                            <input id="bitrix-webhook-url" type="url" placeholder="https://your-company.bitrix24.ru/rest/1/abc123xyz/"
+                                style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;margin-bottom:16px;">
+                            <div style="display:flex;gap:8px;">
+                                <button onclick="closeIntegrationModal('bitrix24')" class="btn-secondary" style="flex:1;">Отмена</button>
+                                <button onclick="testIntegration('bitrix24')" class="btn-secondary" style="flex:1;">Проверить</button>
+                                <button onclick="saveIntegration('bitrix24')" class="btn-settings-save" style="flex:1;">Сохранить</button>
+                            </div>
+                            <div id="bitrix-test-result" style="margin-top:10px;font-size:12px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Modal: AmoCRM -->
+                    <div id="modal-amocrm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center;">
+                        <div style="background:var(--card-bg);border-radius:14px;padding:24px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 16px 48px rgba(0,0,0,.25);">
+                            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">AmoCRM</div>
+                            <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;">
+                                В AmoCRM перейдите в <strong>Настройки → Интеграции → Создать интеграцию (личная)</strong>. Скопируйте поддомен и токен доступа.
+                            </div>
+                            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Поддомен</label>
+                            <input id="amo-subdomain" type="text" placeholder="yourcompany (без .amocrm.ru)"
+                                style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;margin-bottom:10px;">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Токен доступа</label>
+                            <input id="amo-token" type="password" placeholder="eyJ0eXAiOiJKV1..."
+                                style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;margin-bottom:16px;">
+                            <div style="display:flex;gap:8px;">
+                                <button onclick="closeIntegrationModal('amocrm')" class="btn-secondary" style="flex:1;">Отмена</button>
+                                <button onclick="testIntegration('amocrm')" class="btn-secondary" style="flex:1;">Проверить</button>
+                                <button onclick="saveIntegration('amocrm')" class="btn-settings-save" style="flex:1;">Сохранить</button>
+                            </div>
+                            <div id="amo-test-result" style="margin-top:10px;font-size:12px;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -911,6 +949,133 @@
         const myCompany = localStorage.getItem('userCompany');
 
 
+        // ── Integrations ──────────────────────────────────────────────────────
+
+        const INTEGRATION_META = {
+            '1c':       { name: '1С: Предприятие', sub: 'ERP-система',  type: 'export' },
+            'bitrix24': { name: 'Битрикс24',        sub: 'CRM',          type: 'webhook' },
+            'amocrm':   { name: 'AmoCRM',           sub: 'CRM',          type: 'oauth' },
+            'sap':      { name: 'SAP ERP',          sub: 'ERP-система',  type: 'soon' },
+        };
+
+        let integrationsState = {};
+
+        async function loadIntegrations() {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/integrations`);
+                const list = r.ok ? await r.json() : [];
+                integrationsState = {};
+                list.forEach(i => { integrationsState[i.provider] = i; });
+            } catch {}
+            renderIntegrationsGrid();
+        }
+
+        function renderIntegrationsGrid() {
+            const grid = document.getElementById('integrations-grid');
+            if (!grid) return;
+            grid.innerHTML = Object.entries(INTEGRATION_META).map(([key, meta]) => {
+                const connected = integrationsState[key];
+                const isSoon    = meta.type === 'soon';
+                const is1c      = meta.type === 'export';
+                return `
+                <div style="background:var(--inner-bg);border:1px solid ${connected ? 'rgba(5,150,105,.35)' : 'var(--inner-border)'};border-radius:10px;padding:14px;">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                        <div>
+                            <div style="font-weight:600;font-size:13.5px;color:var(--text-primary);">${meta.name}</div>
+                            <div style="font-size:11.5px;color:var(--text-secondary);">${meta.sub}</div>
+                        </div>
+                        ${connected
+                            ? `<span style="font-size:10px;font-weight:700;color:#059669;background:rgba(5,150,105,.1);border-radius:20px;padding:2px 8px;white-space:nowrap;">✓ Подключено</span>`
+                            : isSoon
+                                ? `<span style="font-size:10px;font-weight:700;color:var(--text-secondary);background:var(--card-border);border-radius:20px;padding:2px 8px;white-space:nowrap;">Скоро</span>`
+                                : ''}
+                    </div>
+                    ${connected && !is1c
+                        ? `<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${connected.preview}</div>`
+                        : ''}
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        ${is1c
+                            ? `<button onclick="showToast('Кнопка экспорта доступна в карточке каждой сделки', 'warn')" style="flex:1;background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;">Как экспортировать?</button>`
+                            : isSoon
+                                ? `<button disabled style="flex:1;background:none;border:1px solid var(--card-border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text-secondary);cursor:default;">В разработке</button>`
+                                : connected
+                                    ? `<button onclick="disconnectIntegration('${key}')" style="flex:1;background:none;border:1px solid #dc2626;border-radius:6px;padding:4px 10px;font-size:12px;color:#dc2626;cursor:pointer;">Отключить</button>`
+                                    : `<button onclick="openIntegrationModal('${key}')" style="flex:1;background:none;border:1px solid var(--accent-bright);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--accent-bright);cursor:pointer;">Подключить</button>`
+                        }
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openIntegrationModal(provider) {
+            document.getElementById(`modal-${provider}`).style.display = 'flex';
+        }
+        function closeIntegrationModal(provider) {
+            document.getElementById(`modal-${provider}`).style.display = 'none';
+        }
+
+        async function saveIntegration(provider) {
+            let body = {};
+            if (provider === 'bitrix24') {
+                body.webhookUrl = document.getElementById('bitrix-webhook-url').value.trim();
+            }
+            if (provider === 'amocrm') {
+                body.subdomain   = document.getElementById('amo-subdomain').value.trim();
+                body.accessToken = document.getElementById('amo-token').value.trim();
+            }
+            const r = await apiFetch(`${SERVER_URL}/integrations/${provider}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (r.ok) {
+                closeIntegrationModal(provider);
+                showToast(`${INTEGRATION_META[provider].name} подключена`);
+                loadIntegrations();
+            } else {
+                const d = await r.json().catch(() => ({}));
+                showToast(d.error || 'Ошибка сохранения', 'error');
+            }
+        }
+
+        async function testIntegration(provider) {
+            const resultEl = document.getElementById(`${provider === 'bitrix24' ? 'bitrix' : 'amo'}-test-result`);
+            resultEl.textContent = 'Проверяем...';
+            resultEl.style.color = 'var(--text-secondary)';
+
+            let body = {};
+            if (provider === 'bitrix24') body.webhookUrl = document.getElementById('bitrix-webhook-url').value.trim();
+            if (provider === 'amocrm')   { body.subdomain = document.getElementById('amo-subdomain').value.trim(); body.accessToken = document.getElementById('amo-token').value.trim(); }
+
+            // Save first, then test
+            const saveR = await apiFetch(`${SERVER_URL}/integrations/${provider}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+            });
+            if (!saveR.ok) {
+                const d = await saveR.json().catch(() => ({}));
+                resultEl.textContent = '✗ ' + (d.error || 'Ошибка');
+                resultEl.style.color = '#dc2626';
+                return;
+            }
+
+            const r = await apiFetch(`${SERVER_URL}/integrations/${provider}/test`, { method: 'POST' });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok) {
+                resultEl.textContent = `✓ Соединение установлено: ${d.info || 'OK'}`;
+                resultEl.style.color = '#059669';
+                loadIntegrations();
+            } else {
+                resultEl.textContent = '✗ ' + (d.error || 'Ошибка соединения');
+                resultEl.style.color = '#dc2626';
+            }
+        }
+
+        async function disconnectIntegration(provider) {
+            await apiFetch(`${SERVER_URL}/integrations/${provider}`, { method: 'DELETE' });
+            showToast(`${INTEGRATION_META[provider].name} отключена`);
+            loadIntegrations();
+        }
+
         // ── 2FA ──────────────────────────────────────────────────────────────
 
         async function load2faStatus() {
@@ -1019,6 +1184,7 @@
             if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
 
             load2faStatus();
+            loadIntegrations();
 
             let userEmail = '';
 

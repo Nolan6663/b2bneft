@@ -168,6 +168,15 @@ async function initDb() {
             expires_at TIMESTAMPTZ NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS integrations (
+            id         SERIAL      PRIMARY KEY,
+            company    TEXT        NOT NULL,
+            provider   TEXT        NOT NULL,
+            config     JSONB       NOT NULL DEFAULT '{}',
+            enabled    BOOLEAN     NOT NULL DEFAULT true,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(company, provider)
+        );
         CREATE TABLE IF NOT EXISTS tasks (
             id         SERIAL      PRIMARY KEY,
             order_id   INTEGER     NOT NULL,

@@ -298,6 +298,12 @@
                         Отследить доставку
                     </button>
                 </div>
+                <div id="ddpExport1cBtn" style="display:none;margin-top:8px;">
+                    <button class="btn-secondary" style="width:100%;" id="ddpExport1cBtn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Выгрузить в 1С (XML)
+                    </button>
+                </div>
             </div>
 
         </div><!-- /orders-wrap -->
@@ -505,6 +511,17 @@
                 trackLink.onclick = () => window.location.href = `delivery.html?id=${pid}`;
             } else {
                 trackBtn.style.display = 'none';
+            }
+
+            // 1С export button
+            const exportBtn = document.getElementById('ddpExport1cBtn');
+            if (exportBtn) {
+                if (pid && (d.status === 'inwork' || d.status === 'completed')) {
+                    exportBtn.style.display = '';
+                    exportBtn.onclick = () => window.open(`${SERVER_URL}/export/1c/${pid}`, '_blank');
+                } else {
+                    exportBtn.style.display = 'none';
+                }
             }
 
             renderTable();

@@ -1084,6 +1084,10 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
             }
         });
 
+        // Fire integrations (Bitrix24, AmoCRM) — non-blocking
+        const wonProposal = { id: proposalId, company: proposalRow.company, price: proposalRow.price, days: proposalRow.days };
+        triggerIntegrations(req.user.company, wonProposal, orderRow).catch(() => {});
+
         await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
         await Promise.all(notifs.map(async n => {
             const email = await getCompanyEmail(n.company);
@@ -1951,6 +1955,234 @@ app.get('/api/auth/yandex/callback', async (req, res) => {
         console.error('Yandex OAuth callback error:', e);
         res.redirect('/login.html?error=oauth_error');
     }
+});
+
+// ===================== ИНТЕГРАЦИИ =====================
+
+// ── Push helpers ──────────────────────────────────────────────────────────
+
+async function pushToBitrix24(config, proposal, order) {
+    const url = (config.webhookUrl || '').trim().replace(/\/?$/, '/');
+    if (!url) return;
+    try {
+        await fetch(`${url}crm.deal.add.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fields: {
+                    TITLE:       order.title,
+                    OPPORTUNITY: proposal.price || 0,
+                    CURRENCY_ID: 'RUB',
+                    STAGE_ID:    'WON',
+                    COMMENTS:    `Поставщик: ${proposal.company}. Срок поставки: ${proposal.days} дн. Источник: ТЕХЗАКАЗ.`,
+                    SOURCE_ID:   'OTHER',
+                },
+            }),
+        });
+    } catch (e) {
+        console.error('[bitrix24 push]', e.message);
+    }
+}
+
+async function pushToAmoCRM(config, proposal, order) {
+    const { subdomain, accessToken } = config;
+    if (!subdomain || !accessToken) return;
+    try {
+        await fetch(`https://${subdomain}.amocrm.ru/api/v4/leads`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify([{
+                name:  order.title,
+                price: proposal.price || 0,
+                _embedded: {
+                    tags: [{ name: 'ТЕХЗАКАЗ' }],
+                },
+                custom_fields_values: [{
+                    field_code: 'COMMENTS',
+                    values: [{ value: `Поставщик: ${proposal.company}. Срок: ${proposal.days} дн.` }],
+                }],
+            }]),
+        });
+    } catch (e) {
+        console.error('[amocrm push]', e.message);
+    }
+}
+
+async function triggerIntegrations(customerCompany, proposal, order) {
+    try {
+        const { rows } = await pool.query(
+            "SELECT * FROM integrations WHERE company = $1 AND enabled = true",
+            [customerCompany]
+        );
+        await Promise.all(rows.map(row => {
+            if (row.provider === 'bitrix24') return pushToBitrix24(row.config, proposal, order);
+            if (row.provider === 'amocrm')   return pushToAmoCRM(row.config, proposal, order);
+        }));
+    } catch (e) {
+        console.error('[integrations trigger]', e.message);
+    }
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────
+
+app.get('/api/integrations', requireAuth, async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT provider, enabled, created_at, config FROM integrations WHERE company = $1',
+            [req.user.company]
+        );
+        res.json(rows.map(r => ({
+            provider: r.provider,
+            enabled:  r.enabled,
+            connectedAt: r.created_at,
+            preview: previewConfig(r.provider, r.config),
+        })));
+    } catch (e) { next(e); }
+});
+
+function previewConfig(provider, config) {
+    if (provider === 'bitrix24') {
+        const url = config.webhookUrl || '';
+        return url ? url.replace(/\/rest\/.*/, '/rest/…') : '';
+    }
+    if (provider === 'amocrm') return config.subdomain ? `${config.subdomain}.amocrm.ru` : '';
+    return '';
+}
+
+app.post('/api/integrations/:provider', requireAuth, async (req, res, next) => {
+    try {
+        const { provider } = req.params;
+        if (!['bitrix24', 'amocrm'].includes(provider))
+            return res.status(400).json({ error: 'Неизвестный провайдер' });
+
+        let config = {};
+        if (provider === 'bitrix24') {
+            const { webhookUrl } = req.body;
+            if (!webhookUrl?.trim()) return res.status(400).json({ error: 'Укажите webhook URL' });
+            try { new URL(webhookUrl.trim()); } catch { return res.status(400).json({ error: 'Неверный URL' }); }
+            if (!webhookUrl.includes('/rest/')) return res.status(400).json({ error: 'URL должен содержать /rest/' });
+            config = { webhookUrl: webhookUrl.trim() };
+        }
+        if (provider === 'amocrm') {
+            const { subdomain, accessToken } = req.body;
+            if (!subdomain?.trim() || !accessToken?.trim())
+                return res.status(400).json({ error: 'Укажите поддомен и токен доступа' });
+            config = { subdomain: subdomain.trim().replace(/\.amocrm\.ru$/, ''), accessToken: accessToken.trim() };
+        }
+
+        await pool.query(
+            `INSERT INTO integrations (company, provider, config)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (company, provider) DO UPDATE SET config = $3, enabled = true, created_at = NOW()`,
+            [req.user.company, provider, JSON.stringify(config)]
+        );
+        res.json({ ok: true, preview: previewConfig(provider, config) });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/integrations/:provider/test', requireAuth, async (req, res, next) => {
+    try {
+        const { provider } = req.params;
+        const { rows: [row] } = await pool.query(
+            'SELECT config FROM integrations WHERE company = $1 AND provider = $2',
+            [req.user.company, provider]
+        );
+        if (!row) return res.status(404).json({ error: 'Интеграция не подключена' });
+
+        if (provider === 'bitrix24') {
+            const url = (row.config.webhookUrl || '').trim().replace(/\/?$/, '/');
+            const r = await fetch(`${url}profile.json`);
+            const data = await r.json();
+            if (!r.ok || data.error) return res.status(400).json({ error: data.error_description || 'Ошибка соединения с Bitrix24' });
+            return res.json({ ok: true, info: data.result?.NAME || 'Подключено' });
+        }
+        if (provider === 'amocrm') {
+            const { subdomain, accessToken } = row.config;
+            const r = await fetch(`https://${subdomain}.amocrm.ru/api/v4/account`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) return res.status(400).json({ error: data.detail || 'Ошибка соединения с AmoCRM' });
+            return res.json({ ok: true, info: data.name || subdomain });
+        }
+        res.status(400).json({ error: 'Тест не поддерживается' });
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/integrations/:provider', requireAuth, async (req, res, next) => {
+    try {
+        await pool.query(
+            'DELETE FROM integrations WHERE company = $1 AND provider = $2',
+            [req.user.company, req.params.provider]
+        );
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+// ── 1С CommerceML XML export ───────────────────────────────────────────────
+
+app.get('/api/export/1c/:proposalId', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [row] } = await pool.query(`
+            SELECT p.*, o.title AS order_title, o.quantity, o.description, o.deadline, o.company AS customer
+            FROM proposals p
+            JOIN orders o ON o.id = p.order_id
+            WHERE p.id = $1
+        `, [Number(req.params.proposalId)]);
+
+        if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
+        if (row.customer !== req.user.company && req.user.role !== 'admin')
+            return res.status(403).json({ error: 'Нет доступа' });
+
+        const now     = new Date().toISOString();
+        const dateStr = now.split('T')[0];
+        const price   = Number(row.price) || 0;
+        const qty     = Number(row.quantity) || 1;
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<КоммерческаяИнформация xmlns="urn:1C.ru:commerceml_2" ВерсияСхемы="2.09" ДатаФормирования="${now}">
+  <Документ>
+    <Ид>TZ-${row.id}</Ид>
+    <Номер>${row.id}</Номер>
+    <Дата>${dateStr}</Дата>
+    <ХозОперация>Заказ товара</ХозОперация>
+    <Роль>Покупатель</Роль>
+    <Валюта>RUB</Валюта>
+    <Курс>1</Курс>
+    <Сумма>${price.toFixed(2)}</Сумма>
+    <Комментарий>${htmlEscape(row.description || '')}</Комментарий>
+    ${row.deadline ? `<СрокПоставки>${row.deadline}</СрокПоставки>` : ''}
+    <Контрагенты>
+      <Контрагент>
+        <Наименование>${htmlEscape(row.company)}</Наименование>
+        <Роль>Продавец</Роль>
+      </Контрагент>
+      <Контрагент>
+        <Наименование>${htmlEscape(row.customer)}</Наименование>
+        <Роль>Покупатель</Роль>
+      </Контрагент>
+    </Контрагенты>
+    <Товары>
+      <Товар>
+        <Ид>ITEM-${row.order_id}</Ид>
+        <Наименование>${htmlEscape(row.order_title)}</Наименование>
+        <Количество>${qty}</Количество>
+        <Цена>${(price / qty).toFixed(2)}</Цена>
+        <Сумма>${price.toFixed(2)}</Сумма>
+        <ЕдиницаИзмерения>шт</ЕдиницаИзмерения>
+        <СтавкаНДС>Без НДС</СтавкаНДС>
+      </Товар>
+    </Товары>
+  </Документ>
+</КоммерческаяИнформация>`;
+
+        res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="order-${row.id}.xml"`);
+        res.send(xml);
+    } catch (e) { next(e); }
 });
 
 // ===================== ЗАДАЧИ =====================
