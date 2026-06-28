@@ -29,6 +29,14 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     : null;
+const webpush = require('web-push');
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        process.env.VAPID_SUBJECT || 'mailto:noreply@texzakaz.ru',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+}
 
 function htmlEscape(str) {
     return String(str == null ? '' : str)
@@ -70,6 +78,29 @@ async function sendEmail(to, subject, html) {
     } catch (e) {
         console.error(`[Email] FAILED to ${to} | ${e.message}`, e);
         throw e;
+    }
+}
+
+async function sendPush(userId, title, body, url) {
+    if (!process.env.VAPID_PUBLIC_KEY) return;
+    try {
+        const { rows } = await pool.query(
+            'SELECT id, subscription FROM push_subscriptions WHERE user_id = $1',
+            [userId]
+        );
+        for (const row of rows) {
+            try {
+                await webpush.sendNotification(row.subscription, JSON.stringify({ title, body, url }));
+            } catch (e) {
+                if (e.statusCode === 410 || e.statusCode === 404) {
+                    await pool.query('DELETE FROM push_subscriptions WHERE id = $1', [row.id]);
+                } else {
+                    console.error('[push] send error:', e.message);
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[push] sendPush error:', e.message);
     }
 }
 
@@ -504,6 +535,34 @@ app.get('/api/health', async (req, res) => {
             error: 'database_unavailable',
         });
     }
+});
+
+// ===================== WEB PUSH =====================
+
+app.get('/api/push/vapid-key', (req, res) => {
+    if (!process.env.VAPID_PUBLIC_KEY) return res.status(503).json({ error: 'Push не настроен' });
+    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+app.post('/api/push/subscribe', requireAuth, async (req, res, next) => {
+    try {
+        const { subscription } = req.body;
+        if (!subscription?.endpoint) return res.status(400).json({ error: 'Неверный subscription объект' });
+        await pool.query(
+            `INSERT INTO push_subscriptions (user_id, subscription)
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [req.user.id, JSON.stringify(subscription)]
+        );
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/push/subscribe', requireAuth, async (req, res, next) => {
+    try {
+        await pool.query('DELETE FROM push_subscriptions WHERE user_id = $1', [req.user.id]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
 });
 
 // ===================== УМНЫЙ МАТЧИНГ =====================
