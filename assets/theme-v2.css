@@ -139,6 +139,7 @@ button { font-family: inherit; }
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .sidebar a .nav-icon { width: 17px; height: 17px; margin-right: 10px; flex-shrink: 0; }
+.sidebar a .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sidebar a:hover { color: var(--sidebar-text-active); background: var(--bg-secondary); }
 .sidebar a.active {
   color: var(--accent-cyan);
