@@ -887,6 +887,14 @@ async function addNotification(company, text) {
     }
 }
 
+async function getUserIdsByCompany(company) {
+    const { rows } = await pool.query(
+        'SELECT id FROM users WHERE company = $1',
+        [company]
+    );
+    return rows.map(r => r.id);
+}
+
 // ===================== TRANSACTION HELPER =====================
 
 async function withTransaction(fn) {
@@ -1219,6 +1227,10 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), requireVerified
                   <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
                 </div>`
             );
+            // Push: уведомить заказчика о новом КП
+            getUserIdsByCompany(orderRow.company).then(ids =>
+                ids.forEach(id => sendPush(id, 'Новое коммерческое предложение', `«${orderRow.title}» — получен новый отклик`, `${APP_URL}/index`))
+            ).catch(() => {});
         }
         res.status(201).json(newProposal);
     } catch (e) { next(e); }
@@ -1364,6 +1376,10 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
                 </div>`
             );
         }));
+        // Push: уведомить поставщика о принятом КП
+        getUserIdsByCompany(proposalRow.company).then(ids =>
+            ids.forEach(id => sendPush(id, 'КП принято!', `Ваше предложение по заявке «${orderRow.title}» принято`, `${APP_URL}/deals`))
+        ).catch(() => {});
         res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
     } catch (e) { next(e); }
 });
@@ -1390,6 +1406,10 @@ app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer
               <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
             </div>`
         );
+        // Push: уведомить поставщика об отклонённом КП
+        getUserIdsByCompany(proposalRow.company).then(ids =>
+            ids.forEach(id => sendPush(id, 'КП отклонено', `Предложение по заявке «${orderRow.title}» отклонено`, `${APP_URL}/proposals`))
+        ).catch(() => {});
         const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
         res.json(rowToProposal(updated));
     } catch (e) { next(e); }
@@ -2658,6 +2678,12 @@ app.post('/api/auth/register', async (req, res, next) => {
             [newUser.id, refreshToken]
         );
         await sendVerificationEmail(newUser);
+        // Push: уведомить команду о новом участнике
+        if (inviteData) {
+            getUserIdsByCompany(inviteData.company).then(ids =>
+                ids.forEach(id => sendPush(id, 'Новый участник команды', `${newUser.email} присоединился к вашей компании`, `${APP_URL}/settings`))
+            ).catch(() => {});
+        }
         setAuthCookies(res, accessToken, refreshToken);
         res.status(201).json({
             token: accessToken,
@@ -3437,6 +3463,11 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
                             <a href="https://texzakaz.ru/messages.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть переписку →</a>
                         </div>`);
                 }
+                // Push: уведомить получателя
+                const recipientIds = await getUserIdsByCompany(recipientCompany);
+                await Promise.all(recipientIds.map(id =>
+                    sendPush(id, 'Новое сообщение', `${req.user.company}: ${String(text).slice(0, 80)}`, `${APP_URL}/messages`)
+                ));
             } catch (e) { console.error('[email:chat]', e.message); }
         })();
 
@@ -3848,6 +3879,10 @@ app.post('/api/verification/:id/approve', requireAuth, requireRole('admin'), asy
                   <a href="${APP_URL}/company-profile.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть профиль</a>
                 </div>`
             );
+            // Push: верификация одобрена
+            getUserIdsByCompany(companyRow.company).then(ids =>
+                ids.forEach(id => sendPush(id, 'Верификация одобрена ✓', 'Ваша компания верифицирована платформой ТехЗаказ', `${APP_URL}/settings`))
+            ).catch(() => {});
         }
         res.json({ message: 'Компания верифицирована' });
     } catch (e) { next(e); }
@@ -3995,6 +4030,10 @@ async function sendDeadlineReminders() {
                  <p style="color:#666;font-size:13px;">Откликов на рассмотрении: ${count}. Сравните КП и выберите поставщика, пока закупка активна.</p>
                  <p style="margin-top:14px;"><a href="${APP_URL}/index.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
             );
+            const reminderIds = await getUserIdsByCompany(row.company);
+            await Promise.all(reminderIds.map(id =>
+                sendPush(id, 'Дедлайн через 3 дня', `Закупка «${plainTitle(row.title)}» закрывается через 3 дня`, `${APP_URL}/index`)
+            ));
             sent += 1;
         }
         if (sent) console.log(`[cron:deadline-reminders] sent ${sent} reminder(s)`);
