@@ -616,59 +616,9 @@ function toggleSidebar() {
 function initSidebarExtra() {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
-
-  sidebar.querySelectorAll('a').forEach(link => {
-    Array.from(link.childNodes).forEach(node => {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-        const span = document.createElement('span');
-        span.className = 'nav-label';
-        span.textContent = node.textContent;
-        link.replaceChild(span, node);
-      }
-    });
-  });
-
-  const oldBottom = sidebar.querySelector('.sidebar-bottom');
-  if (oldBottom) oldBottom.remove();
-
-  const spacer = document.createElement('div');
-  spacer.className = 'sidebar-spacer';
-  sidebar.appendChild(spacer);
-
-  const promo = document.createElement('div');
-  promo.className = 'sidebar-promo';
-  promo.innerHTML = `
-    <div class="sidebar-promo-img"></div>
-    <div class="sidebar-promo-text">Платформа прямых<br>закупок ТехЗаказ</div>
-    <a href="#" class="sidebar-promo-btn">Подробнее</a>`;
-  sidebar.appendChild(promo);
-
-  const support = document.createElement('div');
-  support.className = 'sidebar-support';
-  support.innerHTML = `
-    <div class="sidebar-support-head">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Нужна помощь?
-    </div>
-    <div class="sidebar-support-sub">Служба поддержки 24/7</div>
-    <div class="sidebar-support-phone">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.6a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.9 18z"/></svg>
-      8 800 555-27-27
-    </div>`;
-  sidebar.appendChild(support);
-
-  const colBtn = document.createElement('button');
-  colBtn.className = 'sidebar-collapse-btn';
-  colBtn.onclick = toggleSidebar;
-  colBtn.innerHTML = `
-    <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    <span class="sidebar-collapse-label">Свернуть меню</span>`;
-  sidebar.appendChild(colBtn);
-
   if (localStorage.getItem('sidebarCollapsed') === '1') {
     sidebar.classList.add('collapsed');
   }
-
   requestAnimationFrame(() => sidebar.classList.add('ready'));
 }
 
