@@ -380,6 +380,7 @@ app.get('/robots.txt', (req, res) => {
         'Allow: /\n' +
         'Allow: /landing.html\n' +
         'Allow: /map.html\n' +
+        'Allow: /zakupki.html\n' +
         'Disallow: /api/\n' +
         'Disallow: /admin.html\n' +
         'Disallow: /analytics.html\n' +
@@ -403,8 +404,9 @@ app.get('/sitemap.xml', (req, res) => {
     const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
     const today = new Date().toISOString().slice(0, 10);
     const pages = [
-        { url: '/',         priority: '1.0', changefreq: 'weekly' },
-        { url: '/map.html', priority: '0.7', changefreq: 'weekly' },
+        { url: '/',               priority: '1.0', changefreq: 'weekly' },
+        { url: '/zakupki.html',   priority: '0.9', changefreq: 'hourly' },
+        { url: '/map.html',       priority: '0.7', changefreq: 'weekly' },
     ];
     const urls = pages.map(p =>
         `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
@@ -780,6 +782,21 @@ async function enrichCompany(c, ownerCompany) {
 }
 
 // ===================== ORDERS =====================
+
+app.get('/api/orders/public', async (req, res, next) => {
+    try {
+        const category = req.query.category || '';
+        const params = [];
+        let where = "status = 'Активный'";
+        if (category) { params.push(category); where += ` AND category = $${params.length}`; }
+        const { rows } = await pool.query(
+            `SELECT id, title, category, deadline, quantity, responses, created_at
+             FROM orders WHERE ${where} ORDER BY created_at DESC LIMIT 30`,
+            params
+        );
+        res.json(rows);
+    } catch (e) { next(e); }
+});
 
 app.get('/api/orders', requireAuth, async (req, res, next) => {
     try {
