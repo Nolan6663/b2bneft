@@ -593,18 +593,18 @@ async function initSidebarBadges() {
    Sidebar extras — промо-виджет, блок поддержки, кнопка сворачивания
    --------------------------------------------------------------------- */
 function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  if (!sidebar) return;
-  const collapsed = sidebar.classList.toggle('collapsed');
-  localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+  const collapsed = document.documentElement.getAttribute('data-sidebar-collapsed') === '1';
+  if (collapsed) {
+    document.documentElement.removeAttribute('data-sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', '0');
+  } else {
+    document.documentElement.setAttribute('data-sidebar-collapsed', '1');
+    localStorage.setItem('sidebarCollapsed', '1');
+  }
 }
 
 function initSidebarExtra() {
-  const sidebar = document.querySelector('.sidebar');
-  if (!sidebar) return;
-  if (localStorage.getItem('sidebarCollapsed') === '1') {
-    sidebar.classList.add('collapsed');
-  }
+  // collapsed state is set via inline script in <head> — nothing to do here
 }
 
 /* ---------------------------------------------------------------------
