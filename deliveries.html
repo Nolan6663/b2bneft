@@ -124,14 +124,6 @@
             'Принят заказчиком':  'stage-done',
         };
 
-        const MOCK = [
-            { proposalId:3,  title:'Фланец стальной Ду100 Ру16',                counterparty:'АО «РегионСнаб»',    deliveryStage:'Готов к отгрузке', price:980000,  completionStatus:'active' },
-            { proposalId:4,  title:'Труба НКТ 73×5.5 ГОСТ 633',                 counterparty:'ООО «ПромМаш»',      deliveryStage:'Принят заказчиком',price:1340000, completionStatus:'completed' },
-            { proposalId:6,  title:'Запорная арматура DN50 PN40',                counterparty:'ООО «НефтеПромСнаб»',deliveryStage:'Отгружен',         price:560000,  completionStatus:'active' },
-            { proposalId:7,  title:'Кабель ВВГнг 4×16',                         counterparty:'АО «РегионСнаб»',    deliveryStage:'Принят заказчиком',price:320000,  completionStatus:'completed' },
-            { proposalId:8,  title:'Задвижка клиновая 30с941нж',                 counterparty:'ООО «АктивСнаб»',    deliveryStage:'Принят заказчиком',price:670000,  completionStatus:'completed' },
-            { proposalId:10, title:'Электродвигатель АИР 90L2 3кВт',            counterparty:'ООО «ТехноПром»',    deliveryStage:'В производстве',   price:245000,  completionStatus:'active' },
-        ];
 
         let allDeliveries = [];
 
@@ -189,21 +181,11 @@
                     allDeliveries = await r.json();
                     renderTable();
                     updateKPI();
-                } else if (shouldUseMockData()) {
-                    allDeliveries = MOCK;
-                    renderTable();
-                    updateKPI();
                 } else {
                     showDataLoadError('Не удалось загрузить доставки');
                 }
             } catch {
-                if (shouldUseMockData()) {
-                    allDeliveries = MOCK;
-                    renderTable();
-                    updateKPI();
-                } else {
-                    showDataLoadError('Не удалось загрузить доставки');
-                }
+                showDataLoadError('Не удалось загрузить доставки');
             }
         });
     </script>

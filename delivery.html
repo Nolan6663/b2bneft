@@ -307,22 +307,6 @@
     let dealData   = null;
     let eventsData = [];
 
-    const MOCK = {
-        deal: {
-            title: 'Компрессор воздушный ВП-50/8', category: 'Насосное оборудование',
-            price: 2450000, days: 30, quantity: 2,
-            producer_company: 'ООО «НефтеПромСнаб»',
-            customer_company: 'ООО «РН-Нефтепродукт»',
-            delivery_stage: 'Отгружен', tracking_number: 'RU987654321CN',
-            completion_status: 'active',
-        },
-        events: [
-            { stage: 'КП принят',        notes: 'КП принят заказчиком. Сумма: 2 450 000 ₽, срок: 30 дн.', updated_by: 'system',                created_at: '2026-06-01T10:23:00Z' },
-            { stage: 'В производстве',   notes: 'Начали изготовление. Плановая дата готовности — 18 июня.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-03T08:45:00Z' },
-            { stage: 'Готов к отгрузке', notes: 'Продукция прошла ОТК, упакована и готова к передаче перевозчику.', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-17T15:10:00Z' },
-            { stage: 'Отгружен',         notes: 'Передано транспортной компании «ПЭК». Трек: RU987654321CN', updated_by: 'ООО «НефтеПромСнаб»', created_at: '2026-06-18T09:30:00Z' },
-        ],
-    };
 
     async function load() {
         try {
@@ -332,13 +316,8 @@
             dealData   = d.deal;
             eventsData = d.events;
         } catch {
-            if (typeof shouldUseMockData === 'function' && shouldUseMockData()) {
-                dealData   = MOCK.deal;
-                eventsData = MOCK.events;
-            } else {
-                dealData   = null;
-                eventsData = [];
-            }
+            dealData   = null;
+            eventsData = [];
         }
         render();
     }

@@ -311,20 +311,6 @@
         let roleFilter   = 'all';
         let statusFilter = 'all';
 
-        const MOCK_PARTNERS = [
-            { id:1, company:'ООО «НефтеПромСнаб»',  inn:'5406123456', role:'producer', city:'Тюмень',       specialization:'Резинотехнические изделия (РТИ), МТР', status:'Верифицирован', rating:4.8, deals:124, years:15, tags:['РТИ','Металл','МТР'],        about:'Ведущий поставщик РТИ для нефтяной отрасли Западной Сибири.', phone:'+7 (3452) 55-01-23', email:'sales@neftpromsnab.ru' },
-            { id:2, company:'ООО «АктивСнаб»',        inn:'7701987654', role:'producer', city:'Екатеринбург', specialization:'Трубопроводная арматура, фланцы',         status:'Верифицирован', rating:4.6, deals:87,  years:10, tags:['Трубопровод','Металл'],     about:'Поставки трубопроводной арматуры и фланцевых соединений.', phone:'+7 (343) 220-45-67', email:'info@aktivsnab.ru' },
-            { id:3, company:'АО «РегионСнаб»',         inn:'6604551122', role:'producer', city:'Новосибирск',  specialization:'Прокат чёрных металлов, металлоконструкции', status:'Верифицирован', rating:4.7, deals:156, years:18, tags:['Металл','Прокат'],          about:'Металлопрокат и металлоконструкции для промышленных объектов.', phone:'+7 (383) 315-22-10', email:'zakaz@regionsnab.ru' },
-            { id:4, company:'ООО «ПромМаш»',            inn:'8602113344', role:'producer', city:'Пермь',         specialization:'Насосное и компрессорное оборудование',     status:'Верифицирован', rating:4.4, deals:63,  years:12, tags:['Насосы','Компрессоры'],    about:'Насосные агрегаты, компрессоры и вспомогательное оборудование.', phone:'+7 (342) 280-15-48', email:'prommash@mail.ru' },
-            { id:5, company:'ООО «ТехноПром»',          inn:'7451882244', role:'producer', city:'Уфа',           specialization:'Электрооборудование, кабельная продукция',  status:'Верифицирован', rating:4.5, deals:98,  years:14, tags:['Электро','Кабель'],        about:'Кабели, трансформаторы и электрощитовое оборудование.', phone:'+7 (347) 240-78-90', email:'sales@technoprom-ufa.ru' },
-            { id:6, company:'ПАО «Завод РТИ»',          inn:'7451002344', role:'producer', city:'Казань',        specialization:'Уплотнения, прокладки, шланги',             status:'Верифицирован', rating:4.9, deals:210, years:25, tags:['РТИ','Уплотнения'],        about:'Один из крупнейших заводов РТИ в России, ГОСТ-сертификаты.', phone:'+7 (843) 512-33-41', email:'order@zavodrty.ru' },
-            { id:7, company:'АО «ГазНефтьЗаказ»',       inn:'7701234567', role:'customer', city:'Москва',        specialization:'Закупки МТР для нефтегазовых объектов',     status:'Верифицирован', rating:4.3, deals:45,  years:8,  tags:['МТР','Закупки'],           about:'Централизованные закупки МТР для дочерних компаний ПАО.', phone:'+7 (495) 960-12-34', email:'tender@gnz.ru' },
-            { id:8, company:'ООО «СибОйл-Сервис»',      inn:'5402998877', role:'customer', city:'Сургут',        specialization:'Обслуживание нефтепромыслового оборудования', status:'Верифицирован', rating:4.1, deals:28,  years:6,  tags:['Сервис','МТР'],            about:'Сервисное обслуживание и ремонт оборудования на месторождениях.', phone:'+7 (3462) 44-15-70', email:'info@siboil.ru' },
-            { id:9, company:'ООО «МегаПоставка»',       inn:'5404671122', role:'producer', city:'Омск',          specialization:'Комплексная поставка МТР',                  status:'На проверке',    rating:3.9, deals:12,  years:3,  tags:['МТР','Логистика'],         about:'Молодая компания, специализирующаяся на комплексных поставках.', phone:'+7 (381) 555-00-12', email:'info@megapostavka.ru' },
-            { id:10, company:'АО «Металл-Сервис»',       inn:'6604551100', role:'producer', city:'Челябинск',    specialization:'Спецстальные изделия, поковки',             status:'Верифицирован', rating:4.2, deals:74,  years:11, tags:['Металл','Поковки'],         about:'Поковки и спецстальные изделия для нефтяного машиностроения.', phone:'+7 (351) 741-00-88', email:'sales@mets.ru' },
-            { id:11, company:'ООО «РН-Снабжение»',       inn:'8602880011', role:'customer', city:'Ханты-Мансийск', specialization:'Закупки для НПЗ и ГПЗ',                 status:'Верифицирован', rating:4.0, deals:34,  years:9,  tags:['НПЗ','МТР'],               about:'Обеспечение НПЗ и ГПЗ материально-техническими ресурсами.', phone:'+7 (3467) 39-55-22', email:'mtsnab@rnsnab.ru' },
-            { id:12, company:'ПК «УралПолимер»',         inn:'7451002000', role:'producer', city:'Пермь',         specialization:'Полимерные изделия, ПНД/ПВД трубы',        status:'На проверке',    rating:3.8, deals:7,   years:4,  tags:['Полимер','Трубы'],         about:'Производство полимерных труб и фасонных изделий для водовода.', phone:'+7 (342) 201-88-33', email:'uralpolymer@bk.ru' },
-        ];
 
         const RECENT_DEALS = {
             1: ['Манжета 60×90×10, 500 шт — 187 000 ₽','Уплотнение торцевое М56 — 45 000 ₽','Шланг напорный DN50 — 28 000 ₽'],
@@ -571,21 +557,17 @@
             const navProposals = document.getElementById('navProposals');
             if (navProposals) navProposals.style.display = userRole === 'customer' ? 'none' : '';
 
-            allCompanies = shouldUseMockData() ? MOCK_PARTNERS : [];
-            renderGrid(allCompanies);
-            updateCounts();
-
             try {
                 const r = await apiFetch(`${SERVER_URL}/companies`);
                 if (r.ok) {
                     allCompanies = await r.json();
                     renderGrid(allCompanies);
                     updateCounts();
-                } else if (!shouldUseMockData()) {
+                } else {
                     showDataLoadError('Не удалось загрузить контрагентов');
                 }
             } catch {
-                if (!shouldUseMockData()) showDataLoadError('Не удалось загрузить контрагентов');
+                showDataLoadError('Не удалось загрузить контрагентов');
             }
 
             initNotifications();

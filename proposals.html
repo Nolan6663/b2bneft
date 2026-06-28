@@ -177,29 +177,17 @@
             return { icon: '⏱', cls: 'waiting' };
         }
 
-        const MOCK_PROPOSALS = [
-            { id:1, orderTitle:'Компрессор воздушный ВП-50/8', customerCompany:'АО «ГазНефтьЗаказ»', price:2450000, days:21, status:'На рассмотрении', submittedAt:'2026-06-01', orderId:1 },
-            { id:2, orderTitle:'Манжета резиновая армированная 60×90×10', customerCompany:'ООО «РН-Снабжение»', price:187000, days:14, status:'Победитель', submittedAt:'2026-05-20', orderId:2 },
-            { id:3, orderTitle:'Фланец стальной Ду100 Ру16', customerCompany:'АО «ГазНефтьЗаказ»', price:980000, days:30, status:'Отклонено', submittedAt:'2026-04-10', orderId:3 },
-            { id:4, orderTitle:'Насос ЦНС 38-132 в сборе', customerCompany:'ООО «РН-Снабжение»', price:810000, days:60, status:'На рассмотрении', submittedAt:'2026-06-08', orderId:5 },
-            { id:5, orderTitle:'Запорная арматура DN50 PN40', customerCompany:'АО «ГазНефтьЗаказ»', price:560000, days:18, status:'Ожидает ответа', submittedAt:'2026-06-15', orderId:6 },
-        ];
-
         async function loadProposalsPage() {
-            let myProposals = shouldUseMockData() ? MOCK_PROPOSALS : [];
+            let myProposals = [];
             try {
                 const response = await apiFetch(`${SERVER_URL}/proposals`);
                 if (response.ok) {
                     myProposals = await response.json();
-                } else if (!shouldUseMockData()) {
+                } else {
                     showDataLoadError('Не удалось загрузить отклики');
-                    myProposals = [];
                 }
             } catch {
-                if (!shouldUseMockData()) {
-                    showDataLoadError('Не удалось загрузить отклики');
-                    myProposals = [];
-                }
+                showDataLoadError('Не удалось загрузить отклики');
             }
             window._myProposalsCache = myProposals;
 

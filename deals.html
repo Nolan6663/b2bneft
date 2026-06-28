@@ -423,18 +423,6 @@
         let selectedId = null;
         let currentDeal = null;
 
-        const MOCK_DEALS = [
-            { id:1,  num:'КО-2026-06-001', title:'Компрессор воздушный ВП-50/8',              category:'Насосное оборудование', status:'active',    supplier:'ООО «НефтеПромСнаб»', price:2450000, quantity:2,   unit:'шт', deadline:'2026-07-20', proposalCount:8,  coeff:87, description:'ГОСТ 12.2.016, давление 8 бар, производительность 50 м³/ч', proposals:[{num:1,supplier:'ООО «НефтеПромСнаб»',price:2450000,days:21},{num:2,supplier:'АО «РегионСнаб»',price:2610000,days:28}] },
-            { id:2,  num:'КО-2026-06-002', title:'Манжета резиновая армированная 60×90×10',   category:'РТИ',                   status:'active',    supplier:'ООО «АктивСнаб»',     price:187000,  quantity:500, unit:'шт', deadline:'2026-07-05', proposalCount:14, coeff:72, description:'ГОСТ 12.2.016, стойкость к нефти и нефтепродуктам', proposals:[{num:1,supplier:'ООО «АктивСнаб»',price:187000,days:14},{num:2,supplier:'ПАО «Завод РТИ»',price:174000,days:18}] },
-            { id:3,  num:'КО-2026-05-003', title:'Фланец стальной Ду100 Ру16',                category:'Металлоконструкции',    status:'inwork',    supplier:'АО «РегионСнаб»',     price:980000,  quantity:120, unit:'шт', deadline:'2026-07-15', proposalCount:6,  coeff:94, description:'Сталь 09Г2С, PN16, DN100', proposals:[{num:1,supplier:'АО «РегионСнаб»',price:980000,days:30}] },
-            { id:4,  num:'КО-2026-04-004', title:'Труба НКТ 73×5.5 ГОСТ 633',                category:'Трубопровод',           status:'completed', supplier:'ООО «ПромМаш»',       price:1340000, quantity:300, unit:'м',  deadline:'2026-05-30', proposalCount:9,  coeff:100, description:'Группа прочности Д, длина 10 м', proposals:[{num:1,supplier:'ООО «ПромМаш»',price:1340000,days:45}] },
-            { id:5,  num:'КО-2026-06-005', title:'Насос ЦНС 38-132 в сборе',                 category:'Насосное оборудование', status:'active',    supplier:'ООО «ТехноПром»',     price:810000,  quantity:1,   unit:'шт', deadline:'2026-07-25', proposalCount:3,  coeff:61, description:'Центробежный насос для перекачки нефти, Q=38 м³/ч, H=132 м', proposals:[{num:1,supplier:'ООО «ТехноПром»',price:810000,days:60},{num:2,supplier:'ООО «ПромМаш»',price:850000,days:45}] },
-            { id:6,  num:'КО-2026-06-006', title:'Запорная арматура DN50 PN40',               category:'Трубопровод',           status:'inwork',    supplier:'ООО «НефтеПромСнаб»', price:560000,  quantity:24,  unit:'шт', deadline:'2026-07-08', proposalCount:5,  coeff:78, description:'Нержавеющая сталь, задвижки клиновые ГОСТ 9698', proposals:[{num:1,supplier:'ООО «НефтеПромСнаб»',price:560000,days:18}] },
-            { id:7,  num:'КО-2026-03-007', title:'Кабель ВВГнг 4×16',                        category:'Электрооборудование',   status:'completed', supplier:'АО «РегионСнаб»',     price:320000,  quantity:1000,unit:'м',  deadline:'2026-04-20', proposalCount:11, coeff:100, description:'ГОСТ 16442, для стационарной прокладки', proposals:[{num:1,supplier:'АО «РегионСнаб»',price:320000,days:10}] },
-            { id:8,  num:'КО-2026-02-008', title:'Задвижка клиновая 30с941нж',                category:'Трубопровод',           status:'completed', supplier:'ООО «АктивСнаб»',     price:670000,  quantity:8,   unit:'шт', deadline:'2026-03-15', proposalCount:7,  coeff:96, description:'Сталь 20, Ду150 Ру40, ГОСТ 9698', proposals:[{num:1,supplier:'ООО «АктивСнаб»',price:670000,days:25}] },
-            { id:9,  num:'КО-2026-06-009', title:'Уплотнение торцевое М56',                   category:'РТИ',                   status:'active',    supplier:'—',                   price:0,       quantity:50,  unit:'шт', deadline:'2026-07-30', proposalCount:2,  coeff:38, description:'Стойкость к температуре до +150°C, рабочее давление 25 бар', proposals:[] },
-            { id:10, num:'КО-2026-05-010', title:'Электродвигатель АИР 90L2 3кВт',            category:'Электрооборудование',   status:'inwork',    supplier:'ООО «ТехноПром»',     price:245000,  quantity:4,   unit:'шт', deadline:'2026-07-01', proposalCount:6,  coeff:83, description:'Частота вращения 3000 об/мин, IP54, климатическое исполнение УХЛ', proposals:[{num:1,supplier:'ООО «ТехноПром»',price:245000,days:20}] },
-        ];
 
         const STATUS_MAP = {
             active:    { label:'Активный',      cls:'st-active' },
@@ -863,15 +851,8 @@
                     const data = await r.json();
                     allDeals = Array.isArray(data) ? data.map(mapDealFromApi) : [];
                     renderTable();
-                } else if (typeof shouldUseMockData === 'function' && shouldUseMockData()) {
-                    allDeals = MOCK_DEALS;
-                    renderTable();
                 }
             } catch {
-                if (typeof shouldUseMockData === 'function' && shouldUseMockData()) {
-                    allDeals = MOCK_DEALS;
-                    renderTable();
-                }
             }
 
             initNotifications();
