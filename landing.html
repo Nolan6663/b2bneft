@@ -162,7 +162,10 @@
     #lp-adv     { padding: 0 24px 52px !important; }
   }
   @media (max-width: 560px) {
-    #lp-header  { padding: 12px 16px !important; }
+    #lp-header  { padding: 12px 16px !important; align-items: flex-start !important; }
+    #lp-auth-btns { flex-direction: column !important; align-items: flex-end !important; gap: 6px !important; }
+    #lp-auth-btns a:first-child { font-size: 13px !important; }
+    #lp-auth-btns a:last-child  { font-size: 13px !important; padding: 8px 14px !important; }
     #lp-hero    { padding: 20px 16px 28px !important; }
     #lp-h1      { font-size: 30px !important; letter-spacing: -0.2px !important; line-height: 1.1 !important; }
     #lp-hero p  { font-size: 16px !important; }
@@ -214,13 +217,15 @@
         <a class="lp-nv" href="zakupki.html" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Закупки</a>
         <a class="lp-nv" href="dlya-postavshchikov.html" style="text-decoration:none; color:#2E4259; font-size:14px; font-weight:600;">Поставщикам</a>
         <div class="lp-nv" style="width:1px; height:26px; background:rgba(7,27,42,0.12);"></div>
-        <a href="login.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#071B2A; font-size:14px; font-weight:700;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
-          Войти
-        </a>
-        <a href="login.html#register" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#FF6A00; color:#fff; font-size:14px; font-weight:700; padding:13px 22px; border-radius:10px; box-shadow:0 6px 16px rgba(255,106,0,0.28);">Регистрация
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
+        <div id="lp-auth-btns" style="display:flex; align-items:center; gap:12px;">
+          <a href="login.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; color:#071B2A; font-size:14px; font-weight:700; white-space:nowrap;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+            Войти
+          </a>
+          <a href="login.html#register" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#FF6A00; color:#fff; font-size:14px; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 6px 16px rgba(255,106,0,0.28); white-space:nowrap;">Регистрация
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
       </nav>
     </header>
 
