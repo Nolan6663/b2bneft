@@ -545,36 +545,48 @@
                     <table style="width:100%; border-collapse:collapse; font-size:13.5px;">
                         <thead><tr style="color:var(--text-secondary); border-bottom:1px solid var(--card-border);">
                             <th style="text-align:left;padding:8px 0;font-weight:600;">Пользователь</th>
-                            <th style="text-align:left;padding:8px 0;font-weight:600;">Роль</th>
+                            <th style="text-align:left;padding:8px 0;font-weight:600;">Роль в команде</th>
                             <th style="text-align:left;padding:8px 0;font-weight:600;">Добавлен</th>
                             <th></th>
                         </tr></thead>
-                        <tbody>
-                            <tr style="border-bottom:1px solid var(--inner-border);">
-                                <td style="padding:12px 0;"><div style="font-weight:600;color:var(--text-primary);" id="heroName2">—</div><div style="font-size:12px;color:var(--text-secondary);" id="heroEmail2">—</div></td>
-                                <td style="padding:12px 0;"><span style="background:rgba(37,99,235,.1);color:var(--accent-blue);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">Администратор</span></td>
-                                <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">01.01.2025</td>
-                                <td></td>
-                            </tr>
-                            <tr style="border-bottom:1px solid var(--inner-border);">
-                                <td style="padding:12px 0;"><div style="font-weight:600;color:var(--text-primary);">Иванов И.И.</div><div style="font-size:12px;color:var(--text-secondary);">ivanov@company.ru</div></td>
-                                <td style="padding:12px 0;"><span style="background:rgba(16,185,129,.1);color:var(--accent-green);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">Менеджер</span></td>
-                                <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">15.03.2025</td>
-                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="showToast('Управление ролями доступно в Enterprise-тарифе', 'warn')">Изменить</button></td>
-                            </tr>
-                            <tr>
-                                <td style="padding:12px 0;"><div style="font-weight:600;color:var(--text-primary);">Петрова А.С.</div><div style="font-size:12px;color:var(--text-secondary);">petrova@company.ru</div></td>
-                                <td style="padding:12px 0;"><span style="background:rgba(251,191,36,.1);color:#b45309;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">Наблюдатель</span></td>
-                                <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">10.05.2025</td>
-                                <td style="text-align:right;"><button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;padding:4px 8px;" onclick="showToast('Управление ролями доступно в Enterprise-тарифе', 'warn')">Изменить</button></td>
-                            </tr>
+                        <tbody id="teamMembersList">
+                            <tr><td colspan="4" style="padding:20px 0;text-align:center;color:var(--text-secondary);font-size:13px;">Загрузка…</td></tr>
                         </tbody>
                     </table>
+                    <div id="teamPendingSection" style="display:none;margin-top:16px;">
+                        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Ожидают принятия</div>
+                        <div id="teamPendingList"></div>
+                    </div>
                     <div style="margin-top:16px;">
-                        <button class="btn-secondary" onclick="showToast('Приглашение доступно в тарифе Профессиональный и выше', 'warn')">
+                        <button class="btn-secondary" onclick="openInviteModal()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Пригласить сотрудника
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invite modal -->
+            <div id="inviteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+                <div style="background:var(--card-bg);border-radius:16px;padding:28px;width:400px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+                    <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px;">Пригласить сотрудника</div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Email сотрудника</label>
+                        <input id="inviteEmail" type="email" placeholder="colleague@company.ru"
+                            style="width:100%;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:20px;">
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">Роль в команде</label>
+                        <select id="inviteTeamRole" style="width:100%;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:14px;">
+                            <option value="admin">Администратор — полный доступ</option>
+                            <option value="member" selected>Менеджер — закупки и переписка</option>
+                            <option value="viewer">Наблюдатель — только просмотр</option>
+                        </select>
+                    </div>
+                    <div id="inviteResult" style="min-height:20px;font-size:13px;margin-bottom:12px;"></div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn-primary" onclick="submitInvite()" style="flex:1;">Отправить приглашение</button>
+                        <button class="btn-secondary" onclick="closeInviteModal()">Отмена</button>
                     </div>
                 </div>
             </div>
@@ -1288,6 +1300,118 @@
             }
         }
 
+        // ── Team management ─────────────────────────────────────────────────
+
+        const TEAM_ROLE_META = {
+            admin:  { label:'Администратор', color:'var(--accent-blue)',  bg:'rgba(37,99,235,.1)' },
+            member: { label:'Менеджер',       color:'var(--accent-green)', bg:'rgba(16,185,129,.1)' },
+            viewer: { label:'Наблюдатель',    color:'#b45309',             bg:'rgba(251,191,36,.1)' },
+        };
+
+        let _myUserId = null;
+
+        async function loadTeamMembers() {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/team/members`);
+                if (!r.ok) return;
+                const { members, pending } = await r.json();
+
+                // Identify current user to prevent self-removal
+                if (!_myUserId) {
+                    const me = await apiFetch(`${SERVER_URL}/auth/me`);
+                    if (me.ok) { const d = await me.json(); _myUserId = d.id; }
+                }
+
+                const tbody = document.getElementById('teamMembersList');
+                if (!tbody) return;
+                tbody.innerHTML = members.map((m, i) => {
+                    const rm = TEAM_ROLE_META[m.team_role] || TEAM_ROLE_META.admin;
+                    const dt = m.created_at ? new Date(m.created_at).toLocaleDateString('ru-RU') : '—';
+                    const isSelf = m.id === _myUserId;
+                    return `<tr style="border-bottom:1px solid var(--inner-border);">
+                        <td style="padding:12px 0;">
+                            <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(m.email)}</div>
+                        </td>
+                        <td style="padding:12px 0;">
+                            <span style="background:${rm.bg};color:${rm.color};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">${rm.label}</span>
+                        </td>
+                        <td style="padding:12px 0;color:var(--text-secondary);font-size:12.5px;">${dt}</td>
+                        <td style="text-align:right;">
+                            ${isSelf ? '' : `<button style="background:none;border:none;cursor:pointer;color:#e07070;font-size:12px;padding:4px 8px;" onclick="removeMember(${m.id})">Удалить</button>`}
+                        </td>
+                    </tr>`;
+                }).join('') || '<tr><td colspan="4" style="padding:16px 0;text-align:center;color:var(--text-secondary);">Нет сотрудников</td></tr>';
+
+                // Pending invites
+                const pendingSection = document.getElementById('teamPendingSection');
+                const pendingList    = document.getElementById('teamPendingList');
+                if (pending && pending.length) {
+                    pendingSection.style.display = '';
+                    pendingList.innerHTML = pending.map(inv => {
+                        const rm = TEAM_ROLE_META[inv.team_role] || TEAM_ROLE_META.member;
+                        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--inner-border);">
+                            <div>
+                                <span style="font-size:13px;color:var(--text-primary);">${escapeHtml(inv.email)}</span>
+                                <span style="margin-left:8px;background:${rm.bg};color:${rm.color};padding:1px 8px;border-radius:20px;font-size:11px;">${rm.label}</span>
+                            </div>
+                            <button style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:12px;" onclick="cancelInvite(${inv.id})">Отозвать</button>
+                        </div>`;
+                    }).join('');
+                } else {
+                    pendingSection.style.display = 'none';
+                }
+            } catch {}
+        }
+
+        async function removeMember(id) {
+            if (!confirm('Удалить пользователя из команды?')) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/team/members/${id}`, { method:'DELETE' });
+                const d = await r.json();
+                if (!r.ok) { showToast(d.error || 'Ошибка', 'error'); return; }
+                showToast('Пользователь удалён', 'success');
+                loadTeamMembers();
+            } catch { showToast('Ошибка сети', 'error'); }
+        }
+
+        async function cancelInvite(id) {
+            try {
+                await apiFetch(`${SERVER_URL}/team/invites/${id}`, { method:'DELETE' });
+                loadTeamMembers();
+            } catch {}
+        }
+
+        function openInviteModal() {
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('inviteResult').textContent = '';
+            document.getElementById('inviteModal').style.display = 'flex';
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').style.display = 'none';
+        }
+
+        async function submitInvite() {
+            const email     = document.getElementById('inviteEmail').value.trim();
+            const teamRole  = document.getElementById('inviteTeamRole').value;
+            const resultEl  = document.getElementById('inviteResult');
+            if (!email) { resultEl.style.color = '#e07070'; resultEl.textContent = 'Введите email'; return; }
+            resultEl.style.color = 'var(--text-secondary)';
+            resultEl.textContent = 'Отправляем…';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/team/invite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type':'application/json' },
+                    body: JSON.stringify({ email, teamRole }),
+                });
+                const d = await r.json();
+                if (!r.ok) { resultEl.style.color = '#e07070'; resultEl.textContent = d.error || 'Ошибка'; return; }
+                resultEl.style.color = 'var(--accent-green)';
+                resultEl.textContent = 'Приглашение отправлено!';
+                setTimeout(() => { closeInviteModal(); loadTeamMembers(); }, 1200);
+            } catch { resultEl.style.color = '#e07070'; resultEl.textContent = 'Ошибка сети'; }
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
@@ -1296,6 +1420,7 @@
 
             load2faStatus();
             loadIntegrations();
+            loadTeamMembers();
 
             let userEmail = '';
 

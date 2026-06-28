@@ -1771,6 +1771,86 @@ app.get('/api/messages/stats', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ===================== КОМАНДА / ПРИГЛАШЕНИЯ =====================
+
+app.get('/api/team/members', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: members } = await pool.query(
+            'SELECT id, email, team_role, created_at FROM users WHERE company=$1 ORDER BY created_at',
+            [req.user.company]
+        );
+        const { rows: pending } = await pool.query(
+            "SELECT id, email, team_role, created_at FROM invitations WHERE company=$1 AND accepted=false AND expires_at>NOW() ORDER BY created_at DESC",
+            [req.user.company]
+        );
+        res.json({ members, pending });
+    } catch (e) { next(e); }
+});
+
+app.post('/api/team/invite', requireAuth, async (req, res, next) => {
+    try {
+        const { email, teamRole = 'member' } = req.body;
+        if (!email) return res.status(400).json({ error: 'Укажите email' });
+        if (!['admin','member','viewer'].includes(teamRole)) return res.status(400).json({ error: 'Недопустимая роль' });
+
+        const { rows: [existing] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email)=LOWER($1)', [email]);
+        if (existing) return res.status(409).json({ error: 'Этот email уже зарегистрирован на платформе' });
+
+        const token = crypto.randomBytes(24).toString('hex');
+        await pool.query(
+            `INSERT INTO invitations (token,email,company,role,team_role,invited_by)
+             VALUES ($1,$2,$3,$4,$5,$6)
+             ON CONFLICT (token) DO NOTHING`,
+            [token, email.toLowerCase(), req.user.company, req.user.role, teamRole, req.user.email]
+        );
+
+        const appUrl = process.env.APP_URL || 'https://texzakaz.ru';
+        const inviteUrl = `${appUrl}/login.html?invite=${token}`;
+        const roleLabels = { admin:'Администратор', member:'Менеджер', viewer:'Наблюдатель' };
+        await sendEmail(email, `Приглашение в команду — ТехЗаказ`, `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+                <h2 style="color:#1E3A5F;margin:0 0 12px;">Вас пригласили в команду</h2>
+                <p style="color:#444;margin:0 0 8px;">Пользователь <strong>${req.user.email}</strong> приглашает вас присоединиться к компании</p>
+                <p style="font-size:18px;font-weight:700;color:#1E3A5F;margin:0 0 16px;">${req.user.company}</p>
+                <p style="color:#666;margin:0 0 20px;">Роль в команде: <strong>${roleLabels[teamRole] || teamRole}</strong></p>
+                <a href="${inviteUrl}" style="display:inline-block;background:#FF6A00;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Принять приглашение →</a>
+                <p style="color:#aaa;font-size:12px;margin-top:20px;">Ссылка действительна 7 дней. Если вы не ожидали этого письма — проигнорируйте его.</p>
+            </div>`);
+
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/team/members/:id', requireAuth, async (req, res, next) => {
+    try {
+        const targetId = Number(req.params.id);
+        if (targetId === req.user.id) return res.status(400).json({ error: 'Нельзя удалить самого себя' });
+        const { rows: [target] } = await pool.query('SELECT company FROM users WHERE id=$1', [targetId]);
+        if (!target || target.company !== req.user.company) return res.status(404).json({ error: 'Пользователь не найден' });
+        await pool.query('DELETE FROM users WHERE id=$1', [targetId]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/team/invites/:id', requireAuth, async (req, res, next) => {
+    try {
+        await pool.query('DELETE FROM invitations WHERE id=$1 AND company=$2', [req.params.id, req.user.company]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+// Public — called before login to prefill registration form
+app.get('/api/invitations/:token', async (req, res, next) => {
+    try {
+        const { rows: [inv] } = await pool.query(
+            "SELECT email, company, role, team_role FROM invitations WHERE token=$1 AND accepted=false AND expires_at>NOW()",
+            [req.params.token]
+        );
+        if (!inv) return res.status(404).json({ error: 'Приглашение недействительно или истекло' });
+        res.json(inv);
+    } catch (e) { next(e); }
+});
+
 // ===================== ИЗБРАННЫЕ =====================
 
 app.get('/api/favorites', requireAuth, async (req, res, next) => {
@@ -1818,17 +1898,35 @@ app.post('/api/auth/register', async (req, res, next) => {
         const { rows: [taken] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)', [email]);
         if (taken) return res.status(409).json({ error: 'Пользователь с таким email уже зарегистрирован' });
 
+        // Validate invite token if provided
+        let inviteData = null;
+        if (req.body.inviteToken) {
+            const { rows: [inv] } = await pool.query(
+                "SELECT * FROM invitations WHERE token=$1 AND LOWER(email)=LOWER($2) AND accepted=false AND expires_at>NOW()",
+                [req.body.inviteToken, email]
+            );
+            if (!inv) return res.status(400).json({ error: 'Приглашение недействительно или истекло' });
+            inviteData = inv;
+        }
+
+        const resolvedCompany = inviteData ? inviteData.company : company;
+        const resolvedRole    = inviteData ? inviteData.role    : role;
+        const resolvedTeamRole = inviteData ? (inviteData.team_role || 'member') : 'admin';
+
         const newUser = await withTransaction(async (client) => {
             const { rows: [u] } = await client.query(
-                'INSERT INTO users (email,password,role,company,inn) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-                [email, hashPassword(password), role, company, inn || '']
+                'INSERT INTO users (email,password,role,company,inn,team_role) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+                [email, hashPassword(password), resolvedRole, resolvedCompany, inn || '', resolvedTeamRole]
             );
-            const { rows: [compExists] } = await client.query('SELECT 1 FROM companies WHERE company = $1 AND role = $2', [company, role]);
+            const { rows: [compExists] } = await client.query('SELECT 1 FROM companies WHERE company = $1 AND role = $2', [resolvedCompany, resolvedRole]);
             if (!compExists) {
                 await client.query(
                     "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,$2,$3,$4,$5)",
-                    [company, inn || '', role, '', 'На проверке']
+                    [resolvedCompany, inn || '', resolvedRole, '', 'На проверке']
                 );
+            }
+            if (inviteData) {
+                await client.query('UPDATE invitations SET accepted=true WHERE id=$1', [inviteData.id]);
             }
             return u;
         });
@@ -1843,8 +1941,8 @@ app.post('/api/auth/register', async (req, res, next) => {
         res.status(201).json({
             token: accessToken,
             refreshToken,
-            role,
-            company,
+            role: resolvedRole,
+            company: resolvedCompany,
             emailVerified: false,
             message: 'Аккаунт создан. Подтвердите email — письмо отправлено на вашу почту.',
         });
@@ -2597,6 +2695,29 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
         );
         const msg = rowToMessage(newRow);
         if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);
+
+        // Email notification to recipient
+        (async () => {
+            try {
+                const recipientCompany = req.user.role === 'customer' ? threadCompany : order.company;
+                const { rows: [orderRow] } = await pool.query('SELECT title FROM orders WHERE id = $1', [oid]);
+                const orderTitle = orderRow?.title || 'Заявка';
+                const { rows: recips } = await pool.query(
+                    'SELECT email FROM users WHERE company = $1 LIMIT 3', [recipientCompany]
+                );
+                const preview = String(text).slice(0, 200) + (text.length > 200 ? '…' : '');
+                for (const r of recips) {
+                    await sendEmail(r.email, `Новое сообщение по заявке «${orderTitle}» — ТехЗаказ`, `
+                        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+                            <h3 style="color:#1E3A5F;margin:0 0 12px;">Новое сообщение</h3>
+                            <p style="color:#444;margin:0 0 12px;">Компания <strong>${req.user.company}</strong> написала по заявке <strong>«${orderTitle}»</strong>:</p>
+                            <blockquote style="border-left:3px solid #FF6A00;margin:0 0 16px;padding:10px 16px;background:#FFF4EC;border-radius:0 6px 6px 0;color:#333;">${preview}</blockquote>
+                            <a href="https://texzakaz.ru/messages.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть переписку →</a>
+                        </div>`);
+                }
+            } catch {}
+        })();
+
         res.status(201).json(msg);
     } catch (e) { next(e); }
 });

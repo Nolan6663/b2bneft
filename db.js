@@ -187,6 +187,18 @@ async function initDb() {
             created_by TEXT        NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS invitations (
+            id         SERIAL      PRIMARY KEY,
+            token      TEXT        NOT NULL UNIQUE,
+            email      TEXT        NOT NULL,
+            company    TEXT        NOT NULL,
+            role       TEXT        NOT NULL,
+            team_role  TEXT        NOT NULL DEFAULT 'member',
+            invited_by TEXT        NOT NULL,
+            accepted   BOOLEAN     NOT NULL DEFAULT false,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days'
+        );
     `);
 
     await pool.query(`
@@ -199,6 +211,7 @@ async function initDb() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS team_role TEXT NOT NULL DEFAULT 'admin';
     `);
 
     await pool.query(`

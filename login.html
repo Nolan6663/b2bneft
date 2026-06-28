@@ -625,7 +625,7 @@ async function handleRegister() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, company, role }),
+      body: JSON.stringify({ email, password, company, role, inviteToken: _pendingInviteToken || undefined }),
     });
     const data = await res.json();
     if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
@@ -660,6 +660,42 @@ document.addEventListener('keydown', e => {
 })();
 
 if (location.hash === '#register') switchTab('register');
+
+// Invite token flow
+let _pendingInviteToken = null;
+(async function () {
+  const p = new URLSearchParams(location.search);
+  const inviteToken = p.get('invite');
+  if (!inviteToken) return;
+  try {
+    const res = await fetch(`${SERVER_URL}/invitations/${inviteToken}`);
+    if (!res.ok) { showError('Приглашение недействительно или истекло'); return; }
+    const inv = await res.json();
+    _pendingInviteToken = inviteToken;
+    switchTab('register');
+    // Pre-fill and lock company
+    const compInput = document.querySelector('#form-register input[autocomplete="organization"]');
+    if (compInput) { compInput.value = inv.company; compInput.readOnly = true; compInput.style.opacity = '.7'; }
+    // Pre-fill email
+    const emailInput = document.querySelector('#form-register input[type="email"]');
+    if (emailInput) { emailInput.value = inv.email; emailInput.readOnly = true; emailInput.style.opacity = '.7'; }
+    // Select role
+    const roleLabel = inv.role === 'producer' ? 'Производитель' : 'Заказчик';
+    document.querySelectorAll('#form-register .role-btn').forEach(btn => {
+      const matches = btn.querySelector('.role-name')?.textContent.trim() === roleLabel;
+      btn.classList.toggle('selected', matches);
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = matches ? '1' : '.5';
+    });
+    // Show banner
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#FFF4EC;border:1px solid #FF6A00;border-radius:8px;padding:10px 14px;font-size:13px;color:#FF6A00;margin-bottom:12px;';
+    banner.textContent = `Вы регистрируетесь как сотрудник компании «${inv.company}»`;
+    const form = document.getElementById('form-register');
+    form.insertBefore(banner, form.firstChild);
+    history.replaceState({}, '', location.pathname);
+  } catch { showError('Ошибка при загрузке приглашения'); }
+})();
 
 (async function () {
   const p = new URLSearchParams(location.search);
