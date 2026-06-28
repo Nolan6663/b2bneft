@@ -3513,7 +3513,7 @@ app.put('/api/auth/password', requireAuth, async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
         if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Заполните все поля' });
-        if (newPassword.length < 6) return res.status(400).json({ error: 'Новый пароль — минимум 6 символов' });
+        if (newPassword.length < 8) return res.status(400).json({ error: 'Пароль — минимум 8 символов' });
 
         const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
         if (!verifyPassword(currentPassword, user.password)) return res.status(400).json({ error: 'Неверный текущий пароль' });
