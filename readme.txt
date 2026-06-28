@@ -12,9 +12,10 @@
 
 Домен: texzakaz.ru
 Репозиторий: github.com/Nolan6663/b2bneft
-Деплой: VPS, автодеплой через GitHub Actions (push → SSH → pm2 restart)
+Деплой (production): VPS, автодеплой через GitHub Actions (push → SSH → pm2 restart)
 Сервер: /var/www/neft/
 PM2 процесс: neft
+Альтернатива: render.yaml (Render.com) — legacy/тестовый стенд, не основной prod
 
 
 СТЕК ТЕХНОЛОГИЙ
@@ -30,6 +31,7 @@ Backend:
   - Speakeasy + QRCode (TOTP 2FA)
   - node-cron (email дайджест для поставщиков)
   - ExcelJS (экспорт .xlsx)
+  - googleapis (Google Search Console — SEO sync)
   - @sentry/node (мониторинг ошибок)
   - @google/generative-ai (Gemini — AI поиск поставщиков, пока не работает)
 
@@ -41,9 +43,15 @@ Frontend:
   - Yandex Maps API (карта поставщиков)
 
 CI/CD:
-  - GitHub Actions (.github/workflows/deploy.yml)
+  - GitHub Actions (.github/workflows/deploy.yml) — основной prod (VPS)
   - SSH deploy через appleboy/ssh-action
   - Секреты: VPS_HOST, VPS_USER, VPS_KEY
+  - render.yaml — опциональный деплой на Render (health: GET /api/health)
+
+Тесты:
+  - npm test / npm run check — статические проверки (scripts/static-checks.js)
+  - npm run smoke:api — smoke API
+  - npm run test:e2e — Playwright (tests/e2e/)
 
 
 СТРУКТУРА ФАЙЛОВ
@@ -53,13 +61,17 @@ db.js              — инициализация БД, CREATE TABLE, ALTER TABL
 storage.js         — абстракция хранения файлов (локально / S3)
 package.json       — зависимости
 ecosystem.config.js — конфиг PM2
-.env               — переменные окружения (не в git)
-.env.example       — шаблон переменных
+.env               — переменные окружения (не в git; шаблон — раздел ниже)
 
 assets/
   app.js           — общий JS для всех страниц (apiFetch, escapeHtml,
                      showToast, initNotifications, shouldUseMockData и др.)
-  style.css        — глобальные стили
+  theme-v2.css     — глобальные стили (тёмная/светлая тема)
+  theme.css, zakupki-cat.css, fonts.css, ui-animations.js
+
+seo/               — GSC, Yandex Webmaster, SEO-аудит, интенты (auditor.js, gsc.js…)
+scripts/           — static-checks.js, mvp-api-smoke.js
+tests/e2e/         — Playwright e2e
 
 Страницы (HTML):
   index.html           — личный кабинет заказчика (закупки, КП, чат)
@@ -81,7 +93,8 @@ assets/
   partners.html        — партнёры платформы
   landing.html         — лендинг
   dlya-postavshchikov.html — лендинг для поставщиков
-  admin.html           — панель администратора
+  admin.html           — панель администратора (верификация, SEO)
+  tariff.html          — страница тарифов (UI; оплата не подключена)
   404.html             — страница ошибки
 
 
@@ -147,13 +160,23 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 JWT_SECRET=длинная_случайная_строка
 APP_URL=https://texzakaz.ru
 
-# Email (Resend или SMTP)
-RESEND_API_KEY=
+# Email (SMTP через Nodemailer; без SMTP_* письма не отправляются)
 SMTP_HOST=
-SMTP_PORT=
+SMTP_PORT=465
 SMTP_USER=
 SMTP_PASS=
 EMAIL_FROM=noreply@texzakaz.ru
+
+# Яндекс OAuth (вход через Яндекс ID)
+YANDEX_CLIENT_ID=
+YANDEX_CLIENT_SECRET=
+YANDEX_REDIRECT_URI=https://texzakaz.ru/api/auth/yandex/callback
+
+# CORS (доп. origin через запятую, кроме APP_URL)
+CORS_ORIGIN=
+
+# Геокодирование компаний при старте сервера (true/false)
+GEOCODE_ON_START=false
 
 # Файлы (Cloudflare R2 / S3)
 S3_BUCKET=
@@ -189,13 +212,16 @@ ADMIN_PASSWORD=
 
 КЛЮЧЕВЫЕ API ЭНДПОИНТЫ
 -----------------------
+Служебные:
+  GET  /api/health               — healthcheck (БД, storage: s3|local)
+
 Auth:
   POST /api/auth/register        — регистрация (поддерживает inviteToken)
   POST /api/auth/login           — вход (поддерживает TOTP)
   POST /api/auth/logout
   POST /api/auth/refresh
-  GET  /api/auth/me              — текущий пользователь (email, role, totpEnabled,
-                                   digest_frequency, id)
+  GET  /api/auth/me              — текущий пользователь (email, role, emailVerified,
+                                   totpEnabled, digest_frequency, id)
   POST /api/auth/2fa/setup       — генерация QR для 2FA
   POST /api/auth/2fa/confirm     — активация 2FA
   POST /api/auth/2fa/disable
@@ -203,41 +229,69 @@ Auth:
   POST /api/auth/forgot-password
   POST /api/auth/reset-password
   POST /api/auth/verify-email
+  POST /api/auth/resend-verification
+  PUT  /api/auth/password        — смена пароля
+  PUT  /api/auth/email           — смена email (сбрасывает email_verified)
+  GET  /api/auth/yandex          — редирект на Яндекс OAuth
+  GET  /api/auth/yandex/callback — callback OAuth
 
 Закупки (Orders):
   GET    /api/orders             — список заявок компании
-  POST   /api/orders             — создать заявку (multipart, поддерживает чертёж)
-  PUT    /api/orders/:id         — редактировать
-  DELETE /api/orders/:id
+  GET    /api/orders/public      — публичный реестр (без auth)
+  GET    /api/orders/match-scores — match-score для поставщика
+  GET    /api/orders/:orderId/drawing — скачать чертёж (с проверкой доступа)
+  POST   /api/orders             — создать заявку (multipart, чертёж; нужен verified email)
+  PUT    /api/orders/:orderId    — редактировать
+  POST   /api/orders/:orderId/cancel — отменить заявку
 
 Предложения (Proposals / КП):
-  GET  /api/proposals/:orderId   — КП по заявке
-  POST /api/proposals            — подать КП (multipart, файл КП)
-  POST /api/proposals/:id/accept — принять КП (закрывает тендер, тригерит интеграции)
-  GET  /api/proposals/:id/file   — скачать файл КП
+  GET  /api/proposals            — список КП (по роли)
+  GET  /api/order-proposals/:orderId — КП по заявке
+  POST /api/proposals            — подать КП (multipart; нужен verified email)
+  POST /api/proposals/:proposalId/accept — принять КП (тригерит интеграции)
+  POST /api/proposals/:proposalId/reject — отклонить КП
+  PUT  /api/proposals/:proposalId — редактировать КП (поставщик)
+  DELETE /api/proposals/:proposalId — удалить КП (поставщик)
+  GET  /api/proposals/:proposalId/file — скачать файл КП
 
 Сообщения:
+  GET  /api/messages/conversations
   GET  /api/messages/:orderId/:company
   POST /api/messages             — отправить (+ email уведомление получателю)
   POST /api/messages/:orderId/:company/read
   GET  /api/messages/stats       — KPI (unread, total, replies today, avg response)
+  GET  /api/conversation-context/:orderId/:company — контекст чата
+
+Задачи по сделке:
+  GET   /api/tasks
+  POST  /api/tasks
+  PATCH /api/tasks/:id
 
 Сделки и поставки:
   GET  /api/deals                — список сделок
-  GET  /api/delivery/:proposalId — этапы поставки
-  POST /api/delivery/:proposalId — обновить этап
+  PUT  /api/deals/:proposalId/complete — завершить сделку
+  GET  /api/deals/:proposalId/delivery — этапы поставки
+  POST /api/deals/:proposalId/delivery/stage — обновить этап
 
 Компании:
   GET  /api/companies            — каталог поставщиков (фильтры)
   GET  /api/companies/:id        — профиль компании
   PUT  /api/companies/:id        — обновить профиль
   POST /api/companies/:id/photos — загрузить фото
+  DELETE /api/companies/:id/photos/:photoId
   GET  /api/top-suppliers        — топ поставщиков для виджета
+  GET  /api/catalog              — каталог (auth)
+  GET  /api/map                  — точки на карте
+  GET  /api/capacity             — мощности
+  GET  /api/config/maps          — ключ карт для фронта
+  GET  /api/dashboard/counts     — счётчики для дашборда
+  GET  /api/public/stats         — публичная статистика
+  GET  /api/producer/crm-stats   — CRM-статистика поставщика
 
 Отзывы:
   POST /api/reviews                          — оставить отзыв (только после сделки)
   GET  /api/reviews/company/:name            — отзывы о компании
-  GET  /api/reviews/check/:orderId/:company  — проверить, есть ли уже отзыв
+  GET  /api/reviews/check/:orderId/:toCompany — проверить, есть ли уже отзыв
 
 Шаблоны закупок:
   GET    /api/templates
@@ -264,25 +318,35 @@ Auth:
 
 Аналитика:
   GET /api/customer/analytics    — KPI, динамика, категории, топ поставщики
-  GET /api/messages/stats        — статистика переписок
 
 AI:
   POST /api/ai-search            — поиск поставщиков через Gemini
 
 Уведомления:
-  GET  /api/notifications/:company
-  POST /api/notifications/:company/read
+  GET    /api/notifications/:company
+  POST   /api/notifications/:company/read
+  DELETE /api/notifications/:company
 
 Избранное:
   GET    /api/favorites
   POST   /api/favorites
-  DELETE /api/favorites/:id
+  DELETE /api/favorites/:companyId
 
-Администрирование:
-  GET  /api/admin/users
-  GET  /api/admin/companies
-  POST /api/admin/companies/:id/verify
-  GET  /api/admin/stats
+Верификация компаний (admin.html):
+  POST /api/verification/request   — подать заявку (поставщик)
+  GET  /api/verification/status
+  GET  /api/verification/requests  — очередь (admin)
+  POST /api/verification/:id/approve
+  POST /api/verification/:id/reject
+
+SEO (admin.html):
+  GET  /api/seo/data
+  POST /api/seo/audit
+  POST /api/seo/sync
+
+Файлы:
+  GET /api/company-photos/:filename — фото компании (S3 или local)
+  GET /uploads/:filename            — legacy uploads (auth)
 
 
 ЧТО РЕАЛИЗОВАНО
@@ -350,7 +414,7 @@ AI:
       SAP Business One (Service Layer REST), SAP S/4HANA (OData REST)
   [x] Все интеграции тригерятся при принятии КП (non-blocking)
 
-Email уведомления (все через Nodemailer / Resend):
+Email уведомления (SMTP через Nodemailer):
   [x] Подтверждение email при регистрации
   [x] Новый отклик (КП) на заявку заказчика
   [x] КП принято / отклонено (поставщику)
@@ -380,7 +444,7 @@ SEO:
   [ ] Сравнение КП в одной таблице (side-by-side)
   [ ] Проверка риска поставщика (ЕГРЮЛ, арбитраж — открытые данные)
   [ ] Онлайн-тендер с обратным аукционом (reverse auction)
-  [ ] Тарифы / оплата (сознательно отложены — первые клиенты бесплатно)
+  [ ] Тарифы / оплата (страница tariff.html есть; биллинг не подключён)
   [ ] Мобильное приложение (долгосрочно)
   [ ] Web Push уведомления (UI-заглушка есть, логика не реализована)
 
@@ -394,11 +458,15 @@ SEO:
   - shouldUseMockData() = true на localhost → часть данных моковая в dev
     (намеренное поведение, в production моки не показываются).
 
+  - Пакет resend в package.json не используется — email только через SMTP.
+
 
 ВАЖНЫЕ УТИЛИТЫ (assets/app.js)
 -------------------------------
   SERVER_URL           — базовый URL API (автоопределяется по хосту)
-  apiFetch(url, opts)  — fetch с JWT токеном и авторефрешем
+  apiFetch(url, opts)  — fetch с credentials: include и авторефрешем сессии
+  hasSession()         — есть ли активная сессия (httpOnly cookies)
+  applyAuthSession()   — сохранить userRole/company после login
   escapeHtml(str)      — XSS защита
   showToast(msg, type) — уведомления (success / error / warn)
   shouldUseMockData()  — true только на localhost / file:
@@ -413,7 +481,7 @@ SEO:
   2. git pull origin main
   3. npm install --production
   4. pm2 stop neft && pm2 delete neft
-  5. env $(cat .env) pm2 start ecosystem.config.js
+  5. env $(cat .env | grep -v '^#' | xargs) pm2 start ecosystem.config.js
 
 Ручной деплой:
   ssh root@VPS_IP
@@ -423,4 +491,6 @@ SEO:
 Обновить переменную окружения:
   nano /var/www/neft/.env   (добавить/изменить строку KEY=value)
   pm2 restart all
+================================================================================
+Обновлено: 23.06.2026 — сверка с кодом (API paths, env, deploy, структура файлов)
 ================================================================================
