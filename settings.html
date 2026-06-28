@@ -709,10 +709,13 @@
                         <div><div class="settings-card-title">Push-уведомления</div><div class="settings-card-subtitle">Уведомления в браузере</div></div>
                     </div>
                     <div class="settings-card-body">
-                        <div style="display:flex;align-items:center;gap:14px;justify-content:space-between;">
-                            <div><div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Разрешить push-уведомления</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Мгновенные оповещения даже когда сайт закрыт</div></div>
-                            <button class="btn-settings-save" onclick="requestPushPermission()">Разрешить</button>
-                        </div>
+                        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+                            Получайте уведомления о новых КП, сообщениях и сделках прямо в браузере.
+                        </p>
+                        <button id="pushToggleBtn" class="btn-settings-save" onclick="handlePushToggle()">
+                            Проверка...
+                        </button>
+                        <p id="pushStatusText" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
                     </div>
                 </div>
             </div>
@@ -1544,6 +1547,7 @@
 
             initNotifications();
             initSidebarBadges();
+            initPushUI();
 
             if (userRole === 'producer') {
                 document.getElementById('capacityCard').style.display = '';
@@ -1641,6 +1645,54 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        // ── Push-уведомления ────────────────────────────────────────────────
+
+        async function initPushUI() {
+            const btn = document.getElementById('pushToggleBtn');
+            const status = document.getElementById('pushStatusText');
+            if (!btn) return;
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                btn.textContent = 'Push не поддерживается браузером';
+                btn.disabled = true;
+                return;
+            }
+            const sub = await getPushSubscription();
+            if (sub) {
+                btn.textContent = 'Отключить Push-уведомления';
+                status.textContent = 'Уведомления включены';
+            } else {
+                btn.textContent = 'Включить Push-уведомления';
+                status.textContent = '';
+            }
+        }
+
+        async function handlePushToggle() {
+            const btn = document.getElementById('pushToggleBtn');
+            const status = document.getElementById('pushStatusText');
+            btn.disabled = true;
+            try {
+                const sub = await getPushSubscription();
+                if (sub) {
+                    await unsubscribeFromPush();
+                    btn.textContent = 'Включить Push-уведомления';
+                    status.textContent = 'Уведомления отключены';
+                } else {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        status.textContent = 'Разрешите уведомления в браузере';
+                        btn.disabled = false;
+                        return;
+                    }
+                    await subscribeToPush();
+                    btn.textContent = 'Отключить Push-уведомления';
+                    status.textContent = 'Уведомления включены';
+                }
+            } catch (e) {
+                status.textContent = 'Ошибка: ' + e.message;
+            }
+            btn.disabled = false;
         }
 
         // ===================== МОЩНОСТИ =====================

@@ -82,6 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initNotifications();
     initSidebarBadges();
   }
+  if (hasSession() && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/assets/sw.js').catch(e =>
+      console.warn('[SW] registration failed:', e.message)
+    );
+  }
 });
 
 /* ---------------------------------------------------------------------
@@ -922,4 +927,41 @@ function renderPriceBenchmark(b) {
   if (!cached) return;
   try { _applyBadgeCounts(JSON.parse(cached), localStorage.getItem('userRole')); } catch (_) {}
 })();
+
+/* ---------------------------------------------------------
+   Web Push подписка
+--------------------------------------------------------- */
+async function getPushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+async function subscribeToPush() {
+  const reg = await navigator.serviceWorker.ready;
+  const { publicKey } = await apiFetch(`${SERVER_URL}/push/vapid-key`).then(r => r.json());
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+  await apiFetch(`${SERVER_URL}/push/subscribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscription: sub.toJSON() }),
+  });
+  return sub;
+}
+
+async function unsubscribeFromPush() {
+  const sub = await getPushSubscription();
+  if (sub) await sub.unsubscribe();
+  await apiFetch(`${SERVER_URL}/push/subscribe`, { method: 'DELETE' });
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
 
