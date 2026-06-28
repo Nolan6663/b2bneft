@@ -383,7 +383,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets'), {
         } else if (/\.(png|jpg|jpeg|webp|gif|svg|ico)$/.test(filePath)) {
             res.setHeader('Cache-Control', 'public, max-age=604800');
         } else if (/\.(css|js)$/.test(filePath)) {
-            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            res.setHeader('Cache-Control', 'no-cache');
         }
     }
 }));
