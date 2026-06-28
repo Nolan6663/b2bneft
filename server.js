@@ -284,12 +284,9 @@ if (io) {
         socket.on('join-company', (company) => {
             if (company && company === socket.user.company) socket.join(company);
         });
-        socket.on('join-auction', (auctionId) => {
-            if (auctionId) socket.join(`auction:${auctionId}`);
-        });
-        socket.on('leave-auction', (auctionId) => {
-            if (auctionId) socket.leave(`auction:${auctionId}`);
-        });
+        // TODO: проверить доступ к аукциону когда auctions будут реализованы
+        socket.on('join-auction', () => {});
+        socket.on('leave-auction', () => {});
         socket.on('join-chat', async ({ orderId, company }, ack) => {
             try {
                 if (orderId == null || !company) return;
