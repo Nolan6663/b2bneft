@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('[SW] registration failed:', e.message)
     );
   }
+  initSpaRouter();
 });
 
 /* ---------------------------------------------------------------------
@@ -963,5 +964,92 @@ function urlBase64ToUint8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const raw = atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+/* ---------------------------------------------------------
+   SPA-роутер: подменяет только #spa-content при навигации,
+   сайдбар остаётся нетронутым.
+--------------------------------------------------------- */
+const SPA_EXCLUDE = ['/login', '/login.html', '/landing', '/landing.html'];
+
+function isSpaUrl(url) {
+  try {
+    const u = new URL(url, location.origin);
+    if (u.origin !== location.origin) return false;
+    if (SPA_EXCLUDE.some(p => u.pathname === p || u.pathname === p.replace('.html', ''))) return false;
+    if (/\/(api|uploads|assets)\//.test(u.pathname)) return false;
+    return true;
+  } catch { return false; }
+}
+
+async function spaNavigate(url) {
+  const target = new URL(url, location.origin);
+
+  if (typeof window.__pageCleanup === 'function') {
+    try { window.__pageCleanup(); } catch {}
+    window.__pageCleanup = null;
+  }
+  window.__pageInit = null;
+
+  let html;
+  try {
+    const res = await fetch(target.href, { credentials: 'include' });
+    if (!res.ok) { location.href = url; return; }
+    html = await res.text();
+  } catch {
+    location.href = url;
+    return;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const newContent = doc.getElementById('spa-content');
+  const currentContent = document.getElementById('spa-content');
+  if (!newContent || !currentContent) {
+    location.href = url;
+    return;
+  }
+
+  currentContent.innerHTML = newContent.innerHTML;
+  document.title = doc.title || document.title;
+  history.pushState({ spaUrl: url }, '', target.pathname + target.search);
+
+  document.querySelectorAll('.sidebar a, aside a').forEach(a => {
+    a.classList.toggle('active', a.pathname === target.pathname);
+  });
+
+  const scripts = doc.querySelectorAll('script:not([src])');
+  for (const script of scripts) {
+    const code = script.textContent || '';
+    if (!code.includes('__pageInit') && !code.includes('__pageCleanup')) continue;
+    try { new Function(code)(); } catch (e) { console.error('[spa] script error:', e); }
+  }
+
+  if (typeof window.__pageInit === 'function') {
+    try { window.__pageInit(); } catch (e) { console.error('[spa] pageInit error:', e); }
+  }
+}
+
+window.__spaNavigate = spaNavigate;
+
+function initSpaRouter() {
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    if (e.ctrlKey || e.metaKey || e.shiftKey || a.target === '_blank') return;
+    if (!isSpaUrl(href)) return;
+    if (!a.closest('aside, .sidebar, nav, .nav')) return;
+    e.preventDefault();
+    spaNavigate(href);
+  });
+
+  window.addEventListener('popstate', (e) => {
+    if (e.state?.spaUrl || document.getElementById('spa-content')) {
+      spaNavigate(location.pathname + location.search);
+    }
+  });
 }
 
