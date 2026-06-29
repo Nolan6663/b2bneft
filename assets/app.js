@@ -1,4 +1,4 @@
-/* build: 2026-06-23-spa-off-3 */
+/* build: 2026-06-23-sidebar-fix */
 
 const SERVER_URL = (
   window.location.protocol === 'file:' ||
@@ -66,12 +66,37 @@ function initSidebarRole() {
   if (mainLink) mainLink.href = role === 'producer' ? 'producer.html' : 'index.html';
   const navProposals = document.getElementById('navProposals');
   if (navProposals) navProposals.style.display = role === 'producer' ? '' : 'none';
-  // Show profile link immediately from cache — avoids async flash
   const companyId = localStorage.getItem('_myCompanyId');
-  if (companyId && (role === 'customer' || role === 'producer')) {
+  if (companyId) {
     const spl = document.getElementById('sidebarProfileLink');
-    if (spl) { spl.href = `company-profile.html?id=${companyId}`; spl.style.display = ''; }
+    if (spl) spl.href = `company-profile.html?id=${companyId}`;
   }
+}
+
+async function initSidebarProfileLink() {
+  const role = localStorage.getItem('userRole');
+  if (role !== 'customer' && role !== 'producer') return;
+  const spl = document.getElementById('sidebarProfileLink');
+  if (!spl) return;
+
+  const cachedId = localStorage.getItem('_myCompanyId');
+  if (cachedId) {
+    spl.href = `company-profile.html?id=${cachedId}`;
+    return;
+  }
+  if (!hasSession()) return;
+
+  const myCompany = localStorage.getItem('userCompany') || '';
+  try {
+    const r = await apiFetch(`${SERVER_URL}/companies`);
+    if (!r.ok) return;
+    const companies = await r.json();
+    const mine = companies.find(c => c.company === myCompany && c.role === role);
+    if (mine) {
+      localStorage.setItem('_myCompanyId', String(mine.id));
+      spl.href = `company-profile.html?id=${mine.id}`;
+    }
+  } catch { /* ссылка останется # до следующей загрузки */ }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -83,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showEmailVerificationBanner();
     initNotifications();
     initSidebarBadges();
+    initSidebarProfileLink();
   }
   if (hasSession() && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/assets/sw.js').catch(e =>

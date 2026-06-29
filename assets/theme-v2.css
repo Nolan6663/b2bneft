@@ -109,6 +109,11 @@ button { font-family: inherit; }
 #navProposals { display: none !important; }
 html[data-user-role="producer"] #navProposals { display: flex !important; }
 
+/* Мой профиль — всегда виден для заказчика/производителя, без прыжков меню */
+#sidebarProfileLink { display: none !important; }
+html[data-user-role="customer"] #sidebarProfileLink,
+html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; }
+
 @keyframes pageFadeIn  { from { opacity:0; } to { opacity:1; } }
 @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes modalScaleIn{ from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
