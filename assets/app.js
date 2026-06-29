@@ -372,28 +372,34 @@ function deadlineToInputValue(str) {
 /* ---------------------------------------------------------------------
    Toast-уведомления (всплывающие карточки в углу экрана)
    --------------------------------------------------------------------- */
-function showToast(text, type) {
+function showToast(text, type, opts = {}) {
   let container = document.getElementById('toastContainer');
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainer';
     document.body.appendChild(container);
   }
-  // Deduplicate: skip if same message already visible
   for (const el of container.querySelectorAll('.toast-text')) {
     if (el.textContent === text) return;
   }
-  const icon = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '🔔';
+  const icons = { error: '✕', warn: '⚠', success: '✓' };
+  const icon = icons[type] || '●';
   const toast = document.createElement('div');
   toast.className = 'toast' + (type ? ' toast-' + type : '');
-  toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text">${escapeHtml(text)}</div><button class="toast-close" aria-label="Закрыть">✕</button>`;
+  const actionHtml = opts.action
+    ? `<button class="toast-action">${escapeHtml(opts.action.label)}</button>`
+    : '';
+  toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text">${escapeHtml(text)}</div>${actionHtml}<button class="toast-close" aria-label="Закрыть">✕</button>`;
   const dismiss = () => {
     toast.classList.add('toast-out');
     setTimeout(() => toast.remove(), 220);
   };
+  if (opts.action) {
+    toast.querySelector('.toast-action').onclick = () => { opts.action.onClick(); dismiss(); };
+  }
   toast.querySelector('.toast-close').onclick = dismiss;
   container.appendChild(toast);
-  setTimeout(dismiss, 5000);
+  setTimeout(dismiss, opts.duration || 5000);
 }
 
 /* ---------------------------------------------------------------------
@@ -795,6 +801,20 @@ function initHeaderRight() {
   if (elInitials) elInitials.textContent = initials;
   if (elCompany)  elCompany.textContent  = company || 'Гость';
   if (elRole)     elRole.textContent     = roleLabel;
+
+  /* Inject search button before bell */
+  const headerRight = document.querySelector('.header-right');
+  const bellBtn = headerRight?.querySelector('.bell-btn');
+  if (headerRight && bellBtn && !document.getElementById('cpTriggerBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'cpTriggerBtn';
+    btn.className = 'bell-btn';
+    btn.title = 'Поиск (Ctrl+K)';
+    btn.setAttribute('aria-label', 'Открыть поиск');
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+    btn.onclick = () => typeof window.openCommandPalette === 'function' && window.openCommandPalette();
+    headerRight.insertBefore(btn, bellBtn);
+  }
 
   document.addEventListener('click', e => {
     const menu = document.getElementById('userMenu');
@@ -1346,4 +1366,191 @@ function dismissObChecklist() {
   const w = document.getElementById('obChecklist');
   if (w) { w.classList.add('ob-cl-hiding'); setTimeout(() => w.remove(), 300); }
 }
+
+/* =====================================================================
+   COMMAND PALETTE  — Ctrl/Cmd+K
+   ===================================================================== */
+(function initCommandPalette() {
+  if (!hasSession()) return;
+
+  const role = localStorage.getItem('userRole') || '';
+
+  /* ── Static navigation items ─────────────────────────────────────── */
+  const NAV_ITEMS = [
+    { title: 'Главная',         sub: 'Кабинет заказчика',      href: 'index.html',           icon: '🏠', roles: ['customer'] },
+    { title: 'Кабинет',         sub: 'Активные заявки',         href: 'producer.html',        icon: '📋', roles: ['producer'] },
+    { title: 'Каталог',         sub: 'Поиск поставщиков',       href: 'catalog.html',         icon: '🔍', roles: ['customer','producer'] },
+    { title: 'Мои КП',          sub: 'Коммерческие предложения', href: 'proposals.html',       icon: '📄', roles: ['producer'] },
+    { title: 'Сделки',          sub: 'Активные и завершённые',  href: 'deals.html',           icon: '🤝', roles: ['customer','producer'] },
+    { title: 'Доставки',        sub: 'Отслеживание доставок',   href: 'deliveries.html',      icon: '🚚', roles: ['customer','producer'] },
+    { title: 'Контрагенты',     sub: 'Поставщики и заказчики',  href: 'partners.html',        icon: '👥', roles: ['customer','producer'] },
+    { title: 'Аналитика',       sub: 'Статистика и отчёты',     href: 'analytics.html',       icon: '📊', roles: ['customer','producer'] },
+    { title: 'Сообщения',       sub: 'Чаты с контрагентами',    href: 'messages.html',        icon: '💬', roles: ['customer','producer'] },
+    { title: 'Избранное',       sub: 'Сохранённые компании',    href: 'favorites.html',       icon: '❤️', roles: ['customer','producer'] },
+    { title: 'Профиль компании',sub: 'Реквизиты и настройки',   href: 'company-profile.html', icon: '🏢', roles: ['customer','producer'] },
+    { title: 'Настройки',       sub: 'Профиль, уведомления',    href: 'settings.html',        icon: '⚙️', roles: ['customer','producer'] },
+  ].filter(it => it.roles.includes(role) || it.roles.includes('all'));
+
+  /* ── Build DOM ───────────────────────────────────────────────────── */
+  const backdrop = document.createElement('div');
+  backdrop.className = 'cp-backdrop';
+  backdrop.id = 'cpBackdrop';
+  backdrop.innerHTML = `
+    <div class="cp-box" id="cpBox">
+      <div class="cp-input-row">
+        <svg class="cp-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="cp-input" id="cpInput" placeholder="Поиск по разделам, закупкам…" autocomplete="off" spellcheck="false">
+        <kbd class="cp-kbd">Esc</kbd>
+      </div>
+      <div class="cp-results" id="cpResults"></div>
+      <div class="cp-footer">
+        <span><kbd class="cp-kbd">↑↓</kbd> навигация</span>
+        <span><kbd class="cp-kbd">↵</kbd> открыть</span>
+        <span><kbd class="cp-kbd">Esc</kbd> закрыть</span>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) cpClose(); });
+
+  const input = document.getElementById('cpInput');
+  const results = document.getElementById('cpResults');
+  let selectedIdx = -1;
+  let _ordersCache = [];
+  let _ordersLoaded = false;
+
+  /* ── Fetch orders for search ─────────────────────────────────────── */
+  async function cpLoadOrders() {
+    if (_ordersLoaded) return;
+    _ordersLoaded = true;
+    try {
+      const r = await apiFetch(`${SERVER_URL}/orders`);
+      if (r.ok) _ordersCache = await r.json();
+    } catch {}
+  }
+
+  /* ── Highlight match ─────────────────────────────────────────────── */
+  function highlight(text, q) {
+    if (!q) return escapeHtml(text);
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return escapeHtml(text);
+    return escapeHtml(text.slice(0, idx))
+      + `<mark>${escapeHtml(text.slice(idx, idx + q.length))}</mark>`
+      + escapeHtml(text.slice(idx + q.length));
+  }
+
+  /* ── Render results ──────────────────────────────────────────────── */
+  function cpRender(q) {
+    selectedIdx = -1;
+    results.innerHTML = '';
+    const ql = (q || '').toLowerCase().trim();
+
+    /* Navigation matches */
+    const navMatches = NAV_ITEMS.filter(it =>
+      !ql || it.title.toLowerCase().includes(ql) || it.sub.toLowerCase().includes(ql)
+    );
+
+    /* Order matches (only if logged in as customer) */
+    const orderMatches = ql
+      ? _ordersCache.filter(o =>
+          (o.title || '').toLowerCase().includes(ql) ||
+          (o.category || '').toLowerCase().includes(ql) ||
+          ('зк-' + String(o.id).padStart(5,'0')).includes(ql)
+        ).slice(0, 5)
+      : [];
+
+    if (!navMatches.length && !orderMatches.length) {
+      results.innerHTML = `<div class="cp-empty">Ничего не найдено по запросу «${escapeHtml(q)}»</div>`;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+
+    if (navMatches.length) {
+      const lbl = document.createElement('div');
+      lbl.className = 'cp-section-label';
+      lbl.textContent = 'Разделы';
+      frag.appendChild(lbl);
+      navMatches.forEach(it => {
+        const a = document.createElement('a');
+        a.className = 'cp-item';
+        a.href = it.href;
+        a.innerHTML = `
+          <div class="cp-item-icon">${it.icon}</div>
+          <div class="cp-item-body">
+            <div class="cp-item-title">${highlight(it.title, q)}</div>
+            <div class="cp-item-sub">${escapeHtml(it.sub)}</div>
+          </div>`;
+        frag.appendChild(a);
+      });
+    }
+
+    if (orderMatches.length) {
+      const lbl = document.createElement('div');
+      lbl.className = 'cp-section-label';
+      lbl.textContent = 'Закупки';
+      frag.appendChild(lbl);
+      orderMatches.forEach(o => {
+        const a = document.createElement('a');
+        a.className = 'cp-item';
+        a.href = 'index.html';
+        a.dataset.orderId = o.id;
+        a.innerHTML = `
+          <div class="cp-item-icon">📦</div>
+          <div class="cp-item-body">
+            <div class="cp-item-title">${highlight(o.title || '', q)}</div>
+            <div class="cp-item-sub">ЗК-${String(o.id).padStart(5,'0')} · ${escapeHtml(o.category || '')} · ${escapeHtml(o.status || '')}</div>
+          </div>`;
+        frag.appendChild(a);
+      });
+    }
+
+    results.appendChild(frag);
+  }
+
+  /* ── Keyboard navigation ─────────────────────────────────────────── */
+  function cpMoveSelection(dir) {
+    const items = results.querySelectorAll('.cp-item');
+    if (!items.length) return;
+    items[selectedIdx]?.classList.remove('cp-selected');
+    selectedIdx = Math.max(0, Math.min(items.length - 1, selectedIdx + dir));
+    items[selectedIdx].classList.add('cp-selected');
+    items[selectedIdx].scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ── Open / close ────────────────────────────────────────────────── */
+  function cpOpen() {
+    backdrop.classList.add('cp-open');
+    input.value = '';
+    cpRender('');
+    requestAnimationFrame(() => input.focus());
+    if (role === 'customer') cpLoadOrders();
+  }
+  function cpClose() {
+    backdrop.classList.remove('cp-open');
+  }
+
+  /* ── Events ──────────────────────────────────────────────────────── */
+  input.addEventListener('input', () => cpRender(input.value));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown')  { e.preventDefault(); cpMoveSelection(1); }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); cpMoveSelection(-1); }
+    if (e.key === 'Escape')     { cpClose(); }
+    if (e.key === 'Enter') {
+      const sel = results.querySelector('.cp-selected') || results.querySelector('.cp-item');
+      if (sel) { sel.click(); cpClose(); }
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      backdrop.classList.contains('cp-open') ? cpClose() : cpOpen();
+    }
+  });
+
+  /* Expose to header search button if any */
+  window.openCommandPalette = cpOpen;
+})();
 
