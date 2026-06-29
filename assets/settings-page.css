@@ -82,7 +82,7 @@
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+    background: linear-gradient(135deg, #0B2233 0%, #1a3a5c 55%, #FF6A00 100%);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -463,6 +463,67 @@ app.get('/api/company-photos/:filename', async (req, res, next) => {
         await storage.streamToResponse(filename, res);
     } catch (e) { next(e); }
 });
+
+/* ── Sidebar partial: единый источник для всех страниц кабинета ── */
+let _sidebarPartialCache = null;
+const SIDEBAR_ACTIVE = {
+    'index.html': '#mainCabinetLink',
+    'producer.html': '#mainCabinetLink',
+    'catalog.html': 'catalog.html',
+    'proposals.html': 'proposals.html',
+    'deals.html': 'deals.html',
+    'deliveries.html': 'deliveries.html',
+    'partners.html': 'partners.html',
+    'analytics.html': 'analytics.html',
+    'messages.html': 'messages.html',
+    'favorites.html': 'favorites.html',
+    'map.html': 'map.html',
+    'settings.html': 'settings.html',
+    'tariff.html': 'settings.html',
+    'admin.html': 'admin.html',
+    'company-profile.html': '#sidebarProfileLink',
+    'delivery.html': 'deliveries.html',
+};
+
+function getSidebarPartial() {
+    if (!_sidebarPartialCache) {
+        _sidebarPartialCache = fs.readFileSync(path.join(__dirname, 'partials', 'sidebar.html'), 'utf8');
+    }
+    return _sidebarPartialCache;
+}
+
+function sidebarHtmlForPage(pageFile) {
+    let html = getSidebarPartial().replace(/\sclass="active"/g, '');
+    const target = SIDEBAR_ACTIVE[pageFile];
+    if (!target) return html;
+    if (target.startsWith('#')) {
+        const id = target.slice(1);
+        html = html.replace(new RegExp(`(<a\\s)([^>]*\\bid="${id}"[^>]*)>`, 'i'), '$1class="active" $2>');
+    } else {
+        html = html.replace(new RegExp(`(<a\\s)([^>]*href="${target}"[^>]*)>`, 'i'), '$1class="active" $2>');
+    }
+    return html;
+}
+
+function injectSidebarPartial(html, pageFile) {
+    const anchor = '<div id="spa-content"';
+    const idx = html.indexOf(anchor);
+    if (idx === -1) return html;
+    const start = html.lastIndexOf('<div class="sidebar">', idx);
+    if (start === -1) return html;
+    return html.slice(0, start) + sidebarHtmlForPage(pageFile).trim() + '\n\n    ' + html.slice(idx);
+}
+
+function sendCabinetPage(page, res) {
+    res.setHeader('Cache-Control', 'no-cache');
+    const filePath = path.join(__dirname, page);
+    let html = fs.readFileSync(filePath, 'utf8');
+    if (html.includes('<div class="sidebar">')) {
+        html = injectSidebarPartial(html, page);
+    }
+    res.type('html').send(html);
+}
+
 const PUBLIC_PAGES = [
     'landing.html', 'login.html', 'index.html', 'producer.html', 'proposals.html', 'partners.html',
     'analytics.html', 'company-profile.html', 'messages.html', 'favorites.html',
@@ -474,8 +535,12 @@ PUBLIC_PAGES.forEach(page => {
     const slug = '/' + page.replace('.html', '');
     app.get('/' + page, (req, res) => res.redirect(301, slug === '/landing' ? '/' : slug));
     app.get(slug === '/landing' ? '/' : slug, (req, res) => {
-        res.setHeader('Cache-Control', 'no-cache');
-        res.sendFile(path.join(__dirname, page));
+        if (fs.existsSync(path.join(__dirname, page)) && fs.readFileSync(path.join(__dirname, page), 'utf8').includes('<div class="sidebar">')) {
+            sendCabinetPage(page, res);
+        } else {
+            res.setHeader('Cache-Control', 'no-cache');
+            res.sendFile(path.join(__dirname, page));
+        }
     });
 });
 const CAT_PAGES = [
