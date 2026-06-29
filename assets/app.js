@@ -122,6 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
   /* SPA отключён — полная перезагрузка страницы; иначе ломались стили, скрипты и адаптив */
 });
 
+/* View Transitions AbortError — штатно при быстрой навигации, не логировать */
+window.addEventListener('unhandledrejection', (e) => {
+  if (e.reason instanceof DOMException && e.reason.name === 'AbortError') {
+    e.preventDefault();
+  }
+});
+
 /* ---------------------------------------------------------------------
    Универсальное закрытие модалок: клик по фону или Escape
    --------------------------------------------------------------------- */
