@@ -475,7 +475,7 @@ function _getOrCreateDropdown() {
 }
 
 function _positionDropdown(dropdown) {
-  const btn = document.querySelector('.bell-btn');
+  const btn = document.querySelector('.bell-btn:not(.hdr-search-btn)');
   if (!btn) return;
   const rect = btn.getBoundingClientRect();
   dropdown.style.top   = (rect.bottom + 8) + 'px';
@@ -540,7 +540,7 @@ async function clearNotifications() {
 
 document.addEventListener('click', (e) => {
   if (!notifDropdown || !notifDropdown.classList.contains('open')) return;
-  const btn = document.querySelector('.bell-btn');
+  const btn = document.querySelector('.bell-btn:not(.hdr-search-btn)');
   if (btn && btn.contains(e.target)) return;
   if (!notifDropdown.contains(e.target)) notifDropdown.classList.remove('open');
 });
@@ -806,7 +806,7 @@ function initHeaderRight() {
   if (headerRight && bellBtn && !document.getElementById('cpTriggerBtn')) {
     const btn = document.createElement('button');
     btn.id = 'cpTriggerBtn';
-    btn.className = 'bell-btn';
+    btn.className = 'bell-btn hdr-search-btn';
     btn.title = 'Поиск (Ctrl+K)';
     btn.setAttribute('aria-label', 'Открыть поиск');
     btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
