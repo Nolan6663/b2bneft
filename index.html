@@ -495,6 +495,19 @@
         </div>
     </div>
 
+    <div class="modal" id="riskAcceptModal" onclick="if(event.target===this)closeRiskAcceptModal()">
+        <div class="modal-content" style="max-width:480px;">
+            <h3 style="margin:0 0 16px;">Проверка поставщика перед принятием</h3>
+            <div id="riskAcceptBody" style="min-height:80px;display:flex;align-items:center;justify-content:center;">
+                <span style="color:var(--text-secondary);font-size:13px;">Загрузка данных…</span>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="btn-modal-cancel" onclick="closeRiskAcceptModal()">Отмена</button>
+                <button id="riskAcceptConfirmBtn" class="btn-primary" style="min-width:140px;">Принять КП</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js"></script>
     <script src="assets/ui-animations.js"></script>
@@ -1059,7 +1072,7 @@
                         } else if (isPending) {
                             actionCell = `
                                 <div class="proposal-actions">
-                                    <button class="btn-primary" onclick="acceptProposal(${prop.id})">Принять</button>
+                                    <button class="btn-primary" onclick="acceptProposal(${prop.id}, ${JSON.stringify(prop.company)})">Принять</button>
                                     <button class="btn-secondary btn-reject" onclick="rejectProposal(${prop.id})">Отклонить</button>
                                 </div>`;
                         } else {
@@ -1218,8 +1231,64 @@
             } catch { btn.disabled = false; }
         }
 
-        async function acceptProposal(proposalId) {
-            if (!confirm('Вы уверены, что хотите принять это предложение и закрыть закупку?')) return;
+        async function acceptProposal(proposalId, supplierCompany) {
+            const modal = document.getElementById('riskAcceptModal');
+            const body  = document.getElementById('riskAcceptBody');
+            const confirmBtn = document.getElementById('riskAcceptConfirmBtn');
+
+            modal.style.display = 'flex';
+            body.innerHTML = '<span style="color:var(--text-secondary);font-size:13px;">Загрузка данных…</span>';
+            confirmBtn.onclick = null;
+            confirmBtn.onclick = () => { closeRiskAcceptModal(); doAcceptProposal(proposalId); };
+
+            try {
+                const compRes = await apiFetch(`${SERVER_URL}/companies?search=${encodeURIComponent(supplierCompany || '')}`);
+                const companies = compRes.ok ? await compRes.json() : [];
+                const supplier = companies.find(c => c.company === supplierCompany);
+                const inn = supplier?.inn;
+
+                if (!inn) {
+                    body.innerHTML = '<p style="font-size:13px;color:var(--text-secondary);">ИНН поставщика не указан — проверка недоступна.</p>';
+                    return;
+                }
+
+                const riskRes = await apiFetch(`${SERVER_URL}/risk/${encodeURIComponent(inn)}`);
+                if (!riskRes.ok) {
+                    body.innerHTML = '<p style="font-size:13px;color:var(--text-secondary);">Сервис проверки временно недоступен.</p>';
+                    return;
+                }
+                const { level, score, checks } = await riskRes.json();
+                const lvl = {
+                    low:    { label: 'Низкий',   color: '#12A866' },
+                    medium: { label: 'Средний',  color: '#F59E0B' },
+                    high:   { label: 'Высокий',  color: '#ef4444' },
+                }[level] || { label: '—', color: '#94A3B8' };
+                const statusIcon  = { ok: '✓', warn: '⚠', fail: '✗', neutral: '–' };
+                const statusColor = { ok: '#12A866', warn: '#F59E0B', fail: '#ef4444', neutral: '#94A3B8' };
+                const checksHtml = (checks || []).map(c => `
+                    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--inner-border);">
+                        <span style="width:18px;height:18px;border-radius:50%;background:${statusColor[c.status]}22;color:${statusColor[c.status]};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${statusIcon[c.status]}</span>
+                        <div>
+                            <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">${escapeHtml(c.name)}</div>
+                            <div style="font-size:11.5px;color:var(--text-secondary);">${escapeHtml(c.detail)}</div>
+                        </div>
+                    </div>`).join('');
+                body.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${lvl.color}14;border-radius:10px;border:1px solid ${lvl.color}44;margin-bottom:14px;">
+                        <div style="font-size:26px;font-weight:900;color:${lvl.color};min-width:42px;text-align:center;">${score}</div>
+                        <div style="font-size:13.5px;font-weight:700;color:${lvl.color};">Риск: ${lvl.label}</div>
+                    </div>
+                    ${checksHtml}`;
+            } catch {
+                body.innerHTML = '<p style="font-size:13px;color:var(--text-secondary);">Не удалось загрузить данные проверки.</p>';
+            }
+        }
+
+        function closeRiskAcceptModal() {
+            document.getElementById('riskAcceptModal').style.display = 'none';
+        }
+
+        async function doAcceptProposal(proposalId) {
             try {
                 const response = await apiFetch(`${SERVER_URL}/proposals/${proposalId}/accept`, { method: 'POST' });
                 if (response.ok) { closeProposalsModal(); loadOrders(); }
