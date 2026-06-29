@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNotifications();
     initSidebarBadges();
     initSidebarProfileLink();
+    initOnboarding();
   }
   if (hasSession() && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/assets/sw.js').catch(e =>
@@ -1133,5 +1134,182 @@ window.__spaNavigate = spaNavigate;
 
 function initSpaRouter() {
   /* Отключено: подмена #spa-content ломала page CSS, DOMContentLoaded и адаптив на всех страницах кабинета */
+}
+
+/* =====================================================================
+   ОНБОРДИНГ — welcome-модалка + чеклист «Начало работы»
+   ===================================================================== */
+
+const _OB_WELCOME_KEY = 'ob_welcome_v1';
+const _OB_CHECKLIST_KEY = 'ob_checklist';
+const _OB_COLLAPSED_KEY = 'ob_collapsed';
+
+function _obSteps(role) {
+  if (role === 'producer') {
+    return [
+      { id: 'profile',   label: 'Заполните профиль компании',    desc: 'Специализация и оборудование влияют на match-score',  href: 'company-profile.html' },
+      { id: 'browse',    label: 'Просмотрите актуальные заявки', desc: 'Найдите тендеры, подходящие по вашей специализации',  href: 'producer.html' },
+      { id: 'proposal',  label: 'Подайте первое КП',             desc: 'Прикрепите файл и укажите цену прямо в платформе',    href: 'producer.html' },
+      { id: 'settings',  label: 'Подключите интеграцию',         desc: '1С, Bitrix24, AmoCRM — автоматически при принятии КП', href: 'settings.html' },
+    ];
+  }
+  return [
+    { id: 'order',    label: 'Разместите первую закупку',   desc: 'Опишите потребность — поставщики найдут вас сами',     href: '#', action: 'openModal' },
+    { id: 'catalog',  label: 'Изучите каталог поставщиков', desc: 'Более 100 верифицированных производителей РФ',          href: 'catalog.html' },
+    { id: 'profile',  label: 'Заполните профиль компании',  desc: 'ИНН, реквизиты, контакты — для доверия поставщиков',   href: 'company-profile.html' },
+    { id: 'settings', label: 'Настройте уведомления',       desc: 'Email-дайджест и интеграции с вашей CRM',              href: 'settings.html' },
+  ];
+}
+
+function _obDoneMap() {
+  try { return JSON.parse(localStorage.getItem(_OB_CHECKLIST_KEY) || '{}'); } catch { return {}; }
+}
+
+function _obSaveDone(id) {
+  const done = _obDoneMap();
+  done[id] = true;
+  localStorage.setItem(_OB_CHECKLIST_KEY, JSON.stringify(done));
+}
+
+function initOnboarding() {
+  const page = location.pathname.split('/').pop() || 'index.html';
+  const role = localStorage.getItem('userRole') || '';
+  if (role !== 'customer' && role !== 'producer') return;
+
+  const mainPage = role === 'producer' ? 'producer.html' : 'index.html';
+  const onMainPage = page === mainPage || page === '';
+
+  _initObChecklist(role);
+
+  if (onMainPage && !localStorage.getItem(_OB_WELCOME_KEY)) {
+    _showObWelcome(role);
+  }
+}
+
+function _showObWelcome(role) {
+  const company = localStorage.getItem('userCompany') || '';
+  const steps = _obSteps(role);
+  const isProducer = role === 'producer';
+
+  const greeting = company ? `Добро пожаловать,<br><span class="ob-company">${escapeHtml(company)}</span>!` : 'Добро пожаловать<br>в ТехЗаказ!';
+  const subtitle = isProducer
+    ? 'Находите заявки, подавайте КП и выигрывайте контракты напрямую с заказчиками'
+    : 'Размещайте закупки и получайте КП от проверенных поставщиков нефтесервисной отрасли';
+
+  const stepsHtml = steps.slice(0, 3).map((s, i) => `
+    <a class="ob-step" href="${escapeHtml(s.href)}"${s.action ? ` onclick="closeObWelcome();typeof ${s.action}==='function'&&${s.action}();return false;"` : ' onclick="closeObWelcome()"'}>
+      <div class="ob-step-num">${i + 1}</div>
+      <div class="ob-step-body">
+        <strong>${escapeHtml(s.label)}</strong>
+        <span>${escapeHtml(s.desc)}</span>
+      </div>
+      <svg class="ob-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>`).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'ob-overlay';
+  overlay.id = 'obOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML = `
+    <div class="ob-modal">
+      <div class="ob-header">
+        <div class="ob-logo-row">
+          <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+          <span class="ob-logo-text">ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
+        </div>
+        <h2 class="ob-title">${greeting}</h2>
+        <p class="ob-sub">${subtitle}</p>
+      </div>
+      <div class="ob-steps">${stepsHtml}</div>
+      <div class="ob-footer">
+        <button class="btn-primary ob-cta" onclick="closeObWelcome()">Начать работу →</button>
+        <button class="ob-skip" onclick="closeObWelcome()">Пропустить</button>
+      </div>
+    </div>`;
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeObWelcome(); });
+  document.addEventListener('keydown', _obEscHandler);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { requestAnimationFrame(() => overlay.classList.add('ob-visible')); });
+}
+
+function _obEscHandler(e) {
+  if (e.key === 'Escape') { closeObWelcome(); document.removeEventListener('keydown', _obEscHandler); }
+}
+
+function closeObWelcome() {
+  localStorage.setItem(_OB_WELCOME_KEY, '1');
+  document.removeEventListener('keydown', _obEscHandler);
+  const overlay = document.getElementById('obOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('ob-visible');
+  setTimeout(() => overlay.remove(), 280);
+}
+
+/* ---------- Чеклист «Начало работы» (виджет нижний правый) ---------- */
+
+function _initObChecklist(role) {
+  const steps = _obSteps(role);
+  const done = _obDoneMap();
+  const doneCount = steps.filter(s => done[s.id]).length;
+
+  // Не показывать если всё выполнено
+  if (doneCount === steps.length) return;
+
+  const collapsed = localStorage.getItem(_OB_COLLAPSED_KEY) === '1';
+  const percent = Math.round((doneCount / steps.length) * 100);
+
+  const itemsHtml = steps.map(s => {
+    const isDone = !!done[s.id];
+    return `
+      <a class="ob-cl-item${isDone ? ' ob-cl-done' : ''}" href="${escapeHtml(s.href)}"
+         onclick="_obMarkDone('${s.id}')"${s.action ? ` data-action="${s.action}"` : ''}>
+        <div class="ob-cl-check">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span>${escapeHtml(s.label)}</span>
+      </a>`;
+  }).join('');
+
+  const widget = document.createElement('div');
+  widget.className = `ob-checklist${collapsed ? ' ob-cl-collapsed' : ''}`;
+  widget.id = 'obChecklist';
+  widget.innerHTML = `
+    <div class="ob-cl-head" onclick="toggleObChecklist()">
+      <div class="ob-cl-head-left">
+        <div class="ob-cl-ring" style="--pct:${percent}">
+          <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--inner-border)" stroke-width="3"/><circle class="ob-cl-arc" cx="18" cy="18" r="14" fill="none" stroke="url(#obGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${Math.round(percent * 0.879)} 100" transform="rotate(-90 18 18"/><defs><linearGradient id="obGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF6A00"/><stop offset="100%" stop-color="#0B8FCE"/></linearGradient></defs></svg>
+          <span>${doneCount}/${steps.length}</span>
+        </div>
+        <span class="ob-cl-title">Начало работы</span>
+      </div>
+      <svg class="ob-cl-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    </div>
+    <div class="ob-cl-body">
+      <div class="ob-cl-items">${itemsHtml}</div>
+      <button class="ob-cl-dismiss" onclick="dismissObChecklist()">Скрыть</button>
+    </div>`;
+
+  document.body.appendChild(widget);
+}
+
+function _obMarkDone(id) {
+  _obSaveDone(id);
+}
+
+function toggleObChecklist() {
+  const w = document.getElementById('obChecklist');
+  if (!w) return;
+  const isCollapsed = w.classList.toggle('ob-cl-collapsed');
+  localStorage.setItem(_OB_COLLAPSED_KEY, isCollapsed ? '1' : '0');
+}
+
+function dismissObChecklist() {
+  localStorage.setItem(_OB_CHECKLIST_KEY, JSON.stringify(
+    Object.fromEntries(_obSteps(localStorage.getItem('userRole') || '').map(s => [s.id, true]))
+  ));
+  const w = document.getElementById('obChecklist');
+  if (w) { w.classList.add('ob-cl-hiding'); setTimeout(() => w.remove(), 300); }
 }
 
