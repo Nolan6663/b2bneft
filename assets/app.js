@@ -1071,6 +1071,32 @@ function syncSpaPageHead(doc) {
   });
 }
 
+/** Переписывает let/const → var чтобы скрипт страницы можно было выполнить повторно при SPA */
+function rewriteSpaScript(code) {
+  return code.replace(/\b(const|let)\b/g, 'var');
+}
+
+function isSkippableSpaScript(code) {
+  const t = code.trim();
+  return t.length < 120 && t.includes('hasSession()') && t.includes('login.html');
+}
+
+/** Выполняет inline-скрипты страницы из <body> (onclick-обработчики, __pageInit) */
+function runSpaPageScripts(doc) {
+  document.querySelectorAll('script[data-spa-page-script]').forEach((n) => n.remove());
+
+  const scripts = doc.body ? [...doc.body.querySelectorAll('script:not([src])')] : [];
+  for (const script of scripts) {
+    let code = script.textContent || '';
+    if (!code.trim() || isSkippableSpaScript(code)) continue;
+    code = rewriteSpaScript(code);
+    const el = document.createElement('script');
+    el.setAttribute('data-spa-page-script', '1');
+    el.textContent = code;
+    document.body.appendChild(el);
+  }
+}
+
 async function spaNavigate(url) {
   if (_spaNavigating) return;
   _spaNavigating = true;
@@ -1122,20 +1148,17 @@ async function spaNavigate(url) {
     a.classList.toggle('active', a.pathname === target.pathname);
   });
 
-  const scripts = doc.querySelectorAll('script:not([src])');
-  for (const script of scripts) {
-    const code = script.textContent || '';
-    if (!code.includes('__pageInit') && !code.includes('__pageCleanup')) continue;
-    try {
-      const s = document.createElement('script');
-      s.textContent = code;
-      document.head.appendChild(s);
-      document.head.removeChild(s);
-    } catch (e) { console.error('[spa] script error:', e); }
+  try {
+    runSpaPageScripts(doc);
+  } catch (e) {
+    console.error('[spa] script error:', e);
+    _spaNavigating = false;
+    location.href = url;
+    return;
   }
 
   if (typeof window.__pageInit === 'function') {
-    try { window.__pageInit(); } catch (e) { console.error('[spa] pageInit error:', e); }
+    try { await window.__pageInit(); } catch (e) { console.error('[spa] pageInit error:', e); }
   }
 
   _spaNavigating = false;
