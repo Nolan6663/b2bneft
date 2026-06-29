@@ -81,6 +81,19 @@ async function sendEmail(to, subject, html) {
     }
 }
 
+async function sendTelegramNotification(userId, text) {
+    if (!global.__tgBot) return;
+    try {
+        const { rows: [user] } = await pool.query(
+            'SELECT telegram_id FROM users WHERE id=$1 AND telegram_id IS NOT NULL', [userId]
+        );
+        if (!user?.telegram_id) return;
+        await global.__tgBot.telegram.sendMessage(user.telegram_id, text, { parse_mode: 'HTML' });
+    } catch (e) {
+        console.error('[tg:notify]', e.message);
+    }
+}
+
 async function sendPush(userId, title, body, url) {
     if (!process.env.VAPID_PUBLIC_KEY) return;
     try {
@@ -562,6 +575,40 @@ app.delete('/api/push/subscribe', requireAuth, async (req, res, next) => {
     try {
         await pool.query('DELETE FROM push_subscriptions WHERE user_id = $1', [req.user.id]);
         res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+// ===================== TELEGRAM =====================
+
+app.post('/api/telegram/link-token', requireAuth, async (req, res, next) => {
+    try {
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 15 * 60 * 1000);
+        await pool.query(
+            'UPDATE users SET telegram_link_token=$1, telegram_link_expires=$2 WHERE id=$3',
+            [token, expires, req.user.id]
+        );
+        const botName = process.env.TELEGRAM_BOT_NAME || 'TexZakazBot';
+        res.json({ token, deepLink: `https://t.me/${botName}?start=${token}` });
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/telegram/unlink', requireAuth, async (req, res, next) => {
+    try {
+        await pool.query(
+            'UPDATE users SET telegram_id=NULL, telegram_link_token=NULL, telegram_link_expires=NULL WHERE id=$1',
+            [req.user.id]
+        );
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/telegram/status', requireAuth, async (req, res, next) => {
+    try {
+        const { rows: [user] } = await pool.query(
+            'SELECT telegram_id FROM users WHERE id=$1', [req.user.id]
+        );
+        res.json({ linked: Boolean(user?.telegram_id), telegramId: user?.telegram_id || null });
     } catch (e) { next(e); }
 });
 
@@ -1229,7 +1276,10 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), requireVerified
             );
             // Push: уведомить заказчика о новом КП
             getUserIdsByCompany(orderRow.company).then(ids =>
-                ids.forEach(id => sendPush(id, 'Новое коммерческое предложение', `«${orderRow.title}» — получен новый отклик`, `${APP_URL}/index`))
+                ids.forEach(id => {
+                    sendPush(id, 'Новое коммерческое предложение', `«${orderRow.title}» — получен новый отклик`, `${APP_URL}/index`);
+                    sendTelegramNotification(id, `📨 <b>Новое КП</b> по закупке «${orderRow.title}»\nПоставщик: ${proposalRow.company}\nЦена: ${proposalRow.price} руб.`);
+                })
             ).catch(() => {});
         }
         res.status(201).json(newProposal);
@@ -1378,7 +1428,10 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
         }));
         // Push: уведомить поставщика о принятом КП
         getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => sendPush(id, 'КП принято!', `Ваше предложение по заявке «${title}» принято`, `${APP_URL}/deals`))
+            ids.forEach(id => {
+                sendPush(id, 'КП принято!', `Ваше предложение по заявке «${title}» принято`, `${APP_URL}/deals`);
+                sendTelegramNotification(id, `✅ <b>КП принято!</b>\nЗакупка: «${title}»\nЗаказчик выбрал ваше предложение.`);
+            })
         ).catch(() => {});
         res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
     } catch (e) { next(e); }
@@ -1408,7 +1461,10 @@ app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer
         );
         // Push: уведомить поставщика об отклонённом КП
         getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => sendPush(id, 'КП отклонено', `Предложение по заявке «${rejectTitle}» отклонено`, `${APP_URL}/proposals`))
+            ids.forEach(id => {
+                sendPush(id, 'КП отклонено', `Предложение по заявке «${rejectTitle}» отклонено`, `${APP_URL}/proposals`);
+                sendTelegramNotification(id, `❌ <b>КП отклонено</b>\nЗакупка: «${rejectTitle}»`);
+            })
         ).catch(() => {});
         const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
         res.json(rowToProposal(updated));
@@ -2681,7 +2737,10 @@ app.post('/api/auth/register', async (req, res, next) => {
         // Push: уведомить команду о новом участнике
         if (inviteData) {
             getUserIdsByCompany(inviteData.company).then(ids =>
-                ids.forEach(id => sendPush(id, 'Новый участник команды', `${newUser.email} присоединился к вашей компании`, `${APP_URL}/settings`))
+                ids.forEach(id => {
+                    sendPush(id, 'Новый участник команды', `${newUser.email} присоединился к вашей компании`, `${APP_URL}/settings`);
+                    sendTelegramNotification(id, `👤 <b>Новый участник команды</b>\n${newUser.email} присоединился к вашей компании.`);
+                })
             ).catch(() => {});
         }
         setAuthCookies(res, accessToken, refreshToken);
@@ -3465,9 +3524,10 @@ app.post('/api/messages', requireAuth, async (req, res, next) => {
                 }
                 // Push: уведомить получателя
                 const recipientIds = await getUserIdsByCompany(recipientCompany);
-                await Promise.all(recipientIds.map(id =>
-                    sendPush(id, 'Новое сообщение', `${req.user.company}: ${String(text).slice(0, 80)}`, `${APP_URL}/messages`)
-                ));
+                await Promise.all(recipientIds.map(id => {
+                    sendPush(id, 'Новое сообщение', `${req.user.company}: ${String(text).slice(0, 80)}`, `${APP_URL}/messages`);
+                    sendTelegramNotification(id, `💬 <b>Новое сообщение</b>\nОт: ${req.user.company}\n${String(text).slice(0, 100)}`);
+                }));
             } catch (e) { console.error('[email:chat]', e.message); }
         })();
 
@@ -3881,7 +3941,10 @@ app.post('/api/verification/:id/approve', requireAuth, requireRole('admin'), asy
             );
             // Push: верификация одобрена
             getUserIdsByCompany(companyRow.company).then(ids =>
-                ids.forEach(id => sendPush(id, 'Верификация одобрена ✓', 'Ваша компания верифицирована платформой ТехЗаказ', `${APP_URL}/settings`))
+                ids.forEach(id => {
+                    sendPush(id, 'Верификация одобрена ✓', 'Ваша компания верифицирована платформой ТехЗаказ', `${APP_URL}/settings`);
+                    sendTelegramNotification(id, `✅ <b>Верификация одобрена!</b>\nВаша компания верифицирована платформой ТехЗаказ.`);
+                })
             ).catch(() => {});
         }
         res.json({ message: 'Компания верифицирована' });
@@ -4031,9 +4094,10 @@ async function sendDeadlineReminders() {
                  <p style="margin-top:14px;"><a href="${APP_URL}/index.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
             );
             const reminderIds = await getUserIdsByCompany(row.company);
-            await Promise.all(reminderIds.map(id =>
-                sendPush(id, 'Дедлайн через 3 дня', `Закупка «${plainTitle(row.title)}» закрывается через 3 дня`, `${APP_URL}/index`)
-            ));
+            await Promise.all(reminderIds.map(id => {
+                sendPush(id, 'Дедлайн через 3 дня', `Закупка «${plainTitle(row.title)}» закрывается через 3 дня`, `${APP_URL}/index`);
+                sendTelegramNotification(id, `⏳ <b>Дедлайн через 3 дня</b>\nЗакупка «${plainTitle(row.title)}» закрывается.`);
+            }));
             sent += 1;
         }
         if (sent) console.log(`[cron:deadline-reminders] sent ${sent} reminder(s)`);
