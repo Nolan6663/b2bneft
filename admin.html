@@ -21,8 +21,10 @@
             flex-shrink:0; position:sticky; top:0; z-index:100;
         }
         .adm-logo { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:800; color:var(--text-primary-alt); letter-spacing:-.3px; }
-        .adm-logo img { width:26px; height:26px; }
         .adm-logo-sep { color:var(--text-muted); font-weight:400; margin:0 4px; }
+        .adm-logo-mark { position:relative; width:30px; height:30px; border-radius:8px; background:linear-gradient(150deg,#0B2233,#071B2A); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .adm-logo-mark span { font-weight:800; font-size:16px; color:#fff; line-height:1; }
+        .adm-logo-mark::after { content:''; position:absolute; right:4px; bottom:4px; width:8px; height:8px; background:#FF6A00; clip-path:polygon(0 100%,100% 0,100% 100%); }
         .adm-topbar-right { display:flex; align-items:center; gap:12px; }
 
         /* ── Main layout ─────────────────────────────────────────── */
@@ -110,17 +112,10 @@
 
 <div class="adm-topbar">
     <div class="adm-logo">
-        <img src="assets/icons_svg/logo_hex.svg" alt="">
+        <div class="adm-logo-mark"><span>Т</span></div>
         ТЕХЗАКАЗ <span class="adm-logo-sep">/</span> Администратор
     </div>
     <div class="adm-topbar-right">
-        <div class="theme-toggle-row" style="gap:8px;">
-            <span id="themeLabel" class="theme-label" style="font-size:12.5px;"></span>
-            <label class="theme-switch">
-                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
-                <span class="theme-slider"></span>
-            </label>
-        </div>
         <button class="btn-secondary" onclick="adminLogout()" style="height:34px;padding:0 14px;font-size:13px;">Выйти</button>
     </div>
 </div>
@@ -200,21 +195,7 @@
         } catch {}
         loadStats();
         loadVerif('pending');
-        initTheme();
     })();
-
-    // ── Theme ─────────────────────────────────────────────────────────
-    function initTheme() {
-        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-        document.getElementById('themeCheckbox').checked = dark;
-        document.getElementById('themeLabel').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
-    }
-    function toggleTheme() {
-        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-        document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
-        localStorage.setItem('theme', dark ? '' : 'dark');
-        document.getElementById('themeLabel').textContent = dark ? 'Тёмная тема' : 'Светлая тема';
-    }
 
     // ── Tabs ──────────────────────────────────────────────────────────
     function showTab(tab) {
