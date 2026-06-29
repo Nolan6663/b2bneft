@@ -218,8 +218,50 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
 
 /* ── LAYOUT / HEADER ───────────────────────────────────────────────── */
 @keyframes pageContentIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Плавные MPA-переходы: сайдбар статичен, анимируется только контент */
+@view-transition {
+  navigation: auto;
+}
+
+.sidebar {
+  view-transition-name: app-sidebar;
+}
+
+.main-content {
+  view-transition-name: app-main;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(app-sidebar) {
+    animation-duration: 0s;
+  }
+
+  ::view-transition-old(app-main) {
+    animation: 0.14s ease-out both vt-main-out;
+  }
+
+  ::view-transition-new(app-main) {
+    animation: 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both vt-main-in;
+  }
+}
+
+@keyframes vt-main-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-main-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+@media (max-width: 720px) {
+  .sidebar,
+  .main-content {
+    view-transition-name: none;
+  }
 }
 
 .main-content {
@@ -233,7 +275,7 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--bg-secondary);
-  animation: pageContentIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: pageContentIn 0.15s ease-out;
   scrollbar-width: thin;
   scrollbar-color: var(--border-mid) transparent;
 }
@@ -243,6 +285,13 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
 .main-content::-webkit-scrollbar-track { background: transparent; }
 .main-content::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
 .main-content::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* Не дублировать fade, если браузер сам анимирует #app-main */
+@supports (view-transition-name: none) {
+  .main-content {
+    animation: none;
+  }
+}
 
 .header {
   display: flex; justify-content: space-between; align-items: center;
@@ -1452,7 +1501,7 @@ body {
 
 .main-content {
   background: transparent;
-  animation: pageContentIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: pageContentIn 0.15s ease-out;
 }
 
 body {

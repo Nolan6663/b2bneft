@@ -1,4 +1,6 @@
-/* build: 2026-06-23-sidebar-fix */
+/* build: 2026-06-23-smooth-nav */
+
+const SIDEBAR_SCROLL_KEY = 'tzSidebarScroll';
 
 const SERVER_URL = (
   window.location.protocol === 'file:' ||
@@ -103,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
   applyStoredTheme();
   initSidebarRole();
   initSidebarExtra();
+  initSidebarScrollPersist();
+  initSidebarPrefetch();
   initHeaderRight();
   if (hasSession()) {
     showEmailVerificationBanner();
@@ -690,6 +694,39 @@ function toggleSidebar() {
 
 function initSidebarExtra() {
   // collapsed state restored via inline script in <head>
+}
+
+function initSidebarScrollPersist() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb || window.innerWidth <= 720) return;
+
+  const saved = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+  if (saved != null) {
+    const top = parseInt(saved, 10);
+    if (!Number.isNaN(top)) sb.scrollTop = top;
+  }
+
+  window.addEventListener('pagehide', () => {
+    sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(sb.scrollTop));
+  });
+}
+
+function initSidebarPrefetch() {
+  document.querySelectorAll('.sidebar a[href]').forEach((a) => {
+    const href = a.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('javascript:')) return;
+    let url;
+    try { url = new URL(href, location.origin); } catch { return; }
+    if (url.origin !== location.origin) return;
+
+    a.addEventListener('mouseenter', () => {
+      if (document.querySelector(`link[rel="prefetch"][href="${url.pathname}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = url.pathname + url.search;
+      document.head.appendChild(link);
+    }, { once: true, passive: true });
+  });
 }
 
 /* ---------------------------------------------------------------------
