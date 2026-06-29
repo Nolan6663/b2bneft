@@ -313,6 +313,40 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/* ── Empty state helper ─────────────────────────────────────────────── */
+function createEmptyState({ icon, title, desc, ctaText, ctaAction, ctaHref }) {
+  const el = document.createElement('div');
+  el.className = 'empty-state';
+  const ctaEl = ctaText
+    ? ctaHref
+      ? `<a href="${ctaHref}" class="empty-state-cta">${ctaText}</a>`
+      : `<button class="empty-state-cta" onclick="${ctaAction}">${ctaText}</button>`
+    : '';
+  el.innerHTML = `
+    <div class="empty-state-icon">${icon}</div>
+    <div class="empty-state-title">${title}</div>
+    ${desc ? `<p class="empty-state-desc">${desc}</p>` : ''}
+    ${ctaEl}`;
+  return el;
+}
+
+/* ── Skeleton helpers ────────────────────────────────────────────────── */
+function showProcSkeleton(container, rows = 4) {
+  container.innerHTML = '';
+  for (let i = 0; i < rows; i++) {
+    const row = document.createElement('div');
+    row.className = 'skel-row proc-grid-cols';
+    row.innerHTML = Array(6).fill(null).map((_, j) => {
+      const w = [60, 40, 30, 15, 30, 20][j];
+      return `<div class="skel-cell skel-pulse" style="width:${w}%;max-width:${w}%;opacity:${1 - i * 0.15}"></div>`;
+    }).join('');
+    container.appendChild(row);
+  }
+}
+function hideSkeleton(container) {
+  container.querySelectorAll('.skel-row').forEach(r => r.remove());
+}
+
 /* ---------------------------------------------------------------------
    Форматирование дедлайна — поддерживает оба формата хранения:
    старый DD.MM.YYYY и новый YYYY-MM-DD (ISO date input)

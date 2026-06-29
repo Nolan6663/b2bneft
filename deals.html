@@ -338,6 +338,28 @@
             const tbody = document.getElementById('ordersTableBody');
             tbody.innerHTML = '';
 
+            if (filtered.length === 0) {
+                const isEmpty = allDeals.length === 0;
+                const td = document.createElement('td');
+                td.colSpan = 9;
+                const es = createEmptyState(isEmpty ? {
+                    icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+                    title: 'Нет активных сделок',
+                    desc: 'Сделки появятся здесь, когда вы выберете поставщика по одной из ваших закупок',
+                    ctaText: 'Перейти к закупкам',
+                    ctaHref: 'index.html'
+                } : {
+                    icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+                    title: 'Ничего не найдено',
+                    desc: 'По выбранному фильтру сделок нет'
+                });
+                td.appendChild(es);
+                const tr = document.createElement('tr');
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
             filtered.forEach(d => {
                 const st = STATUS_MAP[d.status] || { label: d.status, cls: 'st-cancel' };
                 const tr = document.createElement('tr');
@@ -642,6 +664,18 @@
             } catch {}
 
             try {
+                const tbody = document.getElementById('ordersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    for (let i = 0; i < 4; i++) {
+                        const tr = document.createElement('tr');
+                        tr.className = 'skel-tr';
+                        tr.innerHTML = Array(7).fill(null).map((_, j) =>
+                            `<td><span class="skel-cell skel-pulse" style="width:${[50,70,35,45,40,25,35][j]}%;opacity:${1-i*.15}"></span></td>`
+                        ).join('');
+                        tbody.appendChild(tr);
+                    }
+                }
                 const r = await apiFetch(`${SERVER_URL}/deals`);
                 if (r.ok) {
                     const data = await r.json();

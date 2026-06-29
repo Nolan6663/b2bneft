@@ -255,10 +255,18 @@
             tbody.innerHTML = '';
 
             if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 50px; font-size: 14px;">
-                    У компании <strong>${escapeHtml(companyName)}</strong> пока нет направленных предложений.<br>
-                    <a href="producer.html" style="color: var(--accent-bright); text-decoration: underline; font-weight: 600; display: inline-block; margin-top: 10px;">Перейти к актуальным закупкам</a>
-                </td></tr>`;
+                const td = document.createElement('td');
+                td.colSpan = 5;
+                td.appendChild(createEmptyState({
+                    icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+                    title: 'Предложений пока нет',
+                    desc: `Подайте первое коммерческое предложение по актуальным закупкам`,
+                    ctaText: 'Актуальные закупки',
+                    ctaHref: 'producer.html'
+                }));
+                const tr = document.createElement('tr');
+                tr.appendChild(td);
+                tbody.appendChild(tr);
                 return;
             }
 
@@ -292,7 +300,13 @@
             container.innerHTML = '';
 
             if (list.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: var(--text-secondary); padding: 30px; border: 1px dashed var(--card-border); border-radius: 12px; font-size: 14px;">История предложений пуста</div>`;
+                container.appendChild(createEmptyState({
+                    icon: `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+                    title: 'Предложений пока нет',
+                    desc: 'Подайте первое КП по актуальным закупкам',
+                    ctaText: 'Найти закупки',
+                    ctaHref: 'producer.html'
+                }));
                 return;
             }
 

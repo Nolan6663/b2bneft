@@ -124,10 +124,7 @@
                     </tbody>
                 </table>
             </div>
-            <div id="emptyState" style="display:none;padding:60px 20px;text-align:center;color:var(--text-secondary);">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                <span class="nav-label">Нет активных доставок</span>
-            </div>
+            <div id="emptyState" style="display:none;"></div>
         </div>
     </div>
 
@@ -164,6 +161,12 @@
             const empty = document.getElementById('emptyState');
             if (!filtered.length) {
                 tbody.innerHTML = '';
+                empty.innerHTML = '';
+                empty.appendChild(createEmptyState({
+                    icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+                    title: 'Нет активных доставок',
+                    desc: 'Доставки появятся после того как поставщик примет заказ в работу'
+                }));
                 empty.style.display = '';
                 return;
             }
