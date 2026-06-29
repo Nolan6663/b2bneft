@@ -1,8 +1,4 @@
-/* =====================================================================
-   ТЕХЗАКАЗ — общие JS-утилиты (тема, уведомления, чат, select, auth)
-   Подключается на каждой странице ДО page-specific <script>:
-   <script src="assets/app.js"></script>
-   ===================================================================== */
+/* build: 2026-06-23-spa-off-3 */
 
 const SERVER_URL = (
   window.location.protocol === 'file:' ||
@@ -1027,48 +1023,11 @@ let _spaNavigating = false;
 
 const SPA_GLOBAL_STYLES = /theme-v2\.css|fonts\.css|zakupki-cat\.css/i;
 
-/** Помечает стили текущей страницы — снимаются при SPA-переходе */
-function markCurrentPageStyles() {
-  document.querySelectorAll('head link[rel="stylesheet"]').forEach((link) => {
-    const href = link.getAttribute('href') || '';
-    if (!href || SPA_GLOBAL_STYLES.test(href)) return;
-    link.setAttribute('data-spa-page-css', '1');
-  });
-  document.querySelectorAll('head > style').forEach((style) => {
-    style.setAttribute('data-spa-page', '1');
-  });
-}
+/** Помечает стили текущей страницы — отключено вместе с SPA */
+function markCurrentPageStyles() {}
 
-/** Подменяет page-specific CSS при SPA-навигации (все кабинетные страницы) */
-function syncSpaPageHead(doc) {
-  document.querySelectorAll(
-    'link[data-spa-page-css], style[data-spa-page], [data-spa-head]'
-  ).forEach((node) => node.remove());
-
-  const head = doc.querySelector('head');
-  if (!head) return;
-
-  head.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
-    const href = link.getAttribute('href') || '';
-    if (!href || SPA_GLOBAL_STYLES.test(href)) return;
-    const el = document.createElement('link');
-    el.rel = 'stylesheet';
-    el.href = href;
-    el.setAttribute('data-spa-head', '1');
-    el.setAttribute('data-spa-page-css', '1');
-    document.head.appendChild(el);
-  });
-
-  head.querySelectorAll('style').forEach((style) => {
-    const css = (style.textContent || '').trim();
-    if (!css) return;
-    const el = document.createElement('style');
-    el.textContent = css;
-    el.setAttribute('data-spa-head', '1');
-    el.setAttribute('data-spa-page', '1');
-    document.head.appendChild(el);
-  });
-}
+/** Подменяет page-specific CSS при SPA-навигации — отключено */
+function syncSpaPageHead() {}
 
 /** Переписывает let/const → var чтобы скрипт страницы можно было выполнить повторно при SPA */
 function rewriteSpaScript(code) {
@@ -1097,70 +1056,7 @@ function runSpaPageScripts(doc) {
 }
 
 async function spaNavigate(url) {
-  if (_spaNavigating) return;
-  _spaNavigating = true;
-
-  const target = new URL(url, location.origin);
-
-  // Close mobile sidebar before navigating
-  const _sb = document.querySelector('.sidebar');
-  const _ov = document.getElementById('sidebarOverlay');
-  if (_sb) _sb.classList.remove('open');
-  if (_ov) _ov.classList.remove('visible');
-
-  if (typeof window.__pageCleanup === 'function') {
-    try { window.__pageCleanup(); } catch {}
-    window.__pageCleanup = null;
-  }
-  window.__pageInit = null;
-
-  let html;
-  try {
-    const res = await fetch(target.href, { credentials: 'include' });
-    if (!res.ok) { _spaNavigating = false; location.href = url; return; }
-    html = await res.text();
-  } catch {
-    _spaNavigating = false; location.href = url;
-    return;
-  }
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  const newContent = doc.getElementById('spa-content');
-  const currentContent = document.getElementById('spa-content');
-  if (!newContent || !currentContent) {
-    _spaNavigating = false; location.href = url;
-    return;
-  }
-
-  currentContent.innerHTML = newContent.innerHTML;
-  document.title = doc.title || document.title;
-  syncSpaPageHead(doc);
-  history.pushState({ spaUrl: url }, '', target.pathname + target.search);
-
-  // Re-init global header/sidebar elements that live inside spa-content
-  initSidebarRole();
-  initHeaderRight();
-
-  document.querySelectorAll('.sidebar a, aside a').forEach(a => {
-    a.classList.toggle('active', a.pathname === target.pathname);
-  });
-
-  try {
-    runSpaPageScripts(doc);
-  } catch (e) {
-    console.error('[spa] script error:', e);
-    _spaNavigating = false;
-    location.href = url;
-    return;
-  }
-
-  if (typeof window.__pageInit === 'function') {
-    try { await window.__pageInit(); } catch (e) { console.error('[spa] pageInit error:', e); }
-  }
-
-  _spaNavigating = false;
+  location.assign(url);
 }
 
 window.__spaNavigate = spaNavigate;

@@ -10,252 +10,8 @@
     <title>Техзаказ — Настройки</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css">
-    <style data-spa-page>
-        .settings-tabs {
-            display: flex;
-            gap: 0;
-            border-bottom: 1px solid var(--card-border);
-            margin-bottom: 24px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        .settings-tabs::-webkit-scrollbar { display: none; }
-        .settings-tab-btn {
-            padding: 10px 18px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 13.5px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
-            transition: color .15s, border-color .15s;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-        .settings-tab-btn.active {
-            color: var(--accent-bright);
-            border-bottom-color: var(--accent-bright);
-        }
-        .settings-pane { display: none; }
-        .settings-pane.active { display: flex; flex-direction: column; gap: 20px; }
-
-        .settings-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .settings-layout-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            align-items: start;
-        }
-        .settings-col {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Hero card */
-        .settings-hero {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 28px 28px 24px;
-            display: flex;
-            align-items: center;
-            gap: 22px;
-        }
-        .settings-avatar {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: 700;
-            color: #fff;
-            flex-shrink: 0;
-            letter-spacing: 0;
-        }
-        .settings-hero-info { flex: 1; min-width: 0; }
-        .settings-hero-name {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .settings-hero-email {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 3px;
-        }
-        .settings-hero-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .role-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            background: rgba(37, 99, 235, 0.1);
-            border: 1px solid rgba(37, 99, 235, 0.2);
-            color: var(--accent-blue);
-        }
-        .profile-link-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            background: transparent;
-            border: 1px solid var(--inner-border);
-            color: var(--accent-cyan);
-            text-decoration: none;
-            transition: border-color 0.15s, background 0.15s;
-        }
-        .profile-link-btn:hover {
-            background: rgba(255, 106, 0, 0.08);
-            border-color: var(--accent-cyan);
-        }
-
-        /* Settings cards */
-        .settings-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            overflow: hidden;
-        }
-        .settings-card-header {
-            padding: 18px 24px 16px;
-            border-bottom: 1px solid var(--inner-border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .settings-card-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 9px;
-            background: var(--inner-bg);
-            border: 1px solid var(--inner-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .settings-card-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .settings-card-subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 1px;
-        }
-        .settings-card-body {
-            padding: 22px 24px;
-        }
-
-        .settings-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px 18px;
-        }
-        .settings-form-grid .form-group { margin: 0; }
-        .settings-form-grid .span-2 { grid-column: span 2; }
-
-        .form-row-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            margin-top: 18px;
-            gap: 10px;
-        }
-
-        .alert-inline {
-            padding: 7px 12px;
-            border-radius: 8px;
-            font-size: 12.5px;
-            white-space: nowrap;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-            display: none;
-        }
-        .alert-inline.success {
-            background: rgba(5, 150, 105, 0.08);
-            border: 1px solid rgba(5, 150, 105, 0.2);
-            color: var(--accent-green);
-        }
-        .alert-inline.error {
-            background: rgba(220, 38, 38, 0.08);
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            color: var(--error);
-        }
-
-        .btn-settings-save {
-            padding: 9px 22px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 600;
-            background: var(--accent-gradient);
-            color: var(--accent-on-button);
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.15s, transform 0.15s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .btn-settings-save:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-settings-save:disabled { opacity: 0.5; cursor: default; transform: none; }
-        .btn-settings-secondary {
-            padding: 8px 18px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 600;
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--card-border);
-            cursor: pointer;
-            transition: background 0.15s, color 0.15s;
-        }
-        .btn-settings-secondary:hover { background: var(--hover-bg); color: var(--text-primary); }
-
-        .capacity-row { display: flex; gap: 10px; align-items: center; }
-        .capacity-row input[type="text"] { flex: 1; }
-        .capacity-row input[type="number"] { width: 80px; }
-        .capacity-row .pct-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
-        .capacity-row .btn-remove { width: 32px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 8px; border: 1px solid var(--secondary-btn-border); background: transparent; color: var(--error); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        @media (max-width: 900px) {
-            .settings-layout-2col { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 600px) {
-            .settings-form-grid { grid-template-columns: 1fr; }
-            .settings-form-grid .span-2 { grid-column: span 1; }
-            .settings-hero { flex-direction: column; align-items: flex-start; gap: 16px; padding: 20px 18px; }
-            .form-row-actions { flex-direction: column; align-items: stretch; }
-            .btn-settings-save { width: 100%; text-align: center; }
-            .settings-card { padding: 18px 16px; }
-        }
-    </style>
+    <link rel="stylesheet" href="assets/theme-v2.css?v=3">
+    <link rel="stylesheet" href="assets/settings-page.css?v=3">
 </head>
 <body>
 
@@ -1060,8 +816,8 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js"></script>
-    <script src="assets/ui-animations.js"></script>
+    <script src="assets/app.js?v=3"></script>
+    <script src="assets/ui-animations.js?v=3"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
 
@@ -1156,8 +912,8 @@
             showToast('Webhook успешно сохранён');
         }
 
-        const userRole  = localStorage.getItem('userRole');
-        const myCompany = localStorage.getItem('userCompany');
+        const userRole  = localStorage.getItem('userRole') || '';
+        const myCompany = localStorage.getItem('userCompany') || '';
 
 
         // ── Integrations ──────────────────────────────────────────────────────
@@ -1538,7 +1294,7 @@
             } catch { resultEl.style.color = '#e07070'; resultEl.textContent = 'Ошибка сети'; }
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        async function bootSettingsPage() {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
             const navProposals = document.getElementById('navProposals');
@@ -1550,7 +1306,6 @@
             loadDigestSettings();
 
             let userEmail = '';
-
             try {
                 const r = await apiFetch(`${SERVER_URL}/auth/me`);
                 if (r.ok) {
@@ -1562,10 +1317,14 @@
             const roleLabel = userRole === 'producer' ? 'Производитель' : userRole === 'customer' ? 'Заказчик' : userRole || '—';
             const initials  = getInitials(myCompany || userEmail);
 
-            document.getElementById('heroAvatar').textContent = initials;
-            document.getElementById('heroName').textContent   = myCompany || userEmail || '—';
-            document.getElementById('heroEmail').textContent  = userEmail || '—';
-            document.getElementById('heroBadge').textContent  = roleLabel;
+            const heroAvatar = document.getElementById('heroAvatar');
+            const heroName = document.getElementById('heroName');
+            const heroEmail = document.getElementById('heroEmail');
+            const heroBadge = document.getElementById('heroBadge');
+            if (heroAvatar) heroAvatar.textContent = initials;
+            if (heroName) heroName.textContent = myCompany || userEmail || '—';
+            if (heroEmail) heroEmail.textContent = userEmail || '—';
+            if (heroBadge) heroBadge.textContent = roleLabel;
             const n2 = document.getElementById('heroName2'); if (n2) n2.textContent = myCompany || userEmail || '—';
             const e2 = document.getElementById('heroEmail2'); if (e2) e2.textContent = userEmail || '—';
 
@@ -1577,76 +1336,39 @@
                     if (mine) {
                         const pl  = document.getElementById('profileLink');
                         const spl = document.getElementById('sidebarProfileLink');
-                        pl.href = `company-profile.html?id=${mine.id}`;
-                        pl.style.display = '';
-                        if (spl) { spl.href = pl.href; spl.style.display = ''; }
+                        if (pl) {
+                            pl.href = `company-profile.html?id=${mine.id}`;
+                            pl.style.display = '';
+                        }
+                        if (spl && pl) { spl.href = pl.href; spl.style.display = ''; }
                         localStorage.setItem('_myCompanyId', mine.id);
                     }
                 }
             } catch { }
 
-            initNotifications();
-            initSidebarBadges();
-            initPushUI();
-            initTelegramUI();
+            if (typeof initNotifications === 'function') initNotifications();
+            if (typeof initSidebarBadges === 'function') initSidebarBadges();
+            if (typeof initPushUI === 'function') initPushUI();
+            if (typeof initTelegramUI === 'function') initTelegramUI();
 
             if (userRole === 'producer') {
-                document.getElementById('capacityCard').style.display = '';
+                const capacityCard = document.getElementById('capacityCard');
+                if (capacityCard) capacityCard.style.display = '';
                 loadCapacity();
             }
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootSettingsPage);
+        } else {
+            bootSettingsPage();
+        }
 
         window.__pageCleanup = function() {
             switchSettingsTab('profile', document.querySelector('.settings-tab-btn'));
         };
 
-        window.__pageInit = async function() {
-            load2faStatus();
-            loadIntegrations();
-            loadTeamMembers();
-            loadDigestSettings();
-
-            let userEmail = '';
-            try {
-                const r = await apiFetch(`${SERVER_URL}/auth/me`);
-                if (r.ok) { const data = await r.json(); userEmail = data.email || ''; }
-            } catch { }
-
-            const roleLabel = userRole === 'producer' ? 'Производитель' : userRole === 'customer' ? 'Заказчик' : userRole || '—';
-            const initials  = getInitials(myCompany || userEmail);
-            document.getElementById('heroAvatar').textContent = initials;
-            document.getElementById('heroName').textContent   = myCompany || userEmail || '—';
-            document.getElementById('heroEmail').textContent  = userEmail || '—';
-            document.getElementById('heroBadge').textContent  = roleLabel;
-            const n2 = document.getElementById('heroName2'); if (n2) n2.textContent = myCompany || userEmail || '—';
-            const e2 = document.getElementById('heroEmail2'); if (e2) e2.textContent = userEmail || '—';
-
-            try {
-                const r = await apiFetch(`${SERVER_URL}/companies`);
-                if (r.ok) {
-                    const companies = await r.json();
-                    const mine = companies.find(c => c.company === myCompany && c.role === userRole);
-                    if (mine) {
-                        const pl  = document.getElementById('profileLink');
-                        const spl = document.getElementById('sidebarProfileLink');
-                        if (pl) { pl.href = `company-profile.html?id=${mine.id}`; pl.style.display = ''; }
-                        if (spl) { spl.href = pl.href; spl.style.display = ''; }
-                        localStorage.setItem('_myCompanyId', mine.id);
-                    }
-                }
-            } catch { }
-
-            initNotifications();
-            initSidebarBadges();
-            initPushUI();
-            initTelegramUI();
-
-            if (userRole === 'producer') {
-                const cc = document.getElementById('capacityCard');
-                if (cc) cc.style.display = '';
-                loadCapacity();
-            }
-        };
+        window.__pageInit = bootSettingsPage;
 
         function getInitials(name) {
             if (!name) return '?';
