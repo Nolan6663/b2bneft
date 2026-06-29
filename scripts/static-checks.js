@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const htmlFiles = fs.readdirSync(root).filter(file => file.endsWith('.html')).sort();
-const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'assets/app.js', 'assets/deals-page.css', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
 
 function fail(message) {
   throw new Error(message);
@@ -132,6 +132,27 @@ function checkAccessGuardrails() {
   if (missing.length) fail(`Missing access guardrails:\n${missing.join('\n')}`);
 }
 
+function checkSpaPageStyles() {
+  const spaPages = htmlFiles.filter(file => {
+    const html = fs.readFileSync(path.join(root, file), 'utf8');
+    return html.includes('id="spa-content"');
+  });
+  const missing = [];
+  for (const file of spaPages) {
+    const html = fs.readFileSync(path.join(root, file), 'utf8');
+    const hasInline = /<style[^>]*data-spa-page/i.test(html);
+    const hasPageCss = /data-spa-page-css/i.test(html);
+    if (!hasInline && !hasPageCss) {
+      missing.push(`${file}: no data-spa-page style or data-spa-page-css link`);
+    }
+  }
+  const appJs = fs.readFileSync(path.join(root, 'assets/app.js'), 'utf8');
+  if (!appJs.includes('syncSpaPageHead') || !appJs.includes('markCurrentPageStyles')) {
+    fail('SPA head sync helpers missing in assets/app.js');
+  }
+  if (missing.length) fail(`SPA pages missing page style markers:\n${missing.join('\n')}`);
+}
+
 function main() {
   checkJavaScriptSyntax();
   const inlineScripts = checkInlineScripts();
@@ -141,6 +162,7 @@ function main() {
   checkServerCanBeImported();
   checkProductionGuardrails();
   checkAccessGuardrails();
+  checkSpaPageStyles();
   console.log(`Static checks passed: ${htmlFiles.length} HTML files, ${inlineScripts} inline scripts`);
 }
 

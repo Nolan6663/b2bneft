@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
   initSpaRouter();
+  markCurrentPageStyles();
 });
 
 /* ---------------------------------------------------------------------
@@ -1025,6 +1026,51 @@ function isSpaUrl(url) {
 
 let _spaNavigating = false;
 
+const SPA_GLOBAL_STYLES = /theme-v2\.css|fonts\.css|zakupki-cat\.css/i;
+
+/** Помечает стили текущей страницы — снимаются при SPA-переходе */
+function markCurrentPageStyles() {
+  document.querySelectorAll('head link[rel="stylesheet"]').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    if (!href || SPA_GLOBAL_STYLES.test(href)) return;
+    link.setAttribute('data-spa-page-css', '1');
+  });
+  document.querySelectorAll('head > style').forEach((style) => {
+    style.setAttribute('data-spa-page', '1');
+  });
+}
+
+/** Подменяет page-specific CSS при SPA-навигации (все кабинетные страницы) */
+function syncSpaPageHead(doc) {
+  document.querySelectorAll(
+    'link[data-spa-page-css], style[data-spa-page], [data-spa-head]'
+  ).forEach((node) => node.remove());
+
+  const head = doc.querySelector('head');
+  if (!head) return;
+
+  head.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    if (!href || SPA_GLOBAL_STYLES.test(href)) return;
+    const el = document.createElement('link');
+    el.rel = 'stylesheet';
+    el.href = href;
+    el.setAttribute('data-spa-head', '1');
+    el.setAttribute('data-spa-page-css', '1');
+    document.head.appendChild(el);
+  });
+
+  head.querySelectorAll('style').forEach((style) => {
+    const css = (style.textContent || '').trim();
+    if (!css) return;
+    const el = document.createElement('style');
+    el.textContent = css;
+    el.setAttribute('data-spa-head', '1');
+    el.setAttribute('data-spa-page', '1');
+    document.head.appendChild(el);
+  });
+}
+
 async function spaNavigate(url) {
   if (_spaNavigating) return;
   _spaNavigating = true;
@@ -1065,6 +1111,7 @@ async function spaNavigate(url) {
 
   currentContent.innerHTML = newContent.innerHTML;
   document.title = doc.title || document.title;
+  syncSpaPageHead(doc);
   history.pushState({ spaUrl: url }, '', target.pathname + target.search);
 
   // Re-init global header/sidebar elements that live inside spa-content
@@ -1110,8 +1157,10 @@ function initSpaRouter() {
   });
 
   window.addEventListener('popstate', (e) => {
-    if (e.state?.spaUrl || document.getElementById('spa-content')) {
-      spaNavigate(location.pathname + location.search);
+    if (e.state?.spaUrl) {
+      spaNavigate(e.state.spaUrl);
+    } else {
+      location.reload();
     }
   });
 }
