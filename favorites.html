@@ -1,4 +1,4 @@
-п»ї<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,21 +7,21 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>РўРµС…Р·Р°РєР°Р· вЂ” РР·Р±СЂР°РЅРЅРѕРµ</title>
+    <title>Техзаказ — Избранное</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=7">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
     <style data-spa-page>
-        /* в”Ђв”Ђ Tabs в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Tabs ------------------------------- */
         .fav-tabs { display:flex; gap:2px; margin-bottom:16px; }
         .fav-tab { padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; background:transparent; color:var(--text-secondary); font-family:inherit; transition:background .15s,color .15s; }
         .fav-tab.active { background:var(--accent-bright); color:#fff; }
         .fav-tab:hover:not(.active) { background:var(--bg-section); color:var(--text-primary); }
 
-        /* в”Ђв”Ђ 2-col layout в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- 2-col layout ------------------------ */
         .fav-layout { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
 
-        /* в”Ђв”Ђ Card grid в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Card grid --------------------------- */
         .fav-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -62,7 +62,7 @@
         .fav-empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-secondary); font-size:14px; }
         .fav-empty svg { opacity:.25; margin-bottom:14px; display:block; margin:0 auto 14px; }
 
-        /* в”Ђв”Ђ Right panel в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Right panel ------------------------- */
         .fav-right { display:flex; flex-direction:column; gap:14px; position:sticky; top:16px; }
         .fav-widget { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); padding:16px 18px; }
         .fav-widget-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); margin-bottom:12px; }
@@ -86,7 +86,7 @@
         .fav-rec-score { font-size:11.5px; font-weight:700; color:var(--accent-bright); }
         .fav-rec-item:hover .fav-rec-name { color:var(--accent-bright); }
 
-        /* в”Ђв”Ђ Saved lists tab в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Saved lists tab --------------------- */
         .fav-list-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius-card); padding:16px 18px; cursor:pointer; margin-bottom:12px; transition:border-color .15s; }
         .fav-list-card:hover { border-color:var(--accent-cyan); }
         .fav-list-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
@@ -97,77 +97,77 @@
 
         <div class="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark" aria-hidden="true"><span>Рў</span></div>
-            <span>РўР•РҐ<b class="tz-accent">Р—РђРљРђР—</b></span>
+            <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+            <span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">Р—Р°РєСѓРїРєРё</div>
-            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">РђРєС‚СѓР°Р»СЊРЅС‹Рµ Р·Р°РєСѓРїРєРё</span><span class="nav-badge" id="navBadgeOrders"></span></a>
-            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">РљР°С‚Р°Р»РѕРі</span></a>
-            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">РњРѕРё РѕС‚РєР»РёРєРё</span><span class="nav-badge" id="navBadgeProposals"></span></a>
+            <div class="sidebar-nav-label">Закупки</div>
+            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Актуальные закупки</span><span class="nav-badge" id="navBadgeOrders"></span></a>
+            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">Каталог</span></a>
+            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">Мои отклики</span><span class="nav-badge" id="navBadgeProposals"></span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РЎРґРµР»РєРё</div>
-            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Р—Р°РєР°Р·С‹</span></a>
-            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Р”РѕСЃС‚Р°РІРєРё</span></a>
-            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РљРѕРЅС‚СЂР°РіРµРЅС‚С‹</span></a>
+            <div class="sidebar-nav-label">Сделки</div>
+            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Заказы</span></a>
+            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Доставки</span></a>
+            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Контрагенты</span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РљРѕРјРїР°РЅРёСЏ</div>
-            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">РђРЅР°Р»РёС‚РёРєР°</span></a>
-            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РЎРѕРѕР±С‰РµРЅРёСЏ</span><span class="nav-badge" id="navBadgeMessages"></span></a>
-            <a class="active" href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">РР·Р±СЂР°РЅРЅРѕРµ</span></a>
-            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">РњРѕР№ РїСЂРѕС„РёР»СЊ</span></a>
-            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">РљР°СЂС‚Р°</span></a>
+            <div class="sidebar-nav-label">Компания</div>
+            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">Аналитика</span></a>
+            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Сообщения</span><span class="nav-badge" id="navBadgeMessages"></span></a>
+            <a class="active" href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">Избранное</span></a>
+            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">Мой профиль</span></a>
+            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">Карта</span></a>
         </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
-            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">РќР°СЃС‚СЂРѕР№РєРё</span></a>
-            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РџРѕРґРґРµСЂР¶РєР°</span></a>
+            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
+            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
             <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="sidebar-collapse-label">РЎРІРµСЂРЅСѓС‚СЊ РјРµРЅСЋ</span>
+            <span class="sidebar-collapse-label">Свернуть меню</span>
         </button>
     </div>
 
     <div id="spa-content" class="main-content">
         <div class="header">
-        <button class="burger-btn" aria-label="РњРµРЅСЋ" onclick="toggleMobileSidebar()">
+        <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>            <h2>РР·Р±СЂР°РЅРЅРѕРµ</h2>
+        </button>            <h2>Избранное</h2>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     <span class="bell-badge" id="bellBadge" style="display:none;"></span>
                 </button>
                 <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
-                    <div class="user-avatar-pill" id="headerInitials">РўР—</div>
+                    <div class="user-avatar-pill" id="headerInitials">ТЗ</div>
                     <div class="user-info-block">
-                        <div class="user-company-name" id="headerCompany">Р—Р°РіСЂСѓР·РєР°вЂ¦</div>
+                        <div class="user-company-name" id="headerCompany">Загрузка…</div>
                         <div class="user-role-name" id="headerRole"></div>
                     </div>
                     <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     <div class="user-dropdown" id="userDropdown">
-                        <a href="settings.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>РќР°СЃС‚СЂРѕР№РєРё</a>
-                        <a href="company-profile.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</a>
+                        <a href="settings.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Настройки</a>
+                        <a href="company-profile.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Профиль компании</a>
                         <div class="user-dropdown-sep"></div>
-                        <button class="user-dropdown-item danger" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button>
+                        <button class="user-dropdown-item danger" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Выйти из аккаунта</button>
                     </div>
                 </div>
             </div>        </div>
 
         <!-- Tabs -->
         <div class="fav-tabs">
-            <button class="fav-tab active" onclick="setFavTab('suppliers',this)">РР·Р±СЂР°РЅРЅС‹Рµ РїРѕСЃС‚Р°РІС‰РёРєРё</button>
-            <button class="fav-tab" onclick="setFavTab('orders',this)">РР·Р±СЂР°РЅРЅС‹Рµ Р·Р°РєСѓРїРєРё</button>
-            <button class="fav-tab" onclick="setFavTab('lists',this)">РЎРѕС…СЂР°РЅС‘РЅРЅС‹Рµ СЃРїРёСЃРєРё</button>
+            <button class="fav-tab active" onclick="setFavTab('suppliers',this)">Избранные поставщики</button>
+            <button class="fav-tab" onclick="setFavTab('orders',this)">Избранные закупки</button>
+            <button class="fav-tab" onclick="setFavTab('lists',this)">Сохранённые списки</button>
         </div>
 
         <!-- Tab: Suppliers -->
@@ -176,21 +176,21 @@
                 <!-- Left: grid -->
                 <div>
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                        <span id="favCountLabel" style="font-size:12.5px;color:var(--text-secondary);">4 РєРѕРјРїР°РЅРёРё СЃРѕС…СЂР°РЅРµРЅС‹</span>
-                        <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="showFavToast('Р“СЂСѓРїРїС‹ РґРѕСЃС‚СѓРїРЅС‹ РІ С‚Р°СЂРёС„Рµ РџСЂРѕС„РµСЃСЃРёРѕРЅР°Р»СЊРЅС‹Р№')">Р“СЂСѓРїРїС‹</button>
+                        <span id="favCountLabel" style="font-size:12.5px;color:var(--text-secondary);">4 компании сохранены</span>
+                        <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="showFavToast('Группы доступны в тарифе Профессиональный')">Группы</button>
                     </div>
                     <div class="fav-grid" id="favGrid">
-                        <div class="fav-empty">Р—Р°РіСЂСѓР·РєР°...</div>
+                        <div class="fav-empty">Загрузка...</div>
                     </div>
                 </div>
 
                 <!-- Right: panels -->
                 <div class="fav-right">
-                    <!-- Р РµРєРѕРјРµРЅРґР°С†РёРё РёР· РєР°С‚Р°Р»РѕРіР° -->
+                    <!-- Рекомендации из каталога -->
                     <div class="fav-widget">
-                        <div class="fav-widget-title">Р РµРєРѕРјРµРЅРґР°С†РёРё</div>
-                        <div id="favRecommendations"><div style="font-size:12.5px;color:var(--text-secondary);">Р—Р°РіСЂСѓР·РєР°вЂ¦</div></div>
-                        <button class="btn-secondary" style="width:100%;margin-top:10px;height:30px;font-size:12px;" onclick="window.location.href='catalog.html'">РЎРјРѕС‚СЂРµС‚СЊ РєР°С‚Р°Р»РѕРі в†’</button>
+                        <div class="fav-widget-title">Рекомендации</div>
+                        <div id="favRecommendations"><div style="font-size:12.5px;color:var(--text-secondary);">Загрузка…</div></div>
+                        <button class="btn-secondary" style="width:100%;margin-top:10px;height:30px;font-size:12px;" onclick="window.location.href='catalog.html'">Смотреть каталог ></button>
                     </div>
                 </div>
             </div>
@@ -200,31 +200,31 @@
         <div id="tabOrders" style="display:none;">
             <div class="fav-layout">
                 <div>
-                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">3 Р·Р°РєСѓРїРєРё РІ РёР·Р±СЂР°РЅРЅРѕРј</div>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">3 закупки в избранном</div>
                     <div style="display:flex;flex-direction:column;gap:10px;">
                         <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">РљРѕРјРїСЂРµСЃСЃРѕСЂ РІРѕР·РґСѓС€РЅС‹Р№ Р’Рџ-50/8</div>
-                            <div class="fav-meta"><span>РљРћ-2026-06-001</span><span>вЂў</span><span>РЎСЂРѕРє РґРѕ 20.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">8 РїСЂРµРґР»РѕР¶РµРЅРёР№</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">РђРєС‚РёРІРЅС‹Р№</span></div>
+                            <div class="fav-name">Компрессор воздушный ВП-50/8</div>
+                            <div class="fav-meta"><span>КО-2026-06-001</span><span>•</span><span>Срок до 20.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">8 предложений</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
                         </div>
                         <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">РќР°СЃРѕСЃ Р¦РќРЎ 38-132 РІ СЃР±РѕСЂРµ</div>
-                            <div class="fav-meta"><span>РљРћ-2026-06-005</span><span>вЂў</span><span>РЎСЂРѕРє РґРѕ 25.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">3 РїСЂРµРґР»РѕР¶РµРЅРёСЏ</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">РђРєС‚РёРІРЅС‹Р№</span></div>
+                            <div class="fav-name">Насос ЦНС 38-132 в сборе</div>
+                            <div class="fav-meta"><span>КО-2026-06-005</span><span>•</span><span>Срок до 25.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">3 предложения</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
                         </div>
                         <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">Р—Р°РїРѕСЂРЅР°СЏ Р°СЂРјР°С‚СѓСЂР° DN50 PN40</div>
-                            <div class="fav-meta"><span>РљРћ-2026-06-006</span><span>вЂў</span><span>РЎСЂРѕРє РґРѕ 08.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">5 РїСЂРµРґР»РѕР¶РµРЅРёР№</span><span style="font-size:11.5px;background:rgba(251,191,36,.1);color:#b45309;padding:2px 8px;border-radius:12px;">Р’ РїСЂРѕРёР·РІРѕРґСЃС‚РІРµ</span></div>
+                            <div class="fav-name">Запорная арматура DN50 PN40</div>
+                            <div class="fav-meta"><span>КО-2026-06-006</span><span>•</span><span>Срок до 08.07.2026</span></div>
+                            <div class="fav-footer"><span class="fav-rating">5 предложений</span><span style="font-size:11.5px;background:rgba(251,191,36,.1);color:#b45309;padding:2px 8px;border-radius:12px;">В производстве</span></div>
                         </div>
                     </div>
                 </div>
                 <div class="fav-right">
                     <div class="fav-widget">
-                        <div class="fav-widget-title">РЎС‚Р°С‚СѓСЃ Р·Р°РєСѓРїРѕРє</div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-cyan);"></div><div class="fav-activity-text">РђРєС‚РёРІРЅС‹С… Р·Р°РєСѓРїРѕРє</div><div class="fav-activity-time"><strong>2</strong></div></div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:#f59e0b;"></div><div class="fav-activity-text">Р’ РїСЂРѕРёР·РІРѕРґСЃС‚РІРµ</div><div class="fav-activity-time"><strong>1</strong></div></div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-green);"></div><div class="fav-activity-text">Р—Р°РІРµСЂС€С‘РЅРЅС‹С…</div><div class="fav-activity-time"><strong>0</strong></div></div>
+                        <div class="fav-widget-title">Статус закупок</div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-cyan);"></div><div class="fav-activity-text">Активных закупок</div><div class="fav-activity-time"><strong>2</strong></div></div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:#f59e0b;"></div><div class="fav-activity-text">В производстве</div><div class="fav-activity-time"><strong>1</strong></div></div>
+                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-green);"></div><div class="fav-activity-text">Завершённых</div><div class="fav-activity-time"><strong>0</strong></div></div>
                     </div>
                 </div>
             </div>
@@ -233,31 +233,31 @@
         <!-- Tab: Lists -->
         <div id="tabLists" style="display:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <span style="font-size:12.5px;color:var(--text-secondary);">3 СЃРѕС…СЂР°РЅС‘РЅРЅС‹С… СЃРїРёСЃРєР°</span>
-                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="createList()">пј‹ РЎРѕР·РґР°С‚СЊ СЃРїРёСЃРѕРє</button>
+                <span style="font-size:12.5px;color:var(--text-secondary);">3 сохранённых списка</span>
+                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="createList()">+ Создать список</button>
             </div>
             <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">РџРѕСЃС‚Р°РІС‰РёРєРё Р РўР</div>
-                <div class="fav-list-meta">3 РєРѕРјРїР°РЅРёРё В· РћР±РЅРѕРІР»С‘РЅ 15.06.2026</div>
+                <div class="fav-list-name">Поставщики РТИ</div>
+                <div class="fav-list-meta">3 компании · Обновлён 15.06.2026</div>
             </div>
             <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚ РЈСЂР°Р»</div>
-                <div class="fav-list-meta">5 РєРѕРјРїР°РЅРёР№ В· РћР±РЅРѕРІР»С‘РЅ 10.06.2026</div>
+                <div class="fav-list-name">Металлопрокат Урал</div>
+                <div class="fav-list-meta">5 компаний · Обновлён 10.06.2026</div>
             </div>
             <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</div>
-                <div class="fav-list-meta">2 РєРѕРјРїР°РЅРёРё В· РћР±РЅРѕРІР»С‘РЅ 01.06.2026</div>
+                <div class="fav-list-name">Насосное оборудование</div>
+                <div class="fav-list-meta">2 компании · Обновлён 01.06.2026</div>
             </div>
         </div>
     </div>
 
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width: 440px;">
-            <h3>РЈРІРµРґРѕРјР»РµРЅРёСЏ РїР»Р°С‚С„РѕСЂРјС‹</h3>
+            <h3>Уведомления платформы</h3>
             <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
             <div class="modal-actions" style="justify-content: space-between;">
-                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Р—Р°РєСЂС‹С‚СЊ</button>
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
@@ -296,10 +296,10 @@
         };
 
         const MOCK_FAVS = [
-            { id:1, company:'РћРћРћ В«РќРµС„С‚РµРџСЂРѕРјРЎРЅР°Р±В»', role:'producer', status:'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ', city:'РўСЋРјРµРЅСЊ', rating:4.8, specialization:'Р РµР·РёРЅРѕС‚РµС…РЅРёС‡РµСЃРєРёРµ РёР·РґРµР»РёСЏ (Р РўР), РњРўР ', yearsExperience:15 },
-            { id:2, company:'РћРћРћ В«РђРєС‚РёРІРЎРЅР°Р±В»', role:'producer', status:'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ', city:'Р•РєР°С‚РµСЂРёРЅР±СѓСЂРі', rating:4.6, specialization:'РњРµС‚Р°Р»Р»РѕРєРѕРЅСЃС‚СЂСѓРєС†РёРё, С‚СЂСѓР±РЅР°СЏ Р°СЂРјР°С‚СѓСЂР°', yearsExperience:12 },
-            { id:3, company:'РџРђРћ В«Р—Р°РІРѕРґ Р РўРВ»', role:'producer', status:'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ', city:'РљР°Р·Р°РЅСЊ', rating:4.7, specialization:'Р РµР·РёРЅРѕС‚РµС…РЅРёС‡РµСЃРєРёРµ РёР·РґРµР»РёСЏ', yearsExperience:38 },
-            { id:4, company:'РђРћ В«Р РµРіРёРѕРЅРЎРЅР°Р±В»', role:'customer', status:'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ', city:'РЎСѓСЂРіСѓС‚', rating:4.3, specialization:'Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ, РљРРџРёРђ', yearsExperience:9 },
+            { id:1, company:'ООО «НефтеПромСнаб»', role:'producer', status:'Верифицирован', city:'Тюмень', rating:4.8, specialization:'Резинотехнические изделия (РТИ), МТР', yearsExperience:15 },
+            { id:2, company:'ООО «АктивСнаб»', role:'producer', status:'Верифицирован', city:'Екатеринбург', rating:4.6, specialization:'Металлоконструкции, трубная арматура', yearsExperience:12 },
+            { id:3, company:'ПАО «Завод РТИ»', role:'producer', status:'Верифицирован', city:'Казань', rating:4.7, specialization:'Резинотехнические изделия', yearsExperience:38 },
+            { id:4, company:'АО «РегионСнаб»', role:'customer', status:'Верифицирован', city:'Сургут', rating:4.3, specialization:'Электрооборудование, КИПиА', yearsExperience:9 },
         ];
 
         function showFavToast(msg) {
@@ -332,15 +332,15 @@
             card.className = 'fav-list-card';
             card.style.cursor = 'pointer';
             card.onclick = () => openList(card);
-            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name)}</div><div class="fav-list-meta">0 РєРѕРјРїР°РЅРёР№ В· РЎРѕР·РґР°РЅ ${today}</div>`;
+            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name)}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
             container.insertBefore(card, container.firstChild);
-            showFavToast(`РЎРїРёСЃРѕРє В«${name}В» СЃРѕР·РґР°РЅ`);
+            showFavToast(`Список «${name}» создан`);
         }
 
         function openList(card) {
-            const name = card.querySelector('.fav-list-name')?.textContent || 'РЎРїРёСЃРѕРє';
+            const name = card.querySelector('.fav-list-name')?.textContent || 'Список';
             const meta = card.querySelector('.fav-list-meta')?.textContent || '';
-            showFavToast(`РЎРїРёСЃРѕРє В«${name}В» В· ${meta}`);
+            showFavToast(`Список «${name}» · ${meta}`);
         }
 
         function setFavTab(tab, btn) {
@@ -358,21 +358,21 @@
                 const r = await apiFetch(`${SERVER_URL}/companies?role=producer&limit=3&sort=rating`);
                 const companies = r.ok ? await r.json() : [];
                 const list = Array.isArray(companies) ? companies : (companies.companies || companies.items || []);
-                if (!list.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">РќРµС‚ РґР°РЅРЅС‹С…</div>'; return; }
+                if (!list.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">Нет данных</div>'; return; }
                 el.innerHTML = list.slice(0, 3).map(c => {
-                    const letter = (c.company || c.name || '?').replace(/[В«В»"РћРћРћ РђРћРРџРї]/g,'').trim().charAt(0).toUpperCase();
-                    const score = c.rating ? Math.round(parseFloat(c.rating) / 5 * 100) + '%' : 'вЂ”';
+                    const letter = (c.company || c.name || '?').replace(/[«»"ООО АОИПп]/g,'').trim().charAt(0).toUpperCase();
+                    const score = c.rating ? Math.round(parseFloat(c.rating) / 5 * 100) + '%' : '—';
                     return `<div class="fav-rec-item" onclick="window.location.href='company-profile.html?id=${c.id}'">
                         <div class="fav-rec-avatar">${escapeHtml(letter)}</div>
                         <div class="fav-rec-info">
-                            <div class="fav-rec-name">${escapeHtml(c.company || c.name || 'вЂ”')}</div>
+                            <div class="fav-rec-name">${escapeHtml(c.company || c.name || '—')}</div>
                             <div class="fav-rec-spec">${escapeHtml(c.specialization || c.spec || '')}</div>
                         </div>
                         <div class="fav-rec-score">${escapeHtml(score)}</div>
                     </div>`;
                 }).join('');
             } catch {
-                el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">РќРµС‚ РґР°РЅРЅС‹С…</div>';
+                el.innerHTML = '<div style="font-size:12.5px;color:var(--text-secondary);">Нет данных</div>';
             }
         }
 
@@ -388,26 +388,26 @@
 
         function renderFavorites(favs) {
             const label = document.getElementById('favCountLabel');
-            if (label) label.textContent = `${favs.length} РєРѕРјРїР°РЅРё${favs.length===1?'СЏ':favs.length<5?'Рё':'Р№'} СЃРѕС…СЂР°РЅРµРЅРѕ`;
+            if (label) label.textContent = `${favs.length} компани${favs.length===1?'я':favs.length<5?'и':'й'} сохранено`;
 
             const grid = document.getElementById('favGrid');
             if (!favs.length) {
                 grid.innerHTML = '';
                 grid.appendChild(createEmptyState({
                     icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-                    title: 'Р’ РёР·Р±СЂР°РЅРЅРѕРј РїРѕРєР° РЅРёС‡РµРіРѕ РЅРµС‚',
-                    desc: 'Р”РѕР±Р°РІР»СЏР№С‚Рµ РєРѕРјРїР°РЅРёРё РёР· СЂР°Р·РґРµР»Р° РљРѕРЅС‚СЂР°РіРµРЅС‚С‹ вЂ” РѕРЅРё РїРѕСЏРІСЏС‚СЃСЏ Р·РґРµСЃСЊ',
-                    ctaText: 'РџРµСЂРµР№С‚Рё Рє РєРѕРЅС‚СЂР°РіРµРЅС‚Р°Рј',
+                    title: 'В избранном пока ничего нет',
+                    desc: 'Добавляйте компании из раздела Контрагенты — они появятся здесь',
+                    ctaText: 'Перейти к контрагентам',
                     ctaHref: 'partners.html'
                 }));
                 return;
             }
 
             grid.innerHTML = favs.map(c => {
-                const letter = (c.company||'?').replace(/[В«В»"]/g,'').trim().charAt(0).toUpperCase();
-                const roleText = c.role==='producer'?'РџРѕСЃС‚Р°РІС‰РёРє':'Р—Р°РєР°Р·С‡РёРє';
+                const letter = (c.company||'?').replace(/[«»"]/g,'').trim().charAt(0).toUpperCase();
+                const roleText = c.role==='producer'?'Поставщик':'Заказчик';
                 const roleClass = c.role==='producer'?'producer':'customer';
-                const verBadge = c.status==='Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ'?'<span style="font-size:10.5px;font-weight:600;color:var(--accent-green);">вњ“ Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ</span>':'';
+                const verBadge = c.status==='Верифицирован'?'<span style="font-size:10.5px;font-weight:600;color:var(--accent-green);">? Верифицирован</span>':'';
                 return `
                 <div class="fav-card" onclick="window.location.href='company-profile.html?id=${c.id}'">
                     <div class="fav-card-top">
@@ -416,12 +416,12 @@
                             <div class="fav-name">${escapeHtml(c.company)}</div>
                             <span class="badge ${roleClass}" style="font-size:10.5px;">${roleText}</span>
                         </div>
-                        <button class="fav-unstar" onclick="removeFav(event,${c.id})">в…</button>
+                        <button class="fav-unstar" onclick="removeFav(event,${c.id})">?</button>
                     </div>
-                    ${c.city?`<div class="fav-meta"><span>рџ“Ќ ${escapeHtml(c.city)}</span>${c.yearsExperience?`<span>РћРїС‹С‚: ${c.yearsExperience} Р»РµС‚</span>`:''}</div>`:''}
+                    ${c.city?`<div class="fav-meta"><span>?? ${escapeHtml(c.city)}</span>${c.yearsExperience?`<span>Опыт: ${c.yearsExperience} лет</span>`:''}</div>`:''}
                     ${c.specialization?`<div class="fav-spec">${escapeHtml(c.specialization)}</div>`:''}
                     <div class="fav-footer">
-                        <span class="fav-rating">${c.rating?'в… '+c.rating:''}</span>
+                        <span class="fav-rating">${c.rating?'? '+c.rating:''}</span>
                         ${verBadge}
                     </div>
                 </div>`;
@@ -434,20 +434,20 @@
                 const r = await apiFetch(`${SERVER_URL}/favorites/${companyId}`, { method: 'DELETE' });
                 if (r.ok) loadFavorites();
                 else { /* just re-render without this item */ }
-            } catch { showFavToast('РЎРµСЂРІРµСЂ РЅРµРґРѕСЃС‚СѓРїРµРЅ', 'error'); }
+            } catch { showFavToast('Сервер недоступен', 'error'); }
         }
     </script>
 
     <div id="createListModal" onclick="if(event.target===this)closeCreateListModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);">
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">РќРѕРІС‹Р№ СЃРїРёСЃРѕРє</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РґР»СЏ РЅРѕРІРѕРіРѕ СЃРїРёСЃРєР° РёР·Р±СЂР°РЅРЅС‹С…</div>
-            <input id="newListName" type="text" placeholder="РќР°РїСЂРёРјРµСЂ: РџРѕСЃС‚Р°РІС‰РёРєРё Р РўР" maxlength="60"
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Новый список</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">Введите название для нового списка избранных</div>
+            <input id="newListName" type="text" placeholder="Например: Поставщики РТИ" maxlength="60"
                 style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
                 onkeydown="if(event.key==='Enter')confirmCreateList();if(event.key==='Escape')closeCreateListModal();">
             <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-                <button onclick="closeCreateListModal()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;">РћС‚РјРµРЅР°</button>
-                <button onclick="confirmCreateList()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">РЎРѕР·РґР°С‚СЊ</button>
+                <button onclick="closeCreateListModal()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;">Отмена</button>
+                <button onclick="confirmCreateList()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Создать</button>
             </div>
         </div>
     </div>

@@ -2220,3 +2220,103 @@ table {
   .orders-table th:nth-child(9),
   .orders-table td:nth-child(9) { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   HUMANIZATION — убираем деревянность
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 1. Кнопки — глубина вместо flat */
+.btn-primary, .btn-respond, .btn-modal-submit {
+  background: linear-gradient(160deg, #FF7A1A 0%, #E54400 100%) !important;
+  box-shadow: 0 2px 0 #A83200, 0 4px 16px rgba(255,106,0,.22) !important;
+  letter-spacing: .01em;
+}
+.btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover {
+  box-shadow: 0 3px 0 #A83200, 0 8px 24px rgba(255,106,0,.32) !important;
+  transform: translateY(-1px) !important;
+}
+.btn-primary:active, .btn-respond:active, .btn-modal-submit:active {
+  box-shadow: 0 1px 0 #A83200, 0 2px 8px rgba(255,106,0,.18) !important;
+  transform: translateY(1px) !important;
+}
+
+/* 2. KPI — числа крупнее, с характером */
+.kpi-value {
+  font-size: 34px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--text-primary-alt) !important;
+  line-height: 1 !important;
+}
+.kpi-label {
+  font-size: 10.5px !important;
+  letter-spacing: .07em !important;
+}
+
+/* Первая KPI-карточка — выделяется как featured */
+.kpi-row .kpi-card:first-child {
+  background: linear-gradient(145deg, #0B2233 0%, #102E47 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 20px rgba(11,34,51,.25) !important;
+}
+.kpi-row .kpi-card:first-child .kpi-label { color: rgba(255,255,255,.5) !important; }
+.kpi-row .kpi-card:first-child .kpi-value { color: #fff !important; }
+.kpi-row .kpi-card:first-child .kpi-delta { color: rgba(255,255,255,.7) !important; }
+.kpi-row .kpi-card:first-child .kpi-sub   { color: rgba(255,255,255,.45) !important; }
+.kpi-row .kpi-card:first-child .kpi-icon  { background: rgba(255,255,255,.1) !important; color: #FF6A00 !important; }
+.kpi-row .kpi-card:first-child:hover { box-shadow: 0 8px 28px rgba(11,34,51,.3) !important; }
+
+/* 3. proc-row — hover с левым акцентом вместо простого фона */
+.proc-row {
+  border-left: 3px solid transparent;
+  padding-left: 11px !important;
+  transition: background .15s, border-color .15s !important;
+}
+.proc-row:hover {
+  background: var(--bg-section) !important;
+  border-left-color: var(--card-border) !important;
+}
+.proc-row.row-selected {
+  border-left-color: var(--accent-cyan) !important;
+}
+
+/* 4. Страницы — заголовки с большим контрастом */
+.header h2 {
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--text-primary-alt) !important;
+}
+.section h3 {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em !important;
+}
+
+/* 5. Sidebar — чуть теплее, не такой плоский */
+.sidebar {
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 95%, #0B2233 5%) 100%) !important;
+}
+.sidebar a.active {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06) !important;
+}
+
+/* 6. Бейджи — чуть меньше фон, больше характер */
+.badge {
+  font-size: 10.5px !important;
+  letter-spacing: .03em !important;
+  font-weight: 700 !important;
+}
+
+/* 7. Поля ввода — фокус живее */
+.form-group:focus-within, input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(0,198,198,.1) !important;
+  outline: none !important;
+}
+
+/* 8. Числа в таблицах — моноширинный шрифт не так бросается */
+.proc-row-num, .proc-row-deadline {
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+}

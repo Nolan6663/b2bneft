@@ -1,4 +1,4 @@
-п»ї<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,23 +7,23 @@
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/favicon.svg">
-    <meta property="og:site_name" content="РўРµС…Р—Р°РєР°Р·">
+    <meta property="og:site_name" content="ТехЗаказ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>РўРµС…Р·Р°РєР°Р· вЂ” РљР°СЂС‚Р° РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… РїСЂРµРґРїСЂРёСЏС‚РёР№ Р РѕСЃСЃРёРё</title>
-    <meta name="description" content="РРЅС‚РµСЂР°РєС‚РёРІРЅР°СЏ РєР°СЂС‚Р° РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… РїСЂРµРґРїСЂРёСЏС‚РёР№ Рё Р·Р°РІРѕРґРѕРІ Р РѕСЃСЃРёРё. РќР°С…РѕРґРёС‚Рµ РїРѕСЃС‚Р°РІС‰РёРєРѕРІ Рё РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№ РІ РІР°С€РµРј СЂРµРіРёРѕРЅРµ РЅР° РїР»Р°С‚С„РѕСЂРјРµ РўР•РҐР—РђРљРђР—.">
+    <title>Техзаказ — Карта промышленных предприятий России</title>
+    <meta name="description" content="Интерактивная карта промышленных предприятий и заводов России. Находите поставщиков и производителей в вашем регионе на платформе ТЕХЗАКАЗ.">
     <link rel="canonical" href="https://texzakaz.ru/map.html">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://texzakaz.ru/map.html">
-    <meta property="og:title" content="РљР°СЂС‚Р° РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… РїСЂРµРґРїСЂРёСЏС‚РёР№ Р РѕСЃСЃРёРё вЂ” РўР•РҐР—РђРљРђР—">
-    <meta property="og:description" content="РРЅС‚РµСЂР°РєС‚РёРІРЅР°СЏ РєР°СЂС‚Р° РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… РїСЂРµРґРїСЂРёСЏС‚РёР№ Рё Р·Р°РІРѕРґРѕРІ Р РѕСЃСЃРёРё. РќР°С…РѕРґРёС‚Рµ РїРѕСЃС‚Р°РІС‰РёРєРѕРІ Рё РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№ РІ РІР°С€РµРј СЂРµРіРёРѕРЅРµ.">
+    <meta property="og:title" content="Карта промышленных предприятий России — ТЕХЗАКАЗ">
+    <meta property="og:description" content="Интерактивная карта промышленных предприятий и заводов России. Находите поставщиков и производителей в вашем регионе.">
     <meta property="og:locale" content="ru_RU">
     <meta name="robots" content="index, follow">
-    <link rel="stylesheet" href="assets/theme-v2.css?v=7">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" data-spa-page-css>
     <style data-spa-page>
         .kpi-card::after { display: none !important; }
 
-        /* в”Ђв”Ђ Map 3-col layout в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Map 3-col layout ----------------------------------------- */
         .map-layout {
             display: grid;
             grid-template-columns: 220px 1fr 290px;
@@ -34,7 +34,7 @@
             align-items: start;
         }
 
-        /* в”Ђв”Ђ Left filter sidebar в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Left filter sidebar -------------------------------------- */
         .map-filter-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -87,7 +87,7 @@
         }
         .mf-apply-btn:hover { opacity: .85; }
 
-        /* в”Ђв”Ђ Map center в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Map center ----------------------------------------------- */
         .map-center {
             border-radius: var(--radius-card);
             overflow: hidden;
@@ -141,7 +141,7 @@
         .map-empty-card b { display:block; color:var(--text-primary); font-size:14px; margin-bottom:6px; }
         .map-empty-card span { color:var(--text-secondary); font-size:12.5px; line-height:1.45; }
 
-        /* в”Ђв”Ђ Right company list в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Right company list --------------------------------------- */
         .map-company-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -200,7 +200,7 @@
         }
         .mcp-write-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 
-        /* в”Ђв”Ђ Custom map markers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Custom map markers --------------------------------------- */
         .map-marker {
             width: 34px; height: 34px; border-radius: 12px 12px 12px 4px;
             border: 3px solid #fff; box-shadow: 0 8px 18px rgba(15,23,42,.24);
@@ -211,7 +211,7 @@
         .map-marker span { transform: rotate(45deg); display:block; }
         .map-marker.verified { box-shadow: 0 8px 20px rgba(18,168,102,.28); }
 
-        /* в”Ђв”Ђ Popup в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Popup ---------------------------------------------------- */
         .leaflet-popup-content-wrapper {
             background: var(--card-bg) !important; border: 1px solid var(--card-border) !important;
             border-radius: var(--radius-card) !important; box-shadow: 0 8px 28px rgba(0,0,0,.4) !important;
@@ -259,7 +259,7 @@
             z-index:2;
         }
 
-        /* в”Ђв”Ђ Bottom stats section в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Bottom stats section ------------------------------------- */
         .map-stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -288,7 +288,7 @@
         .chart-bar:hover { opacity: 1; }
         .chart-bar-label { font-size: 10px; color: var(--text-secondary); }
 
-        /* в”Ђв”Ђ MapLibre popup в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- MapLibre popup ------------------------------------------- */
         .maplibregl-popup-content { background:var(--card-bg) !important; border:1px solid var(--card-border) !important; border-radius:var(--radius-card) !important; box-shadow:0 8px 28px rgba(0,0,0,.35) !important; color:var(--text-primary) !important; padding:0 !important; }
         .maplibregl-popup-close-button { color:var(--text-secondary) !important; font-size:18px !important; top:8px !important; right:10px !important; padding:0 4px !important; background:none !important; }
         .maplibregl-popup-close-button:hover { color:var(--text-primary) !important; }
@@ -299,7 +299,7 @@
         .maplibregl-ctrl-attrib { background:rgba(7,27,42,0.7) !important; color:var(--text-secondary) !important; font-size:10px !important; }
         .maplibregl-ctrl-attrib a { color:var(--text-secondary) !important; }
 
-        /* в”Ђв”Ђ Factory pin marker в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Factory pin marker --------------------------------------- */
         .factory-pin { position:relative; width:36px; height:44px; cursor:pointer; filter:drop-shadow(0 4px 14px rgba(0,0,0,.55)); }
         .pin-dot { width:36px; height:36px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2.5px solid rgba(255,255,255,.22); transition:transform .18s; }
         .pin-dot span { transform:rotate(45deg); font-weight:800; font-size:14px; color:#fff; line-height:1; }
@@ -310,7 +310,7 @@
         .factory-pin.pin-new .pin-dot { animation:pinAppear .55s cubic-bezier(.34,1.56,.64,1) forwards; }
         @keyframes pinAppear { from { transform:rotate(-45deg) scale(0); opacity:0; } to { transform:rotate(-45deg) scale(1); opacity:1; } }
 
-        /* в”Ђв”Ђ New factory toast в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- New factory toast ---------------------------------------- */
         .map-new-toast { position:absolute; bottom:22px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(65,189,151,.96); color:#fff; padding:10px 18px; border-radius:20px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; opacity:0; transition:all .3s ease; z-index:100; pointer-events:none; white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.3); }
         .map-new-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -336,57 +336,57 @@
 <body>
         <div class="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark" aria-hidden="true"><span>Рў</span></div>
-            <span>РўР•РҐ<b class="tz-accent">Р—РђРљРђР—</b></span>
+            <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+            <span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">Р—Р°РєСѓРїРєРё</div>
-            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">РђРєС‚СѓР°Р»СЊРЅС‹Рµ Р·Р°РєСѓРїРєРё</span><span class="nav-badge" id="navBadgeOrders"></span></a>
-            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">РљР°С‚Р°Р»РѕРі</span></a>
-            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">РњРѕРё РѕС‚РєР»РёРєРё</span><span class="nav-badge" id="navBadgeProposals"></span></a>
+            <div class="sidebar-nav-label">Закупки</div>
+            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Актуальные закупки</span><span class="nav-badge" id="navBadgeOrders"></span></a>
+            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">Каталог</span></a>
+            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">Мои отклики</span><span class="nav-badge" id="navBadgeProposals"></span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РЎРґРµР»РєРё</div>
-            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Р—Р°РєР°Р·С‹</span></a>
-            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Р”РѕСЃС‚Р°РІРєРё</span></a>
-            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РљРѕРЅС‚СЂР°РіРµРЅС‚С‹</span></a>
+            <div class="sidebar-nav-label">Сделки</div>
+            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Заказы</span></a>
+            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Доставки</span></a>
+            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Контрагенты</span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РљРѕРјРїР°РЅРёСЏ</div>
-            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">РђРЅР°Р»РёС‚РёРєР°</span></a>
-            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РЎРѕРѕР±С‰РµРЅРёСЏ</span><span class="nav-badge" id="navBadgeMessages"></span></a>
-            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">РР·Р±СЂР°РЅРЅРѕРµ</span></a>
-            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">РњРѕР№ РїСЂРѕС„РёР»СЊ</span></a>
-            <a class="active" href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">РљР°СЂС‚Р°</span></a>
+            <div class="sidebar-nav-label">Компания</div>
+            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">Аналитика</span></a>
+            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Сообщения</span><span class="nav-badge" id="navBadgeMessages"></span></a>
+            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">Избранное</span></a>
+            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">Мой профиль</span></a>
+            <a class="active" href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">Карта</span></a>
         </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
-            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">РќР°СЃС‚СЂРѕР№РєРё</span></a>
-            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РџРѕРґРґРµСЂР¶РєР°</span></a>
+            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
+            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
             <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="sidebar-collapse-label">РЎРІРµСЂРЅСѓС‚СЊ РјРµРЅСЋ</span>
+            <span class="sidebar-collapse-label">Свернуть меню</span>
         </button>
     </div>
 
     <div id="spa-content" class="main-content">
         <!-- Header -->
         <div class="header">
-            <button class="burger-btn" aria-label="РњРµРЅСЋ" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+            <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div style="display:flex;align-items:center;gap:16px;">
-                <h1 style="font-size:inherit;font-weight:inherit;margin:0;">РљР°СЂС‚Р° РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… РїСЂРµРґРїСЂРёСЏС‚РёР№</h1>
-                <input class="map-search-inp" id="mapSearch" type="text" placeholder="РџРѕРёСЃРє РїРѕ РіРѕСЂРѕРґСѓ РёР»Рё РєРѕРјРїР°РЅРёРё..." style="width:260px;">
+                <h1 style="font-size:inherit;font-weight:inherit;margin:0;">Карта промышленных предприятий</h1>
+                <input class="map-search-inp" id="mapSearch" type="text" placeholder="Поиск по городу или компании..." style="width:260px;">
             </div>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>
-                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">РўР—</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Р—Р°РіСЂСѓР·РєР°вЂ¦</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">РќР°СЃС‚СЂРѕР№РєРё</a><a href="company-profile.html" class="user-dropdown-item">РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button></div></div>
+                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">ТЗ</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Загрузка…</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">Настройки</a><a href="company-profile.html" class="user-dropdown-item">Профиль компании</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Выйти из аккаунта</button></div></div>
             </div>
         </div>
 
@@ -394,35 +394,35 @@
         <div class="kpi-row">
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">РђРєС‚РёРІРЅС‹С… РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</div>
+                    <div class="kpi-label">Активных поставщиков</div>
                     <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient></defs><polyline points="0,24 13,20 26,22 40,15 53,17 66,10 80,8" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,24 13,20 26,22 40,15 53,17 66,10 80,8 80,30 0,30" fill="url(#mk1)"/></svg>
                 </div>
                 <div class="kpi-value" id="mapKpi1">1 243</div>
-                <div class="kpi-sub kpi-delta positive">в†‘ 12% Рє РїСЂРѕС€Р»РѕРјСѓ РєРІР°СЂС‚Р°Р»Сѓ</div>
+                <div class="kpi-sub kpi-delta positive">^ 12% к прошлому кварталу</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">РџСЂРµРґР»РѕР¶РµРЅРёР№ РЅР° СЂР°СЃСЃРјРѕС‚СЂРµРЅРёРё</div>
+                    <div class="kpi-label">Предложений на рассмотрении</div>
                     <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs><polyline points="0,22 13,18 26,20 40,12 53,14 66,8 80,10" stroke="var(--accent-blue)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,22 13,18 26,20 40,12 53,14 66,8 80,10 80,30 0,30" fill="url(#mk2)"/></svg>
                 </div>
                 <div class="kpi-value" id="mapKpi2">326</div>
-                <div class="kpi-sub">Р°РєС‚РёРІРЅС‹С… Р·Р°РїСЂРѕСЃРѕРІ</div>
+                <div class="kpi-sub">активных запросов</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅРЅС‹С… РїР°СЂС‚РЅС‘СЂРѕРІ</div>
+                    <div class="kpi-label">Верифицированных партнёров</div>
                     <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-green)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0"/></linearGradient></defs><polyline points="0,25 13,22 26,20 40,18 53,14 66,12 80,9" stroke="var(--accent-green)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,25 13,22 26,20 40,18 53,14 66,12 80,9 80,30 0,30" fill="url(#mk3)"/></svg>
                 </div>
                 <div class="kpi-value" id="mapKpi3" style="color:var(--accent-green);">72</div>
-                <div class="kpi-sub">РїСЂРѕС€Р»Рё РїСЂРѕРІРµСЂРєСѓ</div>
+                <div class="kpi-sub">прошли проверку</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">РЎС‚Р°С‚РёСЃС‚РёРєР° РїР°СЂС‚РЅС‘СЂРѕРІ</div>
+                    <div class="kpi-label">Статистика партнёров</div>
                     <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient></defs><polyline points="0,20 13,22 26,17 40,18 53,13 66,15 80,11" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,20 13,22 26,17 40,18 53,13 66,15 80,11 80,30 0,30" fill="url(#mk4)"/></svg>
                 </div>
                 <div class="kpi-value" id="mapKpi4">54</div>
-                <div class="kpi-sub kpi-delta positive">в†‘ РЅРѕРІС‹С… Р·Р° РјРµСЃСЏС†</div>
+                <div class="kpi-sub kpi-delta positive">^ новых за месяц</div>
             </div>
         </div>
 
@@ -430,36 +430,36 @@
         <div class="map-layout">
             <!-- Left: filter panel -->
             <div class="map-filter-panel">
-                <div class="mf-title">Р¤РёР»СЊС‚СЂС‹ РєР°СЂС‚С‹</div>
+                <div class="mf-title">Фильтры карты</div>
 
                 <div class="mf-section">
-                    <div class="mf-label">РўРёРї РїСЂРѕРёР·РІРѕРґСЃС‚РІР°</div>
+                    <div class="mf-label">Тип производства</div>
                     <div class="mf-check-list" id="categoryFilters">
-                        <div style="color:var(--text-secondary);font-size:12px;">Р—Р°РіСЂСѓР·РєР° С‚РёРїРѕРІ...</div>
+                        <div style="color:var(--text-secondary);font-size:12px;">Загрузка типов...</div>
                     </div>
                 </div>
 
                 <hr class="mf-divider">
 
                 <div class="mf-section">
-                    <div class="mf-label">РЎС‚Р°С‚СѓСЃ РєРѕРјРїР°РЅРёРё</div>
-                    <label class="mf-check"><input type="checkbox" id="verifiedOnly"><span>РўРѕР»СЊРєРѕ РІРµСЂРёС„РёС†РёСЂРѕРІР°РЅРЅС‹Рµ</span></label>
+                    <div class="mf-label">Статус компании</div>
+                    <label class="mf-check"><input type="checkbox" id="verifiedOnly"><span>Только верифицированные</span></label>
                 </div>
 
                 <hr class="mf-divider">
 
                 <div class="mf-section">
-                    <div class="mf-label">Р РµРіРёРѕРЅ</div>
+                    <div class="mf-label">Регион</div>
                 <div class="mf-select-wrap">
                     <select class="mf-select" id="regionSelect">
-                        <option value="">Р’СЃРµ СЂРµРіРёРѕРЅС‹</option>
+                        <option value="">Все регионы</option>
                     </select>
                 </div>
                 </div>
 
-                <div class="map-counter-txt" id="mapCounter">Р—Р°РіСЂСѓР·РєР°...</div>
+                <div class="map-counter-txt" id="mapCounter">Загрузка...</div>
 
-                <button class="mf-apply-btn" onclick="applyFilters()">РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹</button>
+                <button class="mf-apply-btn" onclick="applyFilters()">Применить фильтры</button>
             </div>
 
             <!-- Center: map -->
@@ -467,8 +467,8 @@
                 <div class="map-production-summary" id="mapProductionSummary"></div>
                 <div class="map-empty-state" id="mapEmptyState">
                     <div class="map-empty-card">
-                        <b>РќРµС‚ РїСЂРѕРёР·РІРѕРґСЃС‚РІ СЃ РіРµРѕРґР°РЅРЅС‹РјРё</b>
-                        <span>Р—Р°РїРѕР»РЅРёС‚Рµ РіРѕСЂРѕРґ РІ РїСЂРѕС„РёР»Рµ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЏ РёР»Рё РґРѕР±Р°РІСЊС‚Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹, Рё РїСЂРµРґРїСЂРёСЏС‚РёРµ РїРѕСЏРІРёС‚СЃСЏ РЅР° РєР°СЂС‚Рµ.</span>
+                        <b>Нет производств с геоданными</b>
+                        <span>Заполните город в профиле производителя или добавьте координаты, и предприятие появится на карте.</span>
                     </div>
                 </div>
                 <div id="map"></div>
@@ -477,15 +477,15 @@
             <!-- Right: company list -->
             <div class="map-company-panel">
                 <div class="mcp-header">
-                    <span class="mcp-title">РџСЂРѕРёР·РІРѕРґСЃС‚РІР° РЅР° РєР°СЂС‚Рµ</span>
-                    <span class="mcp-count" id="mcpCount">0 РєРѕРјРїР°РЅРёР№</span>
+                    <span class="mcp-title">Производства на карте</span>
+                    <span class="mcp-count" id="mcpCount">0 компаний</span>
                 </div>
                 <div class="mcp-tabs">
-                    <div class="mcp-tab active" onclick="setMcpTab('list',this)">РџРѕ СЃРїРёСЃРєСѓ</div>
-                    <div class="mcp-tab" onclick="setMcpTab('top',this)">РџРѕ РјРѕС‰РЅРѕСЃС‚Рё</div>
+                    <div class="mcp-tab active" onclick="setMcpTab('list',this)">По списку</div>
+                    <div class="mcp-tab" onclick="setMcpTab('top',this)">По мощности</div>
                 </div>
                 <div class="mcp-list" id="mcpList">
-                    <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Р—Р°РіСЂСѓР·РєР°...</div>
+                    <div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Загрузка...</div>
                 </div>
             </div>
         </div>
@@ -494,68 +494,68 @@
         <div class="map-stats-grid">
             <!-- Regional statistics table -->
             <div class="map-stat-card">
-                <h4>РЎС‚Р°С‚РёСЃС‚РёРєР° РїРѕ СЂРµРіРёРѕРЅР°Рј</h4>
+                <h4>Статистика по регионам</h4>
                 <table class="stat-table">
                     <thead>
                         <tr>
-                            <th>Р РµРіРёРѕРЅ</th>
-                            <th>РљРѕРјРїР°РЅРёР№</th>
-                            <th>Р’РµСЂРёС„РёС†.</th>
-                            <th>Р РµР№С‚РёРЅРі</th>
+                            <th>Регион</th>
+                            <th>Компаний</th>
+                            <th>Верифиц.</th>
+                            <th>Рейтинг</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>РўСЋРјРµРЅСЃРєР°СЏ РѕР±Р».</td><td>28</td><td>18</td><td class="stat-rating">4.7</td></tr>
-                        <tr><td>РЎРІРµСЂРґР»РѕРІСЃРєР°СЏ РѕР±Р».</td><td>21</td><td>12</td><td class="stat-rating">4.5</td></tr>
-                        <tr><td>Р РµСЃРї. РўР°С‚Р°СЂСЃС‚Р°РЅ</td><td>19</td><td>14</td><td class="stat-rating">4.6</td></tr>
-                        <tr><td>Р‘Р°С€РєРѕСЂС‚РѕСЃС‚Р°РЅ</td><td>15</td><td>9</td><td class="stat-rating">4.3</td></tr>
-                        <tr><td>РџРµСЂРјСЃРєРёР№ РєСЂР°Р№</td><td>12</td><td>7</td><td class="stat-rating">4.2</td></tr>
-                        <tr><td>РҐРњРђРћвЂ“Р®РіСЂР°</td><td>11</td><td>8</td><td class="stat-rating">4.4</td></tr>
+                        <tr><td>Тюменская обл.</td><td>28</td><td>18</td><td class="stat-rating">4.7</td></tr>
+                        <tr><td>Свердловская обл.</td><td>21</td><td>12</td><td class="stat-rating">4.5</td></tr>
+                        <tr><td>Респ. Татарстан</td><td>19</td><td>14</td><td class="stat-rating">4.6</td></tr>
+                        <tr><td>Башкортостан</td><td>15</td><td>9</td><td class="stat-rating">4.3</td></tr>
+                        <tr><td>Пермский край</td><td>12</td><td>7</td><td class="stat-rating">4.2</td></tr>
+                        <tr><td>ХМАО–Югра</td><td>11</td><td>8</td><td class="stat-rating">4.4</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Popular products -->
             <div class="map-stat-card">
-                <h4>РџРѕРїСѓР»СЏСЂРЅС‹Рµ РєР°С‚РµРіРѕСЂРёРё Р·Р°РєСѓРїРѕРє</h4>
+                <h4>Популярные категории закупок</h4>
                 <div class="pop-item">
-                    <span class="pop-name">Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ</span>
+                    <span class="pop-name">РТИ и уплотнения</span>
                     <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:90%"></div></div><span class="pop-pct">34%</span></div>
                 </div>
                 <div class="pop-item">
-                    <span class="pop-name">РњРµС‚Р°Р»Р»РѕРєРѕРЅСЃС‚СЂСѓРєС†РёРё</span>
+                    <span class="pop-name">Металлоконструкции</span>
                     <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:70%"></div></div><span class="pop-pct">26%</span></div>
                 </div>
                 <div class="pop-item">
-                    <span class="pop-name">РўСЂСѓР±РЅР°СЏ Р°СЂРјР°С‚СѓСЂР°</span>
+                    <span class="pop-name">Трубная арматура</span>
                     <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:55%"></div></div><span class="pop-pct">21%</span></div>
                 </div>
                 <div class="pop-item">
-                    <span class="pop-name">Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</span>
+                    <span class="pop-name">Электрооборудование</span>
                     <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:40%"></div></div><span class="pop-pct">15%</span></div>
                 </div>
                 <div class="pop-item">
-                    <span class="pop-name">РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</span>
+                    <span class="pop-name">Насосное оборудование</span>
                     <div class="pop-bar-wrap"><div class="pop-bar-bg"><div class="pop-bar-fill" style="width:22%"></div></div><span class="pop-pct">8%</span></div>
                 </div>
             </div>
 
             <!-- Monthly chart -->
             <div class="map-stat-card">
-                <h4>РђРєС‚РёРІРЅРѕСЃС‚СЊ РїРѕ РјРµСЃСЏС†Р°Рј</h4>
+                <h4>Активность по месяцам</h4>
                 <div class="chart-bars">
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:40%"></div><span class="chart-bar-label">РЇРЅРІ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:55%"></div><span class="chart-bar-label">Р¤РµРІ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:48%"></div><span class="chart-bar-label">РњР°СЂ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:70%"></div><span class="chart-bar-label">РђРїСЂ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:65%"></div><span class="chart-bar-label">РњР°Р№</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:90%"></div><span class="chart-bar-label">РСЋРЅ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:80%"></div><span class="chart-bar-label">РСЋР»</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:95%"></div><span class="chart-bar-label">РђРІРі</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:85%"></div><span class="chart-bar-label">РЎРµРЅ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:75%"></div><span class="chart-bar-label">РћРєС‚</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:60%"></div><span class="chart-bar-label">РќРѕСЏ</span></div>
-                    <div class="chart-bar-col"><div class="chart-bar" style="height:50%"></div><span class="chart-bar-label">Р”РµРє</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:40%"></div><span class="chart-bar-label">Янв</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:55%"></div><span class="chart-bar-label">Фев</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:48%"></div><span class="chart-bar-label">Мар</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:70%"></div><span class="chart-bar-label">Апр</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:65%"></div><span class="chart-bar-label">Май</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:90%"></div><span class="chart-bar-label">Июн</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:80%"></div><span class="chart-bar-label">Июл</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:95%"></div><span class="chart-bar-label">Авг</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:85%"></div><span class="chart-bar-label">Сен</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:75%"></div><span class="chart-bar-label">Окт</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:60%"></div><span class="chart-bar-label">Ноя</span></div>
+                    <div class="chart-bar-col"><div class="chart-bar" style="height:50%"></div><span class="chart-bar-label">Дек</span></div>
                 </div>
             </div>
         </div>
@@ -570,14 +570,14 @@
         initNotifications();
         initSidebarBadges();
 
-        // в”Ђв”Ђ MapLibre GL map в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- MapLibre GL map --------------------------------------------
         let mapAdapter = null;
         let currentFilteredProducers = [];
         let mlMap = null;
 
         function createMarkerEl(p, animate) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[В«В»"РћРћРћ РђРћРРџР—Рї]/g,'').trim().charAt(0).toUpperCase() || '?';
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
             const el = document.createElement('div');
             el.className = `factory-pin${p.verified ? ' verified' : ''}${animate ? ' pin-new' : ''}`;
             el.style.setProperty('--pin-color', color);
@@ -590,7 +590,7 @@
             if (!area) return;
             const t = document.createElement('div');
             t.className = 'map-new-toast';
-            t.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg> <span class="nav-label">РќРѕРІС‹Р№ Р·Р°РІРѕРґ РЅР° РєР°СЂС‚Рµ: ${escapeHtml(company)}`;
+            t.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg> <span class="nav-label">Новый завод на карте: ${escapeHtml(company)}`;
             area.appendChild(t);
             setTimeout(() => t.classList.add('show'), 30);
             setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
@@ -610,7 +610,7 @@
                                 'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
                             ],
                             tileSize: 256, maxzoom: 19,
-                            attribution: 'В©</span> <a href="https://carto.com">CARTO</a> В© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+                            attribution: '©</span> <a href="https://carto.com">CARTO</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
                         }
                     },
                     layers: [{ id: 'carto-dark', type: 'raster', source: 'carto' }],
@@ -696,7 +696,7 @@
             return Promise.resolve();
         }
 
-        // в”Ђв”Ђ Real-time polling: new factories appear on map в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Real-time polling: new factories appear on map -------------
         const seenIds = new Set();
         function startLivePolling() {
             allProducers.forEach(p => seenIds.add(p.id));
@@ -725,7 +725,7 @@
             }, 15000);
         }
 
-        // в”Ђв”Ђ State в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- State -----------------------------------------------------
         let allProducers = [];
         let markers = [];
         const markerById = {};
@@ -737,14 +737,14 @@
         function normalizeCategory(category) {
             const raw = String(category || '').trim();
             const value = raw.toLowerCase();
-            if (!value) return 'РџСЂРѕС‡РµРµ';
-            if (value.includes('СЂС‚Рё') || value.includes('СЂРµР·РёРЅ') || value.includes('СѓРїР»РѕС‚')) return 'Р РўР';
-            if (value.includes('РјРµС‚Р°Р»Р»') || value.includes('С‚РѕРєР°СЂ') || value.includes('С„СЂРµР·РµСЂ') || value.includes('Р»Р°Р·РµСЂ')) return 'РњРµС‚Р°Р»Р»';
-            if (value.includes('Р°СЂРјР°С‚СѓСЂ') || value.includes('С‚СЂСѓР±РѕРїСЂРѕРІРѕРґ') || value.includes('Р·Р°РґРІРёР¶') || value.includes('РєСЂР°РЅ')) return 'РђСЂРјР°С‚СѓСЂР°';
-            if (value.includes('СЌР»РµРєС‚СЂРѕ') || value.includes('РєР°Р±РµР»СЊ') || value.includes('С‰РёС‚') || value.includes('С‚СЂР°РЅСЃС„РѕСЂРј')) return 'Р­Р»РµРєС‚СЂРѕ';
-            if (value.includes('РЅР°СЃРѕСЃ')) return 'РќР°СЃРѕСЃС‹';
-            if (value.includes('С‚СЂСѓР±')) return 'РўСЂСѓР±С‹';
-            return raw || 'РџСЂРѕС‡РµРµ';
+            if (!value) return 'Прочее';
+            if (value.includes('рти') || value.includes('резин') || value.includes('уплот')) return 'РТИ';
+            if (value.includes('металл') || value.includes('токар') || value.includes('фрезер') || value.includes('лазер')) return 'Металл';
+            if (value.includes('арматур') || value.includes('трубопровод') || value.includes('задвиж') || value.includes('кран')) return 'Арматура';
+            if (value.includes('электро') || value.includes('кабель') || value.includes('щит') || value.includes('трансформ')) return 'Электро';
+            if (value.includes('насос')) return 'Насосы';
+            if (value.includes('труб')) return 'Трубы';
+            return raw || 'Прочее';
         }
 
         function productionLoad(p) {
@@ -756,7 +756,7 @@
         }
 
         function normalizeProducer(p) {
-            const categories = (Array.isArray(p.categories) && p.categories.length ? p.categories : ['РџСЂРѕС‡РµРµ'])
+            const categories = (Array.isArray(p.categories) && p.categories.length ? p.categories : ['Прочее'])
                 .map(normalizeCategory)
                 .filter(Boolean);
             const uniqueCategories = [...new Set(categories)];
@@ -764,11 +764,11 @@
                 ...p,
                 lat: Number(p.lat),
                 lng: Number(p.lng),
-                categories: uniqueCategories.length ? uniqueCategories : ['РџСЂРѕС‡РµРµ'],
+                categories: uniqueCategories.length ? uniqueCategories : ['Прочее'],
                 equipment: Array.isArray(p.equipment) ? p.equipment : [],
                 freeCapacity: Array.isArray(p.freeCapacity) ? p.freeCapacity : [],
                 capabilities: Array.isArray(p.capabilities) ? p.capabilities : [],
-                region: p.region || p.city || 'Р РµРіРёРѕРЅ РЅРµ СѓРєР°Р·Р°РЅ',
+                region: p.region || p.city || 'Регион не указан',
                 productionLoadValue: productionLoad(p),
                 machinesCount: p.machinesCount ?? null,
                 productionArea: p.productionArea ?? null,
@@ -784,7 +784,7 @@
             const current = new Set(filtersReady ? selectedCategories() : []);
             const counts = new Map();
             allProducers.forEach(p => p.categories.forEach(cat => counts.set(cat, (counts.get(cat) || 0) + 1)));
-            const order = ['Р РўР', 'РњРµС‚Р°Р»Р»', 'РђСЂРјР°С‚СѓСЂР°', 'Р­Р»РµРєС‚СЂРѕ', 'РќР°СЃРѕСЃС‹', 'РўСЂСѓР±С‹', 'РџСЂРѕС‡РµРµ'];
+            const order = ['РТИ', 'Металл', 'Арматура', 'Электро', 'Насосы', 'Трубы', 'Прочее'];
             const categories = [...counts.keys()].sort((a, b) => {
                 const ai = order.indexOf(a), bi = order.indexOf(b);
                 return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi) || a.localeCompare(b, 'ru');
@@ -795,40 +795,40 @@
                     const checked = !filtersReady || current.has(cat) ? 'checked' : '';
                     return `<label class="mf-check"><input type="checkbox" ${checked} data-cat="${escapeHtml(cat)}"><span>${escapeHtml(cat)}</span><small>${counts.get(cat)}</small></label>`;
                 }).join('')
-                : '<div style="color:var(--text-secondary);font-size:12px;">РќРµС‚ С‚РёРїРѕРІ РїСЂРѕРёР·РІРѕРґСЃС‚РІ</div>';
+                : '<div style="color:var(--text-secondary);font-size:12px;">Нет типов производств</div>';
             categoryBox.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('change', applyFilters));
 
             const regionSelect = document.getElementById('regionSelect');
             const previousRegion = regionSelect.value;
             const regions = [...new Set(allProducers.map(p => p.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
-            regionSelect.innerHTML = `<option value="">Р’СЃРµ СЂРµРіРёРѕРЅС‹</option>` + regions.map(r => `<option>${escapeHtml(r)}</option>`).join('');
+            regionSelect.innerHTML = `<option value="">Все регионы</option>` + regions.map(r => `<option>${escapeHtml(r)}</option>`).join('');
             if (regions.includes(previousRegion)) regionSelect.value = previousRegion;
             filtersReady = true;
         }
 
-        // в”Ђв”Ђ Mock data в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Mock data -------------------------------------------------
         const MOCK = [
-            { id:1,  company:'РћРћРћ В«РќРµС„С‚РµРџСЂРѕРјРЎРЅР°Р±В»',    city:'РўСЋРјРµРЅСЊ',           lat:57.15, lng:68.00, specialization:'Р РўР, РњРўР  РґР»СЏ РЅРµС„С‚РµРіР°Р·Р°',             categories:['Р РўР'],       verified:true,  rating:4.8, deals:124, region:'РўСЋРјРµРЅСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:2,  company:'РћРћРћ В«РђРєС‚РёРІРЎРЅР°Р±В»',         city:'Р•РєР°С‚РµСЂРёРЅР±СѓСЂРі',     lat:56.84, lng:60.61, specialization:'РњРµС‚Р°Р»Р»РѕРєРѕРЅСЃС‚СЂСѓРєС†РёРё, С‚СЂСѓР±РЅР°СЏ Р°СЂРјР°С‚СѓСЂР°', categories:['РњРµС‚Р°Р»Р»','РђСЂРјР°С‚СѓСЂР°'], verified:true,  rating:4.6, deals:89, region:'РЎРІРµСЂРґР»РѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:3,  company:'РћРћРћ В«РџСЂРѕРјРњР°С€В»',           city:'РЈС„Р°',              lat:54.74, lng:55.97, specialization:'РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ',               categories:['РќР°СЃРѕСЃС‹'],    verified:true,  rating:4.5, deals:201, region:'Р‘Р°С€РєРѕСЂС‚РѕСЃС‚Р°РЅ' },
-            { id:4,  company:'РђРћ В«Р РµРіРёРѕРЅРЎРЅР°Р±В»',         city:'РЎСѓСЂРіСѓС‚',           lat:61.25, lng:73.42, specialization:'Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ, РљРРџРёРђ',          categories:['Р­Р»РµРєС‚СЂРѕ'],   verified:true,  rating:4.3, deals:56, region:'РҐР°РЅС‚С‹-РњР°РЅСЃРёР№СЃРєРёР№ РђРћ' },
-            { id:5,  company:'РћРћРћ В«РўРµС…РЅРѕРџСЂРѕРјВ»',         city:'РџРµСЂРјСЊ',            lat:58.01, lng:56.25, specialization:'РўСЂСѓР±РѕРїСЂРѕРІРѕРґ, Р·Р°РїРѕСЂРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°',       categories:['РђСЂРјР°С‚СѓСЂР°','РўСЂСѓР±С‹'], verified:false, rating:4.1, deals:43, region:'РџРµСЂРјСЃРєРёР№ РєСЂР°Р№' },
-            { id:6,  company:'РџРђРћ В«Р—Р°РІРѕРґ Р РўРВ»',         city:'РљР°Р·Р°РЅСЊ',           lat:55.79, lng:49.12, specialization:'Р РµР·РёРЅРѕС‚РµС…РЅРёС‡РµСЃРєРёРµ РёР·РґРµР»РёСЏ',            categories:['Р РўР'],       verified:true,  rating:4.7, deals:312, region:'Р РµСЃРїСѓР±Р»РёРєР° РўР°С‚Р°СЂСЃС‚Р°РЅ' },
-            { id:7,  company:'РћРћРћ В«РњРµС‚Р°Р»Р»РЎРµСЂРІВ»',        city:'РќРёР¶РЅРµРІР°СЂС‚РѕРІСЃРє',    lat:60.93, lng:76.54, specialization:'РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚, СЃС‚Р°Р»СЊРЅС‹Рµ С‚СЂСѓР±С‹',        categories:['РњРµС‚Р°Р»Р»','РўСЂСѓР±С‹'],  verified:true,  rating:4.2, deals:78, region:'РҐР°РЅС‚С‹-РњР°РЅСЃРёР№СЃРєРёР№ РђРћ' },
-            { id:8,  company:'Р—РђРћ В«Р­Р»РµРєС‚СЂРѕРњР°С€В»',        city:'РЎР°РјР°СЂР°',           lat:53.20, lng:50.15, specialization:'РЎРёР»РѕРІС‹Рµ С‚СЂР°РЅСЃС„РѕСЂРјР°С‚РѕСЂС‹, С‰РёС‚РѕРІРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ', categories:['Р­Р»РµРєС‚СЂРѕ'], verified:false, rating:4.0, deals:34, region:'РЎР°РјР°СЂСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:9,  company:'РћРћРћ В«РџСЂРѕРјРђСЂРјР°С‚СѓСЂР°В»',      city:'РћСЂРµРЅР±СѓСЂРі',         lat:51.77, lng:55.10, specialization:'РЁР°СЂРѕРІС‹Рµ РєСЂР°РЅС‹, Р·Р°РґРІРёР¶РєРё DN20вЂ“DN600',   categories:['РђСЂРјР°С‚СѓСЂР°'],  verified:true,  rating:4.4, deals:67, region:'РћСЂРµРЅР±СѓСЂРіСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:10, company:'РћРћРћ В«РЎРёР±РќР°СЃРѕСЃВ»',          city:'РўРѕРјСЃРє',            lat:56.50, lng:84.98, specialization:'РџРѕРіСЂСѓР¶РЅС‹Рµ Рё С†РµРЅС‚СЂРѕР±РµР¶РЅС‹Рµ РЅР°СЃРѕСЃС‹',       categories:['РќР°СЃРѕСЃС‹'],    verified:true,  rating:4.6, deals:145, region:'РўРѕРјСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:11, company:'Р—РђРћ В«РЈСЂР°Р»РўСЂСѓР±РјР°С€В»',       city:'Р§РµР»СЏР±РёРЅСЃРє',        lat:55.15, lng:61.40, specialization:'РўСЂСѓР±РЅР°СЏ РїСЂРѕРґСѓРєС†РёСЏ Р“РћРЎРў, РўРЈ',           categories:['РўСЂСѓР±С‹','РњРµС‚Р°Р»Р»'], verified:true,  rating:4.3, deals:92, region:'РЎРІРµСЂРґР»РѕРІСЃРєР°СЏ РѕР±Р»Р°СЃС‚СЊ' },
-            { id:12, company:'РћРћРћ В«РљР°Р·Р°РЅСЊРҐРёРјРЎРЅР°Р±В»',     city:'РљР°Р·Р°РЅСЊ',           lat:55.82, lng:49.20, specialization:'РҐРёРјСЂРµР°РіРµРЅС‚С‹, РџРђР’ РґР»СЏ РЅРµС„С‚РµРґРѕР±С‹С‡Рё',     categories:['Р РўР'],       verified:false, rating:3.9, deals:28, region:'Р РµСЃРїСѓР±Р»РёРєР° РўР°С‚Р°СЂСЃС‚Р°РЅ' },
+            { id:1,  company:'ООО «НефтеПромСнаб»',    city:'Тюмень',           lat:57.15, lng:68.00, specialization:'РТИ, МТР для нефтегаза',             categories:['РТИ'],       verified:true,  rating:4.8, deals:124, region:'Тюменская область' },
+            { id:2,  company:'ООО «АктивСнаб»',         city:'Екатеринбург',     lat:56.84, lng:60.61, specialization:'Металлоконструкции, трубная арматура', categories:['Металл','Арматура'], verified:true,  rating:4.6, deals:89, region:'Свердловская область' },
+            { id:3,  company:'ООО «ПромМаш»',           city:'Уфа',              lat:54.74, lng:55.97, specialization:'Насосное оборудование',               categories:['Насосы'],    verified:true,  rating:4.5, deals:201, region:'Башкортостан' },
+            { id:4,  company:'АО «РегионСнаб»',         city:'Сургут',           lat:61.25, lng:73.42, specialization:'Электрооборудование, КИПиА',          categories:['Электро'],   verified:true,  rating:4.3, deals:56, region:'Ханты-Мансийский АО' },
+            { id:5,  company:'ООО «ТехноПром»',         city:'Пермь',            lat:58.01, lng:56.25, specialization:'Трубопровод, запорная арматура',       categories:['Арматура','Трубы'], verified:false, rating:4.1, deals:43, region:'Пермский край' },
+            { id:6,  company:'ПАО «Завод РТИ»',         city:'Казань',           lat:55.79, lng:49.12, specialization:'Резинотехнические изделия',            categories:['РТИ'],       verified:true,  rating:4.7, deals:312, region:'Республика Татарстан' },
+            { id:7,  company:'ООО «МеталлСерв»',        city:'Нижневартовск',    lat:60.93, lng:76.54, specialization:'Металлопрокат, стальные трубы',        categories:['Металл','Трубы'],  verified:true,  rating:4.2, deals:78, region:'Ханты-Мансийский АО' },
+            { id:8,  company:'ЗАО «ЭлектроМаш»',        city:'Самара',           lat:53.20, lng:50.15, specialization:'Силовые трансформаторы, щитовое оборудование', categories:['Электро'], verified:false, rating:4.0, deals:34, region:'Самарская область' },
+            { id:9,  company:'ООО «ПромАрматура»',      city:'Оренбург',         lat:51.77, lng:55.10, specialization:'Шаровые краны, задвижки DN20–DN600',   categories:['Арматура'],  verified:true,  rating:4.4, deals:67, region:'Оренбургская область' },
+            { id:10, company:'ООО «СибНасос»',          city:'Томск',            lat:56.50, lng:84.98, specialization:'Погружные и центробежные насосы',       categories:['Насосы'],    verified:true,  rating:4.6, deals:145, region:'Томская область' },
+            { id:11, company:'ЗАО «УралТрубмаш»',       city:'Челябинск',        lat:55.15, lng:61.40, specialization:'Трубная продукция ГОСТ, ТУ',           categories:['Трубы','Металл'], verified:true,  rating:4.3, deals:92, region:'Свердловская область' },
+            { id:12, company:'ООО «КазаньХимСнаб»',     city:'Казань',           lat:55.82, lng:49.20, specialization:'Химреагенты, ПАВ для нефтедобычи',     categories:['РТИ'],       verified:false, rating:3.9, deals:28, region:'Республика Татарстан' },
         ];
 
 function popupHtml(p) {
             const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[В«В»"РћРћРћ РђРћРРџР—Рї]/g,'').trim().charAt(0).toUpperCase() || '?';
-            const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ</span></span>` : '';
+            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
+            const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>` : '';
             const caps = p.categories.map(c => `<span class="popup-cap">${escapeHtml(c)}</span>`).join('');
-            const loadText = p.productionLoadValue == null ? 'вЂ”' : `${p.productionLoadValue}%`;
-            const equipmentText = p.equipment.length ? p.equipment.slice(0, 2).join(', ') : 'РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ РЅРµ СѓРєР°Р·Р°РЅРѕ';
+            const loadText = p.productionLoadValue == null ? '—' : `${p.productionLoadValue}%`;
+            const equipmentText = p.equipment.length ? p.equipment.slice(0, 2).join(', ') : 'Оборудование не указано';
             return `<div class="popup-body">
                 <div class="popup-header">
                     <div class="popup-avatar" style="background:${color}">${letter}</div>
@@ -838,17 +838,17 @@ function popupHtml(p) {
                 <div class="popup-spec">${escapeHtml(p.specialization)}</div>
                 <div class="popup-caps">${caps}</div>
                 <div class="popup-production-grid">
-                    <div class="popup-production-metric"><span>Р—Р°РіСЂСѓР·РєР°</span><b>${loadText}</b></div>
-                    <div class="popup-production-metric"><span>РЎС‚Р°РЅРєРё</span><b>${p.machinesCount || 'вЂ”'}</b></div>
-                    <div class="popup-production-metric"><span>РџР»РѕС‰Р°РґСЊ</span><b>${p.productionArea ? p.productionArea + ' РјВІ' : 'вЂ”'}</b></div>
-                    <div class="popup-production-metric"><span>РћРїС‹С‚</span><b>${p.yearsExperience ? p.yearsExperience + ' Р»РµС‚' : 'вЂ”'}</b></div>
+                    <div class="popup-production-metric"><span>Загрузка</span><b>${loadText}</b></div>
+                    <div class="popup-production-metric"><span>Станки</span><b>${p.machinesCount || '—'}</b></div>
+                    <div class="popup-production-metric"><span>Площадь</span><b>${p.productionArea ? p.productionArea + ' м?' : '—'}</b></div>
+                    <div class="popup-production-metric"><span>Опыт</span><b>${p.yearsExperience ? p.yearsExperience + ' лет' : '—'}</b></div>
                 </div>
                 <div class="popup-spec">${escapeHtml(equipmentText)}</div>
-                <a href="company-profile.html?id=${p.id}" class="popup-btn">РћС‚РєСЂС‹С‚СЊ РїСЂРѕС„РёР»СЊ в†’</a>
+                <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль ></a>
             </div>`;
         }
 
-        // в”Ђв”Ђ Apply filters в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Apply filters ---------------------------------------------
         function applyFilters() {
             if (!mapAdapter) return;
             mapAdapter.clear();
@@ -876,7 +876,7 @@ function popupHtml(p) {
             mapAdapter.fit();
 
             document.getElementById('mapCounter').innerHTML =
-                `РџРѕРєР°Р·Р°РЅРѕ: <b>${filtered.length}</b> РёР· ${allProducers.length}`;
+                `Показано: <b>${filtered.length}</b> из ${allProducers.length}`;
 
             updateMapSummary(filtered);
             updateMapKpis();
@@ -893,10 +893,10 @@ function popupHtml(p) {
             const emptyState = document.getElementById('mapEmptyState');
             if (emptyState) emptyState.style.display = list.length ? 'none' : 'flex';
             document.getElementById('mapProductionSummary').innerHTML = `
-                <span class="map-summary-pill"><b>${list.length}</b> РїСЂРѕРёР·РІРѕРґСЃС‚РІ</span>
-                <span class="map-summary-pill"><b>${regions}</b> СЂРµРіРёРѕРЅРѕРІ</span>
-                <span class="map-summary-pill"><b>${machines || 'вЂ”'}</b> СЃС‚Р°РЅРєРѕРІ</span>
-                <span class="map-summary-pill">Р·Р°РіСЂСѓР·РєР° <b>${avgLoad == null ? 'вЂ”' : avgLoad + '%'}</b></span>
+                <span class="map-summary-pill"><b>${list.length}</b> производств</span>
+                <span class="map-summary-pill"><b>${regions}</b> регионов</span>
+                <span class="map-summary-pill"><b>${machines || '—'}</b> станков</span>
+                <span class="map-summary-pill">загрузка <b>${avgLoad == null ? '—' : avgLoad + '%'}</b></span>
             `;
         }
 
@@ -908,12 +908,12 @@ function popupHtml(p) {
                 ? Math.round(avgLoadValues.reduce((sum, v) => sum + v, 0) / avgLoadValues.length)
                 : 0;
             document.getElementById('mapKpi1').textContent = allProducers.length;
-            document.getElementById('mapKpi2').textContent = avgLoad ? `${avgLoad}%` : 'вЂ”';
+            document.getElementById('mapKpi2').textContent = avgLoad ? `${avgLoad}%` : '—';
             document.getElementById('mapKpi3').textContent = verified;
-            document.getElementById('mapKpi4').textContent = regions || 'вЂ”';
+            document.getElementById('mapKpi4').textContent = regions || '—';
         }
 
-        // в”Ђв”Ђ Company panel в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Company panel ---------------------------------------------
         function setMcpTab(tab, el) {
             activeMcpTab = tab;
             document.querySelectorAll('.mcp-tab').forEach(t => t.classList.remove('active'));
@@ -927,18 +927,18 @@ function popupHtml(p) {
                 : list;
 
             document.getElementById('mcpCount').textContent =
-                sorted.length + ' РєРѕРјРїР°РЅРё' + (sorted.length === 1 ? 'СЏ' : sorted.length < 5 ? 'Рё' : 'Р№');
+                sorted.length + ' компани' + (sorted.length === 1 ? 'я' : sorted.length < 5 ? 'и' : 'й');
 
             const el = document.getElementById('mcpList');
             if (!sorted.length) {
-                el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">РќРµС‚ РєРѕРјРїР°РЅРёР№</div>';
+                el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Нет компаний</div>';
                 return;
             }
             el.innerHTML = sorted.map(p => {
                 const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-                const letter = p.company.replace(/[В«В»"РћРћРћ РђРћРРџР—Рї]/g,'').trim().charAt(0).toUpperCase() || '?';
+                const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
                 const verBadge = p.verified
-                    ? `<div class="mcp-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ</span></div>`
+                    ? `<div class="mcp-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></div>`
                     : '';
                 const tags = p.categories.slice(0,3).map(c => `<span class="mcp-tag">${escapeHtml(c)}</span>`).join('');
                 const load = p.productionLoadValue == null ? null : p.productionLoadValue;
@@ -956,12 +956,12 @@ function popupHtml(p) {
                     <div class="mcp-spec">${escapeHtml(p.specialization)}</div>
                     <div class="mcp-tags">${tags}</div>
                     <div class="mcp-production-meta">
-                        <span class="mcp-meta-pill">${p.machinesCount ? p.machinesCount + ' СЃС‚Р°РЅРєРѕРІ' : 'СЃС‚Р°РЅРєРё вЂ”'}</span>
-                        <span class="mcp-meta-pill">${p.productionArea ? p.productionArea + ' РјВІ' : 'РїР»РѕС‰Р°РґСЊ вЂ”'}</span>
-                        <span class="mcp-meta-pill">${load == null ? 'Р·Р°РіСЂСѓР·РєР° вЂ”' : 'Р·Р°РіСЂСѓР·РєР° ' + load + '%'}</span>
+                        <span class="mcp-meta-pill">${p.machinesCount ? p.machinesCount + ' станков' : 'станки —'}</span>
+                        <span class="mcp-meta-pill">${p.productionArea ? p.productionArea + ' м?' : 'площадь —'}</span>
+                        <span class="mcp-meta-pill">${load == null ? 'загрузка —' : 'загрузка ' + load + '%'}</span>
                     </div>
                     <div class="mcp-capacity"><div class="mcp-capacity-fill" style="width:${loadWidth}%"></div></div>
-                    <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='company-profile.html?id=${p.id}'">РћС‚РєСЂС‹С‚СЊ РїСЂРѕС„РёР»СЊ</button>
+                    <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='company-profile.html?id=${p.id}'">Открыть профиль</button>
                 </div>`;
             }).join('');
         }
@@ -985,7 +985,7 @@ function popupHtml(p) {
             setTimeout(() => mapAdapter.openPopup(id), 900);
         }
 
-        // в”Ђв”Ђ Load в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Load ------------------------------------------------------
         async function loadMap() {
             allProducers = shouldUseMockData() ? MOCK.map(normalizeProducer) : [];
             renderDynamicFilters();
@@ -1010,7 +1010,7 @@ function popupHtml(p) {
                     allProducers = [];
                     renderDynamicFilters();
                     applyFilters();
-                    showDataLoadError('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїРѕСЃС‚Р°РІС‰РёРєРѕРІ РЅР° РєР°СЂС‚Рµ');
+                    showDataLoadError('Не удалось загрузить поставщиков на карте');
                 }
             }
         }

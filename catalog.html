@@ -1,4 +1,4 @@
-п»ї<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -8,19 +8,19 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/favicon.svg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>РљР°С‚Р°Р»РѕРі РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№ РїСЂРѕРјС‹С€Р»РµРЅРЅРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ вЂ” РўР•РҐР—РђРљРђР—</title>
-    <meta name="description" content="РљР°С‚Р°Р»РѕРі РїСЂРѕРІРµСЂРµРЅРЅС‹С… РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№ Рё РїРѕСЃС‚Р°РІС‰РёРєРѕРІ РїСЂРѕРјС‹С€Р»РµРЅРЅРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ, РјРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚Р°, Р°СЂРјР°С‚СѓСЂС‹ Рё Р·Р°РїС‡Р°СЃС‚РµР№. РџСЂСЏРјС‹Рµ Р·Р°РєСѓРїРєРё Р±РµР· РїРѕСЃСЂРµРґРЅРёРєРѕРІ.">
+    <title>Каталог производителей промышленного оборудования — ТЕХЗАКАЗ</title>
+    <meta name="description" content="Каталог проверенных производителей и поставщиков промышленного оборудования, металлопроката, арматуры и запчастей. Прямые закупки без посредников.">
     <link rel="canonical" href="http://texzakaz.ru/catalog.html">
-    <meta property="og:site_name" content="РўРµС…Р—Р°РєР°Р·">
-    <meta property="og:title" content="РљР°С‚Р°Р»РѕРі РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№ вЂ” РўРµС…Р—Р°РєР°Р·">
-    <meta property="og:description" content="РџСЂРѕРІРµСЂРµРЅРЅС‹Рµ РїСЂРѕРёР·РІРѕРґРёС‚РµР»Рё РїСЂРѕРјС‹С€Р»РµРЅРЅРѕРіРѕ РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ Рё Р·Р°РїС‡Р°СЃС‚РµР№. РџСЂСЏРјС‹Рµ Р·Р°РєСѓРїРєРё Р±РµР· РїРѕСЃСЂРµРґРЅРёРєРѕРІ.">
+    <meta property="og:site_name" content="ТехЗаказ">
+    <meta property="og:title" content="Каталог производителей — ТехЗаказ">
+    <meta property="og:description" content="Проверенные производители промышленного оборудования и запчастей. Прямые закупки без посредников.">
     <meta property="og:url" content="http://texzakaz.ru/catalog.html">
     <meta property="og:type" content="website">
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=7">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
     <style data-spa-page>
-        /* в”Ђв”Ђ Search bar в”Ђв”Ђ */
+        /* -- Search bar -- */
         .catalog-search-row {
             display: flex; align-items: center; gap: 12px;
         }
@@ -42,7 +42,7 @@
         .catalog-search-input::placeholder { color: var(--text-secondary); }
         .catalog-count { font-size: 13px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
 
-        /* в”Ђв”Ђ Filter chips в”Ђв”Ђ */
+        /* -- Filter chips -- */
         .catalog-filters {
             display: flex; flex-wrap: wrap; gap: 8px;
         }
@@ -56,7 +56,7 @@
         .filter-chip:hover:not(.active) { border-color: var(--text-secondary); color: var(--text-primary); }
         .filter-chip.active { background: var(--accent-gradient); color: var(--accent-on-button); border-color: transparent; }
 
-        /* в”Ђв”Ђ Producer grid в”Ђв”Ђ */
+        /* -- Producer grid -- */
         .producers-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
@@ -65,7 +65,7 @@
         }
         @media (max-width: 600px)  { .producers-grid { grid-template-columns: minmax(0, 1fr); } }
 
-        /* в”Ђв”Ђ Producer card в”Ђв”Ђ */
+        /* -- Producer card -- */
         .catalog-card {
             background: var(--card-bg); border: 1px solid var(--card-border);
             border-radius: var(--radius-card); padding: 20px 22px;
@@ -108,7 +108,7 @@
             padding: 3px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
         }
 
-        /* в”Ђв”Ђ Capability chips в”Ђв”Ђ */
+        /* -- Capability chips -- */
         .catalog-caps { display: flex; flex-wrap: wrap; gap: 6px; }
         .catalog-cap-chip {
             background: var(--inner-bg); border: 1px solid var(--inner-border);
@@ -116,7 +116,7 @@
             color: var(--text-tertiary); font-weight: 600;
         }
 
-        /* в”Ђв”Ђ Free capacity mini-bars в”Ђв”Ђ */
+        /* -- Free capacity mini-bars -- */
         .catalog-capacity { display: flex; flex-direction: column; gap: 8px; }
         .catalog-capacity-title {
             font-size: 11px; color: var(--text-secondary); font-weight: 600;
@@ -136,13 +136,13 @@
             background: var(--accent-gradient); transition: width .4s ease;
         }
 
-        /* в”Ђв”Ђ Card CTA в”Ђв”Ђ */
+        /* -- Card CTA -- */
         .catalog-btn {
             margin-top: auto; font-size: 12.5px; height: 36px; padding: 0 14px;
             text-decoration: none; justify-content: center;
         }
 
-        /* в”Ђв”Ђ AI Search в”Ђв”Ђ */
+        /* -- AI Search -- */
         .ai-search-btn {
             flex-shrink: 0; height: 44px; padding: 0 16px;
             border: 1px solid var(--accent-cyan); border-radius: var(--radius-input);
@@ -174,7 +174,7 @@
             transition: background .12s; font-family: inherit; }
         .ai-mode-exit:hover { background: var(--inner-bg); color: var(--accent-red); }
 
-        /* в”Ђв”Ђ Empty / loading states в”Ђв”Ђ */
+        /* -- Empty / loading states -- */
         .catalog-empty {
             grid-column: 1 / -1; padding: 60px 20px; text-align: center;
             color: var(--text-secondary); font-size: 14px; display: flex;
@@ -186,7 +186,7 @@
             color: var(--text-secondary); font-size: 13.5px;
         }
 
-        /* в”Ђв”Ђ About snippet в”Ђв”Ђ */
+        /* -- About snippet -- */
         .catalog-about {
             font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
@@ -300,147 +300,147 @@
 
         <div class="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark" aria-hidden="true"><span>Рў</span></div>
-            <span>РўР•РҐ<b class="tz-accent">Р—РђРљРђР—</b></span>
+            <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+            <span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">Р—Р°РєСѓРїРєРё</div>
-            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">РђРєС‚СѓР°Р»СЊРЅС‹Рµ Р·Р°РєСѓРїРєРё</span><span class="nav-badge" id="navBadgeOrders"></span></a>
-            <a class="active" href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">РљР°С‚Р°Р»РѕРі</span></a>
-            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">РњРѕРё РѕС‚РєР»РёРєРё</span><span class="nav-badge" id="navBadgeProposals"></span></a>
+            <div class="sidebar-nav-label">Закупки</div>
+            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Актуальные закупки</span><span class="nav-badge" id="navBadgeOrders"></span></a>
+            <a class="active" href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">Каталог</span></a>
+            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">Мои отклики</span><span class="nav-badge" id="navBadgeProposals"></span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РЎРґРµР»РєРё</div>
-            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Р—Р°РєР°Р·С‹</span></a>
-            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Р”РѕСЃС‚Р°РІРєРё</span></a>
-            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РљРѕРЅС‚СЂР°РіРµРЅС‚С‹</span></a>
+            <div class="sidebar-nav-label">Сделки</div>
+            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Заказы</span></a>
+            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Доставки</span></a>
+            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Контрагенты</span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РљРѕРјРїР°РЅРёСЏ</div>
-            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">РђРЅР°Р»РёС‚РёРєР°</span></a>
-            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РЎРѕРѕР±С‰РµРЅРёСЏ</span><span class="nav-badge" id="navBadgeMessages"></span></a>
-            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">РР·Р±СЂР°РЅРЅРѕРµ</span></a>
-            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">РњРѕР№ РїСЂРѕС„РёР»СЊ</span></a>
-            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">РљР°СЂС‚Р°</span></a>
+            <div class="sidebar-nav-label">Компания</div>
+            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">Аналитика</span></a>
+            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Сообщения</span><span class="nav-badge" id="navBadgeMessages"></span></a>
+            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">Избранное</span></a>
+            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">Мой профиль</span></a>
+            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">Карта</span></a>
         </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
-            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">РќР°СЃС‚СЂРѕР№РєРё</span></a>
-            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РџРѕРґРґРµСЂР¶РєР°</span></a>
+            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
+            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
             <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="sidebar-collapse-label">РЎРІРµСЂРЅСѓС‚СЊ РјРµРЅСЋ</span>
+            <span class="sidebar-collapse-label">Свернуть меню</span>
         </button>
     </div>
 
     <div id="spa-content" class="main-content catalog-page">
         <div class="header">
-            <button class="burger-btn" aria-label="РњРµРЅСЋ" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-            <h2>РљР°С‚Р°Р»РѕРі РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№</h2>
+            <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+            <h2>Каталог производителей</h2>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>
-                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">РўР—</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Р—Р°РіСЂСѓР·РєР°вЂ¦</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">РќР°СЃС‚СЂРѕР№РєРё</a><a href="company-profile.html" class="user-dropdown-item">РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button></div></div>
+                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">ТЗ</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Загрузка…</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">Настройки</a><a href="company-profile.html" class="user-dropdown-item">Профиль компании</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Выйти из аккаунта</button></div></div>
             </div>
         </div>
 
         <div class="catalog-layout">
             <aside class="catalog-filter-panel">
-                <div class="catalog-panel-title">Р¤РёР»СЊС‚СЂС‹ <button class="catalog-reset" onclick="resetCatalogFilters()">РЎР±СЂРѕСЃРёС‚СЊ РІСЃРµ</button></div>
+                <div class="catalog-panel-title">Фильтры <button class="catalog-reset" onclick="resetCatalogFilters()">Сбросить все</button></div>
                 <div class="filter-group">
-                    <div class="filter-title">РљР°С‚РµРіРѕСЂРёСЏ <span>вЊѓ</span></div>
-                    <select class="filter-select"><option>Р’С‹Р±СЂР°С‚СЊ РєР°С‚РµРіРѕСЂРёСЋ</option></select>
-                    <label class="filter-check"><input type="checkbox"> РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР° <span class="filter-count">128</span></label>
-                    <label class="filter-check"><input type="checkbox"> РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ <span class="filter-count">96</span></label>
-                    <label class="filter-check"><input type="checkbox"> Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ <span class="filter-count">74</span></label>
-                    <label class="filter-check"><input type="checkbox"> Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ <span class="filter-count">62</span></label>
-                    <button class="catalog-reset">РџРѕРєР°Р·Р°С‚СЊ РµС‰С‘</button>
+                    <div class="filter-title">Категория <span>?</span></div>
+                    <select class="filter-select"><option>Выбрать категорию</option></select>
+                    <label class="filter-check"><input type="checkbox"> Трубопроводная арматура <span class="filter-count">128</span></label>
+                    <label class="filter-check"><input type="checkbox"> Насосное оборудование <span class="filter-count">96</span></label>
+                    <label class="filter-check"><input type="checkbox"> Электрооборудование <span class="filter-count">74</span></label>
+                    <label class="filter-check"><input type="checkbox"> РТИ и уплотнения <span class="filter-count">62</span></label>
+                    <button class="catalog-reset">Показать ещё</button>
                 </div>
                 <div class="filter-group">
-                    <div class="filter-title">РЎРїРµС†РёР°Р»РёР·Р°С†РёСЏ <span>вЊѓ</span></div>
-                    <select class="filter-select"><option>Р’С‹Р±СЂР°С‚СЊ СЃРїРµС†РёР°Р»РёР·Р°С†РёСЋ</option></select>
-                    <label class="filter-check"><input type="checkbox"> РќРµС„С‚РµРіР°Р·РѕРґРѕР±С‹С‡Р° <span class="filter-count">186</span></label>
-                    <label class="filter-check"><input type="checkbox"> Р‘СѓСЂРµРЅРёРµ Рё РљР РЎ <span class="filter-count">103</span></label>
-                    <label class="filter-check"><input type="checkbox"> РќРµС„С‚РµРїРµСЂРµСЂР°Р±РѕС‚РєР° <span class="filter-count">71</span></label>
+                    <div class="filter-title">Специализация <span>?</span></div>
+                    <select class="filter-select"><option>Выбрать специализацию</option></select>
+                    <label class="filter-check"><input type="checkbox"> Нефтегазодобыча <span class="filter-count">186</span></label>
+                    <label class="filter-check"><input type="checkbox"> Бурение и КРС <span class="filter-count">103</span></label>
+                    <label class="filter-check"><input type="checkbox"> Нефтепереработка <span class="filter-count">71</span></label>
                 </div>
                 <div class="filter-group">
-                    <div class="filter-title">Р РµРіРёРѕРЅ РїРѕСЃС‚Р°РІРєРё <span>вЊѓ</span></div>
-                    <select class="filter-select"><option>Р’С‹Р±СЂР°С‚СЊ СЂРµРіРёРѕРЅ</option></select>
+                    <div class="filter-title">Регион поставки <span>?</span></div>
+                    <select class="filter-select"><option>Выбрать регион</option></select>
                 </div>
                 <div class="filter-group">
-                    <div class="filter-title">РЎРµСЂС‚РёС„РёРєР°С‚С‹ Рё СЃС‚Р°РЅРґР°СЂС‚С‹</div>
+                    <div class="filter-title">Сертификаты и стандарты</div>
                     <label class="filter-check"><input type="checkbox"> ISO 9001</label>
-                    <label class="filter-check"><input type="checkbox"> Р“РћРЎРў Р  РРЎРћ</label>
-                    <label class="filter-check"><input type="checkbox"> РўР  РўРЎ</label>
+                    <label class="filter-check"><input type="checkbox"> ГОСТ Р ИСО</label>
+                    <label class="filter-check"><input type="checkbox"> ТР ТС</label>
                 </div>
-                <button id="applyFiltersBtn" class="btn-secondary" style="width:100%;margin-top:16px;" onclick="applySidebarFilters()">РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹ (0)</button>
+                <button id="applyFiltersBtn" class="btn-secondary" style="width:100%;margin-top:16px;" onclick="applySidebarFilters()">Применить фильтры (0)</button>
             </aside>
 
             <section class="catalog-results-panel">
                 <div class="catalog-results-head">
                     <div class="catalog-search-wrap">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" class="catalog-search-input" id="catalogSearch" placeholder="РџРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ, РїСЂРѕРґСѓРєС†РёРё, РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЋ..." oninput="onSearch(this.value)">
+                        <input type="text" class="catalog-search-input" id="catalogSearch" placeholder="Поиск по названию, продукции, производителю..." oninput="onSearch(this.value)">
                     </div>
-                    <button class="ai-search-btn" id="aiSearchBtn" onclick="aiSearch()" title="РЈРјРЅС‹Р№ РїРѕРёСЃРє СЃ Gemini AI">
+                    <button class="ai-search-btn" id="aiSearchBtn" onclick="aiSearch()" title="Умный поиск с Gemini AI">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        AI-РїРѕРёСЃРє
+                        AI-поиск
                     </button>
-                    <button class="btn-secondary" onclick="saveSearch()">в™Ў РЎРѕС…СЂР°РЅРёС‚СЊ РїРѕРёСЃРє</button>
+                    <button class="btn-secondary" onclick="saveSearch()">? Сохранить поиск</button>
                 </div>
                 <div class="catalog-toolbar">
-                    <span id="catalogCount">РќР°Р№РґРµРЅРѕ: вЂ”</span>
+                    <span id="catalogCount">Найдено: —</span>
                     <div class="catalog-sort">
-                        <span>РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ:</span>
+                        <span>Сортировать по:</span>
                         <select class="filter-select" id="catalogSort" style="width:190px;" onchange="sortCatalog(this.value)">
-                            <option value="">Р РµР»РµРІР°РЅС‚РЅРѕСЃС‚Рё</option>
-                            <option value="rating">Р РµР№С‚РёРЅРіСѓ в†“</option>
-                            <option value="name">РќР°Р·РІР°РЅРёСЋ Рђ-РЇ</option>
-                            <option value="deals">РљРѕР»-РІСѓ СЃРґРµР»РѕРє в†“</option>
-                            <option value="experience">РћРїС‹С‚Сѓ в†“</option>
+                            <option value="">Релевантности</option>
+                            <option value="rating">Рейтингу v</option>
+                            <option value="name">Названию А-Я</option>
+                            <option value="deals">Кол-ву сделок v</option>
+                            <option value="experience">Опыту v</option>
                         </select>
-                        <button class="catalog-view-btn">в–¦</button>
-                        <button class="catalog-view-btn" style="color:#071936;">в–Ґ</button>
+                        <button class="catalog-view-btn">?</button>
+                        <button class="catalog-view-btn" style="color:#071936;">?</button>
                     </div>
                 </div>
                 <div class="catalog-filters">
-                    <button class="filter-chip active" data-cap="" onclick="setFilter(this)">Р’СЃРµ</button>
-                    <button class="filter-chip" data-cap="Р РўР" onclick="setFilter(this)">Р РўР</button>
-                    <button class="filter-chip" data-cap="РњРµС‚Р°Р»Р»РѕРѕР±СЂР°Р±РѕС‚РєР°" onclick="setFilter(this)">РњРµС‚Р°Р»Р»РѕРѕР±СЂР°Р±РѕС‚РєР°</button>
-                    <button class="filter-chip" data-cap="РўРѕРєР°СЂРєР°" onclick="setFilter(this)">РўРѕРєР°СЂРєР°</button>
-                    <button class="filter-chip" data-cap="Р¤СЂРµР·РµСЂРѕРІРєР°" onclick="setFilter(this)">Р¤СЂРµР·РµСЂРѕРІРєР°</button>
-                    <button class="filter-chip" data-cap="Р›Р°Р·РµСЂРЅР°СЏ СЂРµР·РєР°" onclick="setFilter(this)">Р›Р°Р·РµСЂРЅР°СЏ СЂРµР·РєР°</button>
+                    <button class="filter-chip active" data-cap="" onclick="setFilter(this)">Все</button>
+                    <button class="filter-chip" data-cap="РТИ" onclick="setFilter(this)">РТИ</button>
+                    <button class="filter-chip" data-cap="Металлообработка" onclick="setFilter(this)">Металлообработка</button>
+                    <button class="filter-chip" data-cap="Токарка" onclick="setFilter(this)">Токарка</button>
+                    <button class="filter-chip" data-cap="Фрезеровка" onclick="setFilter(this)">Фрезеровка</button>
+                    <button class="filter-chip" data-cap="Лазерная резка" onclick="setFilter(this)">Лазерная резка</button>
                 </div>
                 <div class="producers-grid" id="producersGrid" style="margin-top:18px;">
-                    <div class="catalog-loading">Р—Р°РіСЂСѓР·РєР° РєР°С‚Р°Р»РѕРіР°...</div>
+                    <div class="catalog-loading">Загрузка каталога...</div>
                 </div>
-                <button class="btn-secondary" id="showMoreBtn" style="width:100%;margin-top:14px;display:none;" onclick="showMore()">РџРѕРєР°Р·Р°С‚СЊ РµС‰С‘ вЊ„</button>
+                <button class="btn-secondary" id="showMoreBtn" style="width:100%;margin-top:14px;display:none;" onclick="showMore()">Показать ещё ?</button>
             </section>
 
             <aside class="catalog-compare-panel" id="compareSidePanel">
                 <div id="comparePanelInner">
-                    <!-- СЂРµРЅРґРµСЂРёС‚СЃСЏ С‡РµСЂРµР· renderComparePanel() -->
+                    <!-- рендерится через renderComparePanel() -->
                 </div>
             </aside>
         </div>
 
         <div class="catalog-bottom-grid">
             <div class="catalog-bottom-panel">
-                <div class="catalog-panel-title">РџРѕРїСѓР»СЏСЂРЅС‹Рµ РєР°С‚РµРіРѕСЂРёРё <a style="font-size:12px;color:var(--accent-blue);" href="#">Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё в†’</a></div>
+                <div class="catalog-panel-title">Популярные категории <a style="font-size:12px;color:var(--accent-blue);" href="#">Все категории ></a></div>
                 <div class="catalog-mini-list">
-                    <div class="catalog-mini-item"><b>вљ™</b><span>РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°<br><small>128 РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</small></span></div>
-                    <div class="catalog-mini-item"><b>в–Ј</b><span>РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ<br><small>96 РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</small></span></div>
-                    <div class="catalog-mini-item"><b>в—Њ</b><span>Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ<br><small>62 РїРѕСЃС‚Р°РІС‰РёРєР°</small></span></div>
+                    <div class="catalog-mini-item"><b>?</b><span>Трубопроводная арматура<br><small>128 поставщиков</small></span></div>
+                    <div class="catalog-mini-item"><b>?</b><span>Насосное оборудование<br><small>96 поставщиков</small></span></div>
+                    <div class="catalog-mini-item"><b>?</b><span>РТИ и уплотнения<br><small>62 поставщика</small></span></div>
                 </div>
             </div>
             <div class="catalog-bottom-panel" id="recentPanel" style="display:none;">
-                <div class="catalog-panel-title">РќРµРґР°РІРЅРѕ РїСЂРѕСЃРјРѕС‚СЂРµРЅРЅС‹Рµ <a style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="clearRecentProducers()">РћС‡РёСЃС‚РёС‚СЊ</a></div>
+                <div class="catalog-panel-title">Недавно просмотренные <a style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="clearRecentProducers()">Очистить</a></div>
                 <div class="catalog-mini-list" id="recentList"></div>
             </div>
         </div>
@@ -474,15 +474,15 @@
                 allProducers = await res.json();
             } catch {
                 allProducers = [];
-                showDataLoadError('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РєР°С‚Р°Р»РѕРі РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№');
+                showDataLoadError('Не удалось загрузить каталог производителей');
             }
             // KPI strip
             const t = document.getElementById('catKpiTotal');
             const r = document.getElementById('catKpiRegions');
             const c = document.getElementById('catKpiCaps');
             if (t) t.textContent = allProducers.length;
-            if (r) r.textContent = new Set(allProducers.map(p => p.city).filter(Boolean)).size || 'вЂ”';
-            if (c) c.textContent = new Set(allProducers.flatMap(p => (p.capabilities || []))).size || 'вЂ”';
+            if (r) r.textContent = new Set(allProducers.map(p => p.city).filter(Boolean)).size || '—';
+            if (c) c.textContent = new Set(allProducers.flatMap(p => (p.capabilities || []))).size || '—';
             render();
         }
 
@@ -545,17 +545,17 @@
         }
 
         function saveSearch() {
-            const q = searchQuery || activeFilter || '(РІСЃРµ)';
-            showToast(`РџРѕРёСЃРє В«${q}В» СЃРѕС…СЂР°РЅС‘РЅ РІ РёР·Р±СЂР°РЅРЅРѕРµ`);
+            const q = searchQuery || activeFilter || '(все)';
+            showToast(`Поиск «${q}» сохранён в избранное`);
         }
 
         async function aiSearch() {
             const query = document.getElementById('catalogSearch').value.trim();
-            if (!query) { showToast('Р’РІРµРґРёС‚Рµ Р·Р°РїСЂРѕСЃ РґР»СЏ AI-РїРѕРёСЃРєР°', 'warn'); return; }
+            if (!query) { showToast('Введите запрос для AI-поиска', 'warn'); return; }
 
             const btn = document.getElementById('aiSearchBtn');
             btn.disabled = true;
-            btn.textContent = 'РџРѕРёСЃРє...';
+            btn.textContent = 'Поиск...';
 
             try {
                 const res = await apiFetch(`${SERVER_URL}/ai-search`, {
@@ -565,16 +565,16 @@
                 });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || 'РћС€РёР±РєР° AI-РїРѕРёСЃРєР°');
+                    throw new Error(err.error || 'Ошибка AI-поиска');
                 }
                 aiResults = await res.json();
                 aiMode = true;
                 render();
             } catch (e) {
-                showToast(e.message || 'РћС€РёР±РєР° AI-РїРѕРёСЃРєР°', 'error');
+                showToast(e.message || 'Ошибка AI-поиска', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI-РїРѕРёСЃРє`;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI-поиск`;
             }
         }
 
@@ -596,15 +596,15 @@
             if (aiMode) {
                 const banner = `<div class="ai-mode-banner" style="grid-column:1/-1;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    <div>Gemini AI РЅР°С€С‘Р» <b>${aiResults.length} РїСЂРѕРёР·РІРѕРґРёС‚РµР»${aiResults.length === 1 ? 'СЏ' : aiResults.length < 5 ? 'СЏ' : 'РµР№'}</b> РїРѕ РІР°С€РµРјСѓ Р·Р°РїСЂРѕСЃСѓ</div>
-                    <button class="ai-mode-exit" onclick="exitAiMode()">вњ• РћР±С‹С‡РЅС‹Р№ РїРѕРёСЃРє</button>
+                    <div>Gemini AI нашёл <b>${aiResults.length} производител${aiResults.length === 1 ? 'я' : aiResults.length < 5 ? 'я' : 'ей'}</b> по вашему запросу</div>
+                    <button class="ai-mode-exit" onclick="exitAiMode()">? Обычный поиск</button>
                 </div>`;
                 if (aiResults.length === 0) {
-                    grid.innerHTML = banner + `<div class="catalog-empty"><p>AI РЅРµ РЅР°С€С‘Р» РїРѕРґС…РѕРґСЏС‰РёС… РїСЂРѕРёР·РІРѕРґРёС‚РµР»РµР№.<br>РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ Р·Р°РїСЂРѕСЃ.</p></div>`;
+                    grid.innerHTML = banner + `<div class="catalog-empty"><p>AI не нашёл подходящих производителей.<br>Попробуйте изменить запрос.</p></div>`;
                 } else {
                     grid.innerHTML = banner + aiResults.map(p => cardHTML(p, p.aiReason)).join('');
                 }
-                document.getElementById('catalogCount').textContent = `AI: РЅР°Р№РґРµРЅРѕ ${aiResults.length}`;
+                document.getElementById('catalogCount').textContent = `AI: найдено ${aiResults.length}`;
                 const btn = document.getElementById('showMoreBtn');
                 if (btn) btn.style.display = 'none';
                 return;
@@ -613,13 +613,13 @@
             let list = filtered();
             const n = list.length;
             document.getElementById('catalogCount').textContent =
-                n === 0 ? 'РќРµ РЅР°Р№РґРµРЅРѕ' : `РќР°Р№РґРµРЅРѕ: ${n} РїСЂРѕРёР·РІРѕРґРёС‚РµР»${n === 1 ? 'СЊ' : n < 5 ? 'СЏ' : 'РµР№'}`;
+                n === 0 ? 'Не найдено' : `Найдено: ${n} производител${n === 1 ? 'ь' : n < 5 ? 'я' : 'ей'}`;
 
 
             if (n === 0) {
                 grid.innerHTML = `<div class="catalog-empty">
                     <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <p>РџСЂРѕРёР·РІРѕРґРёС‚РµР»Рё РЅРµ РЅР°Р№РґРµРЅС‹.<br>РџРѕРїСЂРѕР±СѓР№С‚Рµ РёР·РјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂ РёР»Рё Р·Р°РїСЂРѕСЃ.</p>
+                    <p>Производители не найдены.<br>Попробуйте изменить фильтр или запрос.</p>
                 </div>`;
                 const btn = document.getElementById('showMoreBtn');
                 if (btn) btn.style.display = 'none';
@@ -639,11 +639,11 @@
         }
 
         function cardHTML(p, aiReason) {
-            const letter = (p.company || '?').replace(/[В«В»"]/g, '').trim().charAt(0).toUpperCase();
+            const letter = (p.company || '?').replace(/[«»"]/g, '').trim().charAt(0).toUpperCase();
             const grad   = GRADIENTS[p.id % GRADIENTS.length];
 
             const verBadge = p.verifiedByPlatform
-                ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ</span></span>`
+                ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>`
                 : '';
 
             const caps = (p.capabilities || []).slice(0, 5)
@@ -656,7 +656,7 @@
                 <div class="catalog-cap-bar">
                     <div class="catalog-cap-bar-labels">
                         <span>${escapeHtml(fc.name)}</span>
-                        <span style="color:var(--accent-bright);font-weight:700;">${fc.percent}% СЃРІРѕР±.</span>
+                        <span style="color:var(--accent-bright);font-weight:700;">${fc.percent}% своб.</span>
                     </div>
                     <div class="catalog-cap-track">
                         <div class="catalog-cap-fill" style="width:${fc.percent}%"></div>
@@ -665,7 +665,7 @@
 
             const capacityBlock = capBars
                 ? `<div class="catalog-capacity">
-                       <div class="catalog-capacity-title">РЎРІРѕР±РѕРґРЅС‹Рµ РјРѕС‰РЅРѕСЃС‚Рё</div>
+                       <div class="catalog-capacity-title">Свободные мощности</div>
                        ${capBars}
                    </div>`
                 : '';
@@ -675,7 +675,7 @@
                 : '';
 
             const aiBlock = aiReason
-                ? `<div class="ai-reason-badge"><span>вњ¦ AI:</span>${escapeHtml(aiReason)}</div>`
+                ? `<div class="ai-reason-badge"><span>? AI:</span>${escapeHtml(aiReason)}</div>`
                 : '';
 
             return `
@@ -683,8 +683,8 @@
                 <div class="catalog-card-top">
                     <div class="catalog-avatar" style="background:${grad}">${letter}</div>
                     <div class="catalog-card-main">
-                        <div class="catalog-card-name">${escapeHtml(p.company || 'вЂ”')}</div>
-                        <div class="catalog-card-loc">${escapeHtml(locParts.join(' В· '))}</div>
+                        <div class="catalog-card-name">${escapeHtml(p.company || '—')}</div>
+                        <div class="catalog-card-loc">${escapeHtml(locParts.join(' · '))}</div>
                     </div>
                     ${verBadge}
                 </div>
@@ -693,20 +693,20 @@
                 ${aiBlock}
                 ${capacityBlock}
                 <div style="display:flex;gap:8px;margin-top:auto;">
-                    <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;" onclick="trackRecentProducer(${p.id})">РћС‚РєСЂС‹С‚СЊ РїСЂРѕС„РёР»СЊ в†’</a>
+                    <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;" onclick="trackRecentProducer(${p.id})">Открыть профиль ></a>
                     <button class="compare-card-btn${compareList.some(x=>x.id===p.id)?' in-compare':''}"
                         data-compare-id="${p.id}"
                         onclick="toggleCompare(${p.id})"
-                        title="${compareList.some(x=>x.id===p.id)?'РЈР±СЂР°С‚СЊ РёР· СЃСЂР°РІРЅРµРЅРёСЏ':'Р”РѕР±Р°РІРёС‚СЊ Рє СЃСЂР°РІРЅРµРЅРёСЋ'}">
+                        title="${compareList.some(x=>x.id===p.id)?'Убрать из сравнения':'Добавить к сравнению'}">
                         ${compareList.some(x=>x.id===p.id)
-                          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Р’ СЃСЂР°РІРЅРµРЅРёРё'
-                          : '+ РЎСЂР°РІРЅРёС‚СЊ'}
+                          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> В сравнении'
+                          : '+ Сравнить'}
                     </button>
                 </div>
             </div>`;
         }
 
-        // в”Ђв”Ђ Compare list в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+        // -- Compare list -------------------------------------------------
         let compareList = [];
 
         function toggleCompare(id) {
@@ -717,7 +717,7 @@
                 compareList.splice(idx, 1);
             } else {
                 if (compareList.length >= 4) {
-                    showToast('РњР°РєСЃРёРјСѓРј 4 РїРѕСЃС‚Р°РІС‰РёРєР° РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ', 'warn'); return;
+                    showToast('Максимум 4 поставщика для сравнения', 'warn'); return;
                 }
                 compareList.push(p);
             }
@@ -727,8 +727,8 @@
                 const bid = parseInt(btn.dataset.compareId);
                 const active = compareList.some(x => x.id === bid);
                 btn.classList.toggle('in-compare', active);
-                btn.title = active ? 'РЈР±СЂР°С‚СЊ РёР· СЃСЂР°РІРЅРµРЅРёСЏ' : 'Р”РѕР±Р°РІРёС‚СЊ Рє СЃСЂР°РІРЅРµРЅРёСЋ';
-                btn.textContent = active ? 'вњ“ РЎСЂР°РІРЅРёРІР°СЋ' : '+ РЎСЂР°РІРЅРёС‚СЊ';
+                btn.title = active ? 'Убрать из сравнения' : 'Добавить к сравнению';
+                btn.textContent = active ? '? Сравниваю' : '+ Сравнить';
             });
         }
 
@@ -737,30 +737,30 @@
             if (!inner) return;
             const n = compareList.length;
             const itemsHTML = compareList.map(p => {
-                const letter = (p.company || '?').replace(/[В«В»"]/g,'').trim()[0].toUpperCase();
+                const letter = (p.company || '?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
                 const grad = GRADIENTS[p.id % GRADIENTS.length];
                 return `<div class="compare-item">
                     <div class="compare-logo" style="background:${grad}">${letter}</div>
                     <div class="compare-item-info">
-                        <div class="compare-name">${escapeHtml(p.company || 'вЂ”')}</div>
+                        <div class="compare-name">${escapeHtml(p.company || '—')}</div>
                         <div class="compare-meta">${escapeHtml(p.specialization || p.city || '')}</div>
                     </div>
-                    <button class="compare-remove-btn" onclick="toggleCompare(${p.id})" title="РЈР±СЂР°С‚СЊ">вњ•</button>
+                    <button class="compare-remove-btn" onclick="toggleCompare(${p.id})" title="Убрать">?</button>
                 </div>`;
             }).join('');
 
             const addSlot = n < 4 ? `
                 <div class="compare-add" onclick="document.getElementById('producersGrid')?.scrollIntoView({behavior:'smooth',block:'start'})">
-                    пј‹ Р”РѕР±Р°РІРёС‚СЊ РїРѕСЃС‚Р°РІС‰РёРєР°
-                    <span style="font-size:11px;margin-top:4px;display:block;opacity:.7;">РЅР°Р¶РјРёС‚Рµ В«+ РЎСЂР°РІРЅРёС‚СЊВ» РЅР° РєР°СЂС‚РѕС‡РєРµ</span>
+                    + Добавить поставщика
+                    <span style="font-size:11px;margin-top:4px;display:block;opacity:.7;">нажмите «+ Сравнить» на карточке</span>
                 </div>` : '';
 
             const actionRow = n >= 2
-                ? `<button class="btn-primary" style="width:100%;" onclick="openCompareModal()">РЎСЂР°РІРЅРёС‚СЊ (${n})</button>`
-                : `<div style="font-size:12px;color:var(--text-secondary);text-align:center;padding:4px 0;">Р’С‹Р±РµСЂРёС‚Рµ РјРёРЅРёРјСѓРј 2 РїРѕСЃС‚Р°РІС‰РёРєР°</div>`;
+                ? `<button class="btn-primary" style="width:100%;" onclick="openCompareModal()">Сравнить (${n})</button>`
+                : `<div style="font-size:12px;color:var(--text-secondary);text-align:center;padding:4px 0;">Выберите минимум 2 поставщика</div>`;
 
             inner.innerHTML = `
-                <div class="catalog-panel-title">Р‘С‹СЃС‚СЂРѕРµ СЃСЂР°РІРЅРµРЅРёРµ
+                <div class="catalog-panel-title">Быстрое сравнение
                     <span style="color:var(--text-secondary);font-size:12px;">${n}/4</span>
                 </div>
                 ${itemsHTML}
@@ -777,7 +777,7 @@
             sidebarCategories = checkedCats;
             sidebarRegion = document.querySelector('.filter-group select')?.value || '';
             const count = checkedCats.length + (sidebarRegion ? 1 : 0);
-            document.getElementById('applyFiltersBtn').textContent = `РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹ (${count})`;
+            document.getElementById('applyFiltersBtn').textContent = `Применить фильтры (${count})`;
             render();
         }
 
@@ -785,13 +785,13 @@
         document.querySelectorAll('.filter-check input[type=checkbox]').forEach(cb => {
             cb.addEventListener('change', () => {
                 const n = document.querySelectorAll('.filter-check input[type=checkbox]:checked').length;
-                document.getElementById('applyFiltersBtn').textContent = `РџСЂРёРјРµРЅРёС‚СЊ С„РёР»СЊС‚СЂС‹ (${n})`;
+                document.getElementById('applyFiltersBtn').textContent = `Применить фильтры (${n})`;
             });
         });
 
         function openCompareModal() {
             if (compareList.length < 2) {
-                showToast('Р’С‹Р±РµСЂРёС‚Рµ РјРёРЅРёРјСѓРј 2 РїРѕСЃС‚Р°РІС‰РёРєР° РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ', 'warn'); return;
+                showToast('Выберите минимум 2 поставщика для сравнения', 'warn'); return;
             }
             const existing = document.getElementById('catalogCompareModal');
             if (existing) existing.remove();
@@ -803,34 +803,34 @@
 
             const items = compareList;
             const rows = [
-                ['РЎРїРµС†РёР°Р»РёР·Р°С†РёСЏ', items.map(p => escapeHtml(p.specialization || 'вЂ”'))],
-                ['Р“РѕСЂРѕРґ',         items.map(p => escapeHtml(p.city || 'вЂ”'))],
-                ['Р РµР№С‚РёРЅРі',       items.map(p => p.rating ? `в… ${p.rating}` : 'вЂ”')],
-                ['Р—Р°РІРµСЂС€РµРЅРѕ СЃРґРµР»РѕРє', items.map(p => p.deals ?? 'вЂ”')],
-                ['РЎСЂРѕРє РїРѕСЃС‚Р°РІРєРё', items.map(p => p.deliveryDays ? p.deliveryDays + ' РґРЅ.' : 'вЂ”')],
-                ['РЎРµСЂС‚РёС„РёРєР°С‚С‹',   items.map(p => escapeHtml(p.certificates || 'вЂ”'))],
-                ['РЎРІРѕР±РѕРґРЅС‹Рµ РјРѕС‰РЅРѕСЃС‚Рё', items.map(p => {
+                ['Специализация', items.map(p => escapeHtml(p.specialization || '—'))],
+                ['Город',         items.map(p => escapeHtml(p.city || '—'))],
+                ['Рейтинг',       items.map(p => p.rating ? `? ${p.rating}` : '—')],
+                ['Завершено сделок', items.map(p => p.deals ?? '—')],
+                ['Срок поставки', items.map(p => p.deliveryDays ? p.deliveryDays + ' дн.' : '—')],
+                ['Сертификаты',   items.map(p => escapeHtml(p.certificates || '—'))],
+                ['Свободные мощности', items.map(p => {
                     const fc = (p.freeCapacity || [])[0];
-                    return fc ? `${fc.percent}% (${escapeHtml(fc.name)})` : 'вЂ”';
+                    return fc ? `${fc.percent}% (${escapeHtml(fc.name)})` : '—';
                 })],
             ];
 
             m.innerHTML = `<div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:820px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-                    <div style="font-size:16px;font-weight:700;color:var(--text-primary);">РЎСЂР°РІРЅРµРЅРёРµ РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</div>
-                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-secondary);line-height:1;">вњ•</button>
+                    <div style="font-size:16px;font-weight:700;color:var(--text-primary);">Сравнение поставщиков</div>
+                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-secondary);line-height:1;">?</button>
                 </div>
                 <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
                     <thead><tr>
-                        <th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--card-border);white-space:nowrap;min-width:130px;">РџР°СЂР°РјРµС‚СЂ</th>
+                        <th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--card-border);white-space:nowrap;min-width:130px;">Параметр</th>
                         ${items.map(p => {
-                            const letter = (p.company||'?').replace(/[В«В»"]/g,'').trim()[0].toUpperCase();
+                            const letter = (p.company||'?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
                             const grad = GRADIENTS[p.id % GRADIENTS.length];
                             return `<th style="padding:10px 12px;border-bottom:2px solid var(--card-border);text-align:center;min-width:180px;">
                                 <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
                                     <div style="width:28px;height:28px;border-radius:7px;background:${grad};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;">${letter}</div>
-                                    <span style="font-weight:700;color:var(--text-primary);font-size:13px;">${escapeHtml(p.company||'вЂ”')}</span>
+                                    <span style="font-weight:700;color:var(--text-primary);font-size:13px;">${escapeHtml(p.company||'—')}</span>
                                 </div>
                             </th>`;
                         }).join('')}
@@ -842,13 +842,13 @@
                 </table>
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
-                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="padding:9px 22px;border-radius:8px;border:1px solid var(--card-border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;">Р—Р°РєСЂС‹С‚СЊ</button>
+                    <button onclick="document.getElementById('catalogCompareModal').remove()" style="padding:9px 22px;border-radius:8px;border:1px solid var(--card-border);background:transparent;color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;">Закрыть</button>
                 </div>
             </div>`;
             document.body.appendChild(m);
         }
 
-        /* в”Ђв”Ђ Recently viewed в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Recently viewed -------------------------------------------- */
         const RECENT_KEY = 'catalog_recent_v1';
 
         function trackRecentProducer(id) {
@@ -869,11 +869,11 @@
             if (!list.length) { panel.style.display = 'none'; return; }
             panel.style.display = '';
             container.innerHTML = list.map(p => {
-                const letter = (p.company || '?').replace(/[В«В»"]/g,'').trim()[0].toUpperCase();
-                const rating = p.rating ? `в… ${parseFloat(p.rating).toFixed(1).replace('.',',')}` : '';
+                const letter = (p.company || '?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
+                const rating = p.rating ? `? ${parseFloat(p.rating).toFixed(1).replace('.',',')}` : '';
                 return `<a href="company-profile.html?id=${p.id}" class="catalog-mini-item" onclick="trackRecentProducer(${p.id})" style="text-decoration:none;color:inherit;">
                     <div class="compare-logo">${escapeHtml(letter)}</div>
-                    <span>${escapeHtml(p.company || 'вЂ”')}<br><small style="color:var(--text-secondary);">${escapeHtml(rating)}</small></span>
+                    <span>${escapeHtml(p.company || '—')}<br><small style="color:var(--text-secondary);">${escapeHtml(rating)}</small></span>
                 </a>`;
             }).join('');
         }

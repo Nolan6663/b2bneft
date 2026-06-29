@@ -1,4 +1,4 @@
-п»ї<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,15 +7,15 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>РўРµС…Р·Р°РєР°Р· вЂ” РљР°Р±РёРЅРµС‚ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЏ</title>
+    <title>Техзаказ — Кабинет производителя</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=7">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
     <style data-spa-page>
         .tab-panel { display: none; flex-direction: column; gap: 14px; }
         .tab-panel.active { display: flex; }
 
-        /* в”Ђв”Ђ Company info banner в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Company info banner ----------------------------------------- */
         .producer-banner {
             display: flex; align-items: center; gap: 14px;
             background: var(--card-bg); border: 1px solid var(--card-border);
@@ -38,7 +38,7 @@
         .pbs-pending  { background: rgba(251,146,60,.12);  color: #d97706; }
         .pbs-rejected { background: rgba(248,113,113,.12); color: #dc2626; }
 
-        /* в”Ђв”Ђ Order cards в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Order cards ------------------------------------------------- */
         .orders-grid { display: flex; flex-direction: column; gap: 12px; }
         .order-card {
             background: var(--card-bg); border: 1px solid var(--card-border);
@@ -92,7 +92,7 @@
         .order-card-actions .btn-primary,
         .order-card-actions .btn-secondary { height: 34px; font-size: 12.5px; padding: 0 14px; }
 
-        /* в”Ђв”Ђ Search/filter row в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Search/filter row ------------------------------------------- */
         .orders-toolbar {
             display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
             background: var(--card-bg); border: 1px solid var(--card-border);
@@ -115,7 +115,7 @@
         .orders-cat-label { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
         .orders-cat-select { flex-shrink: 0; min-width: 150px; }
 
-        /* в”Ђв”Ђ Proposals table в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+        /* -- Proposals table --------------------------------------------- */
         .proposals-table-wrap {
             background: var(--card-bg); border: 1px solid var(--card-border);
             border-radius: var(--radius-card); overflow: hidden;
@@ -126,68 +126,68 @@
 
         <div class="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark" aria-hidden="true"><span>Рў</span></div>
-            <span>РўР•РҐ<b class="tz-accent">Р—РђРљРђР—</b></span>
+            <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+            <span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">Р—Р°РєСѓРїРєРё</div>
-            <a class="active" href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">РђРєС‚СѓР°Р»СЊРЅС‹Рµ Р·Р°РєСѓРїРєРё</span><span class="nav-badge" id="navBadgeOrders"></span></a>
-            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">РљР°С‚Р°Р»РѕРі</span></a>
-            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">РњРѕРё РѕС‚РєР»РёРєРё</span><span class="nav-badge" id="navBadgeProposals"></span></a>
+            <div class="sidebar-nav-label">Закупки</div>
+            <a class="active" href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Актуальные закупки</span><span class="nav-badge" id="navBadgeOrders"></span></a>
+            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">Каталог</span></a>
+            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">Мои отклики</span><span class="nav-badge" id="navBadgeProposals"></span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РЎРґРµР»РєРё</div>
-            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Р—Р°РєР°Р·С‹</span></a>
-            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Р”РѕСЃС‚Р°РІРєРё</span></a>
-            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РљРѕРЅС‚СЂР°РіРµРЅС‚С‹</span></a>
+            <div class="sidebar-nav-label">Сделки</div>
+            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Заказы</span></a>
+            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Доставки</span></a>
+            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Контрагенты</span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РљРѕРјРїР°РЅРёСЏ</div>
-            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">РђРЅР°Р»РёС‚РёРєР°</span></a>
-            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РЎРѕРѕР±С‰РµРЅРёСЏ</span><span class="nav-badge" id="navBadgeMessages"></span></a>
-            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">РР·Р±СЂР°РЅРЅРѕРµ</span></a>
-            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">РњРѕР№ РїСЂРѕС„РёР»СЊ</span></a>
-            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">РљР°СЂС‚Р°</span></a>
+            <div class="sidebar-nav-label">Компания</div>
+            <a href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">Аналитика</span></a>
+            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Сообщения</span><span class="nav-badge" id="navBadgeMessages"></span></a>
+            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">Избранное</span></a>
+            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">Мой профиль</span></a>
+            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">Карта</span></a>
         </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
-            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">РќР°СЃС‚СЂРѕР№РєРё</span></a>
-            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РџРѕРґРґРµСЂР¶РєР°</span></a>
+            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
+            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
             <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="sidebar-collapse-label">РЎРІРµСЂРЅСѓС‚СЊ РјРµРЅСЋ</span>
+            <span class="sidebar-collapse-label">Свернуть меню</span>
         </button>
     </div>
 
     <div id="spa-content" class="main-content">
         <div class="header">
-        <button class="burger-btn" aria-label="РњРµРЅСЋ" onclick="toggleMobileSidebar()">
+        <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>            <h2>РљР°Р±РёРЅРµС‚ РїСЂРѕРёР·РІРѕРґРёС‚РµР»СЏ</h2>
+        </button>            <h2>Кабинет производителя</h2>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     <span class="bell-badge" id="bellBadge" style="display:none;"></span>
                 </button>
                 <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)">
-                    <div class="user-avatar-pill" id="headerInitials">РўР—</div>
+                    <div class="user-avatar-pill" id="headerInitials">ТЗ</div>
                     <div class="user-info-block">
-                        <div class="user-company-name" id="headerCompany">Р—Р°РіСЂСѓР·РєР°вЂ¦</div>
+                        <div class="user-company-name" id="headerCompany">Загрузка…</div>
                         <div class="user-role-name" id="headerRole"></div>
                     </div>
                     <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     <div class="user-dropdown" id="userDropdown">
-                        <a href="settings.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>РќР°СЃС‚СЂРѕР№РєРё</a>
-                        <a href="company-profile.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</a>
+                        <a href="settings.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Настройки</a>
+                        <a href="company-profile.html" class="user-dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Профиль компании</a>
                         <div class="user-dropdown-sep"></div>
-                        <button class="user-dropdown-item danger" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button>
+                        <button class="user-dropdown-item danger" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Выйти из аккаунта</button>
                     </div>
                 </div>
             </div>        </div>
@@ -195,64 +195,64 @@
         <div class="kpi-row" id="crmFunnel">
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Р›РёРґРѕРІ РЅР° СЂС‹РЅРєРµ</div>
+                    <div class="kpi-label">Лидов на рынке</div>
                     <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
                 </div>
-                <div class="kpi-value" id="crmLeads">вЂ”</div>
-                <div class="kpi-sub">Р°РєС‚РёРІРЅС‹С… Р·Р°РєСѓРїРѕРє</div>
+                <div class="kpi-value" id="crmLeads">—</div>
+                <div class="kpi-sub">активных закупок</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">РћС‚РїСЂР°РІР»РµРЅРѕ РљРџ</div>
+                    <div class="kpi-label">Отправлено КП</div>
                     <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
                 </div>
-                <div class="kpi-value" id="crmSent">вЂ”</div>
-                <div class="kpi-sub">РІСЃРµРіРѕ РїСЂРµРґР»РѕР¶РµРЅРёР№</div>
+                <div class="kpi-value" id="crmSent">—</div>
+                <div class="kpi-sub">всего предложений</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">Р’ СЂР°Р±РѕС‚Рµ</div>
+                    <div class="kpi-label">В работе</div>
                     <div class="kpi-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 </div>
-                <div class="kpi-value" id="crmActive">вЂ”</div>
-                <div class="kpi-sub">РѕР¶РёРґР°СЋС‚ РѕС‚РІРµС‚Р°</div>
+                <div class="kpi-value" id="crmActive">—</div>
+                <div class="kpi-sub">ожидают ответа</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-card-top">
-                    <div class="kpi-label">РљРѕРЅРІРµСЂСЃРёСЏ</div>
+                    <div class="kpi-label">Конверсия</div>
                     <div class="kpi-icon" style="color:var(--accent-green);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
                 </div>
-                <div class="kpi-value" id="crmConversion" style="color:var(--accent-green);">вЂ”</div>
-                <div class="kpi-sub">Р’С‹РёРіСЂР°РЅРѕ: <span id="crmWon" style="font-weight:700;color:var(--accent-green);">вЂ”</span></div>
+                <div class="kpi-value" id="crmConversion" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">Выиграно: <span id="crmWon" style="font-weight:700;color:var(--accent-green);">—</span></div>
             </div>
         </div>
 
         <!-- Company banner -->
         <div class="producer-banner" id="producerBanner">
-            <div class="producer-banner-avatar" id="bannerAvatar">вЂ”</div>
+            <div class="producer-banner-avatar" id="bannerAvatar">—</div>
             <div class="producer-banner-info">
-                <div class="producer-banner-name" id="bannerName">Р—Р°РіСЂСѓР·РєР°...</div>
-                <div class="producer-banner-role">РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊ</div>
+                <div class="producer-banner-name" id="bannerName">Загрузка...</div>
+                <div class="producer-banner-role">Производитель</div>
                 <span class="producer-banner-status pbs-pending" id="bannerStatus">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                    <span class="nav-label">РќР° РїСЂРѕРІРµСЂРєРµ</span>
+                    <span class="nav-label">На проверке</span>
                 </span>
             </div>
             <a id="myProfileLink" href="#" class="btn-secondary" style="text-decoration:none;display:none;font-size:13px;height:36px;padding:0 16px;white-space:nowrap;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg>
-                <span class="nav-label">РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</span>
+                <span class="nav-label">Профиль компании</span>
             </a>
         </div>
 
         <div class="tab-strip">
             <div class="tabs">
-                <button class="tab active" id="tabOrdersBtn" onclick="switchProducerTab('orders')">РџСЂСЏРјС‹Рµ Р·Р°РєСѓРїРєРё (<span id="tabOrdersCount">0</span>)</button>
-                <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">РќР°РїСЂР°РІР»РµРЅРЅС‹Рµ РїСЂРµРґР»РѕР¶РµРЅРёСЏ (<span id="tabProposalsCount">0</span>)</button>
-                <button class="tab" id="tabAuctionsBtn" onclick="switchProducerTab('auctions')">вљЎ РђСѓРєС†РёРѕРЅС‹ (<span id="tabAuctionsCount">0</span>)</button>
+                <button class="tab active" id="tabOrdersBtn" onclick="switchProducerTab('orders')">Прямые закупки (<span id="tabOrdersCount">0</span>)</button>
+                <button class="tab" id="tabProposalsBtn" onclick="switchProducerTab('proposals')">Направленные предложения (<span id="tabProposalsCount">0</span>)</button>
+                <button class="tab" id="tabAuctionsBtn" onclick="switchProducerTab('auctions')">? Аукционы (<span id="tabAuctionsCount">0</span>)</button>
             </div>
             <button class="refresh-btn" onclick="refreshActiveTab()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6A00" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
-                <span class="nav-label">РћР±РЅРѕРІРёС‚СЊ</span>
+                <span class="nav-label">Обновить</span>
             </button>
         </div>
 
@@ -260,17 +260,17 @@
             <div class="orders-toolbar">
                 <div class="orders-search-wrap">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-                    <input type="text" id="orderSearchInput" class="orders-search-input" placeholder="РџРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ РёР»Рё РѕРїРёСЃР°РЅРёСЋ...">
+                    <input type="text" id="orderSearchInput" class="orders-search-input" placeholder="Поиск по названию или описанию...">
                 </div>
-                <span class="orders-cat-label">РљР°С‚РµРіРѕСЂРёСЏ</span>
+                <span class="orders-cat-label">Категория</span>
                 <div class="orders-cat-select">
                     <select id="categoryFilter" onchange="applyOrderFilters()">
-                        <option value="all">Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё</option>
-                        <option value="Р РўР">Р РўР</option>
-                        <option value="РњРµС‚Р°Р»Р»">РњРµС‚Р°Р»Р»</option>
-                        <option value="РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°">РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°</option>
-                        <option value="Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ">Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</option>
-                        <option value="РџСЂРѕС‡РµРµ">РџСЂРѕС‡РµРµ</option>
+                        <option value="all">Все категории</option>
+                        <option value="РТИ">РТИ</option>
+                        <option value="Металл">Металл</option>
+                        <option value="Трубопроводная арматура">Трубопроводная арматура</option>
+                        <option value="Электрооборудование">Электрооборудование</option>
+                        <option value="Прочее">Прочее</option>
                     </select>
                 </div>
             </div>
@@ -282,10 +282,10 @@
                 <table style="width:100%;border-collapse:collapse;">
                     <thead>
                         <tr>
-                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Р—Р°РєСѓРїРєР°</th>
-                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">РџСЂРµРґР»РѕР¶РµРЅРЅР°СЏ С†РµРЅР°</th>
-                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">РЎСЂРѕРє РїРѕСЃС‚Р°РІРєРё</th>
-                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">РЎС‚Р°С‚СѓСЃ</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Закупка</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Предложенная цена</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Срок поставки</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--card-border);background:var(--table-header-bg);">Статус</th>
                         </tr>
                     </thead>
                     <tbody id="myResponsesTable"></tbody>
@@ -295,7 +295,7 @@
 
         <div class="tab-panel" id="tabAuctions">
             <div id="auctionsListWrap" style="display:flex;flex-direction:column;gap:14px;padding:4px 0;">
-                <div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Р—Р°РіСЂСѓР·РєР° Р°СѓРєС†РёРѕРЅРѕРІвЂ¦</div>
+                <div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Загрузка аукционов…</div>
             </div>
         </div>
     </div>
@@ -304,36 +304,36 @@
     <div class="modal" id="bidModal" style="display:none;">
         <div class="modal-content" style="width:400px;max-width:96vw;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-                <h3 style="margin:0;font-size:16px;">РЎРґРµР»Р°С‚СЊ СЃС‚Р°РІРєСѓ</h3>
-                <button onclick="closeBidModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary);">вњ•</button>
+                <h3 style="margin:0;font-size:16px;">Сделать ставку</h3>
+                <button onclick="closeBidModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary);">?</button>
             </div>
             <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;" id="bidModalDesc"></div>
-            <div style="font-size:13px;margin-bottom:16px;">РўРµРєСѓС‰Р°СЏ Р»СѓС‡С€Р°СЏ С†РµРЅР°: <strong id="bidModalCurrent" style="color:#FF6A00;font-family:'JetBrains Mono',monospace;"></strong></div>
-            <label style="font-size:13px;font-weight:600;">Р’Р°С€Р° СЃС‚Р°РІРєР° (в‚Ѕ)
-                <input id="bidPriceInput" type="number" min="1" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;font-size:14px;background:var(--inner-bg);color:var(--text-primary);font-family:inherit;box-sizing:border-box;" placeholder="Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ РЅРёР¶Рµ С‚РµРєСѓС‰РµР№">
+            <div style="font-size:13px;margin-bottom:16px;">Текущая лучшая цена: <strong id="bidModalCurrent" style="color:#FF6A00;font-family:'JetBrains Mono',monospace;"></strong></div>
+            <label style="font-size:13px;font-weight:600;">Ваша ставка (?)
+                <input id="bidPriceInput" type="number" min="1" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;font-size:14px;background:var(--inner-bg);color:var(--text-primary);font-family:inherit;box-sizing:border-box;" placeholder="Введите сумму ниже текущей">
             </label>
-            <button onclick="submitBid()" style="width:100%;margin-top:18px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">РЎРґРµР»Р°С‚СЊ СЃС‚Р°РІРєСѓ</button>
+            <button onclick="submitBid()" style="width:100%;margin-top:18px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Сделать ставку</button>
         </div>
     </div>
 
     <div class="modal" id="respondModal">
         <div class="modal-content">
-            <h3 id="modalTitle">РћС‚РєР»РёРє РЅР° Р·Р°СЏРІРєСѓ</h3>
+            <h3 id="modalTitle">Отклик на заявку</h3>
             <div class="form-group">
-                <label>Р¦РµРЅР°, в‚Ѕ/С€С‚</label>
-                <input type="number" id="proposalPrice" placeholder="РЈРєР°Р¶РёС‚Рµ С†РµРЅСѓ Р·Р° РµРґРёРЅРёС†Сѓ">
+                <label>Цена, ?/шт</label>
+                <input type="number" id="proposalPrice" placeholder="Укажите цену за единицу">
             </div>
             <div class="form-group">
-                <label>РЎСЂРѕРє РїРѕСЃС‚Р°РІРєРё (РґРЅРµР№)</label>
-                <input type="number" id="proposalTerms" placeholder="РќР°РїСЂРёРјРµСЂ, 14">
+                <label>Срок поставки (дней)</label>
+                <input type="number" id="proposalTerms" placeholder="Например, 14">
             </div>
             <div class="form-group">
-                <label>РџСЂРёРєСЂРµРїРёС‚СЊ РљРџ / РїСЂР°Р№СЃ-Р»РёСЃС‚ (PDF, Word, Excel)</label>
+                <label>Прикрепить КП / прайс-лист (PDF, Word, Excel)</label>
                 <input type="file" id="proposalFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="padding:10px 12px; border:2px dashed var(--input-border); background:transparent; cursor:pointer; height:auto;">
             </div>
             <div class="modal-actions">
-                <button class="btn-modal-cancel" onclick="closeRespondModal()">РћС‚РјРµРЅР°</button>
-                <button class="btn-modal-submit" id="submitProposalBtn" onclick="sendProposal()">РћС‚РїСЂР°РІРёС‚СЊ РљРџ</button>
+                <button class="btn-modal-cancel" onclick="closeRespondModal()">Отмена</button>
+                <button class="btn-modal-submit" id="submitProposalBtn" onclick="sendProposal()">Отправить КП</button>
             </div>
         </div>
     </div>
@@ -342,24 +342,24 @@
         <div class="modal-content">
             <div class="cmp-header">
                 <div class="cmp-header-left">
-                    <div class="cmp-avatar" id="chatModalAvatar">вЂ”</div>
+                    <div class="cmp-avatar" id="chatModalAvatar">—</div>
                     <div style="min-width:0;">
-                        <div class="cmp-title" id="chatModalTitle">РћР±СЃСѓР¶РґРµРЅРёРµ Р·Р°РєСѓРїРєРё</div>
+                        <div class="cmp-title" id="chatModalTitle">Обсуждение закупки</div>
                         <div class="cmp-company" id="chatModalCompany"></div>
                     </div>
                 </div>
                 <div class="cmp-header-actions">
-                    <button class="cmp-icon-btn goto" onclick="goToFullChat()" title="РћС‚РєСЂС‹С‚СЊ РІ РїРѕР»РЅРѕРј С‡Р°С‚Рµ">
+                    <button class="cmp-icon-btn goto" onclick="goToFullChat()" title="Открыть в полном чате">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     </button>
-                    <button class="cmp-icon-btn" onclick="closeChatModal()" title="Р—Р°РєСЂС‹С‚СЊ">
+                    <button class="cmp-icon-btn" onclick="closeChatModal()" title="Закрыть">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
             </div>
             <div class="cmp-messages" id="chatModalMessages"></div>
             <div class="cmp-footer">
-                <input class="cmp-input" id="chatModalInput" type="text" placeholder="РќР°РїРёСЃР°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
+                <input class="cmp-input" id="chatModalInput" type="text" placeholder="Написать сообщение..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
                 <button class="cmp-send-btn" onclick="sendGlobalChatMessage()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
@@ -369,11 +369,11 @@
 
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width: 440px;">
-            <h3>РЈРІРµРґРѕРјР»РµРЅРёСЏ РїР»Р°С‚С„РѕСЂРјС‹</h3>
+            <h3>Уведомления платформы</h3>
             <div id="notificationsList" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--inner-border);"></div>
             <div class="modal-actions" style="justify-content: space-between;">
-                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Р—Р°РєСЂС‹С‚СЊ</button>
+                <button onclick="clearNotifications()" style="color: var(--error); border:none; background:transparent; cursor:pointer; font-size: 13px; padding: 8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
@@ -439,13 +439,13 @@
         }
 
         async function loadCompanyInfo() {
-            const companyName = localStorage.getItem('userCompany') || (isGuest ? 'Р“РѕСЃС‚РµРІРѕР№ РґРѕСЃС‚СѓРї' : 'вЂ”');
-            const letter = companyName.replace(/[В«В»"РћРћРћ ]/g,'').trim()[0]?.toUpperCase() || '?';
+            const companyName = localStorage.getItem('userCompany') || (isGuest ? 'Гостевой доступ' : '—');
+            const letter = companyName.replace(/[«»"ООО ]/g,'').trim()[0]?.toUpperCase() || '?';
             document.getElementById('bannerAvatar').textContent = letter;
             document.getElementById('bannerName').textContent = companyName;
 
             if (isGuest || !localStorage.getItem('userCompany')) {
-                setBannerStatus('Р“РѕСЃС‚РµРІРѕР№ РґРѕСЃС‚СѓРї', 'pbs-pending'); return;
+                setBannerStatus('Гостевой доступ', 'pbs-pending'); return;
             }
             try {
                 const response = await fetch(`${SERVER_URL}/companies`);
@@ -463,16 +463,16 @@
                         sidebarLink.style.display = '';
                     }
                 } else {
-                    setBannerStatus('РќР° РїСЂРѕРІРµСЂРєРµ');
+                    setBannerStatus('На проверке');
                 }
-            } catch { /* С‚РёС…Рѕ */ }
+            } catch { /* тихо */ }
         }
 
         function setBannerStatus(status, forceClass) {
             const el = document.getElementById('bannerStatus');
             const map = {
-                'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ': ['pbs-verified', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg>', 'Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅ'],
-                'РћС‚РєР»РѕРЅРµРЅ':     ['pbs-rejected', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>', 'РћС‚РєР»РѕРЅС‘РЅ'],
+                'Верифицирован': ['pbs-verified', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg>', 'Верифицирован'],
+                'Отклонен':     ['pbs-rejected', '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>', 'Отклонён'],
             };
             const cls = forceClass || (map[status]?.[0] ?? 'pbs-pending');
             const icon = map[status]?.[1] ?? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
@@ -489,7 +489,7 @@
                     orders = await response.json();
                 } else {
                     orders = [];
-                    showDataLoadError('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р·Р°РєСѓРїРєРё');
+                    showDataLoadError('Не удалось загрузить закупки');
                 }
                 if (!isGuest) {
                     try {
@@ -499,12 +499,12 @@
                             orders.forEach(o => { o.matchScore = scores[o.id] != null ? scores[o.id] : null; });
                             orders.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
                         }
-                    } catch (e) { /* РјР°С‚С‡РёРЅРі РЅРµРґРѕСЃС‚СѓРїРµРЅ */ }
+                    } catch (e) { /* матчинг недоступен */ }
                 }
             } catch (error) {
                 if (!shouldUseMockData()) {
                     orders = [];
-                    showDataLoadError('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р·Р°РєСѓРїРєРё');
+                    showDataLoadError('Не удалось загрузить закупки');
                 }
             }
 
@@ -524,20 +524,20 @@
 
                 // Status
                 let statusCls, statusLabel;
-                if (order.status === 'РћС‚РјРµРЅРµРЅР°') { statusCls = 'ocs-muted'; statusLabel = 'РћС‚РјРµРЅРµРЅР° Р·Р°РєР°Р·С‡РёРєРѕРј'; }
-                else if (order.status === 'Р—Р°РєСЂС‹С‚Р°') { statusCls = 'ocs-closed'; statusLabel = 'Р—Р°РєСѓРїРєР° Р·Р°РІРµСЂС€РµРЅР°'; }
-                else if (order.status === 'Р”РµРґР»Р°Р№РЅ РёСЃС‚С‘Рє') { statusCls = 'ocs-muted'; statusLabel = 'Р”РµРґР»Р°Р№РЅ РёСЃС‚С‘Рє'; }
-                else { statusCls = 'ocs-open'; statusLabel = order.status || 'РђРєС‚РёРІРЅР°'; }
+                if (order.status === 'Отменена') { statusCls = 'ocs-muted'; statusLabel = 'Отменена заказчиком'; }
+                else if (order.status === 'Закрыта') { statusCls = 'ocs-closed'; statusLabel = 'Закупка завершена'; }
+                else if (order.status === 'Дедлайн истёк') { statusCls = 'ocs-muted'; statusLabel = 'Дедлайн истёк'; }
+                else { statusCls = 'ocs-open'; statusLabel = order.status || 'Активна'; }
 
                 // Match badge
                 const matchBadge = (order.matchScore > 0)
-                    ? `<span class="oc-badge oc-badge-match">рџ§© ${order.matchScore}% СЃРѕРІРїР°РґРµРЅРёРµ</span>` : '';
+                    ? `<span class="oc-badge oc-badge-match">?? ${order.matchScore}% совпадение</span>` : '';
 
                 // Deadline color
                 const dl = order.deadline ? new Date(order.deadline) : null;
                 const daysLeft = dl ? Math.ceil((dl - Date.now()) / 86400000) : null;
                 const dlColor = daysLeft != null && daysLeft <= 3 ? 'var(--accent-red)' : 'var(--text-primary)';
-                const dlStr = order.deadline ? formatDeadline(order.deadline) : 'вЂ”';
+                const dlStr = order.deadline ? formatDeadline(order.deadline) : '—';
 
                 // Drawing
                 let drawingHTML = '';
@@ -547,19 +547,19 @@
 
                 // Buttons
                 const chatBtn = isGuest
-                    ? `<button class="btn-secondary" onclick="location.href='login.html'">РћС‚РєСЂС‹С‚СЊ С‡Р°С‚</button>`
+                    ? `<button class="btn-secondary" onclick="location.href='login.html'">Открыть чат</button>`
                     : `<button class="btn-secondary" data-oid="${order.id}"
                         data-title="${escapeHtml(displayTitle)}"
                         data-company="${escapeHtml(localStorage.getItem('userCompany')||'')}"
                         onclick="openGlobalChat(+this.dataset.oid,this.dataset.title,this.dataset.company)">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span class="nav-label">Р§Р°С‚</span></button>`;
+                        <span class="nav-label">Чат</span></button>`;
 
-                const actionBtn = (order.status === 'РћС‚РјРµРЅРµРЅР°' || order.status === 'Р—Р°РєСЂС‹С‚Р°')
-                    ? `<button class="btn-secondary" disabled style="opacity:.5;cursor:default;">Р—Р°РєСЂС‹С‚Р°</button>`
+                const actionBtn = (order.status === 'Отменена' || order.status === 'Закрыта')
+                    ? `<button class="btn-secondary" disabled style="opacity:.5;cursor:default;">Закрыта</button>`
                     : isGuest
-                        ? `<button class="btn-primary" onclick="location.href='login.html'">Р’РѕР№С‚Рё РґР»СЏ РѕС‚РєР»РёРєР°</button>`
-                        : `<button class="btn-primary" onclick="openRespondModal(${order.id},'${displayTitle.replace(/'/g,"\\'")}')">РћС‚РєР»РёРєРЅСѓС‚СЊСЃСЏ</button>`;
+                        ? `<button class="btn-primary" onclick="location.href='login.html'">Войти для отклика</button>`
+                        : `<button class="btn-primary" onclick="openRespondModal(${order.id},'${displayTitle.replace(/'/g,"\\'")}')">Откликнуться</button>`;
 
                 card.innerHTML = `
                     <div class="order-card-body">
@@ -567,15 +567,15 @@
                             <div class="order-card-title">${escapeHtml(displayTitle)}</div>
                         </div>
                         <div class="order-card-badges">
-                            <span class="oc-badge oc-badge-direct">РџР РЇРњРђРЇ Р—РђРљРЈРџРљРђ</span>
+                            <span class="oc-badge oc-badge-direct">ПРЯМАЯ ЗАКУПКА</span>
                             ${order.category ? `<span class="oc-badge oc-badge-cat">${escapeHtml(order.category)}</span>` : ''}
                             ${matchBadge}
                             <span class="oc-status ${statusCls}">${statusLabel}</span>
                         </div>
                         <div class="order-card-meta">
-                            ${order.quantity ? `<div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><b>${order.quantity} ${order.unit||'С€С‚'}</b></div>` : ''}
-                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Р”РµРґР»Р°Р№РЅ:</span> <b style="color:${dlColor}">${dlStr}</b></div>
-                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РћС‚РєР»РёРєРѕРІ:</span> <b>${order.responses ?? 0}</b></div>
+                            ${order.quantity ? `<div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><b>${order.quantity} ${order.unit||'шт'}</b></div>` : ''}
+                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Дедлайн:</span> <b style="color:${dlColor}">${dlStr}</b></div>
+                            <div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Откликов:</span> <b>${order.responses ?? 0}</b></div>
                             ${order.createdAt ? `<div class="ocm-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>${new Date(order.createdAt).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}</div>` : ''}
                         </div>
                         ${order.description ? `<div class="order-card-desc">${escapeHtml(order.description)}</div>` : ''}
@@ -621,19 +621,19 @@
                 tableBody.innerHTML = '';
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
-                    let icon = 'вњ“', cls = 'win';
-                    if (prop.status === 'РћС‚РєР»РѕРЅРµРЅ') { icon = 'вњ—'; cls = 'loose'; }
-                    else if (prop.status === 'РћС‚РѕР·РІР°РЅР° Р·Р°РєР°Р·С‡РёРєРѕРј') { icon = 'вЉ'; cls = 'muted'; }
-                    else if (prop.status !== 'Р’С‹РёРіСЂР°РЅ') { icon = 'вЏ±'; cls = 'waiting'; }
-                    row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Р—Р°РєСѓРїРєР° #' + prop.orderId)}</strong></td><td>${prop.price} в‚Ѕ/С€С‚</td><td>${prop.days} РґРЅРµР№</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
+                    let icon = '?', cls = 'win';
+                    if (prop.status === 'Отклонен') { icon = '?'; cls = 'loose'; }
+                    else if (prop.status === 'Отозвана заказчиком') { icon = '?'; cls = 'muted'; }
+                    else if (prop.status !== 'Выигран') { icon = '?'; cls = 'waiting'; }
+                    row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ?/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
                     tableBody.appendChild(row);
                 });
-            } catch { /* С‚РёС…Рѕ */ }
+            } catch { /* тихо */ }
         }
 
         function openRespondModal(id, title) {
             currentOrderId = Number(id); currentOrderTitle = title;
-            document.getElementById('modalTitle').innerText = `РџРѕРґР°С‡Р° РљРџ РЅР°: ${title}`;
+            document.getElementById('modalTitle').innerText = `Подача КП на: ${title}`;
             document.getElementById('respondModal').style.display = 'flex';
         }
         function closeRespondModal() {
@@ -647,7 +647,7 @@
             const fileInput = document.getElementById('proposalFile');
             const price = parseFloat(priceInput.value);
             const days = parseInt(daysInput.value, 10);
-            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) { showToast('РЈРєР°Р¶РёС‚Рµ РєРѕСЂСЂРµРєС‚РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹!', 'warn'); return; }
+            if (isNaN(price) || isNaN(days) || price <= 0 || days <= 0) { showToast('Укажите корректные параметры!', 'warn'); return; }
 
             const formData = new FormData();
             formData.append('orderId', currentOrderId);
@@ -666,13 +666,13 @@
                     loadOrdersForProducers(); loadMyProposals();
                 } else {
                     const err = await response.json();
-                    showToast(err.error || 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ РїСЂРµРґР»РѕР¶РµРЅРёРµ', 'error');
+                    showToast(err.error || 'Не удалось отправить предложение', 'error');
                 }
             } catch {
-                showToast('РЎРµСЂРІРµСЂ РЅРµРґРѕСЃС‚СѓРїРµРЅ. РџСЂРѕРІРµСЂСЊС‚Рµ, С‡С‚Рѕ Р±СЌРєРµРЅРґ Р·Р°РїСѓС‰РµРЅ.', 'error');
+                showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
             }
         }
-        /* в•ђв•ђ AUCTIONS в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+        /* == AUCTIONS ========================================================== */
         let _bidAuctionId = null;
         let _bidAuctionIntervals = {};
 
@@ -686,33 +686,33 @@
                 document.getElementById('tabAuctionsCount').textContent = list.length;
 
                 if (!list.length) {
-                    wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">РђРєС‚РёРІРЅС‹С… Р°СѓРєС†РёРѕРЅРѕРІ РЅРµС‚</div>';
+                    wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Активных аукционов нет</div>';
                     return;
                 }
 
                 wrap.innerHTML = list.map(a => {
-                    const fmtPrice = v => v != null ? new Intl.NumberFormat('ru-RU').format(v) + ' в‚Ѕ' : 'вЂ”';
+                    const fmtPrice = v => v != null ? new Intl.NumberFormat('ru-RU').format(v) + ' ?' : '—';
                     return `<div style="padding:16px 18px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;">
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;">
                             <div>
                                 <div style="font-size:14px;font-weight:700;margin-bottom:3px;">${escapeHtml(a.title)}</div>
-                                <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(a.category)} В· ${escapeHtml(a.customer_company)}</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(a.category)} · ${escapeHtml(a.customer_company)}</div>
                             </div>
                             <div id="auction-timer-${a.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#FF6A00;white-space:nowrap;flex:none;"></div>
                         </div>
                         <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;">
                             <div>
-                                <span style="color:var(--text-secondary);">Р›СѓС‡С€Р°СЏ СЃС‚Р°РІРєР°:</span>
+                                <span style="color:var(--text-secondary);">Лучшая ставка:</span>
                                 <span id="auction-best-${a.id}" style="font-weight:700;font-family:'JetBrains Mono',monospace;margin-left:6px;color:#FF6A00;">${fmtPrice(a.current_best || a.start_price)}</span>
                             </div>
                             <div>
-                                <span style="color:var(--text-secondary);">РЎС‚Р°РІРѕРє:</span>
+                                <span style="color:var(--text-secondary);">Ставок:</span>
                                 <span style="font-weight:600;margin-left:6px;">${a.bid_count}</span>
                             </div>
                         </div>
                         <button onclick="openBidModal(${a.id}, ${a.current_best || a.start_price}, '${escapeHtml(a.title).replace(/'/g,"\\'")}', '${escapeHtml(a.description||'').slice(0,80).replace(/'/g,"\\'")}', '${a.end_time}')"
                             style="padding:9px 18px;background:#FF6A00;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
-                            вљЎ РЎРґРµР»Р°С‚СЊ СЃС‚Р°РІРєСѓ
+                            ? Сделать ставку
                         </button>
                     </div>`;
                 }).join('');
@@ -722,7 +722,7 @@
                     joinAuctionRoom(a.id);
                 });
             } catch {
-                wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р°СѓРєС†РёРѕРЅС‹</div>';
+                wrap.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-secondary);font-size:14px;">Не удалось загрузить аукционы</div>';
             }
         }
 
@@ -732,7 +732,7 @@
             const tick = () => {
                 if (!el) return;
                 const diff = new Date(endTime) - new Date();
-                if (diff <= 0) { el.textContent = 'Р—Р°РІРµСЂС€С‘РЅ'; clearInterval(_bidAuctionIntervals[auctionId]); return; }
+                if (diff <= 0) { el.textContent = 'Завершён'; clearInterval(_bidAuctionIntervals[auctionId]); return; }
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
                 const s = Math.floor((diff % 60000) / 1000);
@@ -748,8 +748,8 @@
                 socket.on('auction:bid', data => {
                     if (data.auctionId !== auctionId) return;
                     const el = document.getElementById(`auction-best-${auctionId}`);
-                    if (el) el.textContent = new Intl.NumberFormat('ru-RU').format(data.price) + ' в‚Ѕ';
-                    showToast(`РќРѕРІР°СЏ Р»СѓС‡С€Р°СЏ СЃС‚Р°РІРєР°: ${new Intl.NumberFormat('ru-RU').format(data.price)} в‚Ѕ`, 'info');
+                    if (el) el.textContent = new Intl.NumberFormat('ru-RU').format(data.price) + ' ?';
+                    showToast(`Новая лучшая ставка: ${new Intl.NumberFormat('ru-RU').format(data.price)} ?`, 'info');
                 });
             }
         }
@@ -757,8 +757,8 @@
         function openBidModal(auctionId, currentBest, title, desc, endTime) {
             _bidAuctionId = auctionId;
             document.getElementById('bidModal').style.display = 'flex';
-            document.getElementById('bidModalDesc').textContent = title + (desc ? ` вЂ” ${desc}` : '');
-            document.getElementById('bidModalCurrent').textContent = new Intl.NumberFormat('ru-RU').format(currentBest) + ' в‚Ѕ';
+            document.getElementById('bidModalDesc').textContent = title + (desc ? ` — ${desc}` : '');
+            document.getElementById('bidModalCurrent').textContent = new Intl.NumberFormat('ru-RU').format(currentBest) + ' ?';
             document.getElementById('bidPriceInput').value = '';
             document.getElementById('bidPriceInput').max = currentBest - 1;
         }
@@ -771,18 +771,18 @@
         async function submitBid() {
             if (!_bidAuctionId) return;
             const price = Number(document.getElementById('bidPriceInput').value);
-            if (!price || price <= 0) { showToast('Р’РІРµРґРёС‚Рµ С†РµРЅСѓ', 'error'); return; }
+            if (!price || price <= 0) { showToast('Введите цену', 'error'); return; }
             try {
                 const r = await apiFetch(`${SERVER_URL}/auctions/${_bidAuctionId}/bid`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ price })
                 });
-                if (!r.ok) { const e = await r.json(); showToast(e.error || 'РћС€РёР±РєР°', 'error'); return; }
-                showToast('РЎС‚Р°РІРєР° РїСЂРёРЅСЏС‚Р°!', 'success');
+                if (!r.ok) { const e = await r.json(); showToast(e.error || 'Ошибка', 'error'); return; }
+                showToast('Ставка принята!', 'success');
                 closeBidModal();
                 loadActiveAuctions();
-            } catch { showToast('РћС€РёР±РєР° РїСЂРё РѕС‚РїСЂР°РІРєРµ СЃС‚Р°РІРєРё', 'error'); }
+            } catch { showToast('Ошибка при отправке ставки', 'error'); }
         }
     </script>
 </body>

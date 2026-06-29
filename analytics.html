@@ -1,4 +1,4 @@
-п»ї<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,13 +7,13 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>РўРµС…Р·Р°РєР°Р· вЂ” РђРЅР°Р»РёС‚РёРєР°</title>
+    <title>Техзаказ — Аналитика</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=7">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style data-spa-page>
-        /* в”Ђв”Ђв”Ђ Filter bar в”Ђв”Ђв”Ђ */
+        /* --- Filter bar --- */
         .an-filters {
             display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
             padding: 10px 14px; background: var(--card-bg); border: 1px solid var(--card-border);
@@ -48,7 +48,7 @@
         }
         .an-filter-reset:hover { background: var(--inner-bg); }
 
-        /* в”Ђв”Ђв”Ђ KPI row в”Ђв”Ђв”Ђ */
+        /* --- KPI row --- */
         .an-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 16px; }
         .an-kpi-card {
             background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
@@ -65,12 +65,12 @@
         .an-kpi-note { font-size: 11px; color: var(--text-muted); font-weight: 400; }
         .an-kpi-spark { width: 80px; height: 32px; flex-shrink: 0; }
 
-        /* в”Ђв”Ђв”Ђ Body: charts + insights в”Ђв”Ђв”Ђ */
+        /* --- Body: charts + insights --- */
         .an-body { display: flex; gap: 14px; align-items: flex-start; }
         .an-main { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
         .an-row { display: grid; grid-template-columns: 5fr 3fr 3fr; gap: 14px; }
 
-        /* в”Ђв”Ђв”Ђ Chart card в”Ђв”Ђв”Ђ */
+        /* --- Chart card --- */
         .an-card {
             background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
             padding: 20px;
@@ -81,19 +81,19 @@
         .an-card-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
         .an-card-title-row .an-card-title { margin-bottom: 0; }
 
-        /* в”Ђв”Ђв”Ђ Period tabs в”Ђв”Ђв”Ђ */
+        /* --- Period tabs --- */
         .period-tabs { display: flex; gap: 3px; }
         .period-tab { font-size: 11.5px; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--card-border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all .15s; font-family: inherit; }
         .period-tab.active { background: var(--accent-bright); color: #fff; border-color: var(--accent-bright); }
         .period-tab:hover:not(.active) { border-color: var(--accent-bright); color: var(--accent-bright); }
         .more-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--card-border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px; }
 
-        /* в”Ђв”Ђв”Ђ Chart legend в”Ђв”Ђв”Ђ */
+        /* --- Chart legend --- */
         .chart-legend { display: flex; gap: 16px; margin-bottom: 10px; }
         .chart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
         .chart-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
-        /* в”Ђв”Ђв”Ђ Funnel в”Ђв”Ђв”Ђ */
+        /* --- Funnel --- */
         .funnel-wrap { display: flex; flex-direction: column; gap: 8px; }
         .funnel-step { display: flex; align-items: center; gap: 8px; }
         .funnel-lbl { font-size: 11.5px; color: var(--text-secondary); width: 90px; flex-shrink: 0; }
@@ -102,14 +102,14 @@
         .funnel-count { font-size: 13px; font-weight: 800; color: var(--text-primary); width: 32px; text-align: right; flex-shrink: 0; }
         .funnel-pct { font-size: 11px; color: var(--text-muted); width: 34px; text-align: right; flex-shrink: 0; }
 
-        /* в”Ђв”Ђв”Ђ Donut legend в”Ђв”Ђв”Ђ */
+        /* --- Donut legend --- */
         .donut-legend { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
         .donut-legend-item { display: flex; align-items: center; gap: 8px; }
         .donut-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .donut-legend-label { font-size: 12px; color: var(--text-secondary); flex: 1; }
         .donut-legend-pct { font-size: 12px; font-weight: 700; color: var(--text-primary); }
 
-        /* в”Ђв”Ђв”Ђ Suppliers table в”Ђв”Ђв”Ђ */
+        /* --- Suppliers table --- */
         .sup-tbl { width: 100%; border-collapse: collapse; }
         .sup-tbl th { font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-align: left; padding: 0 0 8px; border-bottom: 1px solid var(--card-border); }
         .sup-tbl th:not(:first-child) { text-align: right; }
@@ -122,7 +122,7 @@
         .an-link { font-size: 12px; color: var(--accent-bright); font-weight: 600; cursor: pointer; border: none; background: none; font-family: inherit; margin-top: 12px; display: inline-flex; align-items: center; gap: 4px; }
         .an-link:hover { text-decoration: underline; }
 
-        /* в”Ђв”Ђв”Ђ Big metric в”Ђв”Ђв”Ђ */
+        /* --- Big metric --- */
         .an-big { font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -.5px; line-height: 1; }
         .an-delta-row { display: flex; align-items: center; gap: 6px; margin: 6px 0 14px; }
         .an-delta { font-size: 12px; font-weight: 700; }
@@ -130,7 +130,7 @@
         .an-delta.down { color: #EF4444; }
         .an-delta-note { font-size: 11.5px; color: var(--text-muted); }
 
-        /* в”Ђв”Ђв”Ђ Savings bars в”Ђв”Ђв”Ђ */
+        /* --- Savings bars --- */
         .savings-row { margin-bottom: 14px; }
         .savings-row-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .savings-row-label { font-size: 12px; color: var(--text-secondary); }
@@ -140,7 +140,7 @@
         .savings-pct { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
         .savings-target { font-size: 12px; color: var(--text-muted); margin-top: 10px; border-top: 1px solid var(--inner-border); padding-top: 10px; }
 
-        /* в”Ђв”Ђв”Ђ Heatmap rows в”Ђв”Ђв”Ђ */
+        /* --- Heatmap rows --- */
         .heat-row { display: flex; align-items: center; gap: 10px; }
         .heat-name { font-size: 12px; color: var(--text-secondary); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .heat-bar-outer { flex: 1; height: 18px; background: var(--inner-bg); border-radius: 5px; overflow: hidden; }
@@ -151,7 +151,7 @@
         .heatmap-legend-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-secondary); }
         .heatmap-legend-sq { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
-        /* в”Ђв”Ђв”Ђ Ratings table в”Ђв”Ђв”Ђ */
+        /* --- Ratings table --- */
         .rat-tbl { width: 100%; border-collapse: collapse; }
         .rat-tbl th { font-size: 10px; color: var(--text-muted); font-weight: 600; padding: 0 0 7px; border-bottom: 1px solid var(--card-border); text-align: right; }
         .rat-tbl th:first-child { text-align: left; }
@@ -160,14 +160,14 @@
         .rat-num { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: var(--inner-bg); text-align: center; line-height: 18px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); margin-right: 6px; }
         .rat-star { color: #F59E0B; }
 
-        /* в”Ђв”Ђв”Ђ Export в”Ђв”Ђв”Ђ */
+        /* --- Export --- */
         .export-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--inner-border); }
         .export-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--inner-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-bright); }
         .export-label { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
         .export-sub { font-size: 11px; color: var(--text-muted); }
         .export-open { font-size: 12px; color: var(--accent-bright); font-weight: 600; cursor: pointer; border: none; background: none; font-family: inherit; }
 
-        /* в”Ђв”Ђв”Ђ Insights panel в”Ђв”Ђв”Ђ */
+        /* --- Insights panel --- */
         .an-insights-panel {
             width: 252px; flex-shrink: 0;
             background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
@@ -185,7 +185,7 @@
         .insights-icon.rec   { background: #FFF4EC; color: #FF6A00; }
         .insights-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 
-        /* в”Ђв”Ђв”Ђ Period presets + date inputs в”Ђв”Ђв”Ђ */
+        /* --- Period presets + date inputs --- */
         .period-preset-btn {
             padding: 8px 10px; border: 1px solid var(--card-border); border-radius: 8px;
             background: var(--inner-bg); color: var(--text-secondary); font-size: 12.5px;
@@ -197,12 +197,12 @@
             border-radius: 8px; background: var(--inner-bg); color: var(--text-primary);
             font-size: 13px; font-family: inherit; box-sizing: border-box;
         }
-        /* в”Ђв”Ђв”Ђ More menu hover в”Ђв”Ђв”Ђ */
+        /* --- More menu hover --- */
         #moreMenu button:hover { background: var(--inner-bg); }
-        /* в”Ђв”Ђв”Ђ Filter active badge в”Ђв”Ђв”Ђ */
+        /* --- Filter active badge --- */
         .filter-active-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); margin-left: 4px; vertical-align: middle; }
 
-        /* в”Ђв”Ђв”Ђ Responsive в”Ђв”Ђв”Ђ */
+        /* --- Responsive --- */
         @media (max-width: 1300px) { .an-row { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 900px)  { .an-kpi-row { grid-template-columns: 1fr 1fr; } .an-body { flex-direction: column; } .an-insights-panel { width: 100%; } }
         @media (max-width: 600px)  { .an-kpi-row { grid-template-columns: 1fr; } .an-row { grid-template-columns: 1fr; } }
@@ -210,46 +210,46 @@
 </head>
 <body>
 
-    <!-- в•ђв•ђ SIDEBAR в•ђв•ђ -->
+    <!-- == SIDEBAR == -->
         <div class="sidebar">
         <div class="sidebar-logo">
-            <div class="sidebar-logo-mark" aria-hidden="true"><span>Рў</span></div>
-            <span>РўР•РҐ<b class="tz-accent">Р—РђРљРђР—</b></span>
+            <div class="sidebar-logo-mark" aria-hidden="true"><span>Т</span></div>
+            <span>ТЕХ<b class="tz-accent">ЗАКАЗ</b></span>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">Р—Р°РєСѓРїРєРё</div>
-            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">РђРєС‚СѓР°Р»СЊРЅС‹Рµ Р·Р°РєСѓРїРєРё</span><span class="nav-badge" id="navBadgeOrders"></span></a>
-            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">РљР°С‚Р°Р»РѕРі</span></a>
-            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">РњРѕРё РѕС‚РєР»РёРєРё</span><span class="nav-badge" id="navBadgeProposals"></span></a>
+            <div class="sidebar-nav-label">Закупки</div>
+            <a href="#" id="mainCabinetLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Актуальные закупки</span><span class="nav-badge" id="navBadgeOrders"></span></a>
+            <a href="catalog.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="nav-label">Каталог</span></a>
+            <a href="proposals.html" id="navProposals"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="nav-label">Мои отклики</span><span class="nav-badge" id="navBadgeProposals"></span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РЎРґРµР»РєРё</div>
-            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Р—Р°РєР°Р·С‹</span></a>
-            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Р”РѕСЃС‚Р°РІРєРё</span></a>
-            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">РљРѕРЅС‚СЂР°РіРµРЅС‚С‹</span></a>
+            <div class="sidebar-nav-label">Сделки</div>
+            <a href="deals.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Заказы</span></a>
+            <a href="deliveries.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="nav-label">Доставки</span></a>
+            <a href="partners.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">Контрагенты</span></a>
         </div>
 
         <div class="sidebar-nav-group">
-            <div class="sidebar-nav-label">РљРѕРјРїР°РЅРёСЏ</div>
-            <a class="active" href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">РђРЅР°Р»РёС‚РёРєР°</span></a>
-            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РЎРѕРѕР±С‰РµРЅРёСЏ</span><span class="nav-badge" id="navBadgeMessages"></span></a>
-            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">РР·Р±СЂР°РЅРЅРѕРµ</span></a>
-            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">РњРѕР№ РїСЂРѕС„РёР»СЊ</span></a>
-            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">РљР°СЂС‚Р°</span></a>
+            <div class="sidebar-nav-label">Компания</div>
+            <a class="active" href="analytics.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nav-label">Аналитика</span></a>
+            <a href="messages.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Сообщения</span><span class="nav-badge" id="navBadgeMessages"></span></a>
+            <a href="favorites.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nav-label">Избранное</span></a>
+            <a href="#" id="sidebarProfileLink"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg><span class="nav-label">Мой профиль</span></a>
+            <a href="map.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="nav-label">Карта</span></a>
         </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
-            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">РќР°СЃС‚СЂРѕР№РєРё</span></a>
-            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">РџРѕРґРґРµСЂР¶РєР°</span></a>
+            <a href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
+            <a href="mailto:support@texzakaz.ru" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
             <svg class="sidebar-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            <span class="sidebar-collapse-label">РЎРІРµСЂРЅСѓС‚СЊ РјРµРЅСЋ</span>
+            <span class="sidebar-collapse-label">Свернуть меню</span>
         </button>
     </div>
 
@@ -257,14 +257,14 @@
 
         <!-- Header -->
         <div class="header">
-            <button class="burger-btn" aria-label="РњРµРЅСЋ" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+            <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             <div style="display:flex;align-items:center;gap:10px;">
-                <h2>РђРЅР°Р»РёС‚РёРєР°</h2>
-                <button id="starBtn" onclick="toggleStar()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:0;" title="Р’ РёР·Р±СЂР°РЅРЅРѕРµ">в†</button>
+                <h2>Аналитика</h2>
+                <button id="starBtn" onclick="toggleStar()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:0;" title="В избранное">?</button>
             </div>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>
-                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">РўР—</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Р—Р°РіСЂСѓР·РєР°вЂ¦</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">РќР°СЃС‚СЂРѕР№РєРё</a><a href="company-profile.html" class="user-dropdown-item">РџСЂРѕС„РёР»СЊ РєРѕРјРїР°РЅРёРё</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button></div></div>
+                <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">ТЗ</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Загрузка…</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">Настройки</a><a href="company-profile.html" class="user-dropdown-item">Профиль компании</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Выйти из аккаунта</button></div></div>
             </div>
         </div>
 
@@ -272,44 +272,44 @@
         <div class="an-filters">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-bright);flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <button class="an-period-btn" id="periodBtn" onclick="openPeriodPicker()">
-                <span id="periodLabel">01.01.2025 вЂ“ 31.05.2025</span>
-                <button class="an-period-clear" onclick="resetPeriod(event)">Г—</button>
+                <span id="periodLabel">01.01.2025 – 31.05.2025</span>
+                <button class="an-period-clear" onclick="resetPeriod(event)">?</button>
             </button>
             <div class="an-filter-sep"></div>
-            <span class="an-filter-label">РљР°С‚РµРіРѕСЂРёСЏ</span>
+            <span class="an-filter-label">Категория</span>
             <div class="an-select-wrap">
                 <select class="an-filter-select" id="filterCategory" onchange="applyFilters()">
-                    <option value="">Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё</option>
-                    <option>РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°</option>
-                    <option>Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ</option>
-                    <option>РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚</option>
-                    <option>Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</option>
-                    <option>РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ</option>
+                    <option value="">Все категории</option>
+                    <option>Трубопроводная арматура</option>
+                    <option>РТИ и уплотнения</option>
+                    <option>Металлопрокат</option>
+                    <option>Электрооборудование</option>
+                    <option>Насосное оборудование</option>
                 </select>
             </div>
-            <span class="an-filter-label">Р РµРіРёРѕРЅ</span>
+            <span class="an-filter-label">Регион</span>
             <div class="an-select-wrap">
                 <select class="an-filter-select" id="filterRegion" onchange="applyFilters()">
-                    <option value="">Р’СЃРµ СЂРµРіРёРѕРЅС‹</option>
-                    <option>Р—Р°РїР°РґРЅР°СЏ РЎРёР±РёСЂСЊ</option>
-                    <option>РџРѕРІРѕР»Р¶СЊРµ</option>
-                    <option>РЈСЂР°Р»</option>
-                    <option>РҐРњРђРћ-Р®РіСЂР°</option>
-                    <option>РўР°С‚Р°СЂСЃС‚Р°РЅ</option>
+                    <option value="">Все регионы</option>
+                    <option>Западная Сибирь</option>
+                    <option>Поволжье</option>
+                    <option>Урал</option>
+                    <option>ХМАО-Югра</option>
+                    <option>Татарстан</option>
                 </select>
             </div>
-            <span class="an-filter-label">РўРёРї РїРѕСЃС‚Р°РІС‰РёРєР°</span>
+            <span class="an-filter-label">Тип поставщика</span>
             <div class="an-select-wrap">
                 <select class="an-filter-select" id="filterSupplierType" onchange="applyFilters()">
-                    <option value="">Р’СЃРµ С‚РёРїС‹</option>
-                    <option>РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊ</option>
-                    <option>Р”РёСЃС‚СЂРёР±СЊСЋС‚РѕСЂ</option>
-                    <option>РўСЂРµР№РґРµСЂ</option>
+                    <option value="">Все типы</option>
+                    <option>Производитель</option>
+                    <option>Дистрибьютор</option>
+                    <option>Трейдер</option>
                 </select>
             </div>
             <button class="an-filter-reset" onclick="resetAllFilters()">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
-                <span class="nav-label">РЎР±СЂРѕСЃРёС‚СЊ С„РёР»СЊС‚СЂС‹</span>
+                <span class="nav-label">Сбросить фильтры</span>
             </button>
         </div>
 
@@ -326,30 +326,30 @@
                 <div class="an-row">
                     <div class="an-card">
                         <div class="an-card-title-row">
-                            <span class="an-card-title">Р”РёРЅР°РјРёРєР° Р·Р°РєСѓРїРѕРє Рё СЌРєРѕРЅРѕРјРёРё</span>
+                            <span class="an-card-title">Динамика закупок и экономии</span>
                             <div style="display:flex;gap:6px;align-items:center;">
                                 <div class="period-tabs">
-                                    <button class="period-tab active" onclick="setDynPeriod('month',this)">РњРµСЃСЏС†</button>
-                                    <button class="period-tab" onclick="setDynPeriod('quarter',this)">РљРІР°СЂС‚Р°Р»</button>
-                                    <button class="period-tab" onclick="setDynPeriod('year',this)">Р“РѕРґ</button>
+                                    <button class="period-tab active" onclick="setDynPeriod('month',this)">Месяц</button>
+                                    <button class="period-tab" onclick="setDynPeriod('quarter',this)">Квартал</button>
+                                    <button class="period-tab" onclick="setDynPeriod('year',this)">Год</button>
                                 </div>
-                                <button class="more-btn" id="moreBtn" onclick="toggleMoreMenu(event)">в‹®</button>
+                                <button class="more-btn" id="moreBtn" onclick="toggleMoreMenu(event)">?</button>
                             </div>
                         </div>
                         <div class="chart-legend">
-                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє, РјР»РЅ в‚Ѕ</div>
-                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Р­РєРѕРЅРѕРјРёСЏ, РјР»РЅ в‚Ѕ</div>
+                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>Объём закупок, млн ?</div>
+                            <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Экономия, млн ?</div>
                         </div>
                         <div style="position:relative;height:220px;"><canvas id="dynamicsChart"></canvas></div>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">Р’РѕСЂРѕРЅРєР° Р·Р°РєСѓРїРѕРє</div>
+                        <div class="an-card-title">Воронка закупок</div>
                         <div class="funnel-wrap" id="funnelWrap"></div>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">РЎС‚СЂСѓРєС‚СѓСЂР° РїРѕ РєР°С‚РµРіРѕСЂРёСЏРј</div>
+                        <div class="an-card-title">Структура по категориям</div>
                         <div style="position:relative;height:160px;"><canvas id="categoriesChart"></canvas></div>
                         <div class="donut-legend" id="donutLegend"></div>
                     </div>
@@ -358,42 +358,42 @@
                 <!-- Row 2: Top suppliers | Cycle | Savings -->
                 <div class="an-row">
                     <div class="an-card">
-                        <div class="an-card-title">РўРѕРї РїРѕСЃС‚Р°РІС‰РёРєРѕРІ РїРѕ РІС‹РёРіСЂР°РЅРЅС‹Рј Р·Р°РєСѓРїРєР°Рј</div>
+                        <div class="an-card-title">Топ поставщиков по выигранным закупкам</div>
                         <table class="sup-tbl">
-                            <thead><tr><th>РџРѕСЃС‚Р°РІС‰РёРє</th><th>Р’С‹РёРіСЂР°РЅРѕ, РјР»РЅ в‚Ѕ</th><th>Р”РѕР»СЏ</th></tr></thead>
+                            <thead><tr><th>Поставщик</th><th>Выиграно, млн ?</th><th>Доля</th></tr></thead>
                             <tbody id="suppliersBody"></tbody>
                         </table>
-                        <button class="an-link" onclick="openRatingsModal()">РЎРјРѕС‚СЂРµС‚СЊ РІРµСЃСЊ СЂРµР№С‚РёРЅРі в†’</button>
+                        <button class="an-link" onclick="openRatingsModal()">Смотреть весь рейтинг ></button>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">РЎСЂРµРґРЅРёР№ РїСЂРѕРёР·РІРѕРґСЃС‚РІРµРЅРЅС‹Р№ СЃСЂРѕРє</div>
-                        <div class="an-big" id="cycleVal">4,7 РґРЅСЏ</div>
+                        <div class="an-card-title">Средний производственный срок</div>
+                        <div class="an-big" id="cycleVal">4,7 дня</div>
                         <div class="an-delta-row">
-                            <span class="an-delta up">в†‘ 12%</span>
-                            <span class="an-delta-note">Рє РїСЂРµРґС‹РґСѓС‰РµРјСѓ РїРµСЂРёРѕРґСѓ</span>
+                            <span class="an-delta up">^ 12%</span>
+                            <span class="an-delta-note">к предыдущему периоду</span>
                         </div>
                         <div style="position:relative;height:100px;"><canvas id="cycleChart"></canvas></div>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">Р­РєРѕРЅРѕРјРёСЏ РїРѕ Р·Р°РєСѓРїРєР°Рј</div>
-                        <div class="an-big">1,37 РјР»РЅ в‚Ѕ</div>
+                        <div class="an-card-title">Экономия по закупкам</div>
+                        <div class="an-big">1,37 млн ?</div>
                         <div class="an-delta-row">
-                            <span class="an-delta up">в†‘ 21%</span>
-                            <span class="an-delta-note">Рє РїСЂРµРґС‹РґСѓС‰РµРјСѓ РїРµСЂРёРѕРґСѓ</span>
+                            <span class="an-delta up">^ 21%</span>
+                            <span class="an-delta-note">к предыдущему периоду</span>
                         </div>
                         <div class="savings-row">
-                            <div class="savings-row-header"><span class="savings-row-label">РџР»Р°РЅРѕРІР°СЏ СЌРєРѕРЅРѕРјРёСЏ</span><span class="savings-row-amount">1,20 РјР»РЅ в‚Ѕ</span></div>
+                            <div class="savings-row-header"><span class="savings-row-label">Плановая экономия</span><span class="savings-row-amount">1,20 млн ?</span></div>
                             <div class="savings-bar-outer"><div class="savings-bar-inner" style="width:87%;background:#FF6A00;"></div></div>
                             <div class="savings-pct">87%</div>
                         </div>
                         <div class="savings-row">
-                            <div class="savings-row-header"><span class="savings-row-label">Р¤Р°РєС‚РёС‡РµСЃРєР°СЏ СЌРєРѕРЅРѕРјРёСЏ</span><span class="savings-row-amount">1,37 РјР»РЅ в‚Ѕ</span></div>
+                            <div class="savings-row-header"><span class="savings-row-label">Фактическая экономия</span><span class="savings-row-amount">1,37 млн ?</span></div>
                             <div class="savings-bar-outer"><div class="savings-bar-inner" style="width:100%;background:#12A866;"></div></div>
                             <div class="savings-pct">113%</div>
                         </div>
-                        <div class="savings-target">Р¦РµР»РµРІРѕР№ РїРѕРєР°Р·Р°С‚РµР»СЊ: 1,20 РјР»РЅ в‚Ѕ</div>
+                        <div class="savings-target">Целевой показатель: 1,20 млн ?</div>
                     </div>
                 </div>
 
@@ -401,39 +401,39 @@
                 <div class="an-row">
                     <div class="an-card">
                         <div class="an-card-title-row">
-                            <span class="an-card-title">РђРєС‚РёРІРЅРѕСЃС‚СЊ РїРѕ СЂРµРіРёРѕРЅР°Рј</span>
+                            <span class="an-card-title">Активность по регионам</span>
                             <div class="period-tabs">
-                                <button class="period-tab active" id="heatSortCount" onclick="setHeatSort('count',this)">РџРѕ РѕС‚РєР»РёРєР°Рј</button>
-                                <button class="period-tab" id="heatSortAlpha" onclick="setHeatSort('alpha',this)">РђвЂ“РЇ</button>
+                                <button class="period-tab active" id="heatSortCount" onclick="setHeatSort('count',this)">По откликам</button>
+                                <button class="period-tab" id="heatSortAlpha" onclick="setHeatSort('alpha',this)">А–Я</button>
                             </div>
                         </div>
                         <div id="heatmapRows" style="display:flex;flex-direction:column;gap:7px;"></div>
                         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--inner-border);">
-                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#FF6A00;"></div>50+ РѕС‚РєР»РёРєРѕРІ</div>
-                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#38BDF8;"></div>21вЂ“50</div>
-                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#7DD3FC;"></div>11вЂ“20</div>
-                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#BFDBFE;"></div>1вЂ“10</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#FF6A00;"></div>50+ откликов</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#38BDF8;"></div>21–50</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#7DD3FC;"></div>11–20</div>
+                            <div class="heatmap-legend-item"><div class="heatmap-legend-sq" style="background:#BFDBFE;"></div>1–10</div>
                         </div>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">Р РµР№С‚РёРЅРі РїРѕСЃС‚Р°РІС‰РёРєРѕРІ РїРѕ СЌС„С„РµРєС‚РёРІРЅРѕСЃС‚Рё</div>
+                        <div class="an-card-title">Рейтинг поставщиков по эффективности</div>
                         <table class="rat-tbl">
-                            <thead><tr><th>#</th><th style="text-align:left;">РџРѕСЃС‚Р°РІС‰РёРє</th><th>РћС‚РєР». (С‡)</th><th>РљРѕРЅРІ.</th><th>РћС†РµРЅРєР°</th></tr></thead>
+                            <thead><tr><th>#</th><th style="text-align:left;">Поставщик</th><th>Откл. (ч)</th><th>Конв.</th><th>Оценка</th></tr></thead>
                             <tbody id="ratingsBody"></tbody>
                         </table>
-                        <button class="an-link" style="margin-top:10px;" onclick="openRatingsModal()">РЎРјРѕС‚СЂРµС‚СЊ РїРѕР»РЅС‹Р№ СЂРµР№С‚РёРЅРі в†’</button>
+                        <button class="an-link" style="margin-top:10px;" onclick="openRatingsModal()">Смотреть полный рейтинг ></button>
                     </div>
 
                     <div class="an-card">
-                        <div class="an-card-title">Р­РєСЃРїРѕСЂС‚ Рё РѕС‚С‡С‘С‚С‹</div>
+                        <div class="an-card-title">Экспорт и отчёты</div>
                         <div class="export-item">
                             <div class="export-icon">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             </div>
                             <div style="flex:1;">
-                                <div class="export-label" onclick="exportAnalytics()">РћС‚С‡С‘С‚ РїРѕ Р°РЅР°Р»РёС‚РёРєРµ</div>
-                                <div class="export-sub">CSV (РґРµРјРѕ-РґР°РЅРЅС‹Рµ)</div>
+                                <div class="export-label" onclick="exportAnalytics()">Отчёт по аналитике</div>
+                                <div class="export-sub">CSV (демо-данные)</div>
                             </div>
                         </div>
                         <div class="export-item">
@@ -441,7 +441,7 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                             </div>
                             <div style="flex:1;">
-                                <div class="export-label" onclick="exportDetailed()">РћС‚С‡С‘С‚ РїРѕ Р·Р°РєСѓРїРєР°Рј (Excel)</div>
+                                <div class="export-label" onclick="exportDetailed()">Отчёт по закупкам (Excel)</div>
                                 <div class="export-sub">Excel</div>
                             </div>
                         </div>
@@ -450,13 +450,13 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                             </div>
                             <div style="flex:1;">
-                                <div class="export-label">РЎРѕС…СЂР°РЅС‘РЅРЅС‹Рµ РѕС‚С‡С‘С‚С‹</div>
-                                <button class="export-open" onclick="openSavedReportsModal()">РћС‚РєСЂС‹С‚СЊ в†’</button>
+                                <div class="export-label">Сохранённые отчёты</div>
+                                <button class="export-open" onclick="openSavedReportsModal()">Открыть ></button>
                             </div>
                         </div>
                         <button class="btn-secondary" style="width:100%;margin-top:12px;font-size:12.5px;" onclick="openReportBuilderModal()">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                            <span class="nav-label">РќР°СЃС‚СЂРѕРёС‚СЊ РЅРѕРІС‹Р№ РѕС‚С‡С‘С‚</span>
+                            <span class="nav-label">Настроить новый отчёт</span>
                         </button>
                     </div>
                 </div>
@@ -466,14 +466,14 @@
             <!-- Insights panel -->
             <div class="an-insights-panel">
                 <div class="insights-title">
-                    РРЅСЃР°Р№С‚С‹
-                    <div class="insights-title-icon" title="РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІС‹С‡РёСЃР»СЏСЋС‚СЃСЏ РЅР° РѕСЃРЅРѕРІРµ С‚РµРєСѓС‰РёС… РґР°РЅРЅС‹С… Рё С„РёР»СЊС‚СЂРѕРІ">в„№</div>
+                    Инсайты
+                    <div class="insights-title-icon" title="Автоматически вычисляются на основе текущих данных и фильтров">?</div>
                 </div>
-                <div class="insights-section-title">РљР»СЋС‡РµРІС‹Рµ РІС‹РІРѕРґС‹</div>
+                <div class="insights-section-title">Ключевые выводы</div>
                 <div id="insightConclusions"></div>
-                <div class="insights-section-title">РўСЂРµРЅРґС‹</div>
+                <div class="insights-section-title">Тренды</div>
                 <div id="insightTrends"></div>
-                <div class="insights-section-title">Р РµРєРѕРјРµРЅРґР°С†РёРё</div>
+                <div class="insights-section-title">Рекомендации</div>
                 <div id="insightRecs"></div>
             </div>
 
@@ -481,51 +481,51 @@
 
     </div><!-- /main-content -->
 
-    <!-- в‹® More menu dropdown -->
+    <!-- ? More menu dropdown -->
     <div id="moreMenu" style="display:none;position:fixed;z-index:2000;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:180px;">
         <button onclick="downloadChartPNG()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span class="nav-label">РЎРєР°С‡Р°С‚СЊ PNG</span>
+            <span class="nav-label">Скачать PNG</span>
         </button>
         <button onclick="downloadDynamicsCSV()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span class="nav-label">РЎРєР°С‡Р°С‚СЊ CSV</span>
+            <span class="nav-label">Скачать CSV</span>
         </button>
         <div style="height:1px;background:var(--inner-border);margin:4px 6px;"></div>
         <button onclick="fullscreenChart()" style="display:flex;align-items:center;gap:10px;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;color:var(--text-primary);cursor:pointer;border-radius:7px;font-family:inherit;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            <span class="nav-label">Р Р°Р·РІРµСЂРЅСѓС‚СЊ</span>
+            <span class="nav-label">Развернуть</span>
         </button>
     </div>
 
     <!-- Period picker modal -->
     <div class="modal" id="periodModal" onclick="if(event.target===this)closePeriodPicker()" style="display:none;">
         <div class="modal-content" style="width:400px;">
-            <h3 style="margin-bottom:16px;">Р’С‹Р±РѕСЂ РїРµСЂРёРѕРґР°</h3>
+            <h3 style="margin-bottom:16px;">Выбор периода</h3>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:18px;">
-                <button class="period-preset-btn" onclick="setPeriodPreset('week')">Р­С‚Р° РЅРµРґРµР»СЏ</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('month')">Р­С‚РѕС‚ РјРµСЃСЏС†</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('lastmonth')">РџСЂРѕС€Р»С‹Р№ РјРµСЃСЏС†</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('q1')">Q1 2025 (РЇРЅРІвЂ“РњР°СЂ)</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('q2')">Q2 2025 (РђРїСЂвЂ“РСЋРЅ)</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('h1')">I РїРѕР»СѓРіРѕРґРёРµ 2025</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('year')">2025 РіРѕРґ</button>
-                <button class="period-preset-btn" onclick="setPeriodPreset('custom')">РџСЂРѕРёР·РІРѕР»СЊРЅС‹Р№</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('week')">Эта неделя</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('month')">Этот месяц</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('lastmonth')">Прошлый месяц</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('q1')">Q1 2025 (Янв–Мар)</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('q2')">Q2 2025 (Апр–Июн)</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('h1')">I полугодие 2025</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('year')">2025 год</button>
+                <button class="period-preset-btn" onclick="setPeriodPreset('custom')">Произвольный</button>
             </div>
             <div id="customDateRow" style="display:none;gap:10px;align-items:center;margin-bottom:16px;">
                 <div style="flex:1;">
-                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">РЎ</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">С</div>
                     <input type="date" id="periodFrom" class="an-date-input">
                 </div>
                 <div style="flex:1;">
-                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">РџРѕ</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">По</div>
                     <input type="date" id="periodTo" class="an-date-input">
                 </div>
             </div>
             <div id="periodPreviewLine" style="font-size:12px;color:var(--accent-bright);font-weight:600;margin-bottom:16px;min-height:18px;"></div>
             <div class="modal-actions">
-                <button class="btn-modal-cancel" onclick="closePeriodPicker()">РћС‚РјРµРЅР°</button>
-                <button class="btn-primary" onclick="applyPeriod()">РџСЂРёРјРµРЅРёС‚СЊ</button>
+                <button class="btn-modal-cancel" onclick="closePeriodPicker()">Отмена</button>
+                <button class="btn-primary" onclick="applyPeriod()">Применить</button>
             </div>
         </div>
     </div>
@@ -534,12 +534,12 @@
     <div class="modal" id="fullscreenModal" onclick="if(event.target===this)closeFullscreen()" style="display:none;">
         <div class="modal-content" style="width:90vw;max-width:1100px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <h3>Р”РёРЅР°РјРёРєР° Р·Р°РєСѓРїРѕРє Рё СЌРєРѕРЅРѕРјРёРё</h3>
-                <button class="btn-modal-cancel" onclick="closeFullscreen()">Р—Р°РєСЂС‹С‚СЊ</button>
+                <h3>Динамика закупок и экономии</h3>
+                <button class="btn-modal-cancel" onclick="closeFullscreen()">Закрыть</button>
             </div>
             <div class="chart-legend" style="margin-bottom:12px;">
-                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє, РјР»РЅ в‚Ѕ</div>
-                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Р­РєРѕРЅРѕРјРёСЏ, РјР»РЅ в‚Ѕ</div>
+                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#FF6A00;"></div>Объём закупок, млн ?</div>
+                <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#12A866;border-radius:50%;"></div>Экономия, млн ?</div>
             </div>
             <div style="position:relative;height:400px;"><canvas id="dynamicsChartFull"></canvas></div>
         </div>
@@ -549,29 +549,29 @@
     <div class="modal" id="ratingsModal" onclick="if(event.target===this)closeRatingsModal()" style="display:none;">
         <div class="modal-content" style="width:680px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-                <h3>Р РµР№С‚РёРЅРі РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</h3>
+                <h3>Рейтинг поставщиков</h3>
                 <div style="display:flex;gap:8px;">
                     <select id="ratingsSort" onchange="renderRatingsModal()" style="height:32px;padding:0 24px 0 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:12px;font-family:inherit;appearance:none;cursor:pointer;">
-                        <option value="score">РџРѕ РѕС†РµРЅРєРµ</option>
-                        <option value="conv">РџРѕ РєРѕРЅРІРµСЂСЃРёРё</option>
-                        <option value="rt">РџРѕ РІСЂРµРјРµРЅРё РѕС‚РєР»РёРєР°</option>
+                        <option value="score">По оценке</option>
+                        <option value="conv">По конверсии</option>
+                        <option value="rt">По времени отклика</option>
                     </select>
                 </div>
             </div>
             <table class="rat-tbl" style="width:100%;">
                 <thead><tr>
                     <th style="text-align:left;">#</th>
-                    <th style="text-align:left;">РџРѕСЃС‚Р°РІС‰РёРє</th>
-                    <th style="cursor:pointer;" onclick="sortRatings('rt')">РћС‚РєР». (С‡) в†•</th>
-                    <th style="cursor:pointer;" onclick="sortRatings('conv')">РљРѕРЅРІРµСЂСЃРёСЏ в†•</th>
-                    <th style="cursor:pointer;" onclick="sortRatings('score')">РћС†РµРЅРєР° в†•</th>
-                    <th>Р”РµР№СЃС‚РІРёРµ</th>
+                    <th style="text-align:left;">Поставщик</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('rt')">Откл. (ч) ¦</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('conv')">Конверсия ¦</th>
+                    <th style="cursor:pointer;" onclick="sortRatings('score')">Оценка ¦</th>
+                    <th>Действие</th>
                 </tr></thead>
                 <tbody id="ratingsModalBody"></tbody>
             </table>
             <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
-                <button class="btn-modal-cancel" onclick="closeRatingsModal()">Р—Р°РєСЂС‹С‚СЊ</button>
-                <button class="btn-primary" onclick="exportRatingsCSV()">РЎРєР°С‡Р°С‚СЊ CSV</button>
+                <button class="btn-modal-cancel" onclick="closeRatingsModal()">Закрыть</button>
+                <button class="btn-primary" onclick="exportRatingsCSV()">Скачать CSV</button>
             </div>
         </div>
     </div>
@@ -579,11 +579,11 @@
     <!-- Saved reports modal -->
     <div class="modal" id="savedReportsModal" onclick="if(event.target===this)closeSavedReportsModal()" style="display:none;">
         <div class="modal-content" style="width:520px;">
-            <h3 style="margin-bottom:18px;">РЎРѕС…СЂР°РЅС‘РЅРЅС‹Рµ РѕС‚С‡С‘С‚С‹</h3>
+            <h3 style="margin-bottom:18px;">Сохранённые отчёты</h3>
             <div id="savedReportsList"></div>
             <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
-                <button class="btn-modal-cancel" onclick="closeSavedReportsModal()">Р—Р°РєСЂС‹С‚СЊ</button>
-                <button class="btn-primary" onclick="closeSavedReportsModal();openReportBuilderModal()">+ РќРѕРІС‹Р№ РѕС‚С‡С‘С‚</button>
+                <button class="btn-modal-cancel" onclick="closeSavedReportsModal()">Закрыть</button>
+                <button class="btn-primary" onclick="closeSavedReportsModal();openReportBuilderModal()">+ Новый отчёт</button>
             </div>
         </div>
     </div>
@@ -591,35 +591,35 @@
     <!-- Report builder modal -->
     <div class="modal" id="reportBuilderModal" onclick="if(event.target===this)closeReportBuilderModal()" style="display:none;">
         <div class="modal-content" style="width:480px;">
-            <h3 style="margin-bottom:18px;">РќР°СЃС‚СЂРѕРёС‚СЊ РѕС‚С‡С‘С‚</h3>
+            <h3 style="margin-bottom:18px;">Настроить отчёт</h3>
             <div style="display:flex;flex-direction:column;gap:14px;">
                 <div>
-                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">РќР°Р·РІР°РЅРёРµ РѕС‚С‡С‘С‚Р°</label>
-                    <input type="text" id="reportName" placeholder="РќР°РїСЂРёРјРµСЂ: Р•Р¶РµРјРµСЃСЏС‡РЅС‹Р№ РѕС‚С‡С‘С‚ РїРѕ Р·Р°РєСѓРїРєР°Рј" style="width:100%;height:38px;padding:0 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;">
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Название отчёта</label>
+                    <input type="text" id="reportName" placeholder="Например: Ежемесячный отчёт по закупкам" style="width:100%;height:38px;padding:0 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--inner-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
-                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">РџРµСЂРёРѕРґ СЃ</label>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">Период с</label>
                         <input type="date" id="reportFrom" class="an-date-input" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">РџРѕ</label>
+                        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;">По</label>
                         <input type="date" id="reportTo" class="an-date-input" style="width:100%;">
                     </div>
                 </div>
                 <div>
-                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Р Р°Р·РґРµР»С‹ РѕС‚С‡С‘С‚Р°</label>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Разделы отчёта</label>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rKPI" checked> KPI РїРѕРєР°Р·Р°С‚РµР»Рё</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rDyn" checked> Р”РёРЅР°РјРёРєР°</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rSuppliers" checked> РўРѕРї РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rFunnel"> Р’РѕСЂРѕРЅРєР° Р·Р°РєСѓРїРѕРє</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRegions"> Р РµРіРёРѕРЅР°Р»СЊРЅР°СЏ РєР°СЂС‚Р°</label>
-                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRatings"> Р РµР№С‚РёРЅРі РїРѕСЃС‚Р°РІС‰РёРєРѕРІ</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rKPI" checked> KPI показатели</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rDyn" checked> Динамика</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rSuppliers" checked> Топ поставщиков</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rFunnel"> Воронка закупок</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRegions"> Региональная карта</label>
+                        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="rRatings"> Рейтинг поставщиков</label>
                     </div>
                 </div>
                 <div>
-                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Р¤РѕСЂРјР°С‚</label>
+                    <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Формат</label>
                     <div style="display:flex;gap:8px;">
                         <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:7px;"><input type="radio" name="reportFormat" value="pdf" checked> PDF</label>
                         <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;padding:6px 12px;border:1px solid var(--card-border);border-radius:7px;"><input type="radio" name="reportFormat" value="excel"> Excel</label>
@@ -628,8 +628,8 @@
                 </div>
             </div>
             <div class="modal-actions" style="margin-top:20px;">
-                <button class="btn-modal-cancel" onclick="closeReportBuilderModal()">РћС‚РјРµРЅР°</button>
-                <button class="btn-primary" onclick="submitReportBuilder()">РЎС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РѕС‚С‡С‘С‚</button>
+                <button class="btn-modal-cancel" onclick="closeReportBuilderModal()">Отмена</button>
+                <button class="btn-primary" onclick="submitReportBuilder()">Сформировать отчёт</button>
             </div>
         </div>
     </div>
@@ -637,11 +637,11 @@
     <!-- Notification modal -->
     <div class="modal" id="notificationModal">
         <div class="modal-content" style="width:440px;">
-            <h3>РЈРІРµРґРѕРјР»РµРЅРёСЏ</h3>
+            <h3>Уведомления</h3>
             <div id="notificationsList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;background:var(--inner-bg);border-radius:12px;border:1px solid var(--inner-border);"></div>
             <div class="modal-actions" style="justify-content:space-between;">
-                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">РћС‡РёСЃС‚РёС‚СЊ РёСЃС‚РѕСЂРёСЋ</button>
-                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Р—Р°РєСЂС‹С‚СЊ</button>
+                <button onclick="clearNotifications()" style="color:var(--error);border:none;background:transparent;cursor:pointer;font-size:13px;padding:8px 14px;">Очистить историю</button>
+                <button class="btn-modal-cancel" onclick="closeNotificationsModal()">Закрыть</button>
             </div>
         </div>
     </div>
@@ -652,80 +652,80 @@
     <script>
         if (!hasSession()) window.location.href = 'login.html';
 
-        /* в•ђв•ђ MOCK DATA в•ђв•ђ */
+        /* == MOCK DATA == */
         const MOCK = {
             kpi: [
-                { label:'РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє Р·Р° РїРµСЂРёРѕРґ', value:'8,45 РјР»РЅ в‚Ѕ', baseNum:8.45, delta:18, unit:'', color:'#FF6A00', bg:'#FFF4EC', spark:[5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45] },
-                { label:'Р­РєРѕРЅРѕРјРёСЏ Р·Р° РїРµСЂРёРѕРґ',       value:'1,37 РјР»РЅ в‚Ѕ', baseNum:1.37, delta:21, unit:'', color:'#12A866', bg:'#FFF4EC', spark:[0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
-                { label:'РЎСЂРµРґРЅРµРµ РІСЂРµРјСЏ РѕС‚РєР»РёРєР°',    value:'4,7 С‡Р°СЃР°',   baseNum:4.7,  delta:12, unit:'С‡Р°СЃР°', color:'#F59E0B', bg:'#FFF8E8', spark:[6.5,6.2,5.9,5.5,5.2,5.0,4.9,4.8,4.7,4.7] },
-                { label:'РљРѕРЅРІРµСЂСЃРёСЏ РІ РґРѕРіРѕРІРѕСЂС‹',     value:'28,6%',      baseNum:28.6, delta:4,  unit:'Рї.Рї.', color:'#7C3AED', bg:'#F3F0FE', spark:[22,23,24,25,25,26,27,27.5,28,28.6] },
+                { label:'Объём закупок за период', value:'8,45 млн ?', baseNum:8.45, delta:18, unit:'', color:'#FF6A00', bg:'#FFF4EC', spark:[5,5.5,6,6.5,7,7.2,7.8,8,8.1,8.45] },
+                { label:'Экономия за период',       value:'1,37 млн ?', baseNum:1.37, delta:21, unit:'', color:'#12A866', bg:'#FFF4EC', spark:[0.7,0.8,0.9,1.0,1.05,1.1,1.2,1.25,1.3,1.37] },
+                { label:'Среднее время отклика',    value:'4,7 часа',   baseNum:4.7,  delta:12, unit:'часа', color:'#F59E0B', bg:'#FFF8E8', spark:[6.5,6.2,5.9,5.5,5.2,5.0,4.9,4.8,4.7,4.7] },
+                { label:'Конверсия в договоры',     value:'28,6%',      baseNum:28.6, delta:4,  unit:'п.п.', color:'#7C3AED', bg:'#F3F0FE', spark:[22,23,24,25,25,26,27,27.5,28,28.6] },
             ],
             dynamics: {
-                month:   { labels:['РЇРЅРІ 2025','Р¤РµРІ 2025','РњР°СЂ 2025','РђРїСЂ 2025','РњР°Р№ 2025'], volumes:[4,5.5,7,6,8.45], economy:[0.7,1.0,1.5,1.2,2.2] },
+                month:   { labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], volumes:[4,5.5,7,6,8.45], economy:[0.7,1.0,1.5,1.2,2.2] },
                 quarter: { labels:['Q1 2025','Q2 2025','Q3 2025','Q4 2025'],                 volumes:[16.5,20,18,22],  economy:[3.2,4.0,3.5,5.0] },
                 year:    { labels:['2022','2023','2024','2025'],                              volumes:[52,68,85,74],   economy:[10,14,18,16] },
             },
             funnel: [
-                { label:'РћРїСѓР±Р»РёРєРѕРІР°РЅРѕ', count:176, pct:100, color:'#1E3A5F' },
-                { label:'РћС‚РєР»РёРєРё',      count:98,  pct:56,  color:'#F04B00' },
-                { label:'РљРІР°Р»РёС„РёРєР°С†РёСЏ', count:61,  pct:35,  color:'#F59E0B' },
-                { label:'РџРµСЂРµРіРѕРІРѕСЂС‹',   count:34,  pct:19,  color:'#10B981' },
-                { label:'Р”РѕРіРѕРІРѕСЂС‹',     count:25,  pct:14,  color:'#7C3AED' },
+                { label:'Опубликовано', count:176, pct:100, color:'#1E3A5F' },
+                { label:'Отклики',      count:98,  pct:56,  color:'#F04B00' },
+                { label:'Квалификация', count:61,  pct:35,  color:'#F59E0B' },
+                { label:'Переговоры',   count:34,  pct:19,  color:'#10B981' },
+                { label:'Договоры',     count:25,  pct:14,  color:'#7C3AED' },
             ],
             categories: {
-                labels:['РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°','Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ','РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚','Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ','РџСЂРѕС‡РµРµ'],
+                labels:['Трубопроводная арматура','РТИ и уплотнения','Металлопрокат','Электрооборудование','Прочее'],
                 data:[32,21,16,14,17],
                 colors:['#FF6A00','#12A866','#F59E0B','#7C3AED','#94A3B8']
             },
             suppliers: [
-                { name:'РћРћРћ В«РђСЂРјР°С‚СѓСЂРЅС‹Р№ Р—Р°РІРѕРґВ»', amount:1.25, share:14.8 },
-                { name:'РћРћРћ В«РўРµС…РљРѕРјРїР»РµРєС‚В»',       amount:1.13, share:13.3 },
-                { name:'РћРћРћ В«РџСЂРѕРјРќРµС„С‚СЊВ»',          amount:0.92, share:10.9 },
-                { name:'РћРћРћ В«Р­РЅРµСЂРіРѕРЎРЅР°Р±В»',        amount:0.78, share:9.2 },
-                { name:'РћРћРћ В«РРЅРґСѓСЃС‚СЂРёСЏ РЎРµСЂРІРёСЃВ»',  amount:0.64, share:7.6 },
+                { name:'ООО «Арматурный Завод»', amount:1.25, share:14.8 },
+                { name:'ООО «ТехКомплект»',       amount:1.13, share:13.3 },
+                { name:'ООО «ПромНефть»',          amount:0.92, share:10.9 },
+                { name:'ООО «ЭнергоСнаб»',        amount:0.78, share:9.2 },
+                { name:'ООО «Индустрия Сервис»',  amount:0.64, share:7.6 },
             ],
             ratings: [
-                { name:'РћРћРћ В«РђСЂРјР°С‚СѓСЂРЅС‹Р№ Р—Р°РІРѕРґВ»', rt:2.1, conv:38, score:4.6 },
-                { name:'РћРћРћ В«РўРµС…РљРѕРјРїР»РµРєС‚В»',       rt:2.6, conv:32, score:4.3 },
-                { name:'РћРћРћ В«РџСЂРѕРјРќРµС„С‚СЊВ»',          rt:3.4, conv:28, score:4.1 },
-                { name:'РћРћРћ В«Р­РЅРµСЂРіРѕРЎРЅР°Р±В»',        rt:3.8, conv:25, score:3.9 },
-                { name:'РћРћРћ В«РРЅРґСѓСЃС‚СЂРёСЏ РЎРµСЂРІРёСЃВ»',  rt:4.2, conv:22, score:3.6 },
+                { name:'ООО «Арматурный Завод»', rt:2.1, conv:38, score:4.6 },
+                { name:'ООО «ТехКомплект»',       rt:2.6, conv:32, score:4.3 },
+                { name:'ООО «ПромНефть»',          rt:3.4, conv:28, score:4.1 },
+                { name:'ООО «ЭнергоСнаб»',        rt:3.8, conv:25, score:3.9 },
+                { name:'ООО «Индустрия Сервис»',  rt:4.2, conv:22, score:3.6 },
             ],
             regions: [
-                { name:'Р—Р°РїР°РґРЅР°СЏ РЎРёР±РёСЂСЊ', count:89 },
-                { name:'РџРѕРІРѕР»Р¶СЊРµ',         count:45 },
-                { name:'РҐРњРђРћ-Р®РіСЂР°',       count:38 },
-                { name:'РЈСЂР°Р»',            count:22 },
-                { name:'РўР°С‚Р°СЂСЃС‚Р°РЅ',       count:18 },
-                { name:'Р‘Р°С€РєРѕСЂС‚РѕСЃС‚Р°РЅ',    count:15 },
-                { name:'РћСЂРµРЅР±СѓСЂР¶СЊРµ',      count:8  },
-                { name:'РЇРјР°Р»Рѕ-РќРђРћ',       count:6  },
-                { name:'РџРµСЂРјСЃРєРёР№ РєСЂР°Р№',   count:4  },
-                { name:'РўСЋРјРµРЅСЃРєР°СЏ РѕР±Р».',  count:3  },
+                { name:'Западная Сибирь', count:89 },
+                { name:'Поволжье',         count:45 },
+                { name:'ХМАО-Югра',       count:38 },
+                { name:'Урал',            count:22 },
+                { name:'Татарстан',       count:18 },
+                { name:'Башкортостан',    count:15 },
+                { name:'Оренбуржье',      count:8  },
+                { name:'Ямало-НАО',       count:6  },
+                { name:'Пермский край',   count:4  },
+                { name:'Тюменская обл.',  count:3  },
             ],
         };
 
         const FILTER_SCALES = {
-            category: { 'РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°':0.32, 'Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ':0.21, 'РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚':0.16, 'Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ':0.14, 'РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ':0.11 },
-            region:   { 'Р—Р°РїР°РґРЅР°СЏ РЎРёР±РёСЂСЊ':0.51, 'РџРѕРІРѕР»Р¶СЊРµ':0.26, 'РҐРњРђРћ-Р®РіСЂР°':0.22, 'РЈСЂР°Р»':0.13, 'РўР°С‚Р°СЂСЃС‚Р°РЅ':0.10 },
-            stype:    { 'РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊ':0.62, 'Р”РёСЃС‚СЂРёР±СЊСЋС‚РѕСЂ':0.28, 'РўСЂРµР№РґРµСЂ':0.10 },
+            category: { 'Трубопроводная арматура':0.32, 'РТИ и уплотнения':0.21, 'Металлопрокат':0.16, 'Электрооборудование':0.14, 'Насосное оборудование':0.11 },
+            region:   { 'Западная Сибирь':0.51, 'Поволжье':0.26, 'ХМАО-Югра':0.22, 'Урал':0.13, 'Татарстан':0.10 },
+            stype:    { 'Производитель':0.62, 'Дистрибьютор':0.28, 'Трейдер':0.10 },
         };
 
         const CAT_SUPPLIERS = {
-            'РўСЂСѓР±РѕРїСЂРѕРІРѕРґРЅР°СЏ Р°СЂРјР°С‚СѓСЂР°': [0,2,4],
-            'Р РўР Рё СѓРїР»РѕС‚РЅРµРЅРёСЏ':        [1,3],
-            'РњРµС‚Р°Р»Р»РѕРїСЂРѕРєР°С‚':            [2,0],
-            'Р­Р»РµРєС‚СЂРѕРѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ':      [3,1],
-            'РќР°СЃРѕСЃРЅРѕРµ РѕР±РѕСЂСѓРґРѕРІР°РЅРёРµ':    [4,2],
+            'Трубопроводная арматура': [0,2,4],
+            'РТИ и уплотнения':        [1,3],
+            'Металлопрокат':            [2,0],
+            'Электрооборудование':      [3,1],
+            'Насосное оборудование':    [4,2],
         };
 
         const SAVED_REPORTS = [
-            { name:'Р•Р¶РµРјРµСЃСЏС‡РЅС‹Р№ РѕС‚С‡С‘С‚ вЂ” РњР°Р№ 2025', date:'31.05.2025', size:'1.2 РњР‘', fmt:'PDF' },
-            { name:'РљРІР°СЂС‚Р°Р»СЊРЅС‹Р№ РѕС‚С‡С‘С‚ Q1 2025',    date:'31.03.2025', size:'3.4 РњР‘', fmt:'Excel' },
-            { name:'Р“РѕРґРѕРІРѕР№ РѕС‚С‡С‘С‚ 2024',            date:'01.01.2025', size:'8.1 РњР‘', fmt:'PDF' },
+            { name:'Ежемесячный отчёт — Май 2025', date:'31.05.2025', size:'1.2 МБ', fmt:'PDF' },
+            { name:'Квартальный отчёт Q1 2025',    date:'31.03.2025', size:'3.4 МБ', fmt:'Excel' },
+            { name:'Годовой отчёт 2024',            date:'01.01.2025', size:'8.1 МБ', fmt:'PDF' },
         ];
 
-        /* в•ђв•ђ STATE в•ђв•ђ */
+        /* == STATE == */
         let dynPeriod = 'month';
         let chartDynamics = null, chartCategories = null, chartCycle = null, chartDynamicsFull = null;
         let starred = false;
@@ -733,7 +733,7 @@
         let ratSortKey = 'score';
         let heatSortMode = 'count';
 
-        /* в•ђв•ђ HELPERS в•ђв•ђ */
+        /* == HELPERS == */
         function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
         function showToast(msg, type) {
@@ -756,7 +756,7 @@
             return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${color}"/></svg>`;
         }
 
-        /* в•ђв•ђ FILTER LOGIC в•ђв•ђ */
+        /* == FILTER LOGIC == */
         function getFilterScale() {
             const cat   = document.getElementById('filterCategory').value;
             const reg   = document.getElementById('filterRegion').value;
@@ -781,8 +781,8 @@
                 else num = parseFloat((k.baseNum * (0.85 + 0.15 * scale)).toFixed(1));
 
                 let valStr;
-                if (i === 0 || i === 1) valStr = fmt2(num) + ' РјР»РЅ в‚Ѕ';
-                else if (i === 2) valStr = String(num).replace('.', ',') + ' С‡Р°СЃР°';
+                if (i === 0 || i === 1) valStr = fmt2(num) + ' млн ?';
+                else if (i === 2) valStr = String(num).replace('.', ',') + ' часа';
                 else valStr = String(num).replace('.', ',') + '%';
 
                 return { ...k, value: valStr };
@@ -853,7 +853,7 @@
             document.getElementById('filterCategory').value = '';
             document.getElementById('filterRegion').value = '';
             document.getElementById('filterSupplierType').value = '';
-            document.getElementById('periodLabel').textContent = '01.01.2025 вЂ“ 31.05.2025';
+            document.getElementById('periodLabel').textContent = '01.01.2025 – 31.05.2025';
             renderKPI(MOCK);
             renderDynamics(MOCK);
             renderFunnel(MOCK);
@@ -865,18 +865,18 @@
 
         function resetPeriod(e) {
             e.stopPropagation();
-            document.getElementById('periodLabel').textContent = 'Р’С‹Р±СЂР°С‚СЊ РїРµСЂРёРѕРґ';
+            document.getElementById('periodLabel').textContent = 'Выбрать период';
         }
 
-        /* в•ђв•ђ PERIOD PICKER в•ђв•ђ */
+        /* == PERIOD PICKER == */
         const PERIOD_LABELS = {
-            week:      'Р­С‚Р° РЅРµРґРµР»СЏ',
-            month:     'РСЋРЅ 2025',
-            lastmonth: 'РњР°Р№ 2025',
-            q1:        '01.01.2025 вЂ“ 31.03.2025',
-            q2:        '01.04.2025 вЂ“ 30.06.2025',
-            h1:        '01.01.2025 вЂ“ 30.06.2025',
-            year:      '01.01.2025 вЂ“ 31.12.2025',
+            week:      'Эта неделя',
+            month:     'Июн 2025',
+            lastmonth: 'Май 2025',
+            q1:        '01.01.2025 – 31.03.2025',
+            q2:        '01.04.2025 – 30.06.2025',
+            h1:        '01.01.2025 – 30.06.2025',
+            year:      '01.01.2025 – 31.12.2025',
         };
 
         function openPeriodPicker() {
@@ -908,19 +908,19 @@
             if (selectedPeriodPreset === 'custom') {
                 const from = document.getElementById('periodFrom').value;
                 const to   = document.getElementById('periodTo').value;
-                if (!from || !to) { showToast('РЈРєР°Р¶РёС‚Рµ РЅР°С‡Р°Р»Рѕ Рё РєРѕРЅРµС† РїРµСЂРёРѕРґР°', 'warn'); return; }
+                if (!from || !to) { showToast('Укажите начало и конец периода', 'warn'); return; }
                 const fmt = d => d.split('-').reverse().join('.');
-                label = `${fmt(from)} вЂ“ ${fmt(to)}`;
+                label = `${fmt(from)} – ${fmt(to)}`;
             } else if (selectedPeriodPreset) {
                 label = PERIOD_LABELS[selectedPeriodPreset];
             } else {
-                showToast('Р’С‹Р±РµСЂРёС‚Рµ РїРµСЂРёРѕРґ', 'warn'); return;
+                showToast('Выберите период', 'warn'); return;
             }
             document.getElementById('periodLabel').textContent = label;
             closePeriodPicker();
         }
 
-        /* в•ђв•ђ MORE MENU в•ђв•ђ */
+        /* == MORE MENU == */
         function toggleMoreMenu(e) {
             e.stopPropagation();
             const menu = document.getElementById('moreMenu');
@@ -952,11 +952,11 @@
         function downloadDynamicsCSV() {
             closeMoreMenu();
             const d = MOCK.dynamics[dynPeriod];
-            const rows = [['РџРµСЂРёРѕРґ','РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє (РјР»РЅ в‚Ѕ)','Р­РєРѕРЅРѕРјРёСЏ (РјР»РЅ в‚Ѕ)']];
+            const rows = [['Период','Объём закупок (млн ?)','Экономия (млн ?)']];
             d.labels.forEach((l,i) => rows.push([l, d.volumes[i], d.economy[i]]));
             const csv = rows.map(r => r.join(';')).join('\n');
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(['п»ї'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.href = URL.createObjectURL(new Blob(['?'+csv],{type:'text/csv;charset=utf-8;'}));
             a.download = `dynamics_${dynPeriod}.csv`;
             a.click();
         }
@@ -972,10 +972,10 @@
                 chartDynamicsFullInstance = new Chart(document.getElementById('dynamicsChartFull').getContext('2d'), {
                     type:'bar',
                     data:{ labels:d.labels, datasets:[
-                        { label:'РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє, РјР»РЅ в‚Ѕ', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:40, yAxisID:'y' },
-                        { label:'Р­РєРѕРЅРѕРјРёСЏ, РјР»РЅ в‚Ѕ', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:5, borderWidth:2, yAxisID:'y2' },
+                        { label:'Объём закупок, млн ?', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:40, yAxisID:'y' },
+                        { label:'Экономия, млн ?', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:5, borderWidth:2, yAxisID:'y2' },
                     ]},
-                    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12},callback:v=>v+' РјР»РЅ'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:12},callback:v=>v+' РјР»РЅ'},position:'right'} } }
+                    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:12},callback:v=>v+' млн'},position:'right'} } }
                 });
             }, 50);
         }
@@ -985,43 +985,43 @@
             if (chartDynamicsFullInstance) { chartDynamicsFullInstance.destroy(); chartDynamicsFullInstance = null; }
         }
 
-        /* в•ђв•ђ EXPORT в•ђв•ђ */
+        /* == EXPORT == */
         function exportAnalytics() {
             const rows = [
-                ['РџРѕРєР°Р·Р°С‚РµР»СЊ','Р—РЅР°С‡РµРЅРёРµ','РР·РјРµРЅРµРЅРёРµ'],
+                ['Показатель','Значение','Изменение'],
                 ...MOCK.kpi.map(k => [k.label, k.value, '+' + k.delta + (k.unit ? ' ' + k.unit : '%')]),
                 [],
-                ['РўРѕРї РїРѕСЃС‚Р°РІС‰РёРєРѕРІ'],
-                ['РџРѕСЃС‚Р°РІС‰РёРє','Р’С‹РёРіСЂР°РЅРѕ (РјР»РЅ в‚Ѕ)','Р”РѕР»СЏ (%)'],
+                ['Топ поставщиков'],
+                ['Поставщик','Выиграно (млн ?)','Доля (%)'],
                 ...MOCK.suppliers.map(s => [s.name, s.amount, s.share]),
                 [],
-                ['Р’РѕСЂРѕРЅРєР° Р·Р°РєСѓРїРѕРє'],
-                ['Р­С‚Р°Рї','РљРѕР»-РІРѕ','%'],
+                ['Воронка закупок'],
+                ['Этап','Кол-во','%'],
                 ...MOCK.funnel.map(f => [f.label, f.count, f.pct]),
             ];
             const csv = rows.map(r => r.join(';')).join('\n');
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(['п»ї'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.href = URL.createObjectURL(new Blob(['?'+csv],{type:'text/csv;charset=utf-8;'}));
             a.download = 'analytics_report.csv';
             a.click();
-            showToast('РћС‚С‡С‘С‚ СЃРєР°С‡Р°РЅ РІ С„РѕСЂРјР°С‚Рµ CSV');
+            showToast('Отчёт скачан в формате CSV');
         }
 
         function exportDetailed() {
             const d = MOCK.dynamics[dynPeriod];
             const rows = [
-                ['РџРµСЂРёРѕРґ','РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє (РјР»РЅ в‚Ѕ)','Р­РєРѕРЅРѕРјРёСЏ (РјР»РЅ в‚Ѕ)'],
+                ['Период','Объём закупок (млн ?)','Экономия (млн ?)'],
                 ...d.labels.map((l,i) => [l, d.volumes[i], d.economy[i]]),
             ];
             const csv = rows.map(r => r.join(';')).join('\n');
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(['п»ї'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.href = URL.createObjectURL(new Blob(['?'+csv],{type:'text/csv;charset=utf-8;'}));
             a.download = 'detailed_report.csv';
             a.click();
-            showToast('Р”РµС‚Р°Р»СЊРЅС‹Р№ РѕС‚С‡С‘С‚ СЃРєР°С‡Р°РЅ');
+            showToast('Детальный отчёт скачан');
         }
 
-        /* в•ђв•ђ RATINGS MODAL в•ђв•ђ */
+        /* == RATINGS MODAL == */
         function openRatingsModal() {
             renderRatingsModal();
             document.getElementById('ratingsModal').style.display = 'flex';
@@ -1048,24 +1048,24 @@
                 <tr>
                     <td><span class="rat-num">${i+1}</span></td>
                     <td style="text-align:left;font-size:12.5px;color:var(--text-primary);">${r.name}</td>
-                    <td style="${ratSortKey==='rt'?'color:var(--accent-bright);font-weight:700;':''}">${r.rt} С‡</td>
+                    <td style="${ratSortKey==='rt'?'color:var(--accent-bright);font-weight:700;':''}">${r.rt} ч</td>
                     <td style="${ratSortKey==='conv'?'color:var(--accent-bright);font-weight:700;':''}">${r.conv}%</td>
-                    <td style="${ratSortKey==='score'?'color:#F59E0B;font-weight:700;':''}"><span class="rat-star">в…</span> ${r.score}</td>
-                    <td><button class="an-link" style="margin:0;" onclick="showToast('РџРµСЂРµС…РѕРґ РІ РїСЂРѕС„РёР»СЊ РїРѕСЃС‚Р°РІС‰РёРєР°')">РћС‚РєСЂС‹С‚СЊ в†’</button></td>
+                    <td style="${ratSortKey==='score'?'color:#F59E0B;font-weight:700;':''}"><span class="rat-star">?</span> ${r.score}</td>
+                    <td><button class="an-link" style="margin:0;" onclick="showToast('Переход в профиль поставщика')">Открыть ></button></td>
                 </tr>`).join('');
         }
 
         function exportRatingsCSV() {
-            const rows = [['#','РџРѕСЃС‚Р°РІС‰РёРє','Р’СЂРµРјСЏ РѕС‚РєР»РёРєР° (С‡)','РљРѕРЅРІРµСЂСЃРёСЏ (%)','РћС†РµРЅРєР°']];
+            const rows = [['#','Поставщик','Время отклика (ч)','Конверсия (%)','Оценка']];
             MOCK.ratings.forEach((r,i) => rows.push([i+1, r.name, r.rt, r.conv, r.score]));
             const csv = rows.map(r => r.join(';')).join('\n');
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob(['п»ї'+csv],{type:'text/csv;charset=utf-8;'}));
+            a.href = URL.createObjectURL(new Blob(['?'+csv],{type:'text/csv;charset=utf-8;'}));
             a.download = 'ratings.csv';
             a.click();
         }
 
-        /* в•ђв•ђ SAVED REPORTS MODAL в•ђв•ђ */
+        /* == SAVED REPORTS MODAL == */
         function openSavedReportsModal() {
             const list = document.getElementById('savedReportsList');
             list.innerHTML = SAVED_REPORTS.map(r => `
@@ -1075,9 +1075,9 @@
                     </div>
                     <div style="flex:1;">
                         <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${r.name}</div>
-                        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${r.fmt} В· ${r.size} В· ${r.date}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${r.fmt} · ${r.size} · ${r.date}</div>
                     </div>
-                    <button class="an-link" style="margin:0;" onclick="showToast('Р¤Р°Р№Р» СЃРєР°С‡РёРІР°РµС‚СЃСЏ...');this.textContent='Р“РѕС‚РѕРІРѕ';">РЎРєР°С‡Р°С‚СЊ</button>
+                    <button class="an-link" style="margin:0;" onclick="showToast('Файл скачивается...');this.textContent='Готово';">Скачать</button>
                 </div>`).join('');
             document.getElementById('savedReportsModal').style.display = 'flex';
         }
@@ -1086,7 +1086,7 @@
             document.getElementById('savedReportsModal').style.display = 'none';
         }
 
-        /* в•ђв•ђ REPORT BUILDER MODAL в•ђв•ђ */
+        /* == REPORT BUILDER MODAL == */
         function openReportBuilderModal() {
             const today = new Date().toISOString().split('T')[0];
             const monthAgo = new Date(Date.now() - 30*864e5).toISOString().split('T')[0];
@@ -1101,21 +1101,21 @@
         }
 
         function submitReportBuilder() {
-            const name = document.getElementById('reportName').value.trim() || 'Р‘РµР· РЅР°Р·РІР°РЅРёСЏ';
+            const name = document.getElementById('reportName').value.trim() || 'Без названия';
             const fmt = document.querySelector('input[name="reportFormat"]:checked').value.toUpperCase();
             closeReportBuilderModal();
-            showToast(`РћС‚С‡С‘С‚ В«${name}В» РїРѕСЃС‚Р°РІР»РµРЅ РІ РѕС‡РµСЂРµРґСЊ вЂ” ${fmt}`);
+            showToast(`Отчёт «${name}» поставлен в очередь — ${fmt}`);
         }
 
-        /* в•ђв•ђ STAR в•ђв•ђ */
+        /* == STAR == */
         function toggleStar() {
             starred = !starred;
-            document.getElementById('starBtn').textContent = starred ? 'в…' : 'в†';
+            document.getElementById('starBtn').textContent = starred ? '?' : '?';
             document.getElementById('starBtn').style.color = starred ? '#F59E0B' : '';
-            showToast(starred ? 'РЎС‚СЂР°РЅРёС†Р° РґРѕР±Р°РІР»РµРЅР° РІ РёР·Р±СЂР°РЅРЅРѕРµ' : 'РЈРґР°Р»РµРЅРѕ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ');
+            showToast(starred ? 'Страница добавлена в избранное' : 'Удалено из избранного');
         }
 
-        /* в•ђв•ђ RENDER FUNCTIONS в•ђв•ђ */
+        /* == RENDER FUNCTIONS == */
         const KPI_ICONS = [
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`,
             `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
@@ -1133,8 +1133,8 @@
                     <div class="an-kpi-value">${k.value}</div>
                     <div class="an-kpi-bottom">
                         <div>
-                            <div class="an-kpi-delta up">в†‘ ${k.delta}${k.unit ? ' ' + k.unit : '%'}</div>
-                            <div class="an-kpi-note">Рє РїСЂРµРґС‹РґСѓС‰РµРјСѓ РїРµСЂРёРѕРґСѓ</div>
+                            <div class="an-kpi-delta up">^ ${k.delta}${k.unit ? ' ' + k.unit : '%'}</div>
+                            <div class="an-kpi-note">к предыдущему периоду</div>
                         </div>
                         <div class="an-kpi-spark">${sparkSVG(k.spark, k.color)}</div>
                     </div>
@@ -1148,10 +1148,10 @@
             chartDynamics = new Chart(document.getElementById('dynamicsChart').getContext('2d'), {
                 type:'bar',
                 data:{ labels:d.labels, datasets:[
-                    { label:'РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє, РјР»РЅ в‚Ѕ', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:32, yAxisID:'y' },
-                    { label:'Р­РєРѕРЅРѕРјРёСЏ, РјР»РЅ в‚Ѕ', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:4, borderWidth:2, yAxisID:'y2' },
+                    { label:'Объём закупок, млн ?', data:d.volumes, backgroundColor:'#FF6A00', borderRadius:5, maxBarThickness:32, yAxisID:'y' },
+                    { label:'Экономия, млн ?', data:d.economy, type:'line', borderColor:'#12A866', backgroundColor:'rgba(18,168,102,.1)', fill:true, tension:0.4, pointBackgroundColor:'#12A866', pointRadius:4, borderWidth:2, yAxisID:'y2' },
                 ]},
-                options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{backgroundColor:cssVar('--card-bg'),titleColor:cssVar('--text-primary'),bodyColor:txt,borderColor:cssVar('--card-border'),borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11},callback:v=>v+' РјР»РЅ'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:11},callback:v=>v+' РјР»РЅ'},position:'right'} } }
+                options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{display:false}, tooltip:{backgroundColor:cssVar('--card-bg'),titleColor:cssVar('--text-primary'),bodyColor:txt,borderColor:cssVar('--card-border'),borderWidth:1,padding:10,cornerRadius:8} }, scales:{ x:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11}}}, y:{grid:{color:grid},ticks:{color:txt,font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'left'}, y2:{grid:{drawOnChartArea:false},ticks:{color:'#12A866',font:{family:'Inter',size:11},callback:v=>v+' млн'},position:'right'} } }
             });
         }
 
@@ -1183,9 +1183,9 @@
         function renderSuppliers(data = MOCK) {
             const maxShare = Math.max(...data.suppliers.map(s=>s.share));
             document.getElementById('suppliersBody').innerHTML = data.suppliers.map((s,i) => `
-                <tr style="cursor:pointer;" onclick="showToast('${s.name} вЂ” РїРµСЂРµС…РѕРґ РІ РїСЂРѕС„РёР»СЊ')" title="РћС‚РєСЂС‹С‚СЊ РїСЂРѕС„РёР»СЊ">
+                <tr style="cursor:pointer;" onclick="showToast('${s.name} — переход в профиль')" title="Открыть профиль">
                     <td><span class="sup-num">${i+1}</span>${s.name}</td>
-                    <td style="font-weight:700;">${fmt2(s.amount)} РјР»РЅ</td>
+                    <td style="font-weight:700;">${fmt2(s.amount)} млн</td>
                     <td>
                         <div class="share-wrap">
                             <span style="font-weight:700;">${s.share}%</span>
@@ -1199,23 +1199,23 @@
             if (chartCycle) chartCycle.destroy();
             chartCycle = new Chart(document.getElementById('cycleChart').getContext('2d'), {
                 type:'line',
-                data:{ labels:['РЇРЅРІ 2025','Р¤РµРІ 2025','РњР°СЂ 2025','РђРїСЂ 2025','РњР°Р№ 2025'], datasets:[{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#FF6A00', backgroundColor:'rgba(255,106,0,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#FF6A00', borderWidth:2 }] },
+                data:{ labels:['Янв 2025','Фев 2025','Мар 2025','Апр 2025','Май 2025'], datasets:[{ data:[7,6.2,6.5,5.5,4.7], borderColor:'#FF6A00', backgroundColor:'rgba(255,106,0,.1)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#FF6A00', borderWidth:2 }] },
                 options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{display:true,ticks:{color:cssVar('--text-muted'),font:{family:'Inter',size:10}},grid:{display:false}}, y:{display:false,min:3,max:8} } }
             });
         }
 
         function renderRatings(data = MOCK) {
             document.getElementById('ratingsBody').innerHTML = data.ratings.map((r,i) => `
-                <tr style="cursor:pointer;" onclick="showToast('${r.name} вЂ” РїРµСЂРµС…РѕРґ РІ РїСЂРѕС„РёР»СЊ')">
+                <tr style="cursor:pointer;" onclick="showToast('${r.name} — переход в профиль')">
                     <td><span class="rat-num">${i+1}</span></td>
                     <td style="text-align:left;font-size:12px;color:var(--text-secondary);">${r.name}</td>
                     <td>${r.rt}</td>
                     <td>${r.conv}%</td>
-                    <td><span class="rat-star">в…</span> ${r.score}</td>
+                    <td><span class="rat-star">?</span> ${r.score}</td>
                 </tr>`).join('');
         }
 
-        /* в•ђв•ђ HEATMAP в•ђв•ђ */
+        /* == HEATMAP == */
         function heatColor(count) {
             if (count >= 50) return { bg:'#FF6A00', text:'#fff' };
             if (count >= 21) return { bg:'#38BDF8', text:'#fff' };
@@ -1224,10 +1224,10 @@
         }
 
         function heatLabel(count) {
-            if (count >= 50) return 'Р’С‹СЃРѕРєР°СЏ';
-            if (count >= 21) return 'РЎСЂРµРґРЅСЏСЏ';
-            if (count >= 11) return 'РќРёР·РєР°СЏ';
-            return 'РњРёРЅРёРјСѓРј';
+            if (count >= 50) return 'Высокая';
+            if (count >= 21) return 'Средняя';
+            if (count >= 11) return 'Низкая';
+            return 'Минимум';
         }
 
         function renderHeatmap(data = MOCK) {
@@ -1258,9 +1258,9 @@
             renderHeatmap(computeFilteredMock());
         }
 
-        /* в•ђв•ђ INSIGHTS (computed from data) в•ђв•ђ */
+        /* == INSIGHTS (computed from data) == */
         function renderInsights(data = MOCK) {
-            // --- РљР»СЋС‡РµРІС‹Рµ РІС‹РІРѕРґС‹ ---
+            // --- Ключевые выводы ---
             const maxCatIdx  = data.categories.data.indexOf(Math.max(...data.categories.data));
             const topCat     = data.categories.labels[maxCatIdx];
             const topCatPct  = data.categories.data[maxCatIdx];
@@ -1269,12 +1269,12 @@
             const savKpi     = data.kpi[1];
 
             const conclusions = [
-                { icon:'вњ“', cls:'check', text:`РљР°С‚РµРіРѕСЂРёСЏ В«${topCat}В» вЂ” Р»РёРґРµСЂ: ${topCatPct}% РѕР±СЉС‘РјР° Р·Р°РєСѓРїРѕРє` },
-                { icon:'вњ“', cls:'check', text:`${volKpi.label}: ${volKpi.value}, СЂРѕСЃС‚ в†‘${volKpi.delta}%` },
-                { icon:'вњ“', cls:'check', text:`РљРѕРЅРІРµСЂСЃРёСЏ РёР· РѕС‚РєР»РёРєРѕРІ РІ РґРѕРіРѕРІРѕСЂС‹: ${convRate}%` },
+                { icon:'?', cls:'check', text:`Категория «${topCat}» — лидер: ${topCatPct}% объёма закупок` },
+                { icon:'?', cls:'check', text:`${volKpi.label}: ${volKpi.value}, рост ^${volKpi.delta}%` },
+                { icon:'?', cls:'check', text:`Конверсия из откликов в договоры: ${convRate}%` },
             ];
 
-            // --- РўСЂРµРЅРґС‹ ---
+            // --- Тренды ---
             const dynM  = data.dynamics.month;
             const len   = dynM.volumes.length;
             const last  = dynM.volumes[len-1];
@@ -1284,21 +1284,21 @@
             const timeKpi = data.kpi[2];
 
             const trends = [
-                { icon: isUp ? 'в†‘' : 'в†“', cls: isUp ? 'up' : 'down', text: `Р—Р°РєСѓРїРєРё РІ ${dynM.labels[len-1]}: ${last} РјР»РЅ в‚Ѕ вЂ” ${isUp?'СЂРѕСЃС‚':'СЃРЅРёР¶РµРЅРёРµ'} Рє РїСЂРµРґС‹РґСѓС‰РµРјСѓ РїРµСЂРёРѕРґСѓ` },
-                { icon:'в†‘', cls:'up', text:`Р›РёРґРµСЂ РїРѕ РѕР±СЉС‘РјСѓ: В«${topSup.name}В» вЂ” ${fmt2(topSup.amount)} РјР»РЅ в‚Ѕ` },
-                { icon:'в†“', cls:'down', text:`Р’СЂРµРјСЏ РѕС‚РєР»РёРєР° СЃРѕРєСЂР°С‚РёР»РѕСЃСЊ РґРѕ ${timeKpi.value} (в€’${timeKpi.delta}%)` },
+                { icon: isUp ? '^' : 'v', cls: isUp ? 'up' : 'down', text: `Закупки в ${dynM.labels[len-1]}: ${last} млн ? — ${isUp?'рост':'снижение'} к предыдущему периоду` },
+                { icon:'^', cls:'up', text:`Лидер по объёму: «${topSup.name}» — ${fmt2(topSup.amount)} млн ?` },
+                { icon:'v', cls:'down', text:`Время отклика сократилось до ${timeKpi.value} (?${timeKpi.delta}%)` },
             ];
 
-            // --- Р РµРєРѕРјРµРЅРґР°С†РёРё ---
+            // --- Рекомендации ---
             const minCatIdx = data.categories.data.indexOf(Math.min(...data.categories.data));
             const minCat    = data.categories.labels[minCatIdx];
             const funnelGap = data.funnel[1].count - data.funnel[2].count;
             const lowRegion = [...data.regions].sort((a,b)=>a.count-b.count)[0];
 
             const recs = [
-                { text:`Р Р°СЃС€РёСЂРёС‚СЊ РїСѓР» РїРѕСЃС‚Р°РІС‰РёРєРѕРІ РІ РєР°С‚РµРіРѕСЂРёРё В«${minCat}В» вЂ” РЅР°РёРјРµРЅСЊС€РёР№ РѕР±СЉС‘Рј` },
-                { text:`РљРІР°Р»РёС„РёРєР°С†РёРѕРЅРЅС‹Р№ СЌС‚Р°Рї РѕС‚СЃРµРёРІР°РµС‚ ${funnelGap} РѕС‚РєР»РёРєРѕРІ вЂ” СЂРµРєРѕРјРµРЅРґРѕРІР°РЅР° РїСЂРµРґРєРІР°Р»РёС„РёРєР°С†РёСЏ` },
-                { text:`Р РµРіРёРѕРЅ В«${lowRegion.name}В» вЂ” РЅРёР·РєР°СЏ Р°РєС‚РёРІРЅРѕСЃС‚СЊ (${lowRegion.count} РѕС‚РєР».), РїРѕС‚РµРЅС†РёР°Р» СЂРѕСЃС‚Р°` },
+                { text:`Расширить пул поставщиков в категории «${minCat}» — наименьший объём` },
+                { text:`Квалификационный этап отсеивает ${funnelGap} откликов — рекомендована предквалификация` },
+                { text:`Регион «${lowRegion.name}» — низкая активность (${lowRegion.count} откл.), потенциал роста` },
             ];
 
             document.getElementById('insightConclusions').innerHTML = conclusions.map(c =>
@@ -1310,11 +1310,11 @@
             ).join('');
 
             document.getElementById('insightRecs').innerHTML = recs.map(r =>
-                `<div class="insights-item"><div class="insights-icon rec">вЉ™</div><span class="insights-text">${r.text}</span></div>`
+                `<div class="insights-item"><div class="insights-icon rec">?</div><span class="insights-text">${r.text}</span></div>`
             ).join('');
         }
 
-        /* в•ђв•ђ PERIOD TABS в•ђв•ђ */
+        /* == PERIOD TABS == */
         function setDynPeriod(p, btn) {
             dynPeriod = p;
             document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
@@ -1331,7 +1331,7 @@
             renderHeatmap(data);
         });
 
-        /* в•ђв•ђ REAL API в•ђв•ђ */
+        /* == REAL API == */
         let REAL = null; // populated on successful API load
 
         async function tryLoadReal() {
@@ -1353,27 +1353,27 @@
             REAL = {
                 kpi: [
                     {
-                        label: 'РћР±СЉС‘Рј Р·Р°РєСѓРїРѕРє Р·Р° РїРµСЂРёРѕРґ',
-                        value: totalVolume > 0 ? fmt2(totalVolume) + ' РјР»РЅ в‚Ѕ' : '0 в‚Ѕ',
+                        label: 'Объём закупок за период',
+                        value: totalVolume > 0 ? fmt2(totalVolume) + ' млн ?' : '0 ?',
                         baseNum: totalVolume, delta: 0, unit: '', color: '#FF6A00', bg: '#FFF4EC',
                         spark: dynMonthVolumes.length ? dynMonthVolumes : [0],
                     },
                     {
-                        label: d.savings != null ? 'Р­РєРѕРЅРѕРјРёСЏ (% РѕС‚ СЃСЂРµРґРЅРµРіРѕ)' : 'Р­РєРѕРЅРѕРјРёСЏ',
-                        value: d.savings != null ? d.savings + '%' : 'вЂ”',
+                        label: d.savings != null ? 'Экономия (% от среднего)' : 'Экономия',
+                        value: d.savings != null ? d.savings + '%' : '—',
                         baseNum: d.savings || 0, delta: 0, unit: '%', color: '#12A866', bg: '#F0FDF4',
                         spark: dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100),
                     },
                     {
-                        label: 'РЎСЂРµРґРЅРµРµ РІСЂРµРјСЏ РїСЂРѕРёР·РІРѕРґСЃС‚РІР°',
-                        value: d.avgDays != null ? d.avgDays + ' РґРЅ.' : 'вЂ”',
-                        baseNum: d.avgDays || 0, delta: 0, unit: 'РґРЅ.', color: '#F59E0B', bg: '#FFF8E8',
+                        label: 'Среднее время производства',
+                        value: d.avgDays != null ? d.avgDays + ' дн.' : '—',
+                        baseNum: d.avgDays || 0, delta: 0, unit: 'дн.', color: '#F59E0B', bg: '#FFF8E8',
                         spark: [0],
                     },
                     {
-                        label: 'РљРѕРЅРІРµСЂСЃРёСЏ РІ РґРѕРіРѕРІРѕСЂС‹',
+                        label: 'Конверсия в договоры',
                         value: conversion + '%',
-                        baseNum: conversion, delta: 0, unit: 'Рї.Рї.', color: '#7C3AED', bg: '#F3F0FE',
+                        baseNum: conversion, delta: 0, unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE',
                         spark: [0],
                     },
                 ],
@@ -1385,11 +1385,11 @@
                     year:    { labels: [], volumes: [], economy: [] },
                 },
                 funnel: [
-                    { label:'РћРїСѓР±Р»РёРєРѕРІР°РЅРѕ', count: totalOrders,                        pct: 100,                                                     color:'#1E3A5F' },
-                    { label:'РћС‚РєР»РёРєРё',      count: proposals,                          pct: totalOrders > 0 ? Math.round(proposals / totalOrders * 100) : 0, color:'#F04B00' },
-                    { label:'РљРІР°Р»РёС„РёРєР°С†РёСЏ', count: Math.round(proposals * 0.62),       pct: totalOrders > 0 ? Math.round(proposals * 0.62 / totalOrders * 100) : 0, color:'#F59E0B' },
-                    { label:'РџРµСЂРµРіРѕРІРѕСЂС‹',   count: Math.round(proposals * 0.35),       pct: totalOrders > 0 ? Math.round(proposals * 0.35 / totalOrders * 100) : 0, color:'#10B981' },
-                    { label:'Р”РѕРіРѕРІРѕСЂС‹',     count: closed,                             pct: totalOrders > 0 ? Math.round(closed / totalOrders * 100) : 0, color:'#7C3AED' },
+                    { label:'Опубликовано', count: totalOrders,                        pct: 100,                                                     color:'#1E3A5F' },
+                    { label:'Отклики',      count: proposals,                          pct: totalOrders > 0 ? Math.round(proposals / totalOrders * 100) : 0, color:'#F04B00' },
+                    { label:'Квалификация', count: Math.round(proposals * 0.62),       pct: totalOrders > 0 ? Math.round(proposals * 0.62 / totalOrders * 100) : 0, color:'#F59E0B' },
+                    { label:'Переговоры',   count: Math.round(proposals * 0.35),       pct: totalOrders > 0 ? Math.round(proposals * 0.35 / totalOrders * 100) : 0, color:'#10B981' },
+                    { label:'Договоры',     count: closed,                             pct: totalOrders > 0 ? Math.round(closed / totalOrders * 100) : 0, color:'#7C3AED' },
                 ],
                 categories: d.categories && d.categories.length
                     ? { labels: d.categories.map(c => c.label), data: d.categories.map(c => c.count), colors: d.categories.map((_, i) => CAT_COLORS[i % CAT_COLORS.length]) }
@@ -1414,7 +1414,7 @@
             renderInsights(REAL);
         }
 
-        /* в•ђв•ђ INIT в•ђв•ђ */
+        /* == INIT == */
         function renderSkeleton() {
             const skl = `<div style="height:18px;border-radius:6px;background:var(--inner-border);width:60%;margin-bottom:8px;animation:pulse 1.5s infinite;"></div>`;
             document.querySelectorAll('.kpi-card-value').forEach(el => el.innerHTML = skl);
@@ -1438,7 +1438,7 @@
                     renderHeatmap(MOCK);
                     renderInsights(MOCK);
                 } else {
-                    document.querySelectorAll('.kpi-card-value').forEach(el => { el.textContent = 'вЂ”'; });
+                    document.querySelectorAll('.kpi-card-value').forEach(el => { el.textContent = '—'; });
                 }
             }
         }
