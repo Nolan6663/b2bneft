@@ -88,15 +88,13 @@ async function initSidebarProfileLink() {
   }
   if (!hasSession()) return;
 
-  const myCompany = localStorage.getItem('userCompany') || '';
   try {
-    const r = await apiFetch(`${SERVER_URL}/companies`);
+    const r = await apiFetch(`${SERVER_URL}/auth/me`);
     if (!r.ok) return;
-    const companies = await r.json();
-    const mine = companies.find(c => c.company === myCompany && c.role === role);
-    if (mine) {
-      localStorage.setItem('_myCompanyId', String(mine.id));
-      spl.href = `company-profile.html?id=${mine.id}`;
+    const me = await r.json();
+    if (me.companyId) {
+      localStorage.setItem('_myCompanyId', String(me.companyId));
+      spl.href = `company-profile.html?id=${me.companyId}`;
     }
   } catch { /* ссылка останется # до следующей загрузки */ }
 }
@@ -1201,8 +1199,8 @@ const _OB_COLLAPSED_KEY = 'ob_collapsed';
 function _obSteps(role) {
   if (role === 'producer') {
     return [
-      { id: 'profile',   label: 'Заполните профиль компании',    desc: 'Специализация и оборудование влияют на match-score',  href: 'company-profile.html' },
-      { id: 'browse',    label: 'Просмотрите актуальные заявки', desc: 'Найдите тендеры, подходящие по вашей специализации',  href: 'producer.html' },
+      { id: 'profile',   label: 'Заполните профиль компании',    desc: 'Специализация и оборудование влияют на match-score',  href: `company-profile.html?id=${localStorage.getItem('_myCompanyId')||''}` },
+      { id: 'browse',    label: 'Просмотрите актуальные заявки', desc: 'Найдите закупки, подходящие по вашей специализации',  href: 'producer.html' },
       { id: 'proposal',  label: 'Подайте первое КП',             desc: 'Прикрепите файл и укажите цену прямо в платформе',    href: 'producer.html' },
       { id: 'settings',  label: 'Подключите интеграцию',         desc: '1С, Bitrix24, AmoCRM — автоматически при принятии КП', href: 'settings.html' },
     ];
@@ -1210,7 +1208,7 @@ function _obSteps(role) {
   return [
     { id: 'order',    label: 'Разместите первую закупку',   desc: 'Опишите потребность — поставщики найдут вас сами',     href: '#', action: 'openModal' },
     { id: 'catalog',  label: 'Изучите каталог поставщиков', desc: 'Более 100 верифицированных производителей РФ',          href: 'catalog.html' },
-    { id: 'profile',  label: 'Заполните профиль компании',  desc: 'ИНН, реквизиты, контакты — для доверия поставщиков',   href: 'company-profile.html' },
+    { id: 'profile',  label: 'Заполните профиль компании',  desc: 'ИНН, реквизиты, контакты — для доверия поставщиков',   href: `company-profile.html?id=${localStorage.getItem('_myCompanyId')||''}` },
     { id: 'settings', label: 'Настройте уведомления',       desc: 'Email-дайджест и интеграции с вашей CRM',              href: 'settings.html' },
   ];
 }

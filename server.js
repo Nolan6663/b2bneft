@@ -3750,12 +3750,16 @@ app.post('/api/auth/logout', async (req, res, next) => {
 
 app.get('/api/auth/me', requireAuth, async (req, res, next) => {
     try {
-        const { rows: [user] } = await pool.query('SELECT totp_enabled, digest_frequency, id FROM users WHERE id = $1', [req.user.id]);
+        const [{ rows: [user] }, { rows: [comp] }] = await Promise.all([
+            pool.query('SELECT totp_enabled, digest_frequency, id FROM users WHERE id = $1', [req.user.id]),
+            pool.query('SELECT id FROM companies WHERE company = $1 AND role = $2 LIMIT 1', [req.user.company, req.user.role]),
+        ]);
         res.json({
             id:               user?.id,
             email:            req.user.email,
             role:             req.user.role,
             company:          req.user.company,
+            companyId:        comp?.id || null,
             emailVerified:    Boolean(req.user.email_verified),
             totpEnabled:      Boolean(user?.totp_enabled),
             digest_frequency: user?.digest_frequency || 'daily',
