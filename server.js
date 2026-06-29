@@ -25,6 +25,7 @@ const QRCode    = require('qrcode');
 const cron      = require('node-cron');
 const ExcelJS   = require('exceljs');
 const { buildOrdersPdf, buildProposalsPdf } = require('./export-pdf');
+const { startTelegramBot } = require('./telegram-bot');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -4171,6 +4172,7 @@ async function start() {
     startDigestCron();
     startAuctionCron();
     startOrderMaintenanceCron();
+    startTelegramBot();
     return httpServer;
 }
 
