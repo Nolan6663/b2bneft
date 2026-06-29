@@ -226,6 +226,10 @@
 }
 .btn-settings-save:disabled { opacity: 0.5; cursor: default; }
 
+/* Дайджест — только для производителя */
+#digestCard { display: none; }
+html[data-user-role="producer"] #digestCard { display: block; }
+
 /* Дайджест — выбор частоты */
 .digest-freq-list {
     display: flex;
@@ -243,6 +247,7 @@
     cursor: pointer;
     transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
     user-select: none;
+    position: relative;
 }
 .digest-freq-option:hover {
     border-color: color-mix(in srgb, var(--accent-bright) 35%, var(--card-border));
@@ -292,17 +297,21 @@
     color: var(--text-secondary);
     line-height: 1.4;
 }
+.digest-freq-option.is-checked,
 .digest-freq-option:has(.digest-freq-input:checked) {
     border-color: var(--accent-bright);
     background: color-mix(in srgb, var(--accent-bright) 6%, var(--card-bg));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-bright) 12%, transparent);
 }
+.digest-freq-option.is-checked .digest-freq-mark,
 .digest-freq-option:has(.digest-freq-input:checked) .digest-freq-mark {
     border-color: var(--accent-bright);
 }
+.digest-freq-option.is-checked .digest-freq-mark::after,
 .digest-freq-option:has(.digest-freq-input:checked) .digest-freq-mark::after {
     transform: scale(1);
 }
+.digest-freq-option.is-checked .digest-freq-title,
 .digest-freq-option:has(.digest-freq-input:checked) .digest-freq-title {
     color: var(--text-primary-alt);
 }

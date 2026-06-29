@@ -11,7 +11,7 @@
     
     
     <link rel="stylesheet" href="assets/theme-v2.css?v=8">
-    <link rel="stylesheet" href="assets/settings-page.css?v=5">
+    <link rel="stylesheet" href="assets/settings-page.css?v=6">
 </head>
 <body>
 
@@ -459,7 +459,7 @@
                 </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:16px;">
-                <div class="settings-card" id="digestCard" style="display:none;">
+                <div class="settings-card" id="digestCard">
                     <div class="settings-card-header">
                         <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
                         <div><div class="settings-card-title">Дайджест новых заявок</div><div class="settings-card-subtitle">Получайте подборку активных закупок на почту</div></div>
@@ -1174,17 +1174,32 @@
         // ── Digest frequency (producers only) ───────────────────────────────
 
         async function loadDigestSettings() {
-            if (userRole !== 'producer') return;
             const card = document.getElementById('digestCard');
-            if (card) card.style.display = '';
+            if (!card) return;
+
+            let role = userRole;
             try {
                 const r = await apiFetch(`${SERVER_URL}/auth/me`);
-                if (!r.ok) return;
-                const d = await r.json();
-                const freq = d.digest_frequency || 'daily';
-                const radio = document.querySelector(`input[name="digestFreq"][value="${freq}"]`);
-                if (radio) radio.checked = true;
-            } catch {}
+                if (r.ok) {
+                    const d = await r.json();
+                    role = d.role || role;
+                    if (d.role) localStorage.setItem('userRole', d.role);
+                    const freq = d.digest_frequency || 'daily';
+                    const radio = document.querySelector(`input[name="digestFreq"][value="${freq}"]`);
+                    if (radio) radio.checked = true;
+                }
+            } catch { /* оставляем роль из localStorage */ }
+
+            const show = role === 'producer';
+            card.hidden = !show;
+            card.style.display = show ? '' : 'none';
+            syncDigestFreqUI();
+        }
+
+        function syncDigestFreqUI() {
+            document.querySelectorAll('.digest-freq-option').forEach((opt) => {
+                opt.classList.toggle('is-checked', !!opt.querySelector('.digest-freq-input:checked'));
+            });
         }
 
         async function saveDigestFrequency(freq) {
@@ -1194,6 +1209,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ frequency: freq }),
                 });
+                syncDigestFreqUI();
                 const el = document.getElementById('digestSaveStatus');
                 if (el) { el.style.display = ''; setTimeout(() => { el.style.display='none'; }, 2000); }
             } catch {}
