@@ -4094,6 +4094,54 @@ app.post('/api/verification/:id/reject', requireAuth, requireRole('admin'), asyn
     } catch (e) { next(e); }
 });
 
+// ===================== ADMIN: USERS & STATS =====================
+
+app.get('/api/admin/stats', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const [
+            { rows: [{ n: users }] },
+            { rows: [{ n: pending }] },
+            { rows: [{ n: orders }] },
+            { rows: [{ n: companies }] },
+        ] = await Promise.all([
+            pool.query('SELECT COUNT(*) AS n FROM users'),
+            pool.query("SELECT COUNT(*) AS n FROM verification_requests WHERE status='pending'"),
+            pool.query('SELECT COUNT(*) AS n FROM orders'),
+            pool.query('SELECT COUNT(*) AS n FROM companies'),
+        ]);
+        res.json({ users, pending, orders, companies });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/admin/users', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(
+            'SELECT id, email, role, company, inn, email_verified, created_at FROM users ORDER BY id'
+        );
+        res.json(rows);
+    } catch (e) { next(e); }
+});
+
+app.delete('/api/admin/users/:id', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { rows: [me] } = await pool.query('SELECT id FROM users WHERE id=$1', [req.user.id]);
+        if (me && me.id === id) return res.status(400).json({ error: 'Нельзя удалить собственный аккаунт' });
+        await pool.query('DELETE FROM users WHERE id=$1', [id]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
+app.patch('/api/admin/users/:id/role', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { role } = req.body;
+        if (!['customer', 'producer', 'admin'].includes(role)) return res.status(400).json({ error: 'Неверная роль' });
+        await pool.query('UPDATE users SET role=$1 WHERE id=$2', [role, id]);
+        res.json({ ok: true });
+    } catch (e) { next(e); }
+});
+
 // ===================== ОБРАБОТКА ОШИБОК =====================
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Эндпоинт не найден' }));

@@ -1,574 +1,407 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");if(localStorage.getItem("sidebarCollapsed")==="1")document.documentElement.setAttribute("data-sidebar-collapsed","1");var _r=localStorage.getItem("userRole");if(_r==="customer")document.documentElement.setAttribute("data-user-role","customer");if(_r==="producer")document.documentElement.setAttribute("data-user-role","producer");</script>
-    <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Техзаказ — Администратор</title>
-    
-    
     <link rel="stylesheet" href="assets/theme-v2.css?v=7">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style data-spa-page>
-        /* ── SEO tab ── */
-        .seo-panel { display: none; }
-        .seo-panel.active { display: block; }
-        .seo-section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin: 0 0 12px; }
-        .seo-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 20px 24px; margin-bottom: 16px; }
-        .seo-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-        .seo-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .seo-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; padding: 0 10px 10px; border-bottom: 1px solid var(--inner-border); }
-        .seo-table td { padding: 10px; border-bottom: 1px solid var(--inner-border); color: var(--text-primary); vertical-align: top; }
-        .seo-table tr:last-child td { border-bottom: none; }
-        .seo-table tr.expandable { cursor: pointer; }
-        .seo-table tr.expandable:hover td { background: var(--inner-bg); }
-        .seo-score { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; padding: 0 8px; }
-        .seo-score.green { background: rgba(74,222,128,.15); color: #4ade80; }
-        .seo-score.yellow { background: rgba(250,204,21,.15); color: #facc15; }
-        .seo-score.red { background: rgba(248,113,113,.15); color: #f87171; }
-        .seo-issue-row td { background: var(--inner-bg); font-size: 12px; color: var(--text-secondary); }
-        .seo-issue-row { display: none; }
-        .seo-issue-row.open { display: table-row; }
-        .seo-badge-sev { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 6px; }
-        .seo-badge-sev.critical { background: rgba(248,113,113,.15); color: #f87171; }
-        .seo-badge-sev.warning  { background: rgba(250,204,21,.15);  color: #facc15; }
-        .seo-badge-sev.info     { background: rgba(148,163,184,.15); color: #94a3b8; }
-        .seo-source-btn { height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--inner-border); background: var(--inner-bg); color: var(--text-secondary); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
-        .seo-source-btn.active { background: var(--accent-bright); border-color: var(--accent-bright); color: #fff; }
-        .seo-intent-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-        .seo-intent-badge.informational { background: rgba(99,102,241,.15); color: #818cf8; }
-        .seo-intent-badge.commercial    { background: rgba(255,106,0,.15);  color: #22d3ee; }
-        .seo-intent-badge.navigational  { background: rgba(74,222,128,.15); color: #4ade80; }
-        .seo-intent-badge.transactional { background: rgba(251,146,60,.15); color: #fb923c; }
-        .seo-delta.up   { color: #4ade80; font-weight: 700; }
-        .seo-delta.down { color: #f87171; font-weight: 700; }
-        .seo-banner { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; padding: 16px 20px; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
-        .seo-banner code { font-family: monospace; background: var(--card-bg); padding: 1px 5px; border-radius: 4px; color: var(--accent-bright); font-size: 12px; }
-        .seo-chart-wrap { position: relative; height: 220px; margin-top: 16px; }
-    </style>
-    <style data-spa-page>
-        body { display: flex; flex-direction: column; min-height: 100vh; }
-        .admin-topbar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 32px; height: 60px; background: var(--card-bg);
-            border-bottom: 1px solid var(--inner-border); flex-shrink: 0;
+    <style>
+        body { display:flex; flex-direction:column; min-height:100vh; background:var(--bg-page); }
+
+        /* ── Topbar ──────────────────────────────────────────────── */
+        .adm-topbar {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:0 28px; height:58px;
+            background:var(--card-bg); border-bottom:1px solid var(--inner-border);
+            flex-shrink:0; position:sticky; top:0; z-index:100;
         }
-        .admin-topbar-title { font-size: 15px; font-weight: 700; color: var(--text-primary-alt); display: flex; align-items: center; gap: 10px; }
-        .admin-topbar-title img { width: 28px; height: 28px; }
-        .admin-topbar-actions { display: flex; align-items: center; gap: 14px; }
-        .admin-main { flex: 1; padding: 28px 32px; max-width: 960px; width: 100%; margin: 0 auto; }
-        .admin-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--inner-bg); border-radius: 10px; padding: 4px; width: fit-content; }
-        .admin-tab { padding: 8px 20px; border-radius: 8px; border: none; background: none; cursor: pointer; font-size: 13.5px; color: var(--text-secondary); font-weight: 500; transition: all .15s; }
-        .admin-tab.active { background: var(--card-bg); color: var(--text-primary-alt); font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
-        .admin-tab:hover:not(.active) { color: var(--text-primary); }
+        .adm-logo { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:800; color:var(--text-primary-alt); letter-spacing:-.3px; }
+        .adm-logo img { width:26px; height:26px; }
+        .adm-logo-sep { color:var(--text-muted); font-weight:400; margin:0 4px; }
+        .adm-topbar-right { display:flex; align-items:center; gap:12px; }
 
-        .request-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; }
-        .request-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-        .request-company-name { font-size: 16px; font-weight: 800; color: var(--text-primary-alt); }
-        .request-meta { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-        .request-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .request-status.pending  { background: rgba(250,204,21,.15); color: #facc15; border: 1px solid rgba(250,204,21,.3); }
-        .request-status.approved { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
-        .request-status.rejected { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.3); }
+        /* ── Main layout ─────────────────────────────────────────── */
+        .adm-main { flex:1; padding:24px 28px; max-width:1040px; width:100%; margin:0 auto; box-sizing:border-box; }
 
-        .request-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
-        .request-detail { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 10px; padding: 10px 12px; }
-        .request-detail-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .5px; }
-        .request-detail-value { font-size: 13px; color: var(--text-primary-alt); font-weight: 600; word-break: break-word; }
+        /* ── KPI row ─────────────────────────────────────────────── */
+        .adm-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+        .adm-kpi { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:18px 20px; }
+        .adm-kpi-label { font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+        .adm-kpi-value { font-size:28px; font-weight:800; color:var(--text-primary-alt); line-height:1; }
+        .adm-kpi-value.accent { color:var(--accent-bright); }
 
-        .request-caps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-        .cap-badge { background: var(--inner-bg); border: 1px solid var(--inner-border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text-tertiary); }
+        /* ── Tabs ────────────────────────────────────────────────── */
+        .adm-tabs-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
+        .adm-tabs { display:flex; gap:3px; background:var(--inner-bg); border-radius:10px; padding:3px; }
+        .adm-tab { padding:7px 18px; border-radius:8px; border:none; background:none; cursor:pointer; font-size:13.5px; font-weight:500; color:var(--text-secondary); transition:all .15s; }
+        .adm-tab.active { background:var(--card-bg); color:var(--text-primary-alt); font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+        .adm-tab:hover:not(.active) { color:var(--text-primary); }
+        .adm-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; border-radius:9px; background:var(--accent-bright); color:#fff; font-size:10px; font-weight:800; padding:0 4px; margin-left:5px; }
 
-        .request-actions { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-        .reject-form { display: none; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
-        .reject-form textarea { min-height: 60px; resize: vertical; }
-        .reject-form-btns { display: flex; gap: 8px; }
+        /* ── Verification cards ──────────────────────────────────── */
+        .req-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:20px 24px; margin-bottom:14px; transition:box-shadow .18s; }
+        .req-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.07); }
+        .req-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:14px; }
+        .req-company { font-size:16px; font-weight:800; color:var(--text-primary-alt); }
+        .req-meta { font-size:12px; color:var(--text-secondary); margin-top:3px; }
+        .req-badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; }
+        .req-badge.pending  { background:rgba(250,204,21,.12); color:#facc15; border:1px solid rgba(250,204,21,.3); }
+        .req-badge.approved { background:rgba(74,222,128,.1);  color:#4ade80; border:1px solid rgba(74,222,128,.28); }
+        .req-badge.rejected { background:rgba(248,113,113,.1); color:#f87171; border:1px solid rgba(248,113,113,.28); }
 
-        .admin-empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 14px; }
-        .admin-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; background: var(--accent-bright); color: #fff; font-size: 11px; font-weight: 700; padding: 0 5px; margin-left: 6px; }
+        .req-details { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:8px; margin-bottom:14px; }
+        .req-detail { background:var(--inner-bg); border:1px solid var(--inner-border); border-radius:10px; padding:9px 12px; }
+        .req-detail-lbl { font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+        .req-detail-val { font-size:13px; color:var(--text-primary-alt); font-weight:600; word-break:break-word; }
 
-        .comment-block { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-tertiary); margin-bottom: 12px; }
-        .comment-block strong { color: #f87171; }
-        .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .btn-export { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; background: transparent; border: 1px solid var(--inner-border); color: var(--text-secondary); cursor: pointer; transition: border-color .15s, color .15s; }
-        .btn-export:hover { border-color: var(--accent-bright); color: var(--accent-bright); }
+        .req-caps { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+        .cap-chip { background:var(--inner-bg); border:1px solid var(--inner-border); border-radius:6px; padding:3px 9px; font-size:11.5px; color:var(--text-secondary); }
 
-        @media (max-width: 768px) {
-            .admin-topbar { padding: 0 16px; }
-            .admin-main { padding: 20px 14px; }
-            .admin-tabs { width: 100%; overflow-x: auto; }
-            .request-card { padding: 16px; }
-            .request-card-header { flex-wrap: wrap; }
+        .req-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .btn-approve { height:34px; padding:0 16px; border-radius:8px; border:1px solid rgba(74,222,128,.3); background:rgba(74,222,128,.1); color:#4ade80; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+        .btn-approve:hover { background:rgba(74,222,128,.2); }
+        .btn-reject-open { height:34px; padding:0 16px; border-radius:8px; border:1px solid rgba(248,113,113,.3); background:transparent; color:#f87171; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+        .btn-reject-open:hover { background:rgba(248,113,113,.08); }
+
+        .reject-form { display:none; flex-direction:column; gap:8px; width:100%; margin-top:10px; }
+        .reject-form.open { display:flex; }
+        .reject-form textarea { resize:vertical; min-height:60px; }
+        .reject-form-btns { display:flex; gap:8px; }
+        .reject-comment-block { background:rgba(248,113,113,.07); border:1px solid rgba(248,113,113,.18); border-radius:8px; padding:8px 12px; font-size:13px; color:var(--text-tertiary); margin-bottom:12px; }
+        .reject-comment-block strong { color:#f87171; }
+
+        /* ── Users table ─────────────────────────────────────────── */
+        .usr-table-wrap { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; overflow:hidden; }
+        .usr-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .usr-table th { text-align:left; font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; padding:12px 16px; border-bottom:1px solid var(--inner-border); white-space:nowrap; }
+        .usr-table td { padding:12px 16px; border-bottom:1px solid var(--inner-border); color:var(--text-primary); vertical-align:middle; }
+        .usr-table tr:last-child td { border-bottom:none; }
+        .usr-table tr:hover td { background:var(--inner-bg); }
+        .role-pill { display:inline-block; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:700; }
+        .role-pill.admin    { background:rgba(129,140,248,.15); color:#818cf8; }
+        .role-pill.producer { background:rgba(34,211,238,.12);  color:var(--accent-cyan); }
+        .role-pill.customer { background:rgba(251,146,60,.12);  color:#fb923c; }
+        .usr-del-btn { height:30px; padding:0 12px; border-radius:7px; border:1px solid rgba(248,113,113,.28); background:transparent; color:#f87171; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; }
+        .usr-del-btn:hover { background:rgba(248,113,113,.1); }
+        .usr-me { font-size:10px; color:var(--text-muted); margin-left:4px; }
+
+        /* ── Empty / loading ─────────────────────────────────────── */
+        .adm-empty { text-align:center; padding:56px 20px; color:var(--text-secondary); font-size:14px; }
+
+        /* ── Export btn ──────────────────────────────────────────── */
+        .btn-export { display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; border-radius:8px; font-size:12.5px; font-weight:600; background:transparent; border:1px solid var(--inner-border); color:var(--text-secondary); cursor:pointer; transition:border-color .15s,color .15s; }
+        .btn-export:hover { border-color:var(--accent-bright); color:var(--accent-bright); }
+
+        @media(max-width:768px) {
+            .adm-topbar { padding:0 14px; }
+            .adm-main { padding:16px 14px; }
+            .adm-kpi-row { grid-template-columns:repeat(2,1fr); }
+            .req-card { padding:14px 16px; }
+            .usr-table th:nth-child(4), .usr-table td:nth-child(4) { display:none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="admin-topbar">
-        <div class="admin-topbar-title">
-            <img src="assets/icons_svg/logo_hex.svg" alt="">
-            ТЕХЗАКАЗ &nbsp;/&nbsp; Панель администратора
+<div class="adm-topbar">
+    <div class="adm-logo">
+        <img src="assets/icons_svg/logo_hex.svg" alt="">
+        ТЕХЗАКАЗ <span class="adm-logo-sep">/</span> Администратор
+    </div>
+    <div class="adm-topbar-right">
+        <div class="theme-toggle-row" style="gap:8px;">
+            <span id="themeLabel" class="theme-label" style="font-size:12.5px;"></span>
+            <label class="theme-switch">
+                <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+                <span class="theme-slider"></span>
+            </label>
         </div>
-        <div class="admin-topbar-actions">
-            <div class="theme-toggle-row" style="gap:10px;">
-                <span id="themeLabel" class="theme-label" style="font-size:13px;">🌙 Тёмная тема</span>
-                <label class="theme-switch">
-                    <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
-                    <span class="theme-slider"></span>
-                </label>
-            </div>
-            <button class="btn-secondary" onclick="adminLogout()" style="font-size:13px;">Выйти</button>
-        </div>
+        <button class="btn-secondary" onclick="adminLogout()" style="height:34px;padding:0 14px;font-size:13px;">Выйти</button>
+    </div>
+</div>
+
+<div class="adm-main">
+
+    <!-- KPI -->
+    <div class="adm-kpi-row" id="kpiRow">
+        <div class="adm-kpi"><div class="adm-kpi-label">Пользователей</div><div class="adm-kpi-value" id="kpiUsers">—</div></div>
+        <div class="adm-kpi"><div class="adm-kpi-label">На верификации</div><div class="adm-kpi-value accent" id="kpiPending">—</div></div>
+        <div class="adm-kpi"><div class="adm-kpi-label">Заказов</div><div class="adm-kpi-value" id="kpiOrders">—</div></div>
+        <div class="adm-kpi"><div class="adm-kpi-label">Компаний</div><div class="adm-kpi-value" id="kpiCompanies">—</div></div>
     </div>
 
-    <div class="admin-main">
-        <div class="admin-toolbar">
-            <div class="admin-tabs" style="margin-bottom:0;">
-                <button class="admin-tab active" id="tabPending" onclick="loadRequests('pending')">
-                    Ожидают проверки<span class="admin-badge" id="pendingCount" style="display:none;"></span>
-                </button>
-                <button class="admin-tab" id="tabAll" onclick="loadRequests('all')">Все заявки</button>
-                <button class="admin-tab" id="tabSeo" onclick="showSeoTab()">SEO</button>
-            </div>
-            <button class="btn-export" onclick="exportCsv()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span class="nav-label">Экспорт CSV</span>
+    <!-- Tabs bar -->
+    <div class="adm-tabs-bar">
+        <div class="adm-tabs">
+            <button class="adm-tab active" id="tabVerif" onclick="showTab('verif')">
+                Верификация <span class="adm-badge" id="pendingBadge" style="display:none;"></span>
+            </button>
+            <button class="adm-tab" id="tabUsers" onclick="showTab('users')">Пользователи</button>
+        </div>
+        <div id="tabActions"></div>
+    </div>
+
+    <!-- Verification panel -->
+    <div id="panelVerif">
+        <div style="display:flex;gap:6px;margin-bottom:16px;">
+            <button class="btn-export" id="filterPending" onclick="loadVerif('pending')" style="border-color:var(--accent-bright);color:var(--accent-bright);">Ожидают</button>
+            <button class="btn-export" id="filterAll" onclick="loadVerif('all')">Все заявки</button>
+            <button class="btn-export" onclick="exportCsv()" style="margin-left:auto;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Экспорт CSV
             </button>
         </div>
+        <div id="verifList"><div class="adm-empty">Загрузка...</div></div>
+    </div>
 
-        <div id="requestsList">
-            <div class="admin-empty">Загрузка...</div>
-        </div>
-
-        <div id="seoPanel" class="seo-panel">
-
-            <!-- Audit section -->
-            <div class="seo-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                    <p class="seo-section-title" style="margin:0;">Аудит страниц</p>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <select id="seoSevFilter" class="an-filter-select" style="height:32px;" onchange="renderAudit()">
-                            <option value="">Все проблемы</option>
-                            <option value="critical">Критические</option>
-                            <option value="warning">Предупреждения</option>
-                            <option value="info">Информация</option>
-                        </select>
-                        <button class="btn-primary" style="height:32px;padding:0 14px;font-size:12.5px;" onclick="runAudit()" id="auditBtn">Запустить аудит</button>
-                    </div>
-                </div>
-                <div id="auditTable"><div class="admin-empty" style="padding:30px 0;">Нажмите «Запустить аудит»</div></div>
-            </div>
-
-            <!-- Queries section -->
-            <div class="seo-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                    <p class="seo-section-title" style="margin:0;">Поисковые запросы</p>
-                    <button class="btn-primary" style="height:32px;padding:0 14px;font-size:12.5px;" onclick="runSync()" id="syncBtn">Синхронизировать</button>
-                </div>
-                <div class="seo-toolbar">
-                    <button class="seo-source-btn active" id="srcAll"    onclick="setSrc('')">Все</button>
-                    <button class="seo-source-btn"        id="srcGoogle" onclick="setSrc('google')">Google</button>
-                    <button class="seo-source-btn"        id="srcYandex" onclick="setSrc('yandex')">Яндекс</button>
-                    <select id="seoIntentFilter" class="an-filter-select" style="height:32px;" onchange="renderSnapshots()">
-                        <option value="">Все интенты</option>
-                        <option value="informational">Информационный</option>
-                        <option value="commercial">Коммерческий</option>
-                        <option value="navigational">Навигационный</option>
-                        <option value="transactional">Транзакционный</option>
-                    </select>
-                </div>
-                <div id="gcBanner" class="seo-banner" style="display:none;">
-                    Google Search Console не подключён. Добавьте в Render: <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> и <code>GOOGLE_SITE_URL</code>.
-                </div>
-                <div id="yaBanner" class="seo-banner" style="display:none;">
-                    Яндекс.Вебмастер не подключён. Добавьте в Render: <code>YANDEX_WEBMASTER_TOKEN</code> и <code>YANDEX_WEBMASTER_HOST_ID</code>.
-                </div>
-                <div id="snapshotTable"><div class="admin-empty" style="padding:30px 0;">Нет данных — выполните синхронизацию</div></div>
-                <div class="seo-chart-wrap"><canvas id="seoChart"></canvas></div>
-            </div>
-
+    <!-- Users panel -->
+    <div id="panelUsers" style="display:none;">
+        <div class="usr-table-wrap">
+            <table class="usr-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Роль</th>
+                        <th>Компания</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody"><tr><td colspan="5" class="adm-empty">Загрузка...</td></tr></tbody>
+            </table>
         </div>
     </div>
 
-    <script src="assets/app.js?v=6"></script>
-    <script src="assets/ui-animations.js"></script>
-    <script>
-        if (localStorage.getItem('userRole') !== 'admin') window.location.href = 'login.html';
+</div>
 
-        const CAPS_LABEL = {
-            lathe: 'Токарные', mill: 'Фрезерные', laser: 'Лазерные', rti: 'РТИ',
-            cast: 'Литьё', stamp: 'Штамповка', paint: 'Покраска', weld: 'Сварка',
-        };
+<script src="assets/app.js?v=6"></script>
+<script src="assets/ui-animations.js"></script>
+<script>
+    if (localStorage.getItem('userRole') !== 'admin') window.location.href = 'login.html';
 
-        let currentFilter = 'pending';
-        let rejectTargetId = null;
+    const CAPS_LABEL = {
+        lathe:'Токарные', mill:'Фрезерные', laser:'Лазерные', rti:'РТИ',
+        cast:'Литьё', stamp:'Штамповка', paint:'Покраска', weld:'Сварка',
+    };
 
-        async function loadRequests(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(filter === 'pending' ? 'tabPending' : 'tabAll').classList.add('active');
+    let currentVerifFilter = 'pending';
+    let myUserId = null;
 
-            const list = document.getElementById('requestsList');
-            list.innerHTML = '<div class="admin-empty">Загрузка...</div>';
+    // ── Init ─────────────────────────────────────────────────────────
+    (async () => {
+        try {
+            const me = await apiFetch(`${SERVER_URL}/me`);
+            if (me.ok) { const d = await me.json(); myUserId = d.id; }
+        } catch {}
+        loadStats();
+        loadVerif('pending');
+        initTheme();
+    })();
 
-            try {
-                const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=${filter}`);
-                if (!r.ok) { list.innerHTML = '<div class="admin-empty">Ошибка загрузки</div>'; return; }
-                const items = await r.json();
-                renderRequests(items);
+    // ── Theme ─────────────────────────────────────────────────────────
+    function initTheme() {
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.getElementById('themeCheckbox').checked = dark;
+        document.getElementById('themeLabel').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+    }
+    function toggleTheme() {
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
+        localStorage.setItem('theme', dark ? '' : 'dark');
+        document.getElementById('themeLabel').textContent = dark ? 'Тёмная тема' : 'Светлая тема';
+    }
 
-                if (filter === 'pending') {
-                    const badge = document.getElementById('pendingCount');
-                    badge.textContent = items.length;
-                    badge.style.display = items.length ? 'inline-flex' : 'none';
-                }
-            } catch { list.innerHTML = '<div class="admin-empty">Сервер недоступен</div>'; }
-        }
+    // ── Tabs ──────────────────────────────────────────────────────────
+    function showTab(tab) {
+        document.getElementById('panelVerif').style.display = tab === 'verif' ? '' : 'none';
+        document.getElementById('panelUsers').style.display = tab === 'users' ? '' : 'none';
+        document.getElementById('tabVerif').classList.toggle('active', tab === 'verif');
+        document.getElementById('tabUsers').classList.toggle('active', tab === 'users');
+        if (tab === 'users') loadUsers();
+    }
 
-        function renderRequests(items) {
-            const list = document.getElementById('requestsList');
-            if (!items.length) {
-                list.innerHTML = '<div class="admin-empty">Заявок нет</div>';
-                return;
-            }
-            list.innerHTML = items.map(item => renderRequestCard(item)).join('');
-        }
+    // ── KPI ───────────────────────────────────────────────────────────
+    async function loadStats() {
+        try {
+            const r = await apiFetch(`${SERVER_URL}/admin/stats`);
+            if (!r.ok) return;
+            const d = await r.json();
+            document.getElementById('kpiUsers').textContent    = d.users;
+            document.getElementById('kpiPending').textContent  = d.pending;
+            document.getElementById('kpiOrders').textContent   = d.orders;
+            document.getElementById('kpiCompanies').textContent = d.companies;
+            const badge = document.getElementById('pendingBadge');
+            badge.textContent = d.pending;
+            badge.style.display = d.pending > 0 ? 'inline-flex' : 'none';
+        } catch {}
+    }
 
-        function renderRequestCard(r) {
-            const statusLabel = { pending: 'Ожидает', approved: 'Одобрено', rejected: 'Отклонено' }[r.status] || r.status;
-            const roleText = r.companyRole === 'producer' ? 'Производитель' : 'Заказчик';
+    // ── Verification ──────────────────────────────────────────────────
+    async function loadVerif(filter) {
+        currentVerifFilter = filter;
+        document.getElementById('filterPending').style.borderColor = filter === 'pending' ? 'var(--accent-bright)' : '';
+        document.getElementById('filterPending').style.color       = filter === 'pending' ? 'var(--accent-bright)' : '';
+        document.getElementById('filterAll').style.borderColor     = filter === 'all' ? 'var(--accent-bright)' : '';
+        document.getElementById('filterAll').style.color           = filter === 'all' ? 'var(--accent-bright)' : '';
+        const list = document.getElementById('verifList');
+        list.innerHTML = '<div class="adm-empty">Загрузка...</div>';
+        try {
+            const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=${filter}`);
+            if (!r.ok) { list.innerHTML = '<div class="adm-empty">Ошибка загрузки</div>'; return; }
+            const items = await r.json();
+            if (!items.length) { list.innerHTML = '<div class="adm-empty">Заявок нет</div>'; return; }
+            list.innerHTML = items.map(renderVerifCard).join('');
+        } catch { list.innerHTML = '<div class="adm-empty">Сервер недоступен</div>'; }
+    }
 
-            const details = [
-                ['ИНН', r.inn], ['ОГРН', r.ogrn], ['Директор', r.director],
-                ['Год основания', r.foundingYear], ['Уставной капитал', r.authorizedCapital],
-                ['Сотрудников', r.employees ? r.employees + ' чел.' : ''],
-                ['Выручка', r.revenue], ['Станков', r.machinesCount ? r.machinesCount + ' ед.' : ''],
-                ['Площадь', r.productionArea ? r.productionArea + ' м²' : ''],
-                ['Специализация', r.specialization], ['Город', r.city],
-            ].filter(([, v]) => v);
+    function renderVerifCard(r) {
+        const statusLabel = { pending:'Ожидает', approved:'Одобрено', rejected:'Отклонено' }[r.status] || r.status;
+        const roleText = r.companyRole === 'producer' ? 'Производитель' : 'Заказчик';
+        const dateStr = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+        const reviewStr = r.reviewedAt ? new Date(r.reviewedAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}) : '';
 
-            const capsHtml = r.capabilities.length
-                ? `<div style="margin-bottom:12px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Производственные мощности:</div>
-                   <div class="request-caps">${r.capabilities.map(k => `<span class="cap-badge">${escapeHtml(CAPS_LABEL[k] || k)}</span>`).join('')}</div></div>`
-                : '';
+        const details = [
+            ['ИНН', r.inn], ['ОГРН', r.ogrn], ['Директор', r.director],
+            ['Год основания', r.foundingYear], ['Уставной капитал', r.authorizedCapital],
+            ['Сотрудников', r.employees ? r.employees + ' чел.' : ''],
+            ['Выручка', r.revenue], ['Станков', r.machinesCount ? r.machinesCount + ' ед.' : ''],
+            ['Площадь', r.productionArea ? r.productionArea + ' м²' : ''],
+            ['Специализация', r.specialization], ['Город', r.city],
+        ].filter(([, v]) => v);
 
-            const certsHtml = (r.isoCertificates.length || r.qualityCertificates.length)
-                ? `<div style="margin-bottom:12px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Сертификаты:</div>
-                   <div class="request-caps">
-                       ${r.isoCertificates.map(c => `<span class="cert-tag iso">${escapeHtml(c)}</span>`).join('')}
-                       ${r.qualityCertificates.map(c => `<span class="cert-tag quality">${escapeHtml(c)}</span>`).join('')}
-                   </div></div>`
-                : '';
+        const capsHtml = r.capabilities?.length
+            ? `<div style="margin-bottom:12px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">Производственные мощности:</div>
+               <div class="req-caps">${r.capabilities.map(k=>`<span class="cap-chip">${escapeHtml(CAPS_LABEL[k]||k)}</span>`).join('')}</div></div>`
+            : '';
 
-            const commentHtml = r.status === 'rejected' && r.adminComment
-                ? `<div class="comment-block"><strong>Причина отклонения:</strong> ${escapeHtml(r.adminComment)}</div>`
-                : '';
+        const commentHtml = r.status === 'rejected' && r.adminComment
+            ? `<div class="reject-comment-block"><strong>Причина отклонения:</strong> ${escapeHtml(r.adminComment)}</div>`
+            : '';
 
-            const actionsHtml = r.status === 'pending' ? `
-                <div class="request-actions" id="actions-${r.id}">
-                    <button class="btn-modal-submit" onclick="approve(${r.id})" style="background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);">✓ Одобрить</button>
-                    <button class="btn-secondary" onclick="showRejectForm(${r.id})" style="color:#f87171;border-color:rgba(248,113,113,.4);">✗ Отклонить</button>
-                    <div class="reject-form" id="rejectForm-${r.id}">
-                        <textarea id="rejectComment-${r.id}" placeholder="Причина отклонения (необязательно)..." class="form-group" style="width:100%; box-sizing:border-box;"></textarea>
-                        <div class="reject-form-btns">
-                            <button class="btn-modal-submit" onclick="confirmReject(${r.id})" style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3);">Подтвердить отклонение</button>
-                            <button class="btn-modal-cancel" onclick="hideRejectForm(${r.id})">Отмена</button>
-                        </div>
+        const actionsHtml = r.status === 'pending' ? `
+            <div class="req-actions" id="actions-${r.id}">
+                <button class="btn-approve" onclick="approve(${r.id})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Одобрить
+                </button>
+                <button class="btn-reject-open" onclick="showRejectForm(${r.id})">Отклонить</button>
+                <div class="reject-form" id="rejectForm-${r.id}">
+                    <textarea id="rejectComment-${r.id}" placeholder="Причина отклонения (необязательно)..." class="form-group" style="width:100%;box-sizing:border-box;"></textarea>
+                    <div class="reject-form-btns">
+                        <button class="btn-reject-open" onclick="confirmReject(${r.id})" style="background:rgba(248,113,113,.12);">Подтвердить</button>
+                        <button class="btn-export" onclick="hideRejectForm(${r.id})">Отмена</button>
                     </div>
-                </div>` : '';
-
-            const dateStr = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-            const reviewStr = r.reviewedAt ? new Date(r.reviewedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-
-            return `
-            <div class="request-card" id="card-${r.id}">
-                <div class="request-card-header">
-                    <div>
-                        <div class="request-company-name">${escapeHtml(r.company)}</div>
-                        <div class="request-meta">
-                            ${roleText} &nbsp;·&nbsp; Заявка от: ${dateStr}
-                            ${reviewStr ? ' &nbsp;·&nbsp; Рассмотрена: ' + reviewStr : ''}
-                        </div>
-                    </div>
-                    <span class="request-status ${r.status}">${statusLabel}</span>
                 </div>
+            </div>` : '';
 
-                <div class="request-details">
-                    ${details.map(([l, v]) => `
-                        <div class="request-detail">
-                            <div class="request-detail-label">${escapeHtml(l)}</div>
-                            <div class="request-detail-value">${escapeHtml(String(v))}</div>
-                        </div>`).join('')}
+        return `
+        <div class="req-card" id="card-${r.id}">
+            <div class="req-card-head">
+                <div>
+                    <div class="req-company">${escapeHtml(r.company)}</div>
+                    <div class="req-meta">${roleText} · Заявка: ${dateStr}${reviewStr ? ' · Рассмотрена: '+reviewStr : ''}</div>
                 </div>
+                <span class="req-badge ${r.status}">${statusLabel}</span>
+            </div>
+            <div class="req-details">
+                ${details.map(([l,v])=>`<div class="req-detail"><div class="req-detail-lbl">${escapeHtml(l)}</div><div class="req-detail-val">${escapeHtml(String(v))}</div></div>`).join('')}
+            </div>
+            ${capsHtml}
+            ${commentHtml}
+            ${actionsHtml}
+        </div>`;
+    }
 
-                ${capsHtml}
-                ${certsHtml}
-                ${commentHtml}
-                ${actionsHtml}
-            </div>`;
-        }
+    async function approve(id) {
+        if (!confirm('Верифицировать компанию?')) return;
+        try {
+            const r = await apiFetch(`${SERVER_URL}/verification/${id}/approve`, { method:'POST' });
+            if (!r.ok) { const d = await r.json(); return alert(d.error); }
+            loadVerif(currentVerifFilter);
+            loadStats();
+        } catch { alert('Сервер недоступен'); }
+    }
 
-        async function approve(id) {
-            if (!confirm('Верифицировать компанию?')) return;
-            try {
-                const r = await apiFetch(`${SERVER_URL}/verification/${id}/approve`, { method: 'POST' });
-                if (!r.ok) { const d = await r.json(); return alert(d.error); }
-                loadRequests(currentFilter);
-            } catch { alert('Сервер недоступен'); }
-        }
+    function showRejectForm(id) { document.getElementById('rejectForm-'+id).classList.add('open'); }
+    function hideRejectForm(id) { document.getElementById('rejectForm-'+id).classList.remove('open'); }
 
-        function showRejectForm(id) {
-            document.getElementById('rejectForm-' + id).style.display = 'flex';
-        }
-
-        function hideRejectForm(id) {
-            document.getElementById('rejectForm-' + id).style.display = 'none';
-        }
-
-        async function confirmReject(id) {
-            const comment = document.getElementById('rejectComment-' + id).value.trim();
-            try {
-                const r = await apiFetch(`${SERVER_URL}/verification/${id}/reject`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ comment })
-                });
-                if (!r.ok) { const d = await r.json(); return alert(d.error); }
-                loadRequests(currentFilter);
-            } catch { alert('Сервер недоступен'); }
-        }
-
-        async function exportCsv() {
-            try {
-                const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=all`);
-                if (!r.ok) { alert('Ошибка загрузки данных'); return; }
-                const items = await r.json();
-                if (!items.length) { alert('Нет данных для экспорта'); return; }
-
-                const headers = ['ID','Компания','Роль','ИНН','ОГРН','Директор','Город','Статус','Дата заявки','Дата рассмотрения','Комментарий'];
-                const rows = items.map(i => [
-                    i.id,
-                    i.company,
-                    i.companyRole === 'producer' ? 'Производитель' : 'Заказчик',
-                    i.inn || '',
-                    i.ogrn || '',
-                    i.director || '',
-                    i.city || '',
-                    { pending: 'Ожидает', approved: 'Одобрено', rejected: 'Отклонено' }[i.status] || i.status,
-                    i.requestedAt ? new Date(i.requestedAt).toLocaleDateString('ru-RU') : '',
-                    i.reviewedAt ? new Date(i.reviewedAt).toLocaleDateString('ru-RU') : '',
-                    i.adminComment || ''
-                ].map(v => `"${String(v).replace(/"/g, '""')}"`));
-
-                const csv = '﻿' + [headers.map(h => `"${h}"`), ...rows].map(r => r.join(',')).join('\r\n');
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `verifications_${new Date().toISOString().slice(0,10)}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-            } catch { alert('Сервер недоступен'); }
-        }
-
-        function adminLogout() { logout(); }
-
-        loadRequests('pending');
-
-        // ── SEO ──
-        let seoData = null;
-        let seoSource = '';
-        let seoChart = null;
-
-        async function showSeoTab() {
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tabSeo').classList.add('active');
-            document.getElementById('requestsList').style.display = 'none';
-            document.getElementById('seoPanel').classList.add('active');
-            document.querySelector('.admin-toolbar').style.display = 'none';
-            await loadSeoData();
-        }
-
-        async function loadSeoData() {
-            try {
-                const r = await apiFetch(`${SERVER_URL}/seo/data`);
-                if (!r.ok) return;
-                seoData = await r.json();
-                renderAudit();
-                renderSnapshots();
-                renderChart();
-                document.getElementById('gcBanner').style.display = seoData.gscEnabled ? 'none' : '';
-                document.getElementById('yaBanner').style.display = seoData.yandexEnabled ? 'none' : '';
-            } catch (e) { console.error('[seo]', e); }
-        }
-
-        async function runAudit() {
-            const btn = document.getElementById('auditBtn');
-            btn.textContent = 'Запускаю...'; btn.disabled = true;
-            try {
-                const r = await apiFetch(`${SERVER_URL}/seo/audit`, { method: 'POST' });
-                if (!r.ok) throw new Error('audit failed');
-                const results = await r.json();
-                if (seoData) seoData.audit = results;
-                else seoData = { audit: results, snapshots: [], gscEnabled: false, yandexEnabled: false, lastSync: {} };
-                renderAudit();
-            } catch (e) { alert('Ошибка аудита: ' + e.message); }
-            finally { btn.textContent = 'Запустить аудит'; btn.disabled = false; }
-        }
-
-        async function runSync() {
-            const btn = document.getElementById('syncBtn');
-            btn.textContent = 'Синхронизирую...'; btn.disabled = true;
-            try {
-                const r = await apiFetch(`${SERVER_URL}/seo/sync`, { method: 'POST' });
-                if (!r.ok) throw new Error('sync failed');
-                const info = await r.json();
-                alert(`Синхронизировано: ${info.synced} записей, ${info.newQueries} новых запросов`);
-                await loadSeoData();
-            } catch (e) { alert('Ошибка синхронизации: ' + e.message); }
-            finally { btn.textContent = 'Синхронизировать'; btn.disabled = false; }
-        }
-
-        function setSrc(src) {
-            seoSource = src;
-            ['srcAll','srcGoogle','srcYandex'].forEach(id => document.getElementById(id).classList.remove('active'));
-            document.getElementById(src === '' ? 'srcAll' : src === 'google' ? 'srcGoogle' : 'srcYandex').classList.add('active');
-            renderSnapshots();
-            renderChart();
-        }
-
-        function scoreClass(s) { return s >= 80 ? 'green' : s >= 50 ? 'yellow' : 'red'; }
-
-        function renderAudit() {
-            const el = document.getElementById('auditTable');
-            if (!seoData || !seoData.audit || !seoData.audit.length) {
-                el.innerHTML = '<div class="admin-empty" style="padding:30px 0;">Нет данных — нажмите «Запустить аудит»</div>'; return;
-            }
-            const sevF = document.getElementById('seoSevFilter').value;
-            let rows = '';
-            seoData.audit.forEach((p, i) => {
-                const filtered = sevF ? p.issues.filter(iss => iss.severity === sevF) : p.issues;
-                const crits = p.issues.filter(iss => iss.severity === 'critical').length;
-                const warns = p.issues.filter(iss => iss.severity === 'warning').length;
-                rows += `<tr class="expandable" onclick="toggleAuditRow(${i})">
-                    <td>${p.page}</td>
-                    <td><span class="seo-score ${scoreClass(p.score)}">${p.score}</span></td>
-                    <td>${crits ? `<span style="color:#f87171;font-weight:700;">${crits} крит.</span>` : '—'}</td>
-                    <td>${warns ? `<span style="color:#facc15;font-weight:700;">${warns} пред.</span>` : '—'}</td>
-                    <td style="font-size:11px;color:var(--text-muted);">${p.audited_at ? new Date(p.audited_at).toLocaleDateString('ru') : '—'}</td>
-                </tr>
-                <tr class="seo-issue-row" id="auditIssues${i}"><td colspan="5" style="padding:0 10px 10px;">`;
-                if (filtered.length === 0) {
-                    rows += '<span style="color:var(--text-muted);font-size:12px;">Нет проблем этого типа</span>';
-                } else {
-                    rows += filtered.map(iss => `
-                        <div style="margin:6px 0;">
-                            <span class="seo-badge-sev ${iss.severity}">${iss.severity}</span>
-                            <strong>${iss.message}</strong>
-                            <div style="margin-top:3px;color:var(--text-secondary);font-size:12px;">↳ ${iss.fix}</div>
-                        </div>`).join('');
-                }
-                rows += '</td></tr>';
+    async function confirmReject(id) {
+        const comment = document.getElementById('rejectComment-'+id).value.trim();
+        try {
+            const r = await apiFetch(`${SERVER_URL}/verification/${id}/reject`, {
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({comment})
             });
-            el.innerHTML = `<table class="seo-table">
-                <thead><tr><th>Страница</th><th>Score</th><th>Крит.</th><th>Пред.</th><th>Дата</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-        }
+            if (!r.ok) { const d = await r.json(); return alert(d.error); }
+            loadVerif(currentVerifFilter);
+            loadStats();
+        } catch { alert('Сервер недоступен'); }
+    }
 
-        function toggleAuditRow(i) {
-            const row = document.getElementById(`auditIssues${i}`);
-            row.classList.toggle('open');
-        }
-
-        function renderSnapshots() {
-            const el = document.getElementById('snapshotTable');
-            if (!seoData || !seoData.snapshots || !seoData.snapshots.length) {
-                el.innerHTML = '<div class="admin-empty" style="padding:30px 0;">Нет данных — выполните синхронизацию</div>'; return;
-            }
-            const intentF = document.getElementById('seoIntentFilter').value;
-            let items = seoData.snapshots;
-            if (seoSource) items = items.filter(s => s.source === seoSource);
-            if (intentF)   items = items.filter(s => s.intent === intentF);
-
-            const rows = items.slice(0, 200).map(s => {
-                const srcBadge = s.source === 'google'
-                    ? '<span style="background:rgba(255,106,0,.15);color:#22d3ee;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">G</span>'
-                    : '<span style="background:rgba(251,146,60,.15);color:#fb923c;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">Я</span>';
-                const intentBadge = s.intent
-                    ? `<span class="seo-intent-badge ${s.intent}">${s.intent_ru || s.intent}</span>`
-                    : '<span style="color:var(--text-muted);font-size:11px;">—</span>';
-                const deltaHtml = s.delta == null ? '—'
-                    : s.delta < 0 ? `<span class="seo-delta up">▲${Math.abs(s.delta)}</span>`
-                    : s.delta > 0 ? `<span class="seo-delta down">▼${s.delta}</span>`
-                    : '=';
-                const pos = typeof s.position === 'number' ? s.position.toFixed(1) : '—';
-                const ctrPct = typeof s.ctr === 'number' ? (s.ctr * 100).toFixed(1) + '%' : '—';
-                return `<tr>
-                    <td>${srcBadge}</td>
-                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.query}">${s.query}</td>
-                    <td>${intentBadge}</td>
-                    <td style="font-size:11px;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.page}</td>
-                    <td style="font-weight:700;">${pos}</td>
-                    <td>${deltaHtml}</td>
-                    <td>${s.impressions}</td>
-                    <td>${ctrPct}</td>
+    // ── Users ─────────────────────────────────────────────────────────
+    async function loadUsers() {
+        const tbody = document.getElementById('usersBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Загрузка...</td></tr>';
+        try {
+            const r = await apiFetch(`${SERVER_URL}/admin/users`);
+            if (!r.ok) { tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Ошибка загрузки</td></tr>'; return; }
+            const users = await r.json();
+            if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Нет пользователей</td></tr>'; return; }
+            tbody.innerHTML = users.map(u => {
+                const isMe = u.id === myUserId;
+                const roleLabel = { admin:'Админ', producer:'Поставщик', customer:'Заказчик' }[u.role] || u.role;
+                return `<tr id="usr-row-${u.id}">
+                    <td style="color:var(--text-muted);font-size:12px;">#${u.id}</td>
+                    <td>${escapeHtml(u.email)}${isMe ? '<span class="usr-me">(вы)</span>' : ''}</td>
+                    <td><span class="role-pill ${u.role}">${roleLabel}</span></td>
+                    <td style="color:var(--text-secondary);">${escapeHtml(u.company||'—')}</td>
+                    <td>${isMe ? '' : `<button class="usr-del-btn" onclick="deleteUser(${u.id}, '${escapeHtml(u.email)}')">Удалить</button>`}</td>
                 </tr>`;
             }).join('');
+        } catch { tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Сервер недоступен</td></tr>'; }
+    }
 
-            el.innerHTML = `<table class="seo-table">
-                <thead><tr><th></th><th>Запрос</th><th>Интент</th><th>Страница</th><th>Позиция</th><th>Δ</th><th>Показы</th><th>CTR</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-        }
+    async function deleteUser(id, email) {
+        if (!confirm(`Удалить пользователя ${email}?`)) return;
+        try {
+            const r = await apiFetch(`${SERVER_URL}/admin/users/${id}`, { method:'DELETE' });
+            if (!r.ok) { const d = await r.json(); return alert(d.error); }
+            document.getElementById('usr-row-'+id)?.remove();
+            loadStats();
+            showToast(`Пользователь ${email} удалён`, 'success');
+        } catch { alert('Сервер недоступен'); }
+    }
 
-        function renderChart() {
-            const canvas = document.getElementById('seoChart');
-            if (seoChart) { seoChart.destroy(); seoChart = null; }
-            if (!seoData || !seoData.snapshots || !seoData.snapshots.length) return;
-
-            let items = seoData.snapshots;
-            if (seoSource) items = items.filter(s => s.source === seoSource);
-
-            const top10 = items.slice(0, 10);
-            if (!top10.length) return;
-
-            const COLORS = ['#22d3ee','#4ade80','#fb923c','#818cf8','#f87171','#facc15','#a78bfa','#34d399','#60a5fa','#f472b6'];
-            seoChart = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: top10.map(s => s.query.length > 30 ? s.query.slice(0, 30) + '…' : s.query),
-                    datasets: [{
-                        label: 'Позиция (меньше = лучше)',
-                        data: top10.map(s => s.position),
-                        backgroundColor: COLORS.slice(0, top10.length),
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { reverse: true, beginAtZero: false, title: { display: true, text: 'Позиция' } }
-                    }
-                }
+    // ── CSV Export ────────────────────────────────────────────────────
+    async function exportCsv() {
+        try {
+            const r = await apiFetch(`${SERVER_URL}/verification/requests?filter=all`);
+            if (!r.ok) return alert('Ошибка загрузки данных');
+            const items = await r.json();
+            if (!items.length) return alert('Нет данных для экспорта');
+            const headers = ['ID','Компания','Роль','ИНН','ОГРН','Директор','Город','Статус','Дата заявки','Рассмотрена','Комментарий'];
+            const rows = items.map(i => [
+                i.id, i.company, i.companyRole==='producer'?'Производитель':'Заказчик',
+                i.inn||'', i.ogrn||'', i.director||'', i.city||'',
+                {pending:'Ожидает',approved:'Одобрено',rejected:'Отклонено'}[i.status]||i.status,
+                i.requestedAt ? new Date(i.requestedAt).toLocaleDateString('ru-RU') : '',
+                i.reviewedAt  ? new Date(i.reviewedAt).toLocaleDateString('ru-RU')  : '',
+                i.adminComment||''
+            ].map(v=>`"${String(v).replace(/"/g,'""')}"`));
+            const csv = '﻿' + [headers.map(h=>`"${h}"`), ...rows].map(r=>r.join(',')).join('\r\n');
+            const a = Object.assign(document.createElement('a'), {
+                href: URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),
+                download: `verifications_${new Date().toISOString().slice(0,10)}.csv`
             });
-        }
+            a.click(); URL.revokeObjectURL(a.href);
+        } catch { alert('Сервер недоступен'); }
+    }
 
-        // patch existing tab functions to hide SEO panel when switching away
-        const _origLoadRequests = loadRequests;
-        loadRequests = function(filter) {
-            document.getElementById('seoPanel').classList.remove('active');
-            document.getElementById('requestsList').style.display = '';
-            document.querySelector('.admin-toolbar').style.display = '';
-            return _origLoadRequests(filter);
-        };
-    </script>
+    function adminLogout() { logout(); }
+</script>
 </body>
 </html>
-
-
