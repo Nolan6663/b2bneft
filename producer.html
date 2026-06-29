@@ -484,7 +484,7 @@
         async function loadOrdersForProducers() {
             let orders = [];
             try {
-                const response = isGuest ? await fetch(`${SERVER_URL}/orders`) : await apiFetch(`${SERVER_URL}/orders`);
+                const response = isGuest ? await fetch(`${SERVER_URL}/orders/public`) : await apiFetch(`${SERVER_URL}/orders`);
                 if (response.ok) {
                     orders = await response.json();
                 } else {
@@ -526,6 +526,7 @@
                 let statusCls, statusLabel;
                 if (order.status === 'Отменена') { statusCls = 'ocs-muted'; statusLabel = 'Отменена заказчиком'; }
                 else if (order.status === 'Закрыта') { statusCls = 'ocs-closed'; statusLabel = 'Закупка завершена'; }
+                else if (order.status === 'Дедлайн истёк') { statusCls = 'ocs-muted'; statusLabel = 'Дедлайн истёк'; }
                 else { statusCls = 'ocs-open'; statusLabel = order.status || 'Активна'; }
 
                 // Match badge

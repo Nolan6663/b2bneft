@@ -416,22 +416,16 @@
         const notes   = document.getElementById('notesInput').value.trim();
         const tracking = document.getElementById('trackingInput').value.trim();
         try {
-            const r = await fetch(`/api/deals/${proposalId}/delivery/stage`, {
+            const r = await apiFetch(`${SERVER_URL}/deals/${proposalId}/delivery/stage`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stage, notes, trackingNumber: tracking }),
             });
             const data = await r.json();
             if (!r.ok) { showToast(data.error || 'Ошибка', 'error'); return; }
             await load();
         } catch {
-            eventsData.push({ stage, notes, updated_by: myCompany, created_at: new Date().toISOString() });
-            dealData.delivery_stage = stage;
-            if (tracking) dealData.tracking_number = tracking;
-            if (stage === 'Принят заказчиком') dealData.completion_status = 'completed';
-            document.getElementById('notesInput').value  = '';
-            document.getElementById('trackingInput').value = '';
-            render();
+            showToast('Не удалось обновить статус поставки', 'error');
         }
     }
 

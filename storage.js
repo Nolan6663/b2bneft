@@ -109,17 +109,26 @@ async function streamToResponse(storedName, res, downloadName, options = {}) {
 
     if (USE_S3) {
         const { GetObjectCommand } = require('@aws-sdk/client-s3');
-        const result = await s3Client.send(new GetObjectCommand({
-            Bucket: process.env.S3_BUCKET,
-            Key: key,
-        }));
-        const mime = result.ContentType || mimeFromName(label);
-        if (mime) res.setHeader('Content-Type', mime);
-        if (downloadName) {
-            const disp = inline ? 'inline' : 'attachment';
-            res.setHeader('Content-Disposition', `${disp}; filename="${encodeURIComponent(downloadName)}"`);
+        try {
+            const result = await s3Client.send(new GetObjectCommand({
+                Bucket: process.env.S3_BUCKET,
+                Key: key,
+            }));
+            const mime = result.ContentType || mimeFromName(label);
+            if (mime) res.setHeader('Content-Type', mime);
+            if (downloadName) {
+                const disp = inline ? 'inline' : 'attachment';
+                res.setHeader('Content-Disposition', `${disp}; filename="${encodeURIComponent(downloadName)}"`);
+            }
+            result.Body.pipe(res);
+        } catch (e) {
+            const code = e?.name || e?.Code || '';
+            if (code === 'NoSuchKey' || code === 'NotFound' || e?.$metadata?.httpStatusCode === 404) {
+                res.status(404).json({ error: 'Файл не найден' });
+                return;
+            }
+            throw e;
         }
-        result.Body.pipe(res);
         return;
     }
 

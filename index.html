@@ -542,6 +542,10 @@
             }
         }
 
+        function isOpenOrder(o) {
+            return o.status === 'Активный' || o.status === 'Дедлайн истёк';
+        }
+
         function sortBy(field) {
             sortDir = sortField === field ? -sortDir : (field === 'responses' ? -1 : 1);
             sortField = field;
@@ -631,7 +635,7 @@
 
             // Новые КП — берём из активных заказов
             try {
-                const activeOrders = (ordersCache || []).filter(o => o.status === 'Активный').slice(0, 3);
+                const activeOrders = (ordersCache || []).filter(isOpenOrder).slice(0, 3);
                 const allProposals = [];
                 await Promise.all(activeOrders.map(async o => {
                     try {
@@ -749,7 +753,7 @@
         function updateStatusCounts() {
             const list = Array.isArray(ordersCache) ? ordersCache : [];
             document.getElementById('countAll').innerText = list.length;
-            document.getElementById('countActive').innerText = list.filter(o => o.status === 'Активный').length;
+            document.getElementById('countActive').innerText = list.filter(isOpenOrder).length;
             document.getElementById('countClosed').innerText = list.filter(o => o.status === 'Закрыта').length;
             document.getElementById('countCancelled').innerText = list.filter(o => o.status === 'Отменена').length;
         }
@@ -763,7 +767,11 @@
         }
 
         function renderOrdersTable() {
-            const filtered = statusFilter === 'all' ? ordersCache : ordersCache.filter(o => o.status === statusFilter);
+            const filtered = statusFilter === 'all'
+                ? ordersCache
+                : statusFilter === 'Активный'
+                    ? ordersCache.filter(isOpenOrder)
+                    : ordersCache.filter(o => o.status === statusFilter);
             const sorted = [...filtered].sort((a, b) => {
                 const va = sortValue(a, sortField), vb = sortValue(b, sortField);
                 if (va < vb) return -sortDir;
@@ -1015,7 +1023,11 @@
         }
 
         function exportOrders() {
-            const filtered = statusFilter === 'all' ? ordersCache : ordersCache.filter(o => o.status === statusFilter);
+            const filtered = statusFilter === 'all'
+                ? ordersCache
+                : statusFilter === 'Активный'
+                    ? ordersCache.filter(isOpenOrder)
+                    : ordersCache.filter(o => o.status === statusFilter);
             const sorted = [...filtered].sort((a, b) => {
                 const va = sortValue(a, sortField), vb = sortValue(b, sortField);
                 return va < vb ? -sortDir : va > vb ? sortDir : 0;

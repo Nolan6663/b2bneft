@@ -6,7 +6,12 @@ const ROOT = path.join(__dirname, '..');
 
 function auditPage(filename) {
     const filepath = path.join(ROOT, filename);
-    const html = fs.readFileSync(filepath, 'utf8');
+    let html;
+    try {
+        html = fs.readFileSync(filepath, 'utf8');
+    } catch (e) {
+        return { page: filename, score: 0, issues: [{ type: 'read_error', severity: 'critical', message: `Не удалось прочитать файл: ${e.message}`, fix: 'Проверьте наличие и права доступа к файлу' }] };
+    }
     const issues = [];
     let penalty = 0;
 

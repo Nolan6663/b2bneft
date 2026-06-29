@@ -432,9 +432,28 @@ app.use('/assets', express.static(path.join(__dirname, 'assets'), {
         }
     }
 }));
+async function canAccessStoredFile(user, storedName) {
+    if (!user || !storedName) return false;
+    if (user.role === 'admin') return true;
+    const base = path.basename(storedName);
+    const { rows: [orderHit] } = await pool.query(
+        'SELECT id FROM orders WHERE drawing = $1 AND company = $2 LIMIT 1',
+        [base, user.company]
+    );
+    if (orderHit) return true;
+    const { rows: [proposalHit] } = await pool.query(
+        'SELECT p.id FROM proposals p JOIN orders o ON o.id = p.order_id WHERE p.kp_file = $1 AND (p.company = $2 OR o.company = $2) LIMIT 1',
+        [base, user.company]
+    );
+    return Boolean(proposalHit);
+}
+
 app.get('/uploads/:filename', requireAuth, async (req, res, next) => {
     try {
         const filename = path.basename(req.params.filename);
+        if (!(await canAccessStoredFile(req.user, filename))) {
+            return res.status(403).json({ error: 'Нет доступа к файлу' });
+        }
         await storage.streamToResponse(filename, res);
     } catch (e) { next(e); }
 });
@@ -1279,7 +1298,7 @@ app.post('/api/proposals', requireAuth, requireRole('producer'), requireVerified
             getUserIdsByCompany(orderRow.company).then(ids =>
                 ids.forEach(id => {
                     sendPush(id, 'Новое коммерческое предложение', `«${orderRow.title}» — получен новый отклик`, `${APP_URL}/index`);
-                    sendTelegramNotification(id, `📨 <b>Новое КП</b> по закупке «${orderRow.title}»\nПоставщик: ${proposalRow.company}\nЦена: ${proposalRow.price} руб.`);
+                    sendTelegramNotification(id, `📨 <b>Новое КП</b> по закупке «${orderRow.title}»\nПоставщик: ${req.user.company}\nЦена: ${Number(newProposal.price).toLocaleString('ru-RU')} руб.`);
                 })
             ).catch(() => {});
         }
@@ -1385,7 +1404,9 @@ app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer
         const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [proposalRow.order_id]);
         if (!orderRow) return res.status(404).json({ error: 'Связанная заявка не найдена' });
         if (orderRow.company && orderRow.company !== req.user.company) return res.status(403).json({ error: 'Принимать предложения может только владелец закупки' });
-        if (orderRow.status === 'Закрыта') return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
+        if (orderRow.status === 'Закрыта' || orderRow.status === 'Отменена') {
+            return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
+        }
 
         const title = plainTitle(orderRow.title);
         const notifs = [];
@@ -2155,7 +2176,7 @@ app.post('/api/auctions', requireAuth, async (req, res, next) => {
             'INSERT INTO auctions (order_id, start_price, current_best, end_time) VALUES ($1,$2,$2,$3) RETURNING *',
             [orderId, startPrice, endTime]
         );
-        io.emit('auction:created', { auctionId: auction.id, orderId, startPrice, endTime });
+        if (io) io.emit('auction:created', { auctionId: auction.id, orderId, startPrice, endTime });
         res.json(auction);
     } catch (e) { next(e); }
 });
@@ -2214,7 +2235,7 @@ app.post('/api/auctions/:id/bid', requireAuth, async (req, res, next) => {
         );
         await pool.query('UPDATE auctions SET current_best = $1, winner_company = $2 WHERE id = $3', [price, req.user.company, req.params.id]);
 
-        io.to(`auction:${req.params.id}`).emit('auction:bid', {
+        if (io) io.to(`auction:${req.params.id}`).emit('auction:bid', {
             auctionId: Number(req.params.id), company: req.user.company, price: Number(price), bidId: bid.id, createdAt: bid.created_at
         });
         res.json(bid);
@@ -2241,9 +2262,9 @@ async function closeExpiredAuctions() {
             "UPDATE auctions SET status = 'closed' WHERE status = 'active' AND end_time <= NOW() RETURNING id, winner_company, order_id"
         );
         for (const a of rows) {
-            io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company });
+            if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company });
         }
-    } catch {}
+    } catch (e) { console.error('[cron:auctions]', e.message); }
 }
 
 // ── Risk assessment ─────────────────────────────────────────────────────────
@@ -2316,7 +2337,7 @@ app.get('/api/risk/:inn', async (req, res, next) => {
 
         // 2. Platform verification
         const { rows: compRows } = await pool.query(
-            'SELECT verified_by_platform, name FROM companies WHERE inn = $1 LIMIT 1', [inn]
+            'SELECT verified_by_platform, company FROM companies WHERE inn = $1 LIMIT 1', [inn]
         );
         const comp = compRows[0];
         if (comp && comp.verified_by_platform) {
@@ -2329,7 +2350,7 @@ app.get('/api/risk/:inn', async (req, res, next) => {
         // 3. Reviews
         if (comp) {
             const { rows: revRows } = await pool.query(
-                `SELECT AVG(score)::numeric(3,1) as avg, COUNT(*) as cnt FROM reviews WHERE to_company = $1`, [comp.name]
+                `SELECT AVG(score)::numeric(3,1) as avg, COUNT(*) as cnt FROM reviews WHERE to_company = $1`, [comp.company]
             );
             const rv = revRows[0];
             if (rv && parseInt(rv.cnt) > 0) {
@@ -2710,6 +2731,18 @@ app.post('/api/auth/register', async (req, res, next) => {
         const resolvedCompany = inviteData ? inviteData.company : company;
         const resolvedRole    = inviteData ? inviteData.role    : role;
         const resolvedTeamRole = inviteData ? (inviteData.team_role || 'member') : 'admin';
+
+        if (!inviteData) {
+            const { rows: [existingCompany] } = await pool.query(
+                'SELECT 1 FROM companies WHERE company = $1 AND role = $2 LIMIT 1',
+                [resolvedCompany, resolvedRole]
+            );
+            if (existingCompany) {
+                return res.status(409).json({
+                    error: 'Компания с таким названием уже зарегистрирована. Попросите администратора пригласить вас по email или укажите другое название.',
+                });
+            }
+        }
 
         const newUser = await withTransaction(async (client) => {
             const { rows: [u] } = await client.query(
@@ -3316,6 +3349,10 @@ app.get('/api/export/1c/:proposalId', requireAuth, async (req, res, next) => {
 app.get('/api/tasks', requireAuth, async (req, res, next) => {
     try {
         const { orderId, company } = req.query;
+        if (!orderId || !company) return res.status(400).json({ error: 'orderId и company обязательны' });
+        if (!(await canAccessOrderThread(req.user, orderId, company))) {
+            return res.status(403).json({ error: 'Нет доступа к задачам этой переписки' });
+        }
         const { rows } = await pool.query(
             'SELECT * FROM tasks WHERE order_id = $1 AND company = $2 ORDER BY created_at ASC',
             [Number(orderId), company]
@@ -3328,6 +3365,9 @@ app.post('/api/tasks', requireAuth, async (req, res, next) => {
     try {
         const { orderId, company, title, dueDate } = req.body;
         if (!orderId || !company || !title?.trim()) return res.status(400).json({ error: 'Обязательные поля: orderId, company, title' });
+        if (!(await canAccessOrderThread(req.user, orderId, company))) {
+            return res.status(403).json({ error: 'Нет доступа к задачам этой переписки' });
+        }
         const { rows: [row] } = await pool.query(
             'INSERT INTO tasks (order_id, company, title, due_date, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING *',
             [Number(orderId), company, title.trim(), dueDate || null, req.user.company]
@@ -3340,6 +3380,11 @@ app.patch('/api/tasks/:id', requireAuth, async (req, res, next) => {
     try {
         const { status } = req.body;
         if (!['open', 'done'].includes(status)) return res.status(400).json({ error: 'status: open | done' });
+        const { rows: [existing] } = await pool.query('SELECT * FROM tasks WHERE id = $1', [Number(req.params.id)]);
+        if (!existing) return res.status(404).json({ error: 'Задача не найдена' });
+        if (!(await canAccessOrderThread(req.user, existing.order_id, existing.company))) {
+            return res.status(403).json({ error: 'Нет доступа к этой задаче' });
+        }
         const { rows: [row] } = await pool.query(
             'UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *',
             [status, Number(req.params.id)]
@@ -3355,6 +3400,9 @@ app.get('/api/conversation-context/:orderId/:company', requireAuth, async (req, 
     try {
         const orderId = Number(req.params.orderId);
         const company = decodeURIComponent(req.params.company);
+        if (!(await canAccessOrderThread(req.user, orderId, company))) {
+            return res.status(403).json({ error: 'Нет доступа к контексту этой переписки' });
+        }
 
         const [orderRes, proposalRes, companyRes] = await Promise.all([
             pool.query('SELECT * FROM orders WHERE id = $1', [orderId]),
@@ -4038,7 +4086,7 @@ async function closeExpiredOrders() {
             const order = rowToOrder(row);
             const title = plainTitle(order.title);
 
-            await pool.query("UPDATE orders SET status = 'Закрыта' WHERE id = $1", [order.id]);
+            await pool.query("UPDATE orders SET status = 'Дедлайн истёк' WHERE id = $1", [order.id]);
 
             const { rows: pending } = await pool.query(
                 "SELECT company FROM proposals WHERE order_id = $1 AND status = 'Ожидает ответа'",

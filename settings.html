@@ -1770,7 +1770,7 @@
             document.getElementById('tgLinkedBlock').style.display = 'none';
             document.getElementById('tgUnlinkBtn').style.display = 'none';
             try {
-                const r = await apiFetch(`${SERVER_URL}/api/telegram/status`);
+                const r = await apiFetch(`${SERVER_URL}/telegram/status`);
                 if (!r.ok) return;
                 const { linked } = await r.json();
                 document.getElementById('tgLinkedBlock').style.display = linked ? '' : 'none';
@@ -1785,7 +1785,7 @@
             btn.disabled = true;
             status.textContent = 'Генерируем ссылку...';
             try {
-                const r = await apiFetch(`${SERVER_URL}/api/telegram/link-token`, { method: 'POST' });
+                const r = await apiFetch(`${SERVER_URL}/telegram/link-token`, { method: 'POST' });
                 const { deepLink } = await r.json();
                 status.textContent = '';
                 window.open(deepLink, '_blank');
@@ -1801,7 +1801,7 @@
             const status = document.getElementById('tgStatusText');
             if (!confirm('Отвязать Telegram-аккаунт?')) return;
             try {
-                await apiFetch(`${SERVER_URL}/api/telegram/unlink`, { method: 'DELETE' });
+                await apiFetch(`${SERVER_URL}/telegram/unlink`, { method: 'DELETE' });
                 status.textContent = 'Telegram отвязан';
                 initTelegramUI();
             } catch (e) {

@@ -25,6 +25,7 @@ async function fetchQueries(startDate, endDate) {
     const all = [];
     const LIMIT = 500;
     let offset = 0;
+    const snapshotDate = endDate || new Date().toISOString().slice(0, 10);
 
     while (true) {
         const url = new URL(`${BASE}/user/${uid}/hosts/${HOST_ID}/search-queries/all-history`);
@@ -47,7 +48,7 @@ async function fetchQueries(startDate, endDate) {
 
     return all.map(q => ({
         source: 'yandex',
-        date: new Date().toISOString().slice(0, 10),
+        date: snapshotDate,
         query: q.query_text,
         page: HOST_ID,
         impressions: q.indicators?.IMPRESSIONS ?? 0,

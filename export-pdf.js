@@ -20,6 +20,7 @@ function pipePdf(res, filename, build) {
   const doc = new PDFDocument({ margin: 40, size: 'A4', bufferPages: true });
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+  doc.on('error', () => { if (!res.headersSent) res.status(500).end(); });
   doc.pipe(res);
   build(doc);
   doc.end();
