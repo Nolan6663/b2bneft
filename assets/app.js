@@ -93,8 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('[SW] registration failed:', e.message)
     );
   }
-  initSpaRouter();
-  markCurrentPageStyles();
+  /* SPA отключён — полная перезагрузка страницы; иначе ломались стили, скрипты и адаптив */
 });
 
 /* ---------------------------------------------------------------------
@@ -1167,24 +1166,6 @@ async function spaNavigate(url) {
 window.__spaNavigate = spaNavigate;
 
 function initSpaRouter() {
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href]');
-    if (!a) return;
-    const href = a.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-    if (e.ctrlKey || e.metaKey || e.shiftKey || a.target === '_blank') return;
-    if (!isSpaUrl(href)) return;
-    if (!a.closest('aside, .sidebar, nav, .nav')) return;
-    e.preventDefault();
-    spaNavigate(href);
-  });
-
-  window.addEventListener('popstate', (e) => {
-    if (e.state?.spaUrl) {
-      spaNavigate(e.state.spaUrl);
-    } else {
-      location.reload();
-    }
-  });
+  /* Отключено: подмена #spa-content ломала page CSS, DOMContentLoaded и адаптив на всех страницах кабинета */
 }
 

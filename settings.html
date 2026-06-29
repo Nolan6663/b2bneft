@@ -18,7 +18,10 @@
             border-bottom: 1px solid var(--card-border);
             margin-bottom: 24px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
+        .settings-tabs::-webkit-scrollbar { display: none; }
         .settings-tab-btn {
             padding: 10px 18px;
             border: none;
@@ -241,12 +244,16 @@
         .capacity-row .pct-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
         .capacity-row .btn-remove { width: 32px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 8px; border: 1px solid var(--secondary-btn-border); background: transparent; color: var(--error); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+        @media (max-width: 900px) {
+            .settings-layout-2col { grid-template-columns: 1fr; }
+        }
         @media (max-width: 600px) {
             .settings-form-grid { grid-template-columns: 1fr; }
             .settings-form-grid .span-2 { grid-column: span 1; }
-            .settings-hero { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .settings-hero { flex-direction: column; align-items: flex-start; gap: 16px; padding: 20px 18px; }
             .form-row-actions { flex-direction: column; align-items: stretch; }
             .btn-settings-save { width: 100%; text-align: center; }
+            .settings-card { padding: 18px 16px; }
         }
     </style>
 </head>

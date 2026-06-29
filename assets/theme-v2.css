@@ -1171,14 +1171,22 @@ table {
 @media (max-width: 980px) {
   .header,
   .msg-header {
-    align-items: flex-start;
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header h2,
+  .msg-header h2 {
+    flex: 1;
+    min-width: 0;
   }
 
   .header-right {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 0;
   }
 
   .user-company-name {
@@ -1202,6 +1210,11 @@ table {
   .main-content {
     padding: 18px 14px 92px;
     width: 100%;
+  }
+
+  .burger-btn,
+  .sidebar-overlay {
+    display: none !important;
   }
 
   .header-right {
