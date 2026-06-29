@@ -43,6 +43,7 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
+    "telegraf": "^4.16.3",
     "web-push": "^3.6.7"
   }
 }
