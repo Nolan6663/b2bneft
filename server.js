@@ -557,9 +557,7 @@ CAT_PAGES.forEach(({ slug, file }) => {
 });
 
 app.get('/favicon.ico', (req, res) => {
-    res.setHeader('Cache-Control', 'public, max-age=604800');
-    res.type('image/svg+xml');
-    res.sendFile(path.join(__dirname, 'favicon.svg'));
+    res.redirect(301, '/favicon.svg');
 });
 app.get('/favicon.svg', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
