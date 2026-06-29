@@ -1147,8 +1147,18 @@ function renderPriceBenchmark(b) {
 --------------------------------------------------------- */
 async function getPushSubscription() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  const reg = await navigator.serviceWorker.ready;
-  return reg.pushManager.getSubscription();
+  try {
+    if (!navigator.serviceWorker.controller) {
+      await navigator.serviceWorker.register('/assets/sw.js').catch(() => null);
+    }
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 10000)),
+    ]);
+    return reg.pushManager.getSubscription();
+  } catch {
+    return null;
+  }
 }
 
 async function subscribeToPush() {

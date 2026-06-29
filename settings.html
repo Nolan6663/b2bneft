@@ -11,7 +11,7 @@
     
     
     <link rel="stylesheet" href="assets/theme-v2.css?v=8">
-    <link rel="stylesheet" href="assets/settings-page.css?v=6">
+    <link rel="stylesheet" href="assets/settings-page.css?v=9">
 </head>
 <body>
 
@@ -449,10 +449,6 @@
                         </label>
                         <label style="display:flex;align-items:flex-start;gap:14px;cursor:pointer;">
                             <div style="width:40px;height:22px;background:var(--inner-border);border-radius:11px;cursor:pointer;position:relative;flex-shrink:0;margin-top:2px;" onclick="this.style.background=this.dataset.on?(this.dataset.on='',this.querySelector('div').style.left='3px','var(--inner-border)'):(this.dataset.on='1',this.querySelector('div').style.left='21px','var(--accent-bright)')"><div style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;"></div></div>
-                            <div><div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Еженедельный дайджест</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Сводка активности за неделю каждый понедельник</div></div>
-                        </label>
-                        <label style="display:flex;align-items:flex-start;gap:14px;cursor:pointer;">
-                            <div style="width:40px;height:22px;background:var(--inner-border);border-radius:11px;cursor:pointer;position:relative;flex-shrink:0;margin-top:2px;" onclick="this.style.background=this.dataset.on?(this.dataset.on='',this.querySelector('div').style.left='3px','var(--inner-border)'):(this.dataset.on='1',this.querySelector('div').style.left='21px','var(--accent-bright)')"><div style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s;"></div></div>
                             <div><div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Новые компании в реестре</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Когда новые верифицированные поставщики входят в вашу категорию</div></div>
                         </label>
                     </div>
@@ -504,9 +500,11 @@
                         <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
                             Получайте уведомления о новых КП, сообщениях и сделках прямо в браузере.
                         </p>
-                        <button id="pushToggleBtn" class="btn-settings-save" onclick="handlePushToggle()">
-                            Проверка...
-                        </button>
+                        <div class="settings-inline-actions">
+                            <button id="pushToggleBtn" class="btn-settings-save" onclick="handlePushToggle()" disabled>
+                                Загрузка…
+                            </button>
+                        </div>
                         <p id="pushStatusText" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
                     </div>
                 </div>
@@ -525,8 +523,10 @@
                                 <span style="font-size:13.5px;color:var(--text-primary);">Telegram подключён</span>
                             </div>
                         </div>
-                        <button id="tgConnectBtn" class="btn-settings-save" onclick="connectTelegram()" style="display:none;">Подключить Telegram</button>
-                        <button id="tgUnlinkBtn" class="btn-settings-secondary" onclick="unlinkTelegram()" style="display:none;margin-top:8px;">Отвязать</button>
+                        <div class="settings-inline-actions">
+                            <button id="tgConnectBtn" class="btn-settings-save" onclick="connectTelegram()" style="display:none;">Подключить Telegram</button>
+                            <button id="tgUnlinkBtn" class="btn-settings-secondary" onclick="unlinkTelegram()" style="display:none;">Отвязать</button>
+                        </div>
                         <p id="tgStatusText" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
                     </div>
                 </div>
@@ -833,7 +833,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=6"></script>
+    <script src="assets/app.js?v=7"></script>
     <script src="assets/ui-animations.js?v=3"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -1506,13 +1506,20 @@
                 btn.disabled = true;
                 return;
             }
-            const sub = await getPushSubscription();
-            if (sub) {
-                btn.textContent = 'Отключить Push-уведомления';
-                status.textContent = 'Уведомления включены';
-            } else {
+            try {
+                const sub = await getPushSubscription();
+                if (sub) {
+                    btn.textContent = 'Отключить Push-уведомления';
+                    status.textContent = 'Уведомления включены';
+                } else {
+                    btn.textContent = 'Включить Push-уведомления';
+                    status.textContent = '';
+                }
+            } catch {
                 btn.textContent = 'Включить Push-уведомления';
                 status.textContent = '';
+            } finally {
+                btn.disabled = false;
             }
         }
 
