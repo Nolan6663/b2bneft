@@ -17,9 +17,8 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /var/www/neft
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
             npm install --production
-            pm2 stop neft || true
-            pm2 delete neft || true
-            pm2 start ecosystem.config.js
+            pm2 restart neft || pm2 start ecosystem.config.js
             pm2 save
