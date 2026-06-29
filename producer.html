@@ -418,6 +418,10 @@
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
+
+            window.__pageCleanup = function() {
+                if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
+            };
         };
 
         function switchProducerTab(tab) {

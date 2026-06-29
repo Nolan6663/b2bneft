@@ -576,6 +576,10 @@
             loadTopSuppliers();
             initNotifications();
             initSidebarBadges();
+
+            window.__pageCleanup = function() {
+                if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
+            };
         };
 
         const AVATAR_COLORS = ['#41bd97','#4a90d9','#e5854a','#9b59b6','#e74c3c','#16a085'];

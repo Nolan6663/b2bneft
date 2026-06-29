@@ -260,6 +260,12 @@ function msgToast(msg) {
             initSidebarBadges();
             loadConversations();
             loadMsgStats();
+
+            window.__pageCleanup = function() {
+                if (typeof chatSocket !== 'undefined' && chatSocket) {
+                    chatSocket.off();
+                }
+            };
         };
 
         // ── Conversations list ──────────────────────────────────────────
