@@ -501,8 +501,8 @@
                             Получайте уведомления о новых КП, сообщениях и сделках прямо в браузере.
                         </p>
                         <div class="settings-inline-actions">
-                            <button id="pushToggleBtn" class="btn-settings-save" onclick="handlePushToggle()" disabled>
-                                Загрузка…
+                            <button id="pushToggleBtn" class="btn-settings-save" onclick="handlePushToggle()">
+                                Включить Push-уведомления
                             </button>
                         </div>
                         <p id="pushStatusText" style="font-size:13px;color:var(--text-secondary);margin-top:8px;"></p>
@@ -833,7 +833,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=7"></script>
+    <script src="assets/app.js?v=8"></script>
     <script src="assets/ui-animations.js?v=3"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -1328,6 +1328,9 @@
         }
 
         async function bootSettingsPage() {
+            if (typeof initPushUI === 'function') void initPushUI();
+            if (typeof initTelegramUI === 'function') void initTelegramUI();
+
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
             const navProposals = document.getElementById('navProposals');
@@ -1381,8 +1384,6 @@
 
             if (typeof initNotifications === 'function') initNotifications();
             if (typeof initSidebarBadges === 'function') initSidebarBadges();
-            if (typeof initPushUI === 'function') initPushUI();
-            if (typeof initTelegramUI === 'function') initTelegramUI();
 
             if (userRole === 'producer') {
                 const capacityCard = document.getElementById('capacityCard');
@@ -1506,8 +1507,12 @@
                 btn.disabled = true;
                 return;
             }
+            btn.disabled = true;
             try {
-                const sub = await getPushSubscription();
+                const sub = await Promise.race([
+                    getPushSubscription(),
+                    new Promise((resolve) => setTimeout(() => resolve(null), 6000)),
+                ]);
                 if (sub) {
                     btn.textContent = 'Отключить Push-уведомления';
                     status.textContent = 'Уведомления включены';

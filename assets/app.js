@@ -1148,21 +1148,35 @@ function renderPriceBenchmark(b) {
 async function getPushSubscription() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
   try {
-    if (!navigator.serviceWorker.controller) {
-      await navigator.serviceWorker.register('/assets/sw.js').catch(() => null);
+    let reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) {
+      reg = await Promise.race([
+        navigator.serviceWorker.register('/assets/sw.js'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('SW register timeout')), 5000)),
+      ]);
     }
-    const reg = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 10000)),
-    ]);
-    return reg.pushManager.getSubscription();
+    if (!reg?.pushManager) return null;
+    return await reg.pushManager.getSubscription();
   } catch {
     return null;
   }
 }
 
+async function getServiceWorkerRegistration() {
+  if (!('serviceWorker' in navigator)) return null;
+  let reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) {
+    reg = await Promise.race([
+      navigator.serviceWorker.register('/assets/sw.js'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('SW register timeout')), 8000)),
+    ]).catch(() => null);
+  }
+  return reg;
+}
+
 async function subscribeToPush() {
-  const reg = await navigator.serviceWorker.ready;
+  const reg = await getServiceWorkerRegistration();
+  if (!reg?.pushManager) throw new Error('Service Worker недоступен');
   const { publicKey } = await apiFetch(`${SERVER_URL}/push/vapid-key`).then(r => r.json());
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
