@@ -982,8 +982,19 @@ function isSpaUrl(url) {
   } catch { return false; }
 }
 
+let _spaNavigating = false;
+
 async function spaNavigate(url) {
+  if (_spaNavigating) return;
+  _spaNavigating = true;
+
   const target = new URL(url, location.origin);
+
+  // Close mobile sidebar before navigating
+  const _sb = document.querySelector('.sidebar');
+  const _ov = document.getElementById('sidebarOverlay');
+  if (_sb) _sb.classList.remove('open');
+  if (_ov) _ov.classList.remove('visible');
 
   if (typeof window.__pageCleanup === 'function') {
     try { window.__pageCleanup(); } catch {}
@@ -994,10 +1005,10 @@ async function spaNavigate(url) {
   let html;
   try {
     const res = await fetch(target.href, { credentials: 'include' });
-    if (!res.ok) { location.href = url; return; }
+    if (!res.ok) { _spaNavigating = false; location.href = url; return; }
     html = await res.text();
   } catch {
-    location.href = url;
+    _spaNavigating = false; location.href = url;
     return;
   }
 
@@ -1007,7 +1018,7 @@ async function spaNavigate(url) {
   const newContent = doc.getElementById('spa-content');
   const currentContent = document.getElementById('spa-content');
   if (!newContent || !currentContent) {
-    location.href = url;
+    _spaNavigating = false; location.href = url;
     return;
   }
 
@@ -1034,6 +1045,8 @@ async function spaNavigate(url) {
   if (typeof window.__pageInit === 'function') {
     try { window.__pageInit(); } catch (e) { console.error('[spa] pageInit error:', e); }
   }
+
+  _spaNavigating = false;
 }
 
 window.__spaNavigate = spaNavigate;

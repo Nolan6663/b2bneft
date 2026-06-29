@@ -222,6 +222,18 @@
         }
         .btn-settings-save:hover { opacity: 0.88; transform: translateY(-1px); }
         .btn-settings-save:disabled { opacity: 0.5; cursor: default; transform: none; }
+        .btn-settings-secondary {
+            padding: 8px 18px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--card-border);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .btn-settings-secondary:hover { background: var(--hover-bg); color: var(--text-primary); }
 
         .capacity-row { display: flex; gap: 10px; align-items: center; }
         .capacity-row input[type="text"] { flex: 1; }

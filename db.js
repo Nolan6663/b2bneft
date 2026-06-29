@@ -256,10 +256,20 @@ async function initDb() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS team_role TEXT NOT NULL DEFAULT 'admin';
         ALTER TABLE users ADD COLUMN IF NOT EXISTS digest_frequency TEXT NOT NULL DEFAULT 'daily';
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id BIGINT UNIQUE;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_link_token VARCHAR(64);
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_link_expires TIMESTAMPTZ;
     `);
+    // Telegram columns in a separate query so they don't break the batch above
+    try {
+        await pool.query(`
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_id BIGINT;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_link_token VARCHAR(64);
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_link_expires TIMESTAMPTZ;
+        `);
+        await pool.query(`
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id) WHERE telegram_id IS NOT NULL;
+        `);
+    } catch (e) {
+        console.warn('[db] telegram columns already exist or skipped:', e.message);
+    }
 
     await pool.query(`
         CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
