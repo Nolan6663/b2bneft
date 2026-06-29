@@ -1023,7 +1023,12 @@ async function spaNavigate(url) {
   for (const script of scripts) {
     const code = script.textContent || '';
     if (!code.includes('__pageInit') && !code.includes('__pageCleanup')) continue;
-    try { new Function(code)(); } catch (e) { console.error('[spa] script error:', e); }
+    try {
+      const s = document.createElement('script');
+      s.textContent = code;
+      document.head.appendChild(s);
+      document.head.removeChild(s);
+    } catch (e) { console.error('[spa] script error:', e); }
   }
 
   if (typeof window.__pageInit === 'function') {

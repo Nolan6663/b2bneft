@@ -151,7 +151,7 @@
         </button>
     </div>
 
-    <div class="main-content">
+    <div id="spa-content" class="main-content">
         <div class="msg-header" style="display:flex;align-items:center;justify-content:space-between;">
             <h2>Сообщения</h2>
             <div class="header-right">
@@ -254,6 +254,13 @@ function msgToast(msg) {
             loadConversations();
             loadMsgStats();
         });
+
+        window.__pageInit = function() {
+            initNotifications();
+            initSidebarBadges();
+            loadConversations();
+            loadMsgStats();
+        };
 
         // ── Conversations list ──────────────────────────────────────────
 

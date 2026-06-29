@@ -233,7 +233,7 @@
     </div>
 
     <!-- ══ MAIN CONTENT ══ -->
-    <div class="main-content">
+    <div id="spa-content" class="main-content">
 
         <!-- Header -->
         <div class="header">
@@ -1406,6 +1406,24 @@
                 }
             }
         });
+
+        window.__pageInit = async function() {
+            renderCycle();
+            try {
+                await tryLoadReal();
+            } catch {
+                if (shouldUseMockData()) {
+                    renderKPI(MOCK);
+                    renderDynamics(MOCK);
+                    renderFunnel(MOCK);
+                    renderCategories(MOCK);
+                    renderSuppliers(MOCK);
+                    renderRatings(MOCK);
+                    renderHeatmap(MOCK);
+                    renderInsights(MOCK);
+                }
+            }
+        };
     </script>
 </body>
 </html>
