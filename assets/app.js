@@ -1375,20 +1375,38 @@ function dismissObChecklist() {
 
   const role = localStorage.getItem('userRole') || '';
 
+  /* ── SVG icons (match sidebar exactly) ──────────────────────────── */
+  const _svg = p => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const CP_ICONS = {
+    home:     _svg('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
+    catalog:  _svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+    proposal: _svg('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
+    deals:    _svg('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/>'),
+    delivery: _svg('<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'),
+    partners: _svg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    analytics:_svg('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),
+    messages: _svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+    favorites:_svg('<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'),
+    profile:  _svg('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
+    company:  _svg('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/>'),
+    settings: _svg('<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>'),
+    order:    _svg('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>'),
+  };
+
   /* ── Static navigation items ─────────────────────────────────────── */
   const NAV_ITEMS = [
-    { title: 'Главная',         sub: 'Кабинет заказчика',      href: 'index.html',           icon: '🏠', roles: ['customer'] },
-    { title: 'Кабинет',         sub: 'Активные заявки',         href: 'producer.html',        icon: '📋', roles: ['producer'] },
-    { title: 'Каталог',         sub: 'Поиск поставщиков',       href: 'catalog.html',         icon: '🔍', roles: ['customer','producer'] },
-    { title: 'Мои КП',          sub: 'Коммерческие предложения', href: 'proposals.html',       icon: '📄', roles: ['producer'] },
-    { title: 'Сделки',          sub: 'Активные и завершённые',  href: 'deals.html',           icon: '🤝', roles: ['customer','producer'] },
-    { title: 'Доставки',        sub: 'Отслеживание доставок',   href: 'deliveries.html',      icon: '🚚', roles: ['customer','producer'] },
-    { title: 'Контрагенты',     sub: 'Поставщики и заказчики',  href: 'partners.html',        icon: '👥', roles: ['customer','producer'] },
-    { title: 'Аналитика',       sub: 'Статистика и отчёты',     href: 'analytics.html',       icon: '📊', roles: ['customer','producer'] },
-    { title: 'Сообщения',       sub: 'Чаты с контрагентами',    href: 'messages.html',        icon: '💬', roles: ['customer','producer'] },
-    { title: 'Избранное',       sub: 'Сохранённые компании',    href: 'favorites.html',       icon: '❤️', roles: ['customer','producer'] },
-    { title: 'Профиль компании',sub: 'Реквизиты и настройки',   href: 'company-profile.html', icon: '🏢', roles: ['customer','producer'] },
-    { title: 'Настройки',       sub: 'Профиль, уведомления',    href: 'settings.html',        icon: '⚙️', roles: ['customer','producer'] },
+    { title: 'Главная',         sub: 'Кабинет заказчика',       href: 'index.html',           icon: CP_ICONS.home,      roles: ['customer'] },
+    { title: 'Кабинет',         sub: 'Активные заявки',          href: 'producer.html',        icon: CP_ICONS.home,      roles: ['producer'] },
+    { title: 'Каталог',         sub: 'Поиск поставщиков',        href: 'catalog.html',         icon: CP_ICONS.catalog,   roles: ['customer','producer'] },
+    { title: 'Мои КП',          sub: 'Коммерческие предложения', href: 'proposals.html',       icon: CP_ICONS.proposal,  roles: ['producer'] },
+    { title: 'Сделки',          sub: 'Активные и завершённые',   href: 'deals.html',           icon: CP_ICONS.deals,     roles: ['customer','producer'] },
+    { title: 'Доставки',        sub: 'Отслеживание доставок',    href: 'deliveries.html',      icon: CP_ICONS.delivery,  roles: ['customer','producer'] },
+    { title: 'Контрагенты',     sub: 'Поставщики и заказчики',   href: 'partners.html',        icon: CP_ICONS.partners,  roles: ['customer','producer'] },
+    { title: 'Аналитика',       sub: 'Статистика и отчёты',      href: 'analytics.html',       icon: CP_ICONS.analytics, roles: ['customer','producer'] },
+    { title: 'Сообщения',       sub: 'Чаты с контрагентами',     href: 'messages.html',        icon: CP_ICONS.messages,  roles: ['customer','producer'] },
+    { title: 'Избранное',       sub: 'Сохранённые компании',     href: 'favorites.html',       icon: CP_ICONS.favorites, roles: ['customer','producer'] },
+    { title: 'Профиль компании',sub: 'Реквизиты и настройки',    href: 'company-profile.html', icon: CP_ICONS.company,   roles: ['customer','producer'] },
+    { title: 'Настройки',       sub: 'Профиль, уведомления',     href: 'settings.html',        icon: CP_ICONS.settings,  roles: ['customer','producer'] },
   ].filter(it => it.roles.includes(role) || it.roles.includes('all'));
 
   /* ── Build DOM ───────────────────────────────────────────────────── */
@@ -1477,7 +1495,7 @@ function dismissObChecklist() {
         a.className = 'cp-item';
         a.href = it.href;
         a.innerHTML = `
-          <div class="cp-item-icon">${it.icon}</div>
+          <div class="cp-item-icon cp-item-icon-svg">${it.icon}</div>
           <div class="cp-item-body">
             <div class="cp-item-title">${highlight(it.title, q)}</div>
             <div class="cp-item-sub">${escapeHtml(it.sub)}</div>
@@ -1497,7 +1515,7 @@ function dismissObChecklist() {
         a.href = 'index.html';
         a.dataset.orderId = o.id;
         a.innerHTML = `
-          <div class="cp-item-icon">📦</div>
+          <div class="cp-item-icon cp-item-icon-svg">${CP_ICONS.order}</div>
           <div class="cp-item-body">
             <div class="cp-item-title">${highlight(o.title || '', q)}</div>
             <div class="cp-item-sub">ЗК-${String(o.id).padStart(5,'0')} · ${escapeHtml(o.category || '')} · ${escapeHtml(o.status || '')}</div>
