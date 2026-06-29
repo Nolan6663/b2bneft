@@ -632,25 +632,38 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 @media (max-width: 768px) {
   .burger-btn { display: flex; }
   .sidebar {
-    position: fixed; left: -100%; z-index: 200;
-    transition: left .25s ease; height: 100vh;
+    position: fixed;
+    left: -100%;
+    z-index: 200;
+    /* Override the global transition:none !important so slide animation works */
+    transition: left .25s ease !important;
+    height: 100svh; /* svh = small viewport height, stable on mobile browsers */
     box-shadow: 4px 0 24px rgba(7,27,42,.18);
   }
-  .sidebar.open { left: 0; }
+  .sidebar.open { left: 0 !important; }
+  /* Prevent desktop collapsed state from affecting mobile sidebar */
+  [data-sidebar-collapsed="1"] .sidebar {
+    width: var(--sidebar-width) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  [data-sidebar-collapsed="1"] .sidebar .sidebar-logo span,
+  [data-sidebar-collapsed="1"] .sidebar .nav-label { display: block !important; }
+  [data-sidebar-collapsed="1"] .sidebar a { justify-content: flex-start !important; padding: 10px 36px 10px 9px !important; }
+  [data-sidebar-collapsed="1"] .sidebar a .nav-icon { margin-right: 10px !important; }
+  [data-sidebar-collapsed="1"] .sidebar a.active { border-left: 3px solid var(--accent-cyan) !important; }
+  /* Hide collapse/expand button on mobile — not needed */
+  .sidebar-collapse-btn { display: none !important; }
   .main-content { padding: 20px 14px 28px; }
   .modal-content { padding: 20px; width: 94vw; }
   .modal-actions { flex-wrap: wrap; }
   .modal-actions button { flex: 1; }
-  /* Header: keep burger + bell visible, compress user pill */
   .header { gap: 8px; }
   .header-right { gap: 8px; }
   .user-info-block { display: none; }
   .user-menu-caret { display: none; }
-  /* Tables scroll horizontally */
   .table-wrap, .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* KPI cards wrap */
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
-  /* Deals filter row wraps */
   .orders-controls { flex-wrap: wrap; gap: 8px; }
   .orders-search { min-width: 0; flex: 1 1 100%; }
 }

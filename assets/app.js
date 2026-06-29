@@ -610,7 +610,41 @@ async function initSidebarBadges() {
 /* ---------------------------------------------------------------------
    Sidebar extras — промо-виджет, блок поддержки, кнопка сворачивания
    --------------------------------------------------------------------- */
+function _closeMobileSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('visible');
+}
+
+function _openMobileSidebar() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  let ov = document.getElementById('sidebarOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.className = 'sidebar-overlay';
+    ov.id = 'sidebarOverlay';
+    ov.addEventListener('click', _closeMobileSidebar);
+    document.body.appendChild(ov);
+  }
+  sb.classList.add('open');
+  ov.classList.add('visible');
+}
+
+// Called from burger button (onclick="toggleMobileSidebar()")
+function toggleMobileSidebar() {
+  const sb = document.querySelector('.sidebar');
+  if (sb && sb.classList.contains('open')) {
+    _closeMobileSidebar();
+  } else {
+    _openMobileSidebar();
+  }
+}
+
+// Desktop sidebar collapse (only runs on desktop — mobile CSS hides this button)
 function toggleSidebar() {
+  if (window.innerWidth <= 768) return; // no-op on mobile
   const root = document.documentElement;
   root.classList.add('sidebar-resizing');
   const collapsed = root.getAttribute('data-sidebar-collapsed') === '1';
@@ -626,7 +660,7 @@ function toggleSidebar() {
 }
 
 function initSidebarExtra() {
-  // collapsed state is set via inline script in <head> — nothing to do here
+  // collapsed state restored via inline script in <head>
 }
 
 /* ---------------------------------------------------------------------
