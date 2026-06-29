@@ -242,6 +242,7 @@ html[data-user-role="producer"] #navProposals { display: flex !important; }
 .header {
   display: flex; justify-content: space-between; align-items: center;
   width: 100%; gap: 16px;
+  flex-shrink: 0;
 }
 .header h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0; }
 

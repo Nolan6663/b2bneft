@@ -5,11 +5,17 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    flex-shrink: 0;
     border-bottom: 1px solid var(--card-border);
     margin-bottom: 24px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    padding: 4px 8px 0;
+    box-sizing: border-box;
 }
 .settings-tabs::-webkit-scrollbar { display: none; }
 
@@ -33,8 +39,15 @@
     border-bottom-color: var(--accent-bright);
 }
 
-.settings-pane { display: none; }
-.settings-pane.active { display: flex; flex-direction: column; gap: 20px; }
+.settings-pane { display: none; flex-shrink: 0; }
+.settings-pane.active {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+}
 
 .settings-layout {
     display: flex;
@@ -232,7 +245,8 @@
         flex-wrap: wrap;
         overflow-x: visible;
         gap: 4px;
-        padding-bottom: 4px;
+        padding: 6px;
+        border-bottom: 1px solid var(--card-border);
     }
     .settings-tab-btn {
         flex: 1 1 calc(50% - 4px);
@@ -264,4 +278,30 @@
     .btn-settings-save { width: 100%; text-align: center; }
     .settings-card-body { padding: 18px 16px; }
     .settings-card-header { padding: 16px 18px 14px; }
+}
+
+/* Настройки: заголовок не рвётся на мобилке */
+@media (max-width: 720px) {
+    .main-content .header {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+    .main-content .header h2 {
+        font-size: 20px;
+        white-space: nowrap;
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .main-content .header h2::after {
+        display: none;
+    }
+    .main-content .header .burger-btn {
+        flex-shrink: 0;
+    }
+    .main-content .header-right {
+        flex-shrink: 0;
+        margin-left: auto;
+    }
 }
