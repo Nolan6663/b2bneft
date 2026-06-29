@@ -69,7 +69,13 @@ function initSidebarRole() {
   const mainLink = document.getElementById('mainCabinetLink');
   if (mainLink) mainLink.href = role === 'producer' ? 'producer.html' : 'index.html';
   const navProposals = document.getElementById('navProposals');
-  if (navProposals) navProposals.style.display = role === 'customer' ? 'none' : '';
+  if (navProposals) navProposals.style.display = role === 'producer' ? '' : 'none';
+  // Show profile link immediately from cache — avoids async flash
+  const companyId = localStorage.getItem('_myCompanyId');
+  if (companyId && (role === 'customer' || role === 'producer')) {
+    const spl = document.getElementById('sidebarProfileLink');
+    if (spl) { spl.href = `company-profile.html?id=${companyId}`; spl.style.display = ''; }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -133,6 +139,7 @@ function clearAuthSession() {
   localStorage.removeItem('userRole');
   localStorage.removeItem('userCompany');
   localStorage.removeItem('emailVerified');
+  localStorage.removeItem('_myCompanyId');
   if (theme) localStorage.setItem('theme', theme);
 }
 
