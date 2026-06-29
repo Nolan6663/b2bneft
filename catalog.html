@@ -439,12 +439,9 @@
                     <div class="catalog-mini-item"><b>◌</b><span>РТИ и уплотнения<br><small>62 поставщика</small></span></div>
                 </div>
             </div>
-            <div class="catalog-bottom-panel">
-                <div class="catalog-panel-title">Недавно просмотренные <a style="font-size:12px;color:var(--accent-blue);" href="#">Очистить</a></div>
-                <div class="catalog-mini-list">
-                    <div class="catalog-mini-item"><div class="compare-logo">Р</div><span>Римера-Альнас<br><small>★ 4,6</small></span></div>
-                    <div class="catalog-mini-item"><div class="compare-logo">Т</div><span>ТМК<br><small>★ 4,8</small></span></div>
-                </div>
+            <div class="catalog-bottom-panel" id="recentPanel" style="display:none;">
+                <div class="catalog-panel-title">Недавно просмотренные <a style="font-size:12px;color:var(--accent-blue);cursor:pointer;" onclick="clearRecentProducers()">Очистить</a></div>
+                <div class="catalog-mini-list" id="recentList"></div>
             </div>
         </div>
     </div>
@@ -696,12 +693,14 @@
                 ${aiBlock}
                 ${capacityBlock}
                 <div style="display:flex;gap:8px;margin-top:auto;">
-                    <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;">Открыть профиль →</a>
+                    <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;" onclick="trackRecentProducer(${p.id})">Открыть профиль →</a>
                     <button class="compare-card-btn${compareList.some(x=>x.id===p.id)?' in-compare':''}"
                         data-compare-id="${p.id}"
                         onclick="toggleCompare(${p.id})"
                         title="${compareList.some(x=>x.id===p.id)?'Убрать из сравнения':'Добавить к сравнению'}">
-                        ${compareList.some(x=>x.id===p.id)?'✓ Сравниваю':'+ Сравнить'}
+                        ${compareList.some(x=>x.id===p.id)
+                          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> В сравнении'
+                          : '+ Сравнить'}
                     </button>
                 </div>
             </div>`;
@@ -751,9 +750,9 @@
             }).join('');
 
             const addSlot = n < 4 ? `
-                <div class="compare-add">
-                    ＋ Добавить поставщика<br>
-                    <span style="font-size:11px;margin-top:4px;display:block;">${n}/4 выбрано — нажмите <b>+ Сравнить</b> на карточке</span>
+                <div class="compare-add" onclick="document.getElementById('producersGrid')?.scrollIntoView({behavior:'smooth',block:'start'})">
+                    ＋ Добавить поставщика
+                    <span style="font-size:11px;margin-top:4px;display:block;opacity:.7;">нажмите «+ Сравнить» на карточке</span>
                 </div>` : '';
 
             const actionRow = n >= 2
@@ -849,14 +848,51 @@
             document.body.appendChild(m);
         }
 
+        /* ── Recently viewed ──────────────────────────────────────────── */
+        const RECENT_KEY = 'catalog_recent_v1';
+
+        function trackRecentProducer(id) {
+            const p = allProducers.find(x => x.id === id);
+            if (!p) return;
+            let list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            list = [{ id: p.id, company: p.company, rating: p.rating }]
+                .concat(list.filter(x => x.id !== id))
+                .slice(0, 6);
+            localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+        }
+
+        function renderRecentProducers() {
+            const list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            const panel = document.getElementById('recentPanel');
+            const container = document.getElementById('recentList');
+            if (!panel || !container) return;
+            if (!list.length) { panel.style.display = 'none'; return; }
+            panel.style.display = '';
+            container.innerHTML = list.map(p => {
+                const letter = (p.company || '?').replace(/[«»"]/g,'').trim()[0].toUpperCase();
+                const rating = p.rating ? `★ ${parseFloat(p.rating).toFixed(1).replace('.',',')}` : '';
+                return `<a href="company-profile.html?id=${p.id}" class="catalog-mini-item" onclick="trackRecentProducer(${p.id})" style="text-decoration:none;color:inherit;">
+                    <div class="compare-logo">${escapeHtml(letter)}</div>
+                    <span>${escapeHtml(p.company || '—')}<br><small style="color:var(--text-secondary);">${escapeHtml(rating)}</small></span>
+                </a>`;
+            }).join('');
+        }
+
+        function clearRecentProducers() {
+            localStorage.removeItem(RECENT_KEY);
+            renderRecentProducers();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadCatalog();
             renderComparePanel();
+            renderRecentProducers();
         });
 
         window.__pageInit = function() {
             loadCatalog();
             renderComparePanel();
+            renderRecentProducers();
         };
     </script>
 </body>
