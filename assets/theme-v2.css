@@ -2574,3 +2574,44 @@ input:focus, textarea:focus, select:focus {
   padding: 18px 16px 6px !important;
   color: var(--text-muted) !important;
 }
+
+/* Page transition loader (MPA) */
+.tz-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+  backdrop-filter: blur(6px);
+  pointer-events: all;
+}
+.tz-page-loader.is-active { display: flex; }
+.tz-page-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 28px;
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-modal);
+}
+.tz-page-loader-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--inner-border);
+  border-top-color: var(--accent-bright);
+  animation: tzLoaderSpin .75s linear infinite;
+}
+.tz-page-loader-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+@keyframes tzLoaderSpin { to { transform: rotate(360deg); } }
+html.tz-nav-loading { cursor: wait; }
+html.tz-nav-loading .main-content { pointer-events: none; }

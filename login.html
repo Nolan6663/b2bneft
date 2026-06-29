@@ -225,6 +225,60 @@ body {
   box-shadow: 0 12px 26px rgba(255,106,0,0.34);
 }
 .btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: .7; cursor: wait; transform: none; }
+
+.auth-error {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 10px;
+  color: #DC2626;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.auth-error.is-shake { animation: authShake .4s ease; }
+@keyframes authShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.form-group input.input-error {
+  border-color: #DC2626 !important;
+  box-shadow: 0 0 0 3px rgba(220,38,38,.12) !important;
+}
+
+#toastContainer { display: flex; flex-direction: column; gap: 8px; }
+.login-toast {
+  min-width: 280px; max-width: 360px;
+  padding: 12px 14px; border-radius: 10px;
+  background: #fff; border: 1px solid rgba(7,27,42,.1);
+  box-shadow: 0 8px 24px rgba(7,27,42,.12);
+  font-size: 13.5px; font-weight: 600; color: #071B2A;
+  animation: loginToastIn .2s ease;
+}
+.login-toast.error { border-color: rgba(220,38,38,.3); color: #DC2626; background: #FEF2F2; }
+@keyframes loginToastIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#login-overlay {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: rgba(247,250,252,.72);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+#login-overlay.is-active { display: flex; }
+.login-spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid rgba(7,27,42,.12);
+  border-top-color: #FF6A00;
+  animation: loginSpin .7s linear infinite;
+}
+@keyframes loginSpin { to { transform: rotate(360deg); } }
+.login-overlay-text { font-size: 14px; font-weight: 600; color: #5B7184; }
 
 .divider {
   display: flex; align-items: center; gap: 12px;
@@ -341,7 +395,11 @@ body {
 </div>
 
 <!-- RIGHT PANEL -->
-<div id="toastContainer" style="display:none;position:fixed;top:20px;right:20px;z-index:9999;"></div>
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:9999;"></div>
+<div id="login-overlay" aria-hidden="true">
+  <div class="login-spinner" aria-hidden="true"></div>
+  <div class="login-overlay-text" id="login-overlay-text">Входим…</div>
+</div>
 <div class="auth-right">
   <div class="auth-box">
 
@@ -367,6 +425,8 @@ body {
         <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password">
         <a href="#" class="forgot-link" onclick="openForgot(); return false;">Забыли пароль?</a>
       </div>
+
+      <div id="auth-error-login" class="auth-error" role="alert" aria-live="polite" style="display:none;"></div>
 
       <!-- 2FA step (shown when server returns require2fa) -->
       <div id="twofa-step" style="display:none;">
@@ -455,6 +515,8 @@ body {
         <div class="form-hint">Используйте буквы, цифры и специальные символы</div>
       </div>
 
+      <div id="auth-error-register" class="auth-error" role="alert" aria-live="polite" style="display:none;"></div>
+
       <button class="btn-primary" onclick="handleRegister()">
         Создать аккаунт
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -536,23 +598,85 @@ function selectRole(btn) {
   btn.classList.add('selected');
 }
 
-function showError(msg) {
-  let el = document.getElementById('auth-error');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'auth-error';
-    el.style.cssText = 'padding:12px 16px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;color:#DC2626;font-size:13.5px;font-weight:600;';
-    const activeForm = document.querySelector('.auth-form.active');
-    const btn = activeForm.querySelector('.btn-primary');
-    btn.before(el);
+function getActiveAuthErrorEl() {
+  const form = document.querySelector('.auth-form.active');
+  if (!form) return null;
+  return form.querySelector('.auth-error');
+}
+
+function showLoginToast(msg, type) {
+  const container = document.getElementById('toastContainer');
+  if (!container || !msg) return;
+  const toast = document.createElement('div');
+  toast.className = 'login-toast' + (type === 'error' ? ' error' : '');
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5200);
+}
+
+function setLoginOverlay(active, text) {
+  const el = document.getElementById('login-overlay');
+  const label = document.getElementById('login-overlay-text');
+  if (!el) return;
+  if (label && text) label.textContent = text;
+  el.classList.toggle('is-active', !!active);
+  el.setAttribute('aria-hidden', active ? 'false' : 'true');
+}
+
+function getLoginSubmitBtn() {
+  const twofa = document.getElementById('twofa-step');
+  if (twofa && twofa.style.display !== 'none' && getComputedStyle(twofa).display !== 'none') {
+    return twofa.querySelector('.btn-primary');
   }
-  el.textContent = msg;
-  el.style.display = 'block';
+  return document.getElementById('btnSubmit');
+}
+
+function clearFieldErrors() {
+  document.querySelectorAll('#form-login input.input-error, #form-register input.input-error')
+    .forEach((el) => el.classList.remove('input-error'));
+}
+
+function showError(msg) {
+  const el = getActiveAuthErrorEl();
+  if (!msg) { clearError(); return; }
+  if (el) {
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.classList.remove('is-shake');
+    void el.offsetWidth;
+    el.classList.add('is-shake');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  showLoginToast(msg, 'error');
 }
 
 function clearError() {
-  const el = document.getElementById('auth-error');
-  if (el) el.style.display = 'none';
+  document.querySelectorAll('.auth-error').forEach((el) => {
+    el.style.display = 'none';
+    el.textContent = '';
+    el.classList.remove('is-shake');
+  });
+  clearFieldErrors();
+}
+
+async function parseAuthResponse(res) {
+  const text = await res.text();
+  if (!text) {
+    return { error: res.status === 429
+      ? 'Слишком много попыток. Подождите и попробуйте снова.'
+      : 'Сервер не ответил. Попробуйте позже.' };
+  }
+  try { return JSON.parse(text); }
+  catch {
+    return { error: res.status === 429
+      ? 'Слишком много попыток. Подождите и попробуйте снова.'
+      : 'Ошибка сервера. Попробуйте позже.' };
+  }
+}
+
+function markLoginFieldsInvalid() {
+  document.getElementById('authEmail')?.classList.add('input-error');
+  document.getElementById('authPassword')?.classList.add('input-error');
 }
 
 function setLoading(btn, loading) {
@@ -568,7 +692,8 @@ async function handleLogin() {
   clearError();
   if (!email || !password) { showError('Введите email и пароль'); return; }
 
-  const btn = document.querySelector('#form-login .btn-primary:not([style*="none"])');
+  const btn = getLoginSubmitBtn();
+  if (!btn) return;
   setLoading(btn, true);
   try {
     const body = { email, password };
@@ -580,7 +705,7 @@ async function handleLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const data = await parseAuthResponse(res);
 
     if (res.ok && data.require2fa) {
       document.getElementById('twofa-step').style.display = '';
@@ -590,11 +715,16 @@ async function handleLogin() {
       return;
     }
 
-    if (!res.ok) { showError(data.error || 'Ошибка входа'); return; }
+    if (!res.ok) {
+      markLoginFieldsInvalid();
+      showError(data.error || 'Неверный email или пароль');
+      return;
+    }
+    setLoginOverlay(true, 'Входим…');
     applyAuthSession(data);
     window.location.href = data.role === 'admin' ? 'admin.html' : data.role === 'producer' ? 'producer.html' : 'index.html';
   } catch {
-    showError('Нет соединения с сервером');
+    showError('Нет соединения с сервером. Проверьте интернет и попробуйте снова.');
   } finally {
     setLoading(btn, false);
   }
@@ -626,12 +756,13 @@ async function handleRegister() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, company, role, inviteToken: _pendingInviteToken || undefined }),
     });
-    const data = await res.json();
+    const data = await parseAuthResponse(res);
     if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
+    setLoginOverlay(true, 'Создаём аккаунт…');
     applyAuthSession(data);
     window.location.href = role === 'producer' ? 'producer.html' : 'index.html';
   } catch {
-    showError('Нет соединения с сервером');
+    showError('Нет соединения с сервером. Проверьте интернет и попробуйте снова.');
   } finally {
     setLoading(btn, false);
   }
@@ -659,6 +790,16 @@ document.addEventListener('keydown', e => {
 })();
 
 if (location.hash === '#register') switchTab('register');
+
+['authEmail', 'authPassword'].forEach((id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    el.classList.remove('input-error');
+    const err = document.getElementById('auth-error-login');
+    if (err && err.style.display !== 'none') err.style.display = 'none';
+  });
+});
 
 // Invite token flow
 let _pendingInviteToken = null;

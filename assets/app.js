@@ -1,4 +1,4 @@
-/* build: 2026-06-23-smooth-nav */
+/* build: 2026-06-29-page-loader */
 
 const SIDEBAR_SCROLL_KEY = 'tzSidebarScroll';
 
@@ -101,6 +101,7 @@ async function initSidebarProfileLink() {
 
 document.addEventListener('DOMContentLoaded', () => {
   applyStoredTheme();
+  initPageTransitionLoader();
   initSidebarRole();
   initSidebarExtra();
   initSidebarScrollPersist();
@@ -773,6 +774,58 @@ function initSidebarPrefetch() {
       document.head.appendChild(link);
     }, { once: true, passive: true });
   });
+}
+
+/* ---------------------------------------------------------------------
+   Загрузочный экран при переходах между страницами (MPA)
+   --------------------------------------------------------------------- */
+function ensurePageLoader() {
+  if (document.getElementById('tz-page-loader')) return;
+  const el = document.createElement('div');
+  el.id = 'tz-page-loader';
+  el.className = 'tz-page-loader';
+  el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = '<div class="tz-page-loader-card"><div class="tz-page-loader-spinner" aria-hidden="true"></div><div class="tz-page-loader-text">Загрузка…</div></div>';
+  document.body.appendChild(el);
+}
+
+function showPageLoader(message) {
+  ensurePageLoader();
+  const el = document.getElementById('tz-page-loader');
+  const text = el?.querySelector('.tz-page-loader-text');
+  if (text && message) text.textContent = message;
+  el?.classList.add('is-active');
+  document.documentElement.classList.add('tz-nav-loading');
+}
+
+function hidePageLoader() {
+  const el = document.getElementById('tz-page-loader');
+  el?.classList.remove('is-active');
+  document.documentElement.classList.remove('tz-nav-loading');
+}
+
+function shouldShowLoaderForLink(a) {
+  if (!a || a.target === '_blank' || a.hasAttribute('download')) return false;
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return false;
+  let url;
+  try { url = new URL(href, location.href); } catch { return false; }
+  if (url.origin !== location.origin) return false;
+  if (url.pathname === location.pathname && url.search === location.search && !url.hash) return false;
+  return true;
+}
+
+function initPageTransitionLoader() {
+  ensurePageLoader();
+  hidePageLoader();
+  window.addEventListener('pageshow', hidePageLoader);
+
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a[href]');
+    if (!shouldShowLoaderForLink(a)) return;
+    showPageLoader();
+  }, true);
 }
 
 /* ---------------------------------------------------------------------
