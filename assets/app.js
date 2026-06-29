@@ -1067,6 +1067,10 @@ async function spaNavigate(url) {
   document.title = doc.title || document.title;
   history.pushState({ spaUrl: url }, '', target.pathname + target.search);
 
+  // Re-init global header/sidebar elements that live inside spa-content
+  initSidebarRole();
+  initHeaderRight();
+
   document.querySelectorAll('.sidebar a, aside a').forEach(a => {
     a.classList.toggle('active', a.pathname === target.pathname);
   });
