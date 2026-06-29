@@ -220,6 +220,44 @@ window.hideSkeleton = function(container) {
     container.querySelectorAll('.skeleton-card').forEach(el => el.remove());
 };
 
+// ── Number counter animation ─────────────────────────────────────────────
+window.animateCounter = function(el, endVal, suffix, duration) {
+    suffix   = suffix   || '';
+    duration = duration || 700;
+
+    const raw = parseFloat(String(endVal).replace(/[^0-9.]/g, ''));
+    if (isNaN(raw) || raw === 0) return;
+
+    el.setAttribute('data-counting', '1');
+    const startTime = performance.now();
+
+    function step(now) {
+        const p = Math.min((now - startTime) / duration, 1);
+        // cubic ease-out
+        const ease = 1 - Math.pow(1 - p, 3);
+        const cur = Math.round(raw * ease);
+        el.textContent = cur + suffix;
+        if (p < 1) {
+            requestAnimationFrame(step);
+        } else {
+            el.textContent = endVal; // exact final value
+            el.removeAttribute('data-counting');
+        }
+    }
+    requestAnimationFrame(step);
+};
+
+// ── Proc-row stagger (called after render) ───────────────────────────────
+window.staggerProcRows = function(container) {
+    const rows = container ? container.querySelectorAll('.proc-row') : [];
+    rows.forEach((row, i) => {
+        row.classList.remove('proc-row-enter');
+        void row.offsetWidth; // force reflow to restart animation
+        row.style.animationDelay = (i * 0.04) + 's';
+        row.classList.add('proc-row-enter');
+    });
+};
+
 // ── Init all ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     initCustomSelects();

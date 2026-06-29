@@ -616,10 +616,11 @@
                 if (row) row.classList.remove('is-loading');
                 if (!r.ok) return;
                 const s = await r.json();
-                if (s.monthOrders != null) document.getElementById('anaMonth').textContent = s.monthOrders;
-                if (s.activeOrders != null) document.getElementById('anaActive').textContent = s.activeOrders;
-                if (s.avgDays != null) document.getElementById('anaDays').textContent = s.avgDays + ' дн.';
-                if (s.savings != null) document.getElementById('anaSavings').textContent = s.savings + '%';
+                const ac = typeof animateCounter === 'function' ? animateCounter : (el, v) => { el.textContent = v; };
+                if (s.monthOrders != null) ac(document.getElementById('anaMonth'), s.monthOrders, '', 600);
+                if (s.activeOrders != null) ac(document.getElementById('anaActive'), s.activeOrders, '', 600);
+                if (s.avgDays != null) ac(document.getElementById('anaDays'), s.avgDays, ' дн.', 500);
+                if (s.savings != null) ac(document.getElementById('anaSavings'), s.savings, '%', 700);
             } catch {
                 const row = document.getElementById('analyticsRow');
                 if (row) row.classList.remove('is-loading');
@@ -858,6 +859,7 @@
 
             window.showMoreOrders = () => { visibleCount += INITIAL; renderRows(); };
             renderRows();
+            if (typeof staggerProcRows === 'function') staggerProcRows(tableBody);
         }
 
         let _detailPanelOrderId = null;

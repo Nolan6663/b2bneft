@@ -99,9 +99,12 @@ a, button, input, select, textarea,
 .sidebar a, .proc-row, .kpi-card, .settings-tab-btn {
   transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.sidebar,
-.sidebar * {
-  transition: none !important;
+/* sidebar container static (view-transition snapshot), but allow child transitions */
+.sidebar { transition: none !important; }
+/* sidebar links get transform for slide-in hover */
+.sidebar a {
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease,
+              transform .18s cubic-bezier(.2,.8,.3,1) !important;
 }
 /* navProposals hidden by default; visible only for producers (set before first paint via head script) */
 #navProposals { display: none !important; }
@@ -405,7 +408,7 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   box-shadow: 0 4px 14px rgba(255,106,0,.2);
 }
 .btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,106,0,.3); }
-.btn-primary:active  { transform: translateY(0); }
+.btn-primary:active, .btn-respond:active, .btn-modal-submit:active  { transform: scale(.96) !important; box-shadow: none !important; transition-duration: .06s !important; }
 .btn-primary:disabled, .btn-respond:disabled { background: var(--inner-bg); color: var(--text-muted); box-shadow: none; cursor: not-allowed; transform: none; }
 
 .btn-secondary, .btn-chat-secondary, .btn-modal-cancel {
@@ -415,7 +418,8 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   font-size: 13px; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
-.btn-secondary:hover, .btn-modal-cancel:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.btn-secondary:hover, .btn-modal-cancel:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-1px); }
+.btn-secondary:active, .btn-modal-cancel:active, .btn-chat-secondary:active { transform: scale(.96) !important; transition-duration: .06s !important; }
 
 .btn-disabled {
   background: var(--inner-bg); color: var(--text-muted);
@@ -1711,6 +1715,87 @@ table {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* =====================================================================
+   MICRO-INTERACTIONS
+   ===================================================================== */
+
+/* ── Sidebar link hover slide ────────────────────────────────────────── */
+.sidebar a:not(.active):hover { transform: translateX(4px); }
+.sidebar a.active { transform: none; }
+
+/* ── KPI card lift on hover ──────────────────────────────────────────── */
+.kpi-card {
+  transition: transform .22s cubic-bezier(.2,.8,.3,1), box-shadow .22s ease, border-color .22s ease !important;
+  will-change: transform;
+}
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.12);
+  border-color: rgba(255,106,0,.25);
+}
+
+/* ── Bell / icon buttons micro-press ────────────────────────────────── */
+.bell-btn { transition: transform .1s ease, background .15s ease !important; }
+.bell-btn:active { transform: scale(.88) !important; transition-duration: .05s !important; }
+
+/* ── Proc-row btn micro-press ────────────────────────────────────────── */
+.proc-row-btn { transition: border-color .15s, color .15s, transform .1s ease !important; }
+.proc-row-btn:active { transform: scale(.84) !important; transition-duration: .05s !important; }
+
+/* ── Proc-list tab press ─────────────────────────────────────────────── */
+.proc-list-tab:active { transform: scale(.96) !important; transition-duration: .06s !important; }
+
+/* ── Empty-state / onboarding CTA press ─────────────────────────────── */
+.empty-state-cta:active, .ob-cta:active, .ob-step:active { transform: scale(.97) !important; transition-duration: .06s !important; }
+
+/* ── Settings tab press ──────────────────────────────────────────────── */
+.settings-tab-btn:active { transform: scale(.97) !important; }
+
+/* ── Status dot pulse (open = active) ───────────────────────────────── */
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,.45); }
+  60%       { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
+.status-dot.open::before { animation: dotPulse 2.4s ease-in-out infinite; }
+
+/* ── Proc-row stagger fade on render ────────────────────────────────── */
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.proc-row-enter {
+  animation: rowIn .26s cubic-bezier(.2,.8,.3,1) both;
+}
+
+/* ── Input focus glow (upgrade existing) ────────────────────────────── */
+.form-group input:focus, .form-group textarea:focus, .search-input:focus,
+.orders-search:focus, .cmp-input:focus {
+  box-shadow: 0 0 0 3px rgba(255,106,0,.15), 0 1px 3px rgba(0,0,0,.06) !important;
+  border-color: var(--accent-cyan) !important;
+  outline: none;
+  transition: box-shadow .18s ease, border-color .18s ease !important;
+}
+
+/* ── ct-card hover lift ──────────────────────────────────────────────── */
+.ct-card {
+  transition: transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, border-color .2s ease !important;
+}
+.ct-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+}
+
+/* ── Section card subtle lift ───────────────────────────────────────── */
+.section:not(.proc-list-panel):not(.proc-detail-panel) {
+  transition: box-shadow .2s ease !important;
+}
+
+/* ── Sidebar collapse btn press ─────────────────────────────────────── */
+.sidebar-collapse-btn:active { transform: scale(.88) !important; }
+
+/* ── Number counter: prevent layout jump during animation ───────────── */
+.kpi-value[data-counting] { font-variant-numeric: tabular-nums; }
 
 /* ── Modal pop-in ──────────────────────────────────────────────────── */
 @keyframes modalPopIn {
