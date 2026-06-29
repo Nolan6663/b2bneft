@@ -11,7 +11,7 @@
     
     
     <link rel="stylesheet" href="assets/theme-v2.css?v=8">
-    <link rel="stylesheet" href="assets/settings-page.css?v=4">
+    <link rel="stylesheet" href="assets/settings-page.css?v=5">
 </head>
 <body>
 
@@ -465,18 +465,30 @@
                         <div><div class="settings-card-title">Дайджест новых заявок</div><div class="settings-card-subtitle">Получайте подборку активных закупок на почту</div></div>
                     </div>
                     <div class="settings-card-body">
-                        <div style="display:flex;flex-direction:column;gap:10px;">
-                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                                <input type="radio" name="digestFreq" value="daily" style="accent-color:#FF6A00;" onchange="saveDigestFrequency('daily')">
-                                <span style="font-size:13.5px;color:var(--text-primary);">Ежедневно (в 9:00)</span>
+                        <div class="digest-freq-list" role="radiogroup" aria-label="Частота дайджеста">
+                            <label class="digest-freq-option">
+                                <input type="radio" name="digestFreq" value="daily" class="digest-freq-input" onchange="saveDigestFrequency('daily')">
+                                <span class="digest-freq-mark" aria-hidden="true"></span>
+                                <span class="digest-freq-text">
+                                    <span class="digest-freq-title">Ежедневно</span>
+                                    <span class="digest-freq-desc">Подборка в 9:00 по Москве</span>
+                                </span>
                             </label>
-                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                                <input type="radio" name="digestFreq" value="weekly" style="accent-color:#FF6A00;" onchange="saveDigestFrequency('weekly')">
-                                <span style="font-size:13.5px;color:var(--text-primary);">Еженедельно (по понедельникам)</span>
+                            <label class="digest-freq-option">
+                                <input type="radio" name="digestFreq" value="weekly" class="digest-freq-input" onchange="saveDigestFrequency('weekly')">
+                                <span class="digest-freq-mark" aria-hidden="true"></span>
+                                <span class="digest-freq-text">
+                                    <span class="digest-freq-title">Еженедельно</span>
+                                    <span class="digest-freq-desc">Каждый понедельник утром</span>
+                                </span>
                             </label>
-                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                                <input type="radio" name="digestFreq" value="never" style="accent-color:#FF6A00;" onchange="saveDigestFrequency('never')">
-                                <span style="font-size:13.5px;color:var(--text-primary);">Не получать</span>
+                            <label class="digest-freq-option">
+                                <input type="radio" name="digestFreq" value="never" class="digest-freq-input" onchange="saveDigestFrequency('never')">
+                                <span class="digest-freq-mark" aria-hidden="true"></span>
+                                <span class="digest-freq-text">
+                                    <span class="digest-freq-title">Не получать</span>
+                                    <span class="digest-freq-desc">Отключить email-дайджест</span>
+                                </span>
                             </label>
                         </div>
                         <div id="digestSaveStatus" style="font-size:12px;color:var(--accent-green);margin-top:10px;display:none;">Сохранено</div>
