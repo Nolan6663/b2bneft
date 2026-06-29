@@ -40,6 +40,19 @@
             border-radius: 8px; background: var(--inner-bg); color: var(--text-primary);
             font-size: 12.5px; font-family: inherit; cursor: pointer;
             appearance: none; -webkit-appearance: none;
+            min-width: 10.5rem;
+            max-width: 100%;
+        }
+        #filterCategory { min-width: 13.25rem; }
+        #filterRegion { min-width: 10.75rem; }
+        #filterSupplierType { min-width: 11.5rem; }
+        .an-select-wrap--category { min-width: 13.25rem; }
+        .an-select-wrap--region { min-width: 10.75rem; }
+        .an-select-wrap--stype { min-width: 11.5rem; }
+        .an-select-wrap--category .an-filter-select,
+        .an-select-wrap--region .an-filter-select,
+        .an-select-wrap--stype .an-filter-select {
+            width: 100%;
         }
         .an-filter-reset {
             display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
@@ -258,10 +271,7 @@
         <!-- Header -->
         <div class="header">
             <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <h2>Аналитика</h2>
-                <button id="starBtn" onclick="toggleStar()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;padding:0;" title="В избранное">☆</button>
-            </div>
+            <h2>Аналитика</h2>
             <div class="header-right">
                 <button class="bell-btn" onclick="openNotificationsModal()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="bell-badge" id="bellBadge" style="display:none;"></span></button>
                 <div class="user-menu" id="userMenu" onclick="toggleUserMenu(event)"><div class="user-avatar-pill" id="headerInitials">ТЗ</div><div class="user-info-block"><div class="user-company-name" id="headerCompany">Загрузка…</div><div class="user-role-name" id="headerRole"></div></div><svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="user-dropdown" id="userDropdown"><a href="settings.html" class="user-dropdown-item">Настройки</a><a href="company-profile.html" class="user-dropdown-item">Профиль компании</a><div class="user-dropdown-sep"></div><button class="user-dropdown-item danger" onclick="logout()">Выйти из аккаунта</button></div></div>
@@ -277,7 +287,7 @@
             </button>
             <div class="an-filter-sep"></div>
             <span class="an-filter-label">Категория</span>
-            <div class="an-select-wrap">
+            <div class="an-select-wrap an-select-wrap--category">
                 <select class="an-filter-select" id="filterCategory" onchange="applyFilters()">
                     <option value="">Все категории</option>
                     <option>Трубопроводная арматура</option>
@@ -288,7 +298,7 @@
                 </select>
             </div>
             <span class="an-filter-label">Регион</span>
-            <div class="an-select-wrap">
+            <div class="an-select-wrap an-select-wrap--region">
                 <select class="an-filter-select" id="filterRegion" onchange="applyFilters()">
                     <option value="">Все регионы</option>
                     <option>Западная Сибирь</option>
@@ -299,7 +309,7 @@
                 </select>
             </div>
             <span class="an-filter-label">Тип поставщика</span>
-            <div class="an-select-wrap">
+            <div class="an-select-wrap an-select-wrap--stype">
                 <select class="an-filter-select" id="filterSupplierType" onchange="applyFilters()">
                     <option value="">Все типы</option>
                     <option>Производитель</option>
@@ -728,7 +738,6 @@
         /* ══ STATE ══ */
         let dynPeriod = 'month';
         let chartDynamics = null, chartCategories = null, chartCycle = null, chartDynamicsFull = null;
-        let starred = false;
         let selectedPeriodPreset = null;
         let ratSortKey = 'score';
         let heatSortMode = 'count';
@@ -1105,14 +1114,6 @@
             const fmt = document.querySelector('input[name="reportFormat"]:checked').value.toUpperCase();
             closeReportBuilderModal();
             showToast(`Отчёт «${name}» поставлен в очередь — ${fmt}`);
-        }
-
-        /* ══ STAR ══ */
-        function toggleStar() {
-            starred = !starred;
-            document.getElementById('starBtn').textContent = starred ? '★' : '☆';
-            document.getElementById('starBtn').style.color = starred ? '#F59E0B' : '';
-            showToast(starred ? 'Страница добавлена в избранное' : 'Удалено из избранного');
         }
 
         /* ══ RENDER FUNCTIONS ══ */
