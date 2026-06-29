@@ -833,7 +833,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=8"></script>
+    <script src="assets/app.js?v=9"></script>
     <script src="assets/ui-animations.js?v=3"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -1509,6 +1509,13 @@
             }
             btn.disabled = true;
             try {
+                const vapidRes = await apiFetch(`${SERVER_URL}/push/vapid-key`);
+                if (!vapidRes.ok) {
+                    btn.textContent = 'Push временно недоступен';
+                    status.textContent = 'Сервис уведомлений не настроен на сервере';
+                    btn.disabled = true;
+                    return;
+                }
                 const sub = await Promise.race([
                     getPushSubscription(),
                     new Promise((resolve) => setTimeout(() => resolve(null), 6000)),
@@ -1524,7 +1531,7 @@
                 btn.textContent = 'Включить Push-уведомления';
                 status.textContent = '';
             } finally {
-                btn.disabled = false;
+                if (btn.textContent !== 'Push временно недоступен') btn.disabled = false;
             }
         }
 

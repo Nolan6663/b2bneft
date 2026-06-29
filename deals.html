@@ -168,6 +168,11 @@
                 </div>
                 <div id="ddpKPList"></div>
 
+                <div id="ddpTimelineWrap" style="display:none;">
+                    <div class="ddp-section-title">История сделки</div>
+                    <div id="ddpTimeline"></div>
+                </div>
+
                 <div id="ddpAnalytics" class="ddp-analytics" style="display:none;">
                     <div class="ddp-analytics-title">Аналитика по заказу</div>
                     <div class="ddp-mini-bars" id="ddpBars"></div>
@@ -266,7 +271,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=6"></script>
+    <script src="assets/app.js?v=10"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -523,7 +528,26 @@
                 }
             }
 
+            loadDealTimeline(d.proposalId || d.id);
             renderTable();
+        }
+
+        async function loadDealTimeline(proposalId) {
+            const wrap = document.getElementById('ddpTimelineWrap');
+            const el = document.getElementById('ddpTimeline');
+            if (!wrap || !el || !proposalId) return;
+            wrap.style.display = '';
+            el.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Загрузка…</div>';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/deals/${proposalId}/timeline`);
+                if (!r.ok) throw new Error();
+                const { events } = await r.json();
+                el.innerHTML = typeof renderDealTimeline === 'function'
+                    ? renderDealTimeline(events)
+                    : '<div style="font-size:12px;color:var(--text-secondary);">Нет событий</div>';
+            } catch {
+                el.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Не удалось загрузить историю</div>';
+            }
         }
 
         // ── Compare KP modal ────────────────────────────────────────────────

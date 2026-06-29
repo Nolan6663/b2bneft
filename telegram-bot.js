@@ -21,6 +21,7 @@ async function getUserByTgId(telegramId) {
 
 // Хранилище FSM-состояния для ответа в чат (in-memory, достаточно для polling)
 const chatReplyState = new Map(); // tgId → { orderId, company }
+const bidState = new Map(); // tgId → { orderId, step, price? }
 
 function startTelegramBot() {
     if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -107,12 +108,54 @@ function startTelegramBot() {
                 const text = rows.map((o, i) =>
                     `${i + 1}. <b>${escHtml(o.title)}</b>\n   ${escHtml(o.category)} | Дедлайн: ${o.deadline || '—'}`
                 ).join('\n\n');
-                await ctx.reply(`📋 <b>Активные закупки:</b>\n\n${text}`, { parse_mode: 'HTML' });
+                await ctx.reply(`📋 <b>Активные закупки:</b>\n\n${text}`, {
+                    parse_mode: 'HTML',
+                    ...Markup.inlineKeyboard(
+                        rows.map(o => [Markup.button.callback(`📨 ${o.title.slice(0, 28)}`, `bid:${o.id}`)])
+                    ),
+                });
             }
         } catch (e) {
             console.error('[tg:orders]', e.message);
             ctx.reply('Произошла ошибка. Попробуйте позже.');
         }
+    });
+
+    // Inline callback — карточка закупки (заказчик)
+    bot.action(/^order:(\d+)$/, async (ctx) => {
+        const orderId = parseInt(ctx.match[1]);
+        try {
+            const { rows: [o] } = await pool.query(
+                `SELECT id, title, category, deadline, quantity, description FROM orders WHERE id=$1 AND status='Активный'`,
+                [orderId]
+            );
+            if (!o) return ctx.answerCbQuery('Закупка не найдена');
+            await ctx.editMessageText(
+                `<b>${escHtml(o.title)}</b>\n` +
+                `Категория: ${escHtml(o.category)}\n` +
+                `Дедлайн: ${o.deadline || '—'}\n` +
+                `Кол-во: ${o.quantity || '—'}`,
+                {
+                    parse_mode: 'HTML',
+                    ...Markup.inlineKeyboard([[
+                        Markup.button.callback('📨 Подать КП', `bid:${orderId}`),
+                    ]]),
+                }
+            );
+            await ctx.answerCbQuery();
+        } catch (e) {
+            console.error('[tg:order]', e.message);
+            ctx.answerCbQuery('Ошибка');
+        }
+    });
+
+    // Подать КП — FSM для поставщика
+    bot.action(/^bid:(\d+)$/, async (ctx) => {
+        if (ctx.tgUser.role !== 'producer') return ctx.answerCbQuery('Только для поставщиков');
+        const orderId = parseInt(ctx.match[1]);
+        bidState.set(ctx.from.id, { orderId, step: 'price' });
+        await ctx.reply('Введите цену КП (число в рублях):');
+        await ctx.answerCbQuery();
     });
 
     // ── 📨 КП ────────────────────────────────────────────────────────────────
@@ -293,8 +336,47 @@ function startTelegramBot() {
         await ctx.answerCbQuery();
     });
 
-    // Обработать текстовое сообщение как ответ в чат (FSM)
+    // Текстовые сообщения: КП из Telegram, ответ в чат
     bot.on('text', async (ctx, next) => {
+        const bid = bidState.get(ctx.from.id);
+        if (bid && ctx.tgUser?.role === 'producer') {
+            const text = ctx.message.text.trim();
+            if (bid.step === 'price') {
+                const price = parseFloat(text.replace(/\s/g, '').replace(',', '.'));
+                if (!Number.isFinite(price) || price <= 0) {
+                    return ctx.reply('Введите корректную цену числом.');
+                }
+                bid.price = price;
+                bid.step = 'days';
+                bidState.set(ctx.from.id, bid);
+                return ctx.reply('Укажите срок поставки в днях:');
+            }
+            if (bid.step === 'days') {
+                const days = parseInt(text, 10);
+                if (!Number.isFinite(days) || days <= 0) {
+                    return ctx.reply('Введите корректный срок (целое число дней).');
+                }
+                bidState.delete(ctx.from.id);
+                try {
+                    const { rows: [o] } = await pool.query('SELECT title FROM orders WHERE id=$1', [bid.orderId]);
+                    await pool.query(
+                        `INSERT INTO proposals (order_id, order_title, price, days, company, status)
+                         VALUES ($1,$2,$3,$4,$5,'Ожидает ответа')`,
+                        [bid.orderId, o?.title || '', bid.price, days, ctx.tgUser.company]
+                    );
+                    await pool.query(
+                        'UPDATE orders SET responses = responses + 1 WHERE id = $1',
+                        [bid.orderId]
+                    );
+                    await ctx.reply(`✅ КП отправлено!\n\nЦена: ${bid.price} ₽\nСрок: ${days} дн.`, MAIN_MENU);
+                } catch (e) {
+                    console.error('[tg:bid]', e.message);
+                    await ctx.reply('Не удалось отправить КП. Возможно, вы уже откликались.', MAIN_MENU);
+                }
+                return;
+            }
+        }
+
         const state = chatReplyState.get(ctx.from.id);
         if (!state) return next();
 

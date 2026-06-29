@@ -329,9 +329,12 @@ if (io) {
         socket.on('join-company', (company) => {
             if (company && company === socket.user.company) socket.join(company);
         });
-        // TODO: проверить доступ к аукциону когда auctions будут реализованы
-        socket.on('join-auction', () => {});
-        socket.on('leave-auction', () => {});
+        socket.on('join-auction', (auctionId) => {
+            if (auctionId != null) socket.join(`auction:${auctionId}`);
+        });
+        socket.on('leave-auction', (auctionId) => {
+            if (auctionId != null) socket.leave(`auction:${auctionId}`);
+        });
         socket.on('join-chat', async ({ orderId, company }, ack) => {
             try {
                 if (orderId == null || !company) return;
@@ -575,6 +578,7 @@ app.get('/robots.txt', (req, res) => {
         'Allow: /zakupki\n' +
         'Allow: /map\n' +
         'Allow: /dlya-postavshchikov\n' +
+        'Allow: /p/\n' +
         'Disallow: /api/\n' +
         'Disallow: /admin\n' +
         'Disallow: /analytics\n' +
@@ -594,24 +598,59 @@ app.get('/robots.txt', (req, res) => {
     );
 });
 
-app.get('/sitemap.xml', (req, res) => {
-    const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
-    const today = new Date().toISOString().slice(0, 10);
-    const pages = [
-        { url: '/',                    priority: '1.0', changefreq: 'weekly' },
-        { url: '/zakupki',             priority: '0.9', changefreq: 'hourly' },
-        { url: '/zakupki/metall',      priority: '0.8', changefreq: 'daily'  },
-        { url: '/zakupki/armatura',    priority: '0.8', changefreq: 'daily'  },
-        { url: '/zakupki/elektro',     priority: '0.8', changefreq: 'daily'  },
-        { url: '/zakupki/rti',         priority: '0.8', changefreq: 'daily'  },
-        { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
-        { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
-    ];
-    const urls = pages.map(p =>
-        `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
-    ).join('\n');
-    res.type('application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+app.get('/sitemap.xml', async (req, res, next) => {
+    try {
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        const today = new Date().toISOString().slice(0, 10);
+        const pages = [
+            { url: '/',                    priority: '1.0', changefreq: 'weekly' },
+            { url: '/zakupki',             priority: '0.9', changefreq: 'hourly' },
+            { url: '/zakupki/metall',      priority: '0.8', changefreq: 'daily'  },
+            { url: '/zakupki/armatura',    priority: '0.8', changefreq: 'daily'  },
+            { url: '/zakupki/elektro',     priority: '0.8', changefreq: 'daily'  },
+            { url: '/zakupki/rti',         priority: '0.8', changefreq: 'daily'  },
+            { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
+            { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
+        ];
+        const { rows: suppliers } = await pool.query(
+            "SELECT id FROM companies WHERE role = 'producer' AND verified_by_platform = true ORDER BY id ASC LIMIT 200"
+        );
+        for (const s of suppliers) {
+            pages.push({ url: `/p/${s.id}`, priority: '0.6', changefreq: 'weekly' });
+        }
+        const urls = pages.map(p =>
+            `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
+        ).join('\n');
+        res.type('application/xml');
+        res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+    } catch (e) { next(e); }
+});
+
+app.get('/p/:id', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { rows: [row] } = await pool.query(
+            "SELECT company, specialization, city, about, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
+            [id]
+        );
+        if (!row) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+        const filePath = path.join(__dirname, 'supplier-public.html');
+        let html = fs.readFileSync(filePath, 'utf8');
+        const title = `${row.company} — поставщик | ТехЗаказ`;
+        const desc = [row.specialization, row.city, row.about].filter(Boolean).join(' · ').slice(0, 160)
+            || `Профиль поставщика ${row.company} на B2B-платформе ТехЗаказ`;
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        html = html
+            .replace(/<!--META_TITLE-->/g, htmlEscape(title))
+            .replace(/<!--META_DESC-->/g, htmlEscape(desc))
+            .replace(/<!--CANONICAL_URL-->/g, `${base}/p/${id}`)
+            .replace(/<!--COMPANY_ID-->/g, String(id));
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.type('html').send(html);
+    } catch (e) { next(e); }
 });
 
 app.get('/api/health', async (req, res) => {
@@ -1454,6 +1493,19 @@ app.get('/api/orders/:orderId/price-benchmark', requireAuth, async (req, res, ne
             benchmark.currentMax = Math.max(...currentPrices);
         }
 
+        res.json(benchmark);
+    } catch (e) { next(e); }
+});
+
+app.get('/api/orders/:orderId/producer-benchmark', requireAuth, requireRole('producer'), async (req, res, next) => {
+    try {
+        const orderId = Number(req.params.orderId);
+        const orderRow = await getOrderAccessRow(orderId);
+        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
+        if (orderRow.status !== 'Активный') {
+            return res.status(400).json({ error: 'Бенчмарк доступен только для активных закупок' });
+        }
+        const benchmark = await computePriceBenchmark(orderRow.category, orderId);
         res.json(benchmark);
     } catch (e) { next(e); }
 });
@@ -2448,6 +2500,49 @@ app.get('/api/reviews/company/:name', async (req, res, next) => {
         );
         const avg = rows.length ? Math.round(rows.reduce((s, r) => s + r.score, 0) / rows.length * 10) / 10 : null;
         res.json({ reviews: rows, avg, count: rows.length });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/public/companies/:id', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { rows: [row] } = await pool.query(
+            "SELECT * FROM companies WHERE id = $1 AND role = 'producer'",
+            [id]
+        );
+        if (!row) return res.status(404).json({ error: 'Поставщик не найден' });
+        const c = await enrichCompany(rowToCompany(row), null);
+        const { rows: reviews } = await pool.query(
+            `SELECT from_company, score, text, created_at FROM reviews
+             WHERE to_company = $1 ORDER BY created_at DESC LIMIT 12`,
+            [c.company]
+        );
+        const avg = reviews.length
+            ? Math.round(reviews.reduce((s, r) => s + r.score, 0) / reviews.length * 10) / 10
+            : null;
+        res.json({
+            id: c.id,
+            company: c.company,
+            inn: c.inn || '',
+            specialization: c.specialization || '',
+            city: c.city || '',
+            about: c.about || '',
+            equipment: c.equipment || [],
+            isoCertificates: c.iso_certificates || [],
+            qualityCertificates: c.quality_certificates || [],
+            capabilities: c.capabilities || [],
+            productionLoad: c.production_load,
+            verified: Boolean(c.verified_by_platform),
+            status: c.status,
+            rating: c.rating,
+            ratingLabel: c.ratingLabel,
+            stats: c.stats,
+            photos: c.photos || [],
+            reviews,
+            reviewAvg: avg,
+            reviewCount: reviews.length,
+            publicUrl: `/p/${c.id}`,
+        });
     } catch (e) { next(e); }
 });
 
@@ -3894,6 +3989,80 @@ app.put('/api/deals/:proposalId/complete', requireAuth, requireRole('customer'),
         await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
         await addNotification(row.company, `Заказчик подтвердил выполнение заказа «${plainTitle(row.order_title)}».`);
         res.json({ message: 'Сделка завершена' });
+    } catch (e) { next(e); }
+});
+
+app.get('/api/deals/:proposalId/timeline', requireAuth, async (req, res, next) => {
+    try {
+        const proposalId = Number(req.params.proposalId);
+        const { rows: [deal] } = await pool.query(`
+            SELECT p.id, p.order_id, p.company AS producer_company, p.price, p.days, p.created_at AS proposal_created_at,
+                   p.completion_status, p.delivery_stage,
+                   o.title AS order_title, o.category, o.company AS customer_company, o.created_at AS order_created_at
+            FROM proposals p
+            JOIN orders o ON o.id = p.order_id
+            WHERE p.id = $1 AND p.status = 'Выигран'
+        `, [proposalId]);
+        if (!deal) return res.status(404).json({ error: 'Сделка не найдена' });
+        if (req.user.role === 'customer' && deal.customer_company !== req.user.company) {
+            return res.status(403).json({ error: 'Нет доступа' });
+        }
+        if (req.user.role === 'producer' && deal.producer_company !== req.user.company) {
+            return res.status(403).json({ error: 'Нет доступа' });
+        }
+
+        const events = [];
+        const push = (type, title, detail, at) => {
+            if (!at) return;
+            events.push({ type, title, detail: detail || '', at });
+        };
+
+        push('order', 'Закупка опубликована', deal.order_title, deal.order_created_at);
+        push('proposal', 'КП подано поставщиком', `${Number(deal.price).toLocaleString('ru-RU')} ₽ · ${deal.days} дн.`, deal.proposal_created_at);
+
+        const { rows: allProps } = await pool.query(
+            `SELECT company, price, created_at FROM proposals WHERE order_id = $1 ORDER BY created_at ASC`,
+            [deal.order_id]
+        );
+        for (const p of allProps) {
+            if (p.company === deal.producer_company) continue;
+            push('proposal_other', 'КП от другого поставщика', `${p.company} · ${Number(p.price).toLocaleString('ru-RU')} ₽`, p.created_at);
+        }
+
+        const { rows: deliveryRows } = await pool.query(
+            'SELECT stage, notes, updated_by, created_at FROM delivery_events WHERE proposal_id = $1 ORDER BY created_at ASC',
+            [proposalId]
+        );
+        for (const ev of deliveryRows) {
+            push('delivery', ev.stage, ev.notes || '', ev.created_at);
+        }
+
+        const { rows: [{ n: msgCount }] } = await pool.query(
+            `SELECT COUNT(*)::int AS n FROM messages WHERE order_id = $1 AND company = $2`,
+            [deal.order_id, deal.producer_company]
+        );
+        if (msgCount > 0) {
+            const { rows: [{ last_at }] } = await pool.query(
+                `SELECT MAX(created_at) AS last_at FROM messages WHERE order_id = $1 AND company = $2`,
+                [deal.order_id, deal.producer_company]
+            );
+            push('chat', 'Переписка по сделке', `${msgCount} сообщ.`, last_at);
+        }
+
+        if (deal.completion_status === 'completed') {
+            push('complete', 'Сделка завершена', 'Заказчик подтвердил выполнение', deliveryRows.at(-1)?.created_at || deal.proposal_created_at);
+        }
+
+        const { rows: reviewRows } = await pool.query(
+            'SELECT score, text, from_company, created_at FROM reviews WHERE order_id = $1 ORDER BY created_at ASC',
+            [deal.order_id]
+        );
+        for (const rv of reviewRows) {
+            push('review', `Отзыв: ${'★'.repeat(rv.score)}`, `${rv.from_company}${rv.text ? ' — ' + rv.text.slice(0, 80) : ''}`, rv.created_at);
+        }
+
+        events.sort((a, b) => new Date(a.at) - new Date(b.at));
+        res.json({ events, currentStage: deal.delivery_stage || 'КП принят', completionStatus: deal.completion_status || 'active' });
     } catch (e) { next(e); }
 });
 

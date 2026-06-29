@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");</script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><!--META_TITLE--></title>
+    <meta name="description" content="<!--META_DESC-->">
+    <link rel="canonical" href="<!--CANONICAL_URL-->">
+    <meta property="og:title" content="<!--META_TITLE-->">
+    <meta property="og:description" content="<!--META_DESC-->">
+    <meta property="og:url" content="<!--CANONICAL_URL-->">
+    <meta property="og:type" content="profile">
+    <meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
+    <style>
+        body { display:block; min-height:100vh; overflow:auto; background:var(--bg-primary); }
+        .sp-topbar {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:14px 24px; border-bottom:1px solid var(--card-border);
+            background:var(--card-bg); position:sticky; top:0; z-index:10;
+        }
+        .sp-logo { font-size:15px; font-weight:800; color:var(--text-primary); text-decoration:none; }
+        .sp-logo b { color:var(--accent-bright); }
+        .sp-wrap { max-width:920px; margin:0 auto; padding:28px 20px 60px; }
+        .sp-hero {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:20px; padding:28px 28px 24px; margin-bottom:20px;
+        }
+        .sp-hero h1 { font-size:26px; font-weight:900; margin:0 0 8px; color:var(--text-primary-alt); }
+        .sp-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+        .sp-badge {
+            display:inline-flex; align-items:center; gap:5px; padding:4px 10px;
+            border-radius:20px; font-size:12px; font-weight:600;
+            background:var(--inner-bg); border:1px solid var(--inner-border); color:var(--text-secondary);
+        }
+        .sp-badge.verified { color:var(--accent-green); border-color:rgba(5,150,105,.25); background:rgba(5,150,105,.08); }
+        .sp-about { font-size:14px; line-height:1.6; color:var(--text-secondary); }
+        .sp-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        @media (max-width:720px) { .sp-grid { grid-template-columns:1fr; } }
+        .sp-card {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:16px; padding:20px;
+        }
+        .sp-card h2 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin:0 0 12px; }
+        .sp-kpi-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .sp-kpi { flex:1; min-width:100px; padding:12px; background:var(--inner-bg); border-radius:12px; border:1px solid var(--inner-border); }
+        .sp-kpi-val { font-size:22px; font-weight:900; color:var(--accent-bright); }
+        .sp-kpi-label { font-size:11px; color:var(--text-secondary); margin-top:4px; }
+        .sp-list { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+        .sp-list li { font-size:13px; color:var(--text-primary); padding-left:14px; position:relative; }
+        .sp-list li::before { content:'•'; position:absolute; left:0; color:var(--accent-bright); }
+        .sp-review { padding:12px 0; border-bottom:1px solid var(--inner-border); }
+        .sp-review:last-child { border-bottom:none; }
+        .sp-review-stars { color:#FF6A00; font-size:13px; }
+        .sp-review-from { font-size:12px; font-weight:600; color:var(--text-primary); }
+        .sp-review-text { font-size:12.5px; color:var(--text-secondary); margin-top:4px; line-height:1.45; }
+        .sp-photos { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; }
+        .sp-photos img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px; border:1px solid var(--card-border); }
+        .sp-cta { margin-top:24px; display:flex; gap:10px; flex-wrap:wrap; }
+    </style>
+</head>
+<body>
+    <header class="sp-topbar">
+        <a class="sp-logo" href="/">ТЕХ<b>ЗАКАЗ</b></a>
+        <a href="/login" class="btn-secondary" style="height:36px;padding:0 16px;font-size:13px;">Войти в кабинет</a>
+    </header>
+
+    <main class="sp-wrap">
+        <div id="spLoading" style="text-align:center;padding:60px 0;color:var(--text-secondary);">Загрузка профиля…</div>
+        <div id="spContent" style="display:none;"></div>
+    </main>
+
+    <script>
+        const COMPANY_ID = <!--COMPANY_ID-->;
+        const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000/api' : '/api';
+
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        async function boot() {
+            try {
+                const r = await fetch(`${API}/public/companies/${COMPANY_ID}`);
+                if (!r.ok) throw new Error();
+                const c = await r.json();
+                document.getElementById('spLoading').style.display = 'none';
+                const el = document.getElementById('spContent');
+                el.style.display = '';
+                const stars = c.reviewAvg ? '★'.repeat(Math.round(c.reviewAvg)) : '';
+                const equipment = Array.isArray(c.equipment) ? c.equipment : [];
+                const iso = Array.isArray(c.isoCertificates) ? c.isoCertificates : [];
+                el.innerHTML = `
+                    <section class="sp-hero">
+                        <h1>${esc(c.company)}</h1>
+                        <div class="sp-meta">
+                            ${c.city ? `<span class="sp-badge">📍 ${esc(c.city)}</span>` : ''}
+                            ${c.specialization ? `<span class="sp-badge">${esc(c.specialization)}</span>` : ''}
+                            ${c.verified ? '<span class="sp-badge verified">✓ Проверен ТехЗаказ</span>' : ''}
+                            ${c.rating ? `<span class="sp-badge">Рейтинг ${esc(c.rating)}</span>` : ''}
+                            ${c.reviewAvg ? `<span class="sp-badge">${stars} ${c.reviewAvg} (${c.reviewCount})</span>` : ''}
+                        </div>
+                        ${c.about ? `<p class="sp-about">${esc(c.about)}</p>` : '<p class="sp-about">Поставщик на платформе прямых закупок ТехЗаказ.</p>'}
+                        <div class="sp-cta">
+                            <a href="/zakupki" class="btn-primary" style="height:40px;padding:0 20px;">Смотреть закупки</a>
+                            <a href="/dlya-postavshchikov" class="btn-secondary" style="height:40px;padding:0 20px;">Стать поставщиком</a>
+                        </div>
+                    </section>
+                    <div class="sp-grid">
+                        <div class="sp-card">
+                            <h2>Показатели</h2>
+                            <div class="sp-kpi-row">
+                                <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.completedOrders ?? '—'}</div><div class="sp-kpi-label">Выигранных сделок</div></div>
+                                <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.avgDeliveryDays != null ? c.stats.avgDeliveryDays + ' дн.' : '—'}</div><div class="sp-kpi-label">Средний срок</div></div>
+                                <div class="sp-kpi"><div class="sp-kpi-val">${c.productionLoad != null ? c.productionLoad + '%' : '—'}</div><div class="sp-kpi-label">Загрузка</div></div>
+                            </div>
+                        </div>
+                        <div class="sp-card">
+                            <h2>Оборудование и сертификаты</h2>
+                            ${equipment.length ? `<ul class="sp-list">${equipment.slice(0,8).map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : '<p style="font-size:13px;color:var(--text-secondary);margin:0;">Не указано</p>'}
+                            ${iso.length ? `<ul class="sp-list" style="margin-top:10px;">${iso.slice(0,5).map(e => `<li>ISO: ${esc(e)}</li>`).join('')}</ul>` : ''}
+                        </div>
+                    </div>
+                    ${c.photos?.length ? `<div class="sp-card" style="margin-top:16px;"><h2>Производство</h2><div class="sp-photos">${c.photos.slice(0,6).map(p => `<img src="${esc(p.url)}" alt="${esc(p.originalName || 'Фото')}">`).join('')}</div></div>` : ''}
+                    ${c.reviews?.length ? `<div class="sp-card" style="margin-top:16px;"><h2>Отзывы заказчиков</h2>${c.reviews.map(rv => `<div class="sp-review"><div class="sp-review-stars">${'★'.repeat(rv.score)}${'☆'.repeat(5-rv.score)}</div><div class="sp-review-from">${esc(rv.from_company)}</div>${rv.text ? `<div class="sp-review-text">${esc(rv.text)}</div>` : ''}</div>`).join('')}</div>` : ''}
+                `;
+            } catch {
+                document.getElementById('spLoading').textContent = 'Поставщик не найден';
+            }
+        }
+        boot();
+    </script>
+</body>
+</html>

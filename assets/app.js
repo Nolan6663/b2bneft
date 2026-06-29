@@ -1135,6 +1135,52 @@ function renderPriceBenchmark(b) {
     <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">Анонимная статистика по закрытым прямым закупкам на платформе</div>`;
 }
 
+function renderProducerPriceHint(price, benchmark) {
+  if (!benchmark?.enough || !price || price <= 0) return '';
+  const fmt = v => new Intl.NumberFormat('ru-RU').format(v);
+  const pct = Math.round((price - benchmark.median) / benchmark.median * 100);
+  if (pct <= -5) {
+    return `<div style="margin-top:8px;font-size:12px;color:var(--accent-green);">На ${Math.abs(pct)}% ниже медианы (${fmt(benchmark.median)} ₽) — конкурентное предложение</div>`;
+  }
+  if (pct <= 10) {
+    return `<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">Около медианы рынка (${fmt(benchmark.median)} ₽)</div>`;
+  }
+  return `<div style="margin-top:8px;font-size:12px;color:#e07070;">На ${pct}% выше медианы (${fmt(benchmark.median)} ₽) — может снизить шансы</div>`;
+}
+
+const DEAL_TIMELINE_ICONS = {
+  order: '📋',
+  proposal: '📨',
+  proposal_other: '↩️',
+  delivery: '🚚',
+  chat: '💬',
+  complete: '✅',
+  review: '⭐',
+};
+
+function renderDealTimeline(events) {
+  if (!events || !events.length) {
+    return '<div style="font-size:12px;color:var(--text-secondary);">Событий пока нет</div>';
+  }
+  const fmtDate = (iso) => {
+    try {
+      return new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch { return '—'; }
+  };
+  return `<div class="deal-timeline">${events.map((ev, i) => {
+    const isLast = i === events.length - 1;
+    const icon = DEAL_TIMELINE_ICONS[ev.type] || '•';
+    return `<div class="deal-tl-item${isLast ? ' is-last' : ''}">
+      <div class="deal-tl-dot">${icon}</div>
+      <div class="deal-tl-body">
+        <div class="deal-tl-title">${escapeHtml(ev.title)}</div>
+        ${ev.detail ? `<div class="deal-tl-detail">${escapeHtml(ev.detail)}</div>` : ''}
+        <div class="deal-tl-time">${fmtDate(ev.at)}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 (function applySidebarBadgesEarly() {
   if (!hasSession()) return;
   const cached = localStorage.getItem('_badgeCache');
@@ -1174,19 +1220,33 @@ async function getServiceWorkerRegistration() {
   return reg;
 }
 
+async function fetchVapidPublicKey() {
+  const r = await apiFetch(`${SERVER_URL}/push/vapid-key`);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.publicKey) {
+    throw new Error(data.error || 'Push-уведомления не настроены на сервере');
+  }
+  return data.publicKey;
+}
+
 async function subscribeToPush() {
   const reg = await getServiceWorkerRegistration();
   if (!reg?.pushManager) throw new Error('Service Worker недоступен');
-  const { publicKey } = await apiFetch(`${SERVER_URL}/push/vapid-key`).then(r => r.json());
+  const publicKey = await fetchVapidPublicKey();
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(publicKey),
   });
-  await apiFetch(`${SERVER_URL}/push/subscribe`, {
+  const saveRes = await apiFetch(`${SERVER_URL}/push/subscribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ subscription: sub.toJSON() }),
   });
+  if (!saveRes.ok) {
+    await sub.unsubscribe().catch(() => {});
+    const err = await saveRes.json().catch(() => ({}));
+    throw new Error(err.error || 'Не удалось сохранить подписку');
+  }
   return sub;
 }
 
@@ -1197,6 +1257,9 @@ async function unsubscribeFromPush() {
 }
 
 function urlBase64ToUint8Array(base64String) {
+  if (!base64String || typeof base64String !== 'string') {
+    throw new Error('Некорректный VAPID-ключ');
+  }
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const raw = atob(base64);
