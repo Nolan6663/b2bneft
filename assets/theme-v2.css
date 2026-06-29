@@ -898,7 +898,7 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 [data-sidebar-collapsed="1"] .sidebar a.active { border-left: none; padding-left: 10px; }
 [data-sidebar-collapsed="1"] .sidebar .nav-label,
 [data-sidebar-collapsed="1"] .sidebar .nav-badge,
-[data-sidebar-collapsed="1"] .sidebar .sidebar-nav-label { display: none; }
+[data-sidebar-collapsed="1"] .sidebar .sidebar-nav-label { display: none !important; }
 
 .kpi-card {
   padding: 18px 20px;
