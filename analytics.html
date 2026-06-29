@@ -769,8 +769,9 @@
         }
 
         function computeFilteredMock() {
+            const BASE = REAL || MOCK;
             const { scale, cat, reg, anyActive } = getFilterScale();
-            if (!anyActive) return MOCK;
+            if (!anyActive) return BASE;
 
             const scaledKpi = MOCK.kpi.map((k, i) => {
                 let num;
@@ -1330,77 +1331,87 @@
             renderHeatmap(data);
         });
 
-        /* ══ REAL API (mock-first) ══ */
-        /* SERVER_URL берётся из app.js */
+        /* ══ REAL API ══ */
+        let REAL = null; // populated on successful API load
 
         async function tryLoadReal() {
             const r = await apiFetch(`${SERVER_URL}/customer/analytics`);
             if (!r.ok) throw new Error('analytics api failed');
-            try {
-                const d = await r.json();
+            const d = await r.json();
 
-                // KPI patches
-                if (d.avgDays != null) {
-                    MOCK.kpi[2].value = d.avgDays + ' дн.';
-                    MOCK.kpi[2].label = 'Среднее время производства';
-                }
-                if (d.savings != null) {
-                    MOCK.kpi[1].value = d.savings + '%';
-                    MOCK.kpi[1].label = 'Экономия (% от среднего)';
-                }
+            const totalOrders  = Number(d.monthOrders)    || 0;
+            const proposals    = Number(d.totalProposals)  || 0;
+            const closed       = Number(d.closedOrders)    || 0;
+            const totalVolume  = (d.dynamics || []).reduce((s, r) => s + (r.volume || 0), 0);
+            const conversion   = totalOrders > 0 ? Math.round(closed / totalOrders * 100) : 0;
 
-                // Funnel — real order counts
-                const total    = Number(d.monthOrders)   || MOCK.funnel[0].count;
-                const proposals= Number(d.totalProposals) || MOCK.funnel[1].count;
-                const closed   = Number(d.closedOrders)  || MOCK.funnel[4].count;
-                MOCK.funnel[0].count = total;
-                MOCK.funnel[1].count = proposals;
-                MOCK.funnel[4].count = closed;
-                MOCK.funnel[2].count = Math.round(proposals * 0.62);
-                MOCK.funnel[3].count = Math.round(proposals * 0.35);
-                MOCK.funnel.forEach(f => { f.pct = total > 0 ? Math.round(f.count / total * 100) : 0; });
-                MOCK.funnel[0].pct = 100;
+            const CAT_COLORS = ['#FF6A00','#12A866','#F59E0B','#7C3AED','#94A3B8','#3B82F6'];
 
-                // Dynamics — real monthly data (last 6 months)
-                if (d.dynamics && d.dynamics.length) {
-                    MOCK.dynamics.month = {
-                        labels:  d.dynamics.map(r => r.label),
-                        volumes: d.dynamics.map(r => r.volume),
-                        economy: d.dynamics.map(r => Math.round(r.volume * 0.16 * 100) / 100),
-                    };
-                }
+            const dynMonthLabels  = (d.dynamics || []).map(r => r.label);
+            const dynMonthVolumes = (d.dynamics || []).map(r => r.volume || 0);
 
-                // Categories — real breakdown
-                if (d.categories && d.categories.length) {
-                    const colors = ['#FF6A00','#12A866','#F59E0B','#7C3AED','#94A3B8','#3B82F6'];
-                    MOCK.categories = {
-                        labels: d.categories.map(c => c.label),
-                        data:   d.categories.map(c => c.count),
-                        colors: d.categories.map((_, i) => colors[i % colors.length]),
-                    };
-                }
+            REAL = {
+                kpi: [
+                    {
+                        label: 'Объём закупок за период',
+                        value: totalVolume > 0 ? fmt2(totalVolume) + ' млн ₽' : '0 ₽',
+                        baseNum: totalVolume, delta: 0, unit: '', color: '#FF6A00', bg: '#FFF4EC',
+                        spark: dynMonthVolumes.length ? dynMonthVolumes : [0],
+                    },
+                    {
+                        label: d.savings != null ? 'Экономия (% от среднего)' : 'Экономия',
+                        value: d.savings != null ? d.savings + '%' : '—',
+                        baseNum: d.savings || 0, delta: 0, unit: '%', color: '#12A866', bg: '#F0FDF4',
+                        spark: dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100),
+                    },
+                    {
+                        label: 'Среднее время производства',
+                        value: d.avgDays != null ? d.avgDays + ' дн.' : '—',
+                        baseNum: d.avgDays || 0, delta: 0, unit: 'дн.', color: '#F59E0B', bg: '#FFF8E8',
+                        spark: [0],
+                    },
+                    {
+                        label: 'Конверсия в договоры',
+                        value: conversion + '%',
+                        baseNum: conversion, delta: 0, unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE',
+                        spark: [0],
+                    },
+                ],
+                dynamics: {
+                    month: dynMonthLabels.length
+                        ? { labels: dynMonthLabels, volumes: dynMonthVolumes, economy: dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100) }
+                        : { labels: [], volumes: [], economy: [] },
+                    quarter: { labels: [], volumes: [], economy: [] },
+                    year:    { labels: [], volumes: [], economy: [] },
+                },
+                funnel: [
+                    { label:'Опубликовано', count: totalOrders,                        pct: 100,                                                     color:'#1E3A5F' },
+                    { label:'Отклики',      count: proposals,                          pct: totalOrders > 0 ? Math.round(proposals / totalOrders * 100) : 0, color:'#F04B00' },
+                    { label:'Квалификация', count: Math.round(proposals * 0.62),       pct: totalOrders > 0 ? Math.round(proposals * 0.62 / totalOrders * 100) : 0, color:'#F59E0B' },
+                    { label:'Переговоры',   count: Math.round(proposals * 0.35),       pct: totalOrders > 0 ? Math.round(proposals * 0.35 / totalOrders * 100) : 0, color:'#10B981' },
+                    { label:'Договоры',     count: closed,                             pct: totalOrders > 0 ? Math.round(closed / totalOrders * 100) : 0, color:'#7C3AED' },
+                ],
+                categories: d.categories && d.categories.length
+                    ? { labels: d.categories.map(c => c.label), data: d.categories.map(c => c.count), colors: d.categories.map((_, i) => CAT_COLORS[i % CAT_COLORS.length]) }
+                    : { labels: [], data: [], colors: [] },
+                suppliers: d.suppliers && d.suppliers.length ? d.suppliers : [],
+                ratings: d.suppliers && d.suppliers.length
+                    ? d.suppliers.map(s => ({ name: s.name, rt: s.deals || 0, conv: s.deals > 0 ? Math.round(s.deals / (proposals || 1) * 100) : 0, score: s.avgScore || null }))
+                    : [],
+                regions: [],
+            };
 
-                // Suppliers — real top suppliers
-                if (d.suppliers && d.suppliers.length) {
-                    MOCK.suppliers = d.suppliers;
-                    MOCK.ratings   = d.suppliers.map(s => ({
-                        name:  s.name,
-                        rt:    s.deals || 0,
-                        conv:  s.deals > 0 ? Math.round(s.deals / (Number(d.totalProposals) || 1) * 100) : 0,
-                        score: s.avgScore || null,
-                    }));
-                }
+            // Sync REAL into MOCK so filters/export/dynamics switching all use real data
+            Object.assign(MOCK, REAL);
 
-                renderKPI(MOCK);
-                renderDynamics(MOCK);
-                renderFunnel(MOCK);
-                renderCategories(MOCK);
-                renderSuppliers(MOCK);
-                renderRatings(MOCK);
-                renderHeatmap(MOCK);
-                renderInsights(MOCK);
-
-            } catch (e) { throw e; }
+            renderKPI(REAL);
+            renderDynamics(REAL);
+            renderFunnel(REAL);
+            renderCategories(REAL);
+            renderSuppliers(REAL);
+            renderRatings(REAL);
+            renderHeatmap(REAL);
+            renderInsights(REAL);
         }
 
         /* ══ INIT ══ */
@@ -1409,12 +1420,15 @@
             document.querySelectorAll('.kpi-card-value').forEach(el => el.innerHTML = skl);
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        async function initAnalytics() {
             renderCycle();
             try {
                 await tryLoadReal();
-            } catch {
+            } catch(e) {
+                console.error('[analytics]', e);
+                // Mock only on localhost for development
                 if (shouldUseMockData()) {
+                    REAL = MOCK;
                     renderKPI(MOCK);
                     renderDynamics(MOCK);
                     renderFunnel(MOCK);
@@ -1423,27 +1437,14 @@
                     renderRatings(MOCK);
                     renderHeatmap(MOCK);
                     renderInsights(MOCK);
+                } else {
+                    document.querySelectorAll('.kpi-card-value').forEach(el => { el.textContent = '—'; });
                 }
             }
-        });
+        }
 
-        window.__pageInit = async function() {
-            renderCycle();
-            try {
-                await tryLoadReal();
-            } catch {
-                if (shouldUseMockData()) {
-                    renderKPI(MOCK);
-                    renderDynamics(MOCK);
-                    renderFunnel(MOCK);
-                    renderCategories(MOCK);
-                    renderSuppliers(MOCK);
-                    renderRatings(MOCK);
-                    renderHeatmap(MOCK);
-                    renderInsights(MOCK);
-                }
-            }
-        };
+        window.addEventListener('DOMContentLoaded', initAnalytics);
+        window.__pageInit = initAnalytics;
     </script>
 </body>
 </html>
