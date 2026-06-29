@@ -399,11 +399,11 @@
                         <button class="ct-card-fav ${c.isFavorite?'active':''}" onclick="event.stopPropagation();toggleFav(${c.id},this)">${c.isFavorite?'★':'☆'}</button>
                     </div>
                     ${verBadge}
-                    <div class="ct-card-rating">${starSVG(c.rating)} <span style="color:var(--text-primary);font-size:12px;">${c.rating}</span></div>
-                    <div class="ct-card-spec">${escapeHtml(c.specialization)}</div>
+                    ${c.rating != null ? `<div class="ct-card-rating">${starSVG(c.rating)} <span style="color:var(--text-primary);font-size:12px;">${c.rating}</span></div>` : ''}
+                    <div class="ct-card-spec">${escapeHtml(c.specialization || '')}</div>
                     <div class="ct-card-stats">
-                        <div class="ct-stat"><strong>${c.deals}</strong>сделок</div>
-                        <div class="ct-stat"><strong>${c.years}</strong>лет</div>
+                        ${c.deals != null ? `<div class="ct-stat"><strong>${c.deals}</strong>сделок</div>` : ''}
+                        ${c.years != null ? `<div class="ct-stat"><strong>${c.years}</strong>лет</div>` : ''}
                     </div>
                     <div class="ct-card-tags">${(c.tags||[]).map(t=>`<span class="ct-tag">${escapeHtml(t)}</span>`).join('')}</div>`;
                 div.onclick = () => openDetail(c, div);
@@ -438,9 +438,9 @@
                 <div class="ct-det-row"><span>Email</span><span>${escapeHtml(c.email||'—')}</span></div>`;
 
             document.getElementById('detStats').innerHTML = `
-                <div class="ct-det-row"><span>Рейтинг</span><span>${starSVG(c.rating)} ${c.rating}</span></div>
-                <div class="ct-det-row"><span>Сделок всего</span><span>${c.deals}</span></div>
-                <div class="ct-det-row"><span>Лет на рынке</span><span>${c.years}</span></div>
+                ${c.rating != null ? `<div class="ct-det-row"><span>Рейтинг</span><span>${starSVG(c.rating)} ${c.rating}</span></div>` : ''}
+                ${c.deals != null ? `<div class="ct-det-row"><span>Сделок всего</span><span>${c.deals}</span></div>` : ''}
+                ${c.years != null ? `<div class="ct-det-row"><span>Лет на рынке</span><span>${c.years}</span></div>` : ''}
                 <div class="ct-det-row"><span>Теги</span><span>${(c.tags||[]).map(t=>`<span class="ct-tag" style="margin-left:3px;">${escapeHtml(t)}</span>`).join('')}</span></div>`;
 
             const deals = RECENT_DEALS[c.id] || [];
