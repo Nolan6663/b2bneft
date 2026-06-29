@@ -175,7 +175,7 @@
                 <button onclick="closeProcPanel()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;padding:0 0 0 8px;flex:none;">✕</button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <span class="status-dot open" id="detPanelStatus"></span>
+                <span class="status-dot status-pill open" id="detPanelStatus"></span>
                 <span style="font-size:11.5px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;" id="detPanelNum"></span>
             </div>
 
@@ -830,7 +830,7 @@
                             <div class="proc-row-num">ЗК-${String(order.id).padStart(5,'0')}</div>
                         </div>
                         <div class="proc-row-cat">${escapeHtml(order.category)}</div>
-                        <div><span class="status-dot ${statusCls}">${escapeHtml(order.status)}</span></div>
+                        <div><span class="status-dot status-pill ${statusCls}">${escapeHtml(order.status)}</span></div>
                         <div class="proc-row-resp">${order.responses ?? 0}</div>
                         <div>
                             <div class="proc-row-deadline" style="color:${dColor};">${dFmt}</div>
@@ -886,7 +886,7 @@
             document.getElementById('detPanelTitle').textContent = order.title;
             const statusEl = document.getElementById('detPanelStatus');
             const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
-            statusEl.className = 'status-dot ' + statusCls;
+            statusEl.className = 'status-dot status-pill ' + statusCls;
             statusEl.textContent = order.status;
             document.getElementById('detPanelNum').textContent = '№' + String(order.id).padStart(6, '0');
 

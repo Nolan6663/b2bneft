@@ -2320,3 +2320,257 @@ table {
   color: var(--text-muted) !important;
   font-size: 11px !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN REVAMP (prompt.txt) — append-only overrides
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 1. Карточки — глубина и воздух */
+.card, .section {
+  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.06);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.card:hover, .section:hover {
+  box-shadow: 0 2px 4px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.1);
+  transform: translateY(-1px);
+}
+.kpi-card {
+  transition: box-shadow .2s ease, transform .18s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(15,23,42,.12);
+}
+
+/* 2. Таблицы — dense data */
+.orders-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.orders-table thead th {
+  background: var(--inner-bg);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--card-border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.orders-table tbody tr {
+  border-bottom: 1px solid var(--inner-border);
+  transition: background .1s;
+}
+.orders-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent-cyan) 4%, var(--card-bg));
+}
+.orders-table td:last-child,
+.orders-table td.col-price,
+.orders-table td.col-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  text-align: right;
+}
+.orders-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--text-primary) 1.2%, transparent);
+}
+
+/* 3. Статусы — dot + текст */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.status-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+.status-pill.active::before,
+.status-dot.open::before,
+.status-pill.open::before {
+  background: var(--accent-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-green) 15%, transparent);
+}
+.status-pill.active,
+.status-dot.open,
+.status-pill.open { color: var(--accent-green); }
+.status-pill.pending::before,
+.status-dot.muted::before { background: #facc15; }
+.status-pill.pending,
+.status-dot.muted { color: #ca8a04; }
+.status-pill.closed::before,
+.status-dot.closed::before { background: var(--text-muted); }
+.status-pill.closed,
+.status-dot.closed { color: var(--text-secondary); }
+.status-pill.draft::before { background: var(--accent-blue); }
+.status-pill.rejected::before { background: var(--error); }
+.status-pill.rejected { color: var(--error); }
+
+/* 4. Empty states — иконка в рамке */
+.empty-state {
+  gap: 12px;
+}
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--inner-bg);
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  opacity: 1;
+}
+
+/* 5. Кнопки — иерархия */
+.btn-secondary {
+  background: transparent !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+}
+.btn-secondary:hover {
+  border-color: var(--accent-cyan) !important;
+  color: var(--text-primary) !important;
+  background: var(--inner-bg) !important;
+}
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 7px;
+  transition: background .15s, color .15s;
+  font-family: inherit;
+}
+.btn-ghost:hover {
+  background: var(--inner-bg);
+  color: var(--text-primary);
+}
+
+/* 6. Инпуты */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+input[type="url"],
+textarea,
+select {
+  border-radius: 10px !important;
+  border: 1.5px solid var(--input-border) !important;
+  background: var(--input-bg) !important;
+  padding: 9px 13px !important;
+  font-size: 13.5px !important;
+  transition: border-color .15s, box-shadow .15s !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 10%, transparent) !important;
+  outline: none !important;
+}
+.form-label, label:not(.filter-check):not(.settings-tab-btn) {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  letter-spacing: .02em !important;
+}
+
+/* 7. Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--inner-bg) 25%,
+    var(--card-border) 50%,
+    var(--inner-bg) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease infinite;
+  color: transparent !important;
+  pointer-events: none;
+  user-select: none;
+}
+.skeleton * { visibility: hidden; }
+
+/* 8. Профиль компании — hero */
+.cp-hero {
+  background: linear-gradient(135deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 70%, var(--text-primary) 30%) 100%);
+  border-radius: var(--radius-card);
+  padding: 32px 28px;
+  color: var(--text-primary);
+  margin-bottom: 0;
+  position: relative;
+  overflow: hidden;
+}
+.cp-hero::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-bright) 12%, transparent);
+  pointer-events: none;
+}
+.cp-hero .profile-name-row h2,
+.cp-hero-name {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  margin-bottom: 6px;
+  color: var(--text-primary-alt);
+}
+.cp-hero .profile-meta,
+.cp-hero-inn {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.cp-hero-inn {
+  font-family: 'JetBrains Mono', monospace;
+  opacity: .8;
+}
+.cp-hero .profile-meta span { color: var(--text-secondary); }
+
+/* 9. Аналитика — цветные KPI */
+.an-kpi-row .an-kpi-card:nth-child(1) { border-top: 3px solid var(--accent-bright); }
+.an-kpi-row .an-kpi-card:nth-child(2) { border-top: 3px solid var(--accent-cyan); }
+.an-kpi-row .an-kpi-card:nth-child(3) { border-top: 3px solid var(--accent-green); }
+.an-kpi-row .an-kpi-card:nth-child(4) { border-top: 3px solid var(--accent-blue); }
+.kpi-row .kpi-card:nth-child(1) { border-top: 3px solid var(--accent-bright); }
+.kpi-row .kpi-card:nth-child(2) { border-top: 3px solid var(--accent-cyan); }
+.kpi-row .kpi-card:nth-child(3) { border-top: 3px solid var(--accent-green); }
+.kpi-row .kpi-card:nth-child(4) { border-top: 3px solid var(--accent-blue); }
+
+/* 10. Сайдбар — выразительнее секции */
+.sidebar-nav-label {
+  font-size: 9.5px !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  padding: 18px 16px 6px !important;
+  color: var(--text-muted) !important;
+}
