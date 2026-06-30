@@ -1266,67 +1266,8 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-/* ---------------------------------------------------------
-   SPA-роутер: подменяет только #spa-content при навигации,
-   сайдбар остаётся нетронутым.
---------------------------------------------------------- */
-const SPA_EXCLUDE = ['/login', '/login.html', '/landing', '/landing.html'];
-
-function isSpaUrl(url) {
-  try {
-    const u = new URL(url, location.origin);
-    if (u.origin !== location.origin) return false;
-    if (SPA_EXCLUDE.some(p => u.pathname === p || u.pathname === p.replace('.html', ''))) return false;
-    if (/\/(api|uploads|assets)\//.test(u.pathname)) return false;
-    return true;
-  } catch { return false; }
-}
-
-let _spaNavigating = false;
-
-const SPA_GLOBAL_STYLES = /theme-v2\.css|fonts\.css|zakupki-cat\.css/i;
-
-/** Помечает стили текущей страницы — отключено вместе с SPA */
-function markCurrentPageStyles() {}
-
-/** Подменяет page-specific CSS при SPA-навигации — отключено */
-function syncSpaPageHead() {}
-
-/** Переписывает let/const → var чтобы скрипт страницы можно было выполнить повторно при SPA */
-function rewriteSpaScript(code) {
-  return code.replace(/\b(const|let)\b/g, 'var');
-}
-
-function isSkippableSpaScript(code) {
-  const t = code.trim();
-  return t.length < 120 && t.includes('hasSession()') && t.includes('login.html');
-}
-
-/** Выполняет inline-скрипты страницы из <body> (onclick-обработчики, __pageInit) */
-function runSpaPageScripts(doc) {
-  document.querySelectorAll('script[data-spa-page-script]').forEach((n) => n.remove());
-
-  const scripts = doc.body ? [...doc.body.querySelectorAll('script:not([src])')] : [];
-  for (const script of scripts) {
-    let code = script.textContent || '';
-    if (!code.trim() || isSkippableSpaScript(code)) continue;
-    code = rewriteSpaScript(code);
-    const el = document.createElement('script');
-    el.setAttribute('data-spa-page-script', '1');
-    el.textContent = code;
-    document.body.appendChild(el);
-  }
-}
-
-async function spaNavigate(url) {
-  location.assign(url);
-}
-
-window.__spaNavigate = spaNavigate;
-
-function initSpaRouter() {
-  /* Отключено: подмена #spa-content ломала page CSS, DOMContentLoaded и адаптив на всех страницах кабинета */
-}
+/* SPA отключён — полная перезагрузка страницы (см. комментарий в DOMContentLoaded) */
+window.__spaNavigate = (url) => { location.assign(url); };
 
 /* =====================================================================
    ОНБОРДИНГ — welcome-модалка + чеклист «Начало работы»
