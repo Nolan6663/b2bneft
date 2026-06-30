@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const htmlFiles = fs.readdirSync(root).filter(file => file.endsWith('.html')).sort();
-const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'routes/auth.js', 'routes/orders.js', 'routes/proposals.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'lib/company-enrich.js', 'routes/auth.js', 'routes/orders.js', 'routes/proposals.js', 'routes/companies.js', 'routes/messages.js', 'routes/deals.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
 const cssFiles = ['assets/theme-v2.css', 'assets/deals-page.css'];
 
 function fail(message) {
@@ -127,7 +127,7 @@ function checkProductionGuardrails() {
 }
 
 function checkAccessGuardrails() {
-  const routeFiles = ['server.js', 'routes/orders.js', 'routes/proposals.js'];
+  const routeFiles = ['server.js', 'routes/orders.js', 'routes/proposals.js', 'routes/messages.js'];
   const combined = routeFiles
     .map(file => fs.readFileSync(path.join(root, file), 'utf8'))
     .join('\n');

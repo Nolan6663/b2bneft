@@ -31,6 +31,11 @@ const createAuthRouter = require('./routes/auth');
 const createOrdersRouter = require('./routes/orders');
 const createProposalsRouter = require('./routes/proposals');
 const { createOrderProposalsRouter } = require('./routes/proposals');
+const createCompanyEnricher = require('./lib/company-enrich');
+const createCompaniesRouter = require('./routes/companies');
+const { createTopSuppliersRouter } = require('./routes/companies');
+const createMessagesRouter = require('./routes/messages');
+const createDealsRouter = require('./routes/deals');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -1065,70 +1070,7 @@ async function canAccessOrderDrawing(user, orderId) {
     return false;
 }
 
-// ===================== COMPANIES: вычисляемые поля =====================
-
-async function computeProducerRating(companyName) {
-    const { rows: resolved } = await pool.query(
-        "SELECT status FROM proposals WHERE company = $1 AND status IN ('Выигран', 'Отклонен')",
-        [companyName]
-    );
-    if (!resolved.length) return null;
-    const won = resolved.filter(p => p.status === 'Выигран').length;
-    const rate = won / resolved.length;
-    let rating, ratingLabel;
-    if (rate >= 0.7 && won >= 3) { rating = 'A+'; ratingLabel = 'Высокий'; }
-    else if (rate >= 0.5)        { rating = 'A';  ratingLabel = 'Высокий'; }
-    else if (rate >= 0.3)        { rating = 'B+'; ratingLabel = 'Средний'; }
-    else if (rate >= 0.15 || won > 0) { rating = 'B'; ratingLabel = 'Средний'; }
-    else                         { rating = 'C';  ratingLabel = 'Низкий'; }
-    return { status: won > 0 ? 'Верифицирован' : 'На проверке', rating, ratingLabel, ratingStats: { won, resolved: resolved.length } };
-}
-
-async function computeCustomerStatus(companyName) {
-    const { rows: [{ n: total }] } = await pool.query('SELECT COUNT(*) AS n FROM orders WHERE company = $1', [companyName]);
-    if (!total) return null;
-    const { rows: [{ n: closed }] } = await pool.query("SELECT COUNT(*) AS n FROM orders WHERE company = $1 AND status = 'Закрыта'", [companyName]);
-    return { status: closed > 0 ? 'Верифицирован' : 'На проверке' };
-}
-
-async function computeProducerStats(companyName) {
-    const { rows: [{ n: total }] } = await pool.query('SELECT COUNT(*) AS n FROM proposals WHERE company = $1', [companyName]);
-    if (!total) return null;
-    const { rows: won } = await pool.query("SELECT days FROM proposals WHERE company = $1 AND status = 'Выигран'", [companyName]);
-    const avgDeliveryDays = won.length ? Math.round(won.reduce((s, p) => s + p.days, 0) / won.length) : null;
-    return { completedOrders: won.length, avgDeliveryDays, totalProposals: total };
-}
-
-async function computeCustomerStats(companyName) {
-    const { rows } = await pool.query('SELECT status FROM orders WHERE company = $1', [companyName]);
-    if (!rows.length) return null;
-    return { postedOrders: rows.length, closedOrders: rows.filter(o => o.status === 'Закрыта').length };
-}
-
-async function enrichCompany(c, ownerCompany) {
-    let enriched;
-    if (c.role === 'producer') {
-        const rating = await computeProducerRating(c.company);
-        enriched = { ...c, ...(rating || {}), stats: await computeProducerStats(c.company) };
-    } else {
-        const status = await computeCustomerStatus(c.company);
-        enriched = { ...c, ...(status || {}), stats: await computeCustomerStats(c.company) };
-    }
-    if (ownerCompany) {
-        const { rows: [fav] } = await pool.query('SELECT 1 FROM favorites WHERE owner_company = $1 AND company_id = $2', [ownerCompany, c.id]);
-        enriched.isFavorite = Boolean(fav);
-    } else {
-        enriched.isFavorite = false;
-    }
-    const { rows: photos } = await pool.query('SELECT id, stored_name, original_name FROM company_photos WHERE company_id = $1 ORDER BY created_at ASC', [c.id]);
-    enriched.photos = photos.map(p => ({
-        id: p.id,
-        storedName: p.stored_name,
-        originalName: p.original_name,
-        url: storage.photoPublicUrl(p.stored_name),
-    }));
-    return enriched;
-}
+const { enrichCompany } = createCompanyEnricher({ pool, storage });
 
 // ===================== AUTH ROUTES =====================
 
@@ -1152,17 +1094,23 @@ const routesDeps = {
     storage,
     requireAuth,
     requireRole,
+    optionalAuth,
     requireVerifiedEmail,
     handleDrawingUpload,
     handleKPUpload,
+    handlePhotoUpload,
     persistUpload,
     deleteDrawingFile,
     canAccessOrderDrawing,
     canAccessProposal,
+    canAccessOrderThread,
     getOrderAccessRow,
     rowToOrder,
     rowToProposal,
     rowToCompany,
+    rowToMessage,
+    enrichCompany,
+    geocodeCity,
     computeMatchScore,
     computeMatchReasons,
     matchedProducers,
@@ -1178,174 +1126,17 @@ const routesDeps = {
     sendPush,
     sendTelegramNotification,
     triggerIntegrations,
+    getIo: () => io,
     APP_URL,
 };
 
 app.use('/api/orders', createOrdersRouter(routesDeps));
 app.use('/api/proposals', createProposalsRouter(routesDeps));
 app.use('/api/order-proposals', createOrderProposalsRouter(routesDeps));
-
-// ===================== COMPANIES =====================
-
-app.get('/api/top-suppliers', async (req, res, next) => {
-    try {
-        const { rows } = await pool.query(`
-            SELECT
-                c.id,
-                c.company,
-                c.specialization,
-                c.city,
-                c.verified_by_platform,
-                COUNT(p.id)                                           AS total_proposals,
-                COUNT(p.id) FILTER (WHERE p.status = 'Принято')      AS won_deals
-            FROM companies c
-            LEFT JOIN proposals p ON p.company = c.company
-            WHERE c.role = 'producer'
-            GROUP BY c.id
-            ORDER BY won_deals DESC, total_proposals DESC
-            LIMIT 5
-        `);
-        res.json(rows.map(r => ({
-            id:         r.id,
-            company:    r.company,
-            spec:       r.specialization || '',
-            city:       r.city || '',
-            verified:   r.verified_by_platform,
-            deals:      Number(r.won_deals),
-            proposals:  Number(r.total_proposals),
-        })));
-    } catch (e) { next(e); }
-});
-
-app.get('/api/companies', optionalAuth, async (req, res, next) => {
-    try {
-        const ownerCompany = req.user ? req.user.company : null;
-        const { rows } = await pool.query('SELECT * FROM companies');
-        const enriched = await Promise.all(rows.map(r => enrichCompany(rowToCompany(r), ownerCompany)));
-        res.json(enriched);
-    } catch (e) { next(e); }
-});
-
-app.get('/api/companies/:id', optionalAuth, async (req, res, next) => {
-    try {
-        const { rows: [row] } = await pool.query('SELECT * FROM companies WHERE id = $1', [Number(req.params.id)]);
-        if (!row) return res.status(404).json({ error: 'Компания не найдена' });
-        res.json(await enrichCompany(rowToCompany(row), req.user ? req.user.company : null));
-    } catch (e) { next(e); }
-});
-
-app.put('/api/companies/:id', requireAuth, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        const { rows: [row] } = await pool.query('SELECT * FROM companies WHERE id = $1', [id]);
-        if (!row) return res.status(404).json({ error: 'Компания не найдена' });
-        if (row.company !== req.user.company) return res.status(403).json({ error: 'Можно редактировать только профиль своей компании' });
-
-        const { city, yearsExperience, about, equipment, specialization, phone, website,
-                ogrn, director, foundingYear, authorizedCapital, employees, revenue,
-                machinesCount, productionArea, videoUrl,
-                isoCertificates, qualityCertificates, capabilities, productionLoad } = req.body;
-
-        const str  = (v, max) => String(v).slice(0, max);
-        const num  = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : null; };
-
-        const sets = [], vals = [];
-        const f = (col, val) => { sets.push(`${col} = $${sets.length + 1}`); vals.push(val); };
-
-        if (city !== undefined) {
-            const cityVal = str(city, 100);
-            f('city', cityVal);
-            if (cityVal !== row.city) {
-                geocodeCity(cityVal).then(coords => {
-                    if (coords) pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, id]);
-                    else pool.query('UPDATE companies SET lat=NULL,lng=NULL WHERE id=$1', [id]);
-                });
-            }
-        }
-        if (yearsExperience !== undefined)    f('years_experience', num(yearsExperience));
-        if (about !== undefined)              f('about', str(about, 1000));
-        if (specialization !== undefined)     f('specialization', str(specialization, 200));
-        if (phone !== undefined)              f('phone', str(phone, 30));
-        if (website !== undefined)            f('website', str(website, 200));
-        if (ogrn !== undefined)               f('ogrn', str(ogrn, 20));
-        if (director !== undefined)           f('director', str(director, 150));
-        if (foundingYear !== undefined)       f('founding_year', num(foundingYear));
-        if (authorizedCapital !== undefined)  f('authorized_capital', str(authorizedCapital, 50));
-        if (employees !== undefined)          f('employees', num(employees));
-        if (revenue !== undefined)            f('revenue', str(revenue, 50));
-        if (machinesCount !== undefined)      f('machines_count', num(machinesCount));
-        if (productionArea !== undefined)     f('production_area', num(productionArea));
-        if (videoUrl !== undefined)           f('video_url', str(videoUrl, 300));
-        if (productionLoad !== undefined) {
-            const n = Number(productionLoad);
-            f('production_load', Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null);
-        }
-        if (Array.isArray(equipment))           f('equipment', JSON.stringify(equipment.map(e => str(e, 60)).slice(0, 20)));
-        if (Array.isArray(isoCertificates))     f('iso_certificates', JSON.stringify(isoCertificates.map(e => str(e, 80)).slice(0, 20)));
-        if (Array.isArray(qualityCertificates)) f('quality_certificates', JSON.stringify(qualityCertificates.map(e => str(e, 80)).slice(0, 20)));
-        if (Array.isArray(capabilities))        f('capabilities', JSON.stringify(capabilities.slice(0, 20)));
-        if (req.body.freeCapacity !== undefined) {
-            const cap = Array.isArray(req.body.freeCapacity) ? req.body.freeCapacity : [];
-            const valid = cap
-                .filter(c => c && typeof c.name === 'string' && c.name.trim())
-                .map(c => ({ name: String(c.name).slice(0, 80), percent: Math.min(100, Math.max(0, Number(c.percent) || 0)) }))
-                .slice(0, 15);
-            f('free_capacity', JSON.stringify(valid));
-        }
-
-        if (sets.length) {
-            vals.push(id);
-            await pool.query(`UPDATE companies SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals);
-        }
-
-        const { rows: [updated] } = await pool.query('SELECT * FROM companies WHERE id = $1', [id]);
-        res.json(await enrichCompany(rowToCompany(updated), req.user.company));
-    } catch (e) { next(e); }
-});
-
-// ===================== ФОТО КОМПАНИИ =====================
-
-app.post('/api/companies/:id/photos', requireAuth, handlePhotoUpload, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        const { rows: [row] } = await pool.query('SELECT company FROM companies WHERE id = $1', [id]);
-        if (!row) return res.status(404).json({ error: 'Компания не найдена' });
-        if (row.company !== req.user.company) return res.status(403).json({ error: 'Можно загружать фото только своей компании' });
-        if (!req.file) return res.status(400).json({ error: 'Файл не передан' });
-
-        const { rows: [{ n: count }] } = await pool.query('SELECT COUNT(*) AS n FROM company_photos WHERE company_id = $1', [id]);
-        if (count >= 10) return res.status(400).json({ error: 'Максимум 10 фотографий' });
-
-        const meta = await storage.saveFile(req.file, 'photos');
-        const { rows: [photo] } = await pool.query(
-            'INSERT INTO company_photos (company_id, stored_name, original_name) VALUES ($1, $2, $3) RETURNING *',
-            [id, meta.storedName, meta.originalName]
-        );
-        res.status(201).json({
-            id: photo.id,
-            storedName: photo.stored_name,
-            originalName: photo.original_name,
-            url: storage.photoPublicUrl(photo.stored_name),
-        });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/companies/:id/photos/:photoId', requireAuth, async (req, res, next) => {
-    try {
-        const id = Number(req.params.id);
-        const photoId = Number(req.params.photoId);
-        const { rows: [row] } = await pool.query('SELECT company FROM companies WHERE id = $1', [id]);
-        if (!row) return res.status(404).json({ error: 'Компания не найдена' });
-        if (row.company !== req.user.company) return res.status(403).json({ error: 'Нет прав' });
-
-        const { rows: [photo] } = await pool.query('SELECT stored_name FROM company_photos WHERE id = $1 AND company_id = $2', [photoId, id]);
-        if (!photo) return res.status(404).json({ error: 'Фото не найдено' });
-
-        await pool.query('DELETE FROM company_photos WHERE id = $1', [photoId]);
-        storage.deleteStored(photo.stored_name).catch(() => {});
-        res.json({ message: 'Удалено' });
-    } catch (e) { next(e); }
-});
+app.use('/api/top-suppliers', createTopSuppliersRouter(routesDeps));
+app.use('/api/companies', createCompaniesRouter(routesDeps));
+app.use('/api/messages', createMessagesRouter(routesDeps));
+app.use('/api/deals', createDealsRouter(routesDeps));
 
 // ===================== DASHBOARD COUNTS =====================
 
@@ -1746,45 +1537,6 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
                 amount: Math.round(Number(r.total) / 1e6 * 100) / 100,
                 share:  totalSupply > 0 ? Math.round(Number(r.total) / totalSupply * 1000) / 10 : 0,
             })),
-        });
-    } catch (e) { next(e); }
-});
-
-app.get('/api/messages/stats', requireAuth, async (req, res, next) => {
-    try {
-        const { role, company } = req.user;
-        const whereClause = role === 'producer' ? 'm.company=$1' : 'o.company=$1';
-        const todayStart  = "date_trunc('day', NOW())";
-
-        const [{ rows: [convRow] }, { rows: [todayRow] }, { rows: [avgRow] }] = await Promise.all([
-            pool.query(`SELECT
-                COUNT(DISTINCT (m.order_id, m.company)) AS total_convs,
-                SUM(CASE WHEN m.sender!=$2 AND m.read=false THEN 1 ELSE 0 END) AS unread
-                FROM messages m JOIN orders o ON o.id=m.order_id WHERE ${whereClause}`,
-                [company, role]),
-            pool.query(`SELECT COUNT(*) AS n FROM messages m JOIN orders o ON o.id=m.order_id
-                WHERE ${whereClause} AND m.sender!=$2 AND m.created_at>=${todayStart}`,
-                [company, role]),
-            // avg response time in hours (time between customer msg and next producer msg)
-            pool.query(`SELECT ROUND(AVG(EXTRACT(EPOCH FROM (reply.created_at - orig.created_at))/3600)::numeric, 1) AS avg_h
-                FROM messages orig
-                JOIN messages reply ON reply.order_id=orig.order_id AND reply.company=orig.company
-                    AND reply.sender!=orig.sender AND reply.created_at>orig.created_at
-                JOIN orders o ON o.id=orig.order_id
-                WHERE ${whereClause} AND orig.sender=$2
-                    AND reply.created_at = (
-                        SELECT MIN(created_at) FROM messages
-                        WHERE order_id=orig.order_id AND company=orig.company
-                            AND sender!=orig.sender AND created_at>orig.created_at
-                    )`,
-                [company, role]),
-        ]);
-
-        res.json({
-            totalConversations: Number(convRow.total_convs || 0),
-            unread:             Number(convRow.unread || 0),
-            repliesToday:       Number(todayRow.n || 0),
-            avgResponseHours:   avgRow.avg_h ? Number(avgRow.avg_h) : null,
         });
     } catch (e) { next(e); }
 });
@@ -2870,150 +2622,6 @@ app.get('/api/conversation-context/:orderId/:company', requireAuth, async (req, 
     } catch (e) { next(e); }
 });
 
-// ===================== СООБЩЕНИЯ =====================
-
-app.get('/api/messages/conversations', requireAuth, async (req, res, next) => {
-    try {
-        const { role, company } = req.user;
-        const unreadSender = role === 'producer' ? 'customer' : 'producer';
-        const whereClause = role === 'producer' ? 'm.company = $1' : 'o.company = $1';
-
-        const { rows } = await pool.query(`
-            WITH last_msg AS (
-                SELECT DISTINCT ON (order_id, company)
-                    order_id, company, text, sender
-                FROM messages
-                ORDER BY order_id, company, created_at DESC
-            )
-            SELECT
-                m.order_id,
-                o.title AS order_title,
-                o.company AS customer_company,
-                m.company,
-                MAX(m.created_at) AS last_at,
-                COUNT(CASE WHEN m.sender = $2 AND m.read = false THEN 1 END) AS unread_count,
-                lm.text  AS last_message,
-                lm.sender AS last_sender
-            FROM messages m
-            JOIN orders o ON o.id = m.order_id
-            LEFT JOIN last_msg lm ON lm.order_id = m.order_id AND lm.company = m.company
-            WHERE ${whereClause}
-            GROUP BY m.order_id, o.title, o.company, m.company, lm.text, lm.sender
-            ORDER BY last_at DESC
-        `, [company, unreadSender]);
-
-        res.json(rows.map(r => ({
-            orderId: r.order_id,
-            orderTitle: r.order_title || `Заявка #${r.order_id}`,
-            company: r.company,
-            customerCompany: r.customer_company || '',
-            lastMessage: r.last_message || '',
-            lastSender: r.last_sender || '',
-            lastAt: r.last_at,
-            unreadCount: Number(r.unread_count) || 0,
-        })));
-    } catch (e) { next(e); }
-});
-
-app.post('/api/messages/:orderId/:company/read', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const company = req.params.company;
-        if (!(await canAccessOrderThread(req.user, orderId, company))) {
-            return res.status(403).json({ error: 'Нет доступа к этому чату' });
-        }
-        const otherSender = req.user.role === 'producer' ? 'customer' : 'producer';
-        await pool.query(
-            'UPDATE messages SET read = true WHERE order_id = $1 AND company = $2 AND sender = $3 AND read = false',
-            [orderId, company, otherSender]
-        );
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-app.get('/api/messages/:orderId/:company', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const company = req.params.company;
-        if (!(await canAccessOrderThread(req.user, orderId, company))) {
-            return res.status(403).json({ error: 'Нет доступа к этому чату' });
-        }
-        const { rows } = await pool.query(
-            'SELECT * FROM messages WHERE order_id = $1 AND company = $2 ORDER BY created_at ASC',
-            [orderId, company]
-        );
-        res.json(rows.map(rowToMessage));
-    } catch (e) { next(e); }
-});
-
-app.post('/api/messages', requireAuth, async (req, res, next) => {
-    try {
-        const { orderId, text } = req.body;
-        if (!orderId || !text) return res.status(400).json({ error: 'Заполните все поля сообщения' });
-
-        const oid = Number(orderId);
-        const { rows: [order] } = await pool.query('SELECT company FROM orders WHERE id = $1', [oid]);
-        if (!order) return res.status(404).json({ error: 'Заявка не найдена' });
-
-        let threadCompany;
-        if (req.user.role === 'customer') {
-            if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к этому чату' });
-            threadCompany = req.body.company;
-            if (!threadCompany) return res.status(400).json({ error: 'Не указана компания поставщика' });
-            const { rows: [proposal] } = await pool.query(
-                'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
-                [oid, threadCompany]
-            );
-            if (!proposal) return res.status(403).json({ error: 'Чат доступен только с поставщиком, подавшим КП' });
-        } else {
-            // producer: company is always the authenticated user's company — don't trust the client
-            const { rows: [proposal] } = await pool.query(
-                'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
-                [oid, req.user.company]
-            );
-            if (!proposal) return res.status(403).json({ error: 'Нет доступа к этому чату' });
-            threadCompany = req.user.company;
-        }
-
-        const { rows: [newRow] } = await pool.query(
-            'INSERT INTO messages (order_id,company,sender,text) VALUES ($1,$2,$3,$4) RETURNING *',
-            [oid, threadCompany, req.user.role, String(text).slice(0, 2000)]
-        );
-        const msg = rowToMessage(newRow);
-        if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);
-
-        // Email notification to recipient
-        (async () => {
-            try {
-                const recipientCompany = req.user.role === 'customer' ? threadCompany : order.company;
-                const { rows: [orderRow] } = await pool.query('SELECT title FROM orders WHERE id = $1', [oid]);
-                const orderTitle = orderRow?.title || 'Заявка';
-                const { rows: recips } = await pool.query(
-                    'SELECT email FROM users WHERE company = $1 LIMIT 3', [recipientCompany]
-                );
-                const preview = String(text).slice(0, 200) + (text.length > 200 ? '…' : '');
-                for (const r of recips) {
-                    await sendEmail(r.email, `Новое сообщение по заявке «${orderTitle}» — ТехЗаказ`, `
-                        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-                            <h3 style="color:#1E3A5F;margin:0 0 12px;">Новое сообщение</h3>
-                            <p style="color:#444;margin:0 0 12px;">Компания <strong>${req.user.company}</strong> написала по заявке <strong>«${orderTitle}»</strong>:</p>
-                            <blockquote style="border-left:3px solid #FF6A00;margin:0 0 16px;padding:10px 16px;background:#FFF4EC;border-radius:0 6px 6px 0;color:#333;">${preview}</blockquote>
-                            <a href="https://texzakaz.ru/messages.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть переписку →</a>
-                        </div>`);
-                }
-                // Push: уведомить получателя
-                const recipientIds = await getUserIdsByCompany(recipientCompany);
-                await Promise.all(recipientIds.map(id => {
-                    sendPush(id, 'Новое сообщение', `${req.user.company}: ${String(text).slice(0, 80)}`, `${APP_URL}/messages`);
-                    sendTelegramNotification(id, `💬 <b>Новое сообщение</b>\nОт: ${req.user.company}\n${String(text).slice(0, 100)}`);
-                }));
-            } catch (e) { console.error('[email:chat]', e.message); }
-        })();
-
-        res.status(201).json(msg);
-    } catch (e) { next(e); }
-});
-
 // ===================== УВЕДОМЛЕНИЯ =====================
 
 app.get('/api/notifications/:company', requireAuth, async (req, res, next) => {
@@ -3037,228 +2645,6 @@ app.delete('/api/notifications/:company', requireAuth, async (req, res, next) =>
         if (req.params.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
         await pool.query('DELETE FROM notifications WHERE company = $1', [req.user.company]);
         res.json({ message: 'ok' });
-    } catch (e) { next(e); }
-});
-
-// ===================== ЗАКАЗЫ (СДЕЛКИ) =====================
-
-app.get('/api/deals', requireAuth, async (req, res, next) => {
-    try {
-        const { role, company } = req.user;
-        let rows;
-
-        if (role === 'customer') {
-            const { rows: r } = await pool.query(`
-                SELECT o.id AS order_id, o.title, o.quantity, o.category,
-                       p.id AS proposal_id, p.company AS counterparty,
-                       p.price, p.days, p.created_at AS deal_date, p.completion_status,
-                       p.delivery_stage, c.id AS counterparty_profile_id
-                FROM orders o
-                JOIN proposals p ON p.order_id = o.id AND p.status = 'Выигран'
-                LEFT JOIN companies c ON c.company = p.company AND c.role = 'producer'
-                WHERE o.company = $1
-                ORDER BY p.created_at DESC
-            `, [company]);
-            rows = r;
-        } else if (role === 'producer') {
-            const { rows: r } = await pool.query(`
-                SELECT o.id AS order_id, o.title, o.quantity, o.category,
-                       p.id AS proposal_id, o.company AS counterparty,
-                       p.price, p.days, p.created_at AS deal_date, p.completion_status,
-                       p.delivery_stage, c.id AS counterparty_profile_id
-                FROM proposals p
-                JOIN orders o ON o.id = p.order_id
-                LEFT JOIN companies c ON c.company = o.company AND c.role = 'customer'
-                WHERE p.company = $1 AND p.status = 'Выигран'
-                ORDER BY p.created_at DESC
-            `, [company]);
-            rows = r;
-        } else {
-            return res.json([]);
-        }
-
-        res.json(rows.map(r => ({
-            orderId:               r.order_id,
-            proposalId:            r.proposal_id,
-            title:                 r.title,
-            quantity:              r.quantity,
-            category:              r.category,
-            counterparty:          r.counterparty,
-            counterpartyProfileId: r.counterparty_profile_id || null,
-            price:                 r.price,
-            days:                  r.days,
-            dealDate:              r.deal_date,
-            completionStatus:      r.completion_status || 'active',
-            deliveryStage:         r.delivery_stage || 'КП принят',
-        })));
-    } catch (e) { next(e); }
-});
-
-app.put('/api/deals/:proposalId/complete', requireAuth, requireRole('customer'), async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [row] } = await pool.query(`
-            SELECT p.*, o.company AS customer_company, o.title AS order_title
-            FROM proposals p JOIN orders o ON o.id = p.order_id
-            WHERE p.id = $1
-        `, [proposalId]);
-
-        if (!row) return res.status(404).json({ error: 'Сделка не найдена' });
-        if (row.status !== 'Выигран') return res.status(400).json({ error: 'Это не активная сделка' });
-        if (row.customer_company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
-        if (row.completion_status === 'completed') return res.status(400).json({ error: 'Сделка уже завершена' });
-
-        await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
-        await addNotification(row.company, `Заказчик подтвердил выполнение заказа «${plainTitle(row.order_title)}».`);
-        res.json({ message: 'Сделка завершена' });
-    } catch (e) { next(e); }
-});
-
-app.get('/api/deals/:proposalId/timeline', requireAuth, async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [deal] } = await pool.query(`
-            SELECT p.id, p.order_id, p.company AS producer_company, p.price, p.days, p.created_at AS proposal_created_at,
-                   p.completion_status, p.delivery_stage,
-                   o.title AS order_title, o.category, o.company AS customer_company, o.created_at AS order_created_at
-            FROM proposals p
-            JOIN orders o ON o.id = p.order_id
-            WHERE p.id = $1 AND p.status = 'Выигран'
-        `, [proposalId]);
-        if (!deal) return res.status(404).json({ error: 'Сделка не найдена' });
-        if (req.user.role === 'customer' && deal.customer_company !== req.user.company) {
-            return res.status(403).json({ error: 'Нет доступа' });
-        }
-        if (req.user.role === 'producer' && deal.producer_company !== req.user.company) {
-            return res.status(403).json({ error: 'Нет доступа' });
-        }
-
-        const events = [];
-        const push = (type, title, detail, at) => {
-            if (!at) return;
-            events.push({ type, title, detail: detail || '', at });
-        };
-
-        push('order', 'Закупка опубликована', deal.order_title, deal.order_created_at);
-        push('proposal', 'КП подано поставщиком', `${Number(deal.price).toLocaleString('ru-RU')} ₽ · ${deal.days} дн.`, deal.proposal_created_at);
-
-        const { rows: allProps } = await pool.query(
-            `SELECT company, price, created_at FROM proposals WHERE order_id = $1 ORDER BY created_at ASC`,
-            [deal.order_id]
-        );
-        for (const p of allProps) {
-            if (p.company === deal.producer_company) continue;
-            push('proposal_other', 'КП от другого поставщика', `${p.company} · ${Number(p.price).toLocaleString('ru-RU')} ₽`, p.created_at);
-        }
-
-        const { rows: deliveryRows } = await pool.query(
-            'SELECT stage, notes, updated_by, created_at FROM delivery_events WHERE proposal_id = $1 ORDER BY created_at ASC',
-            [proposalId]
-        );
-        for (const ev of deliveryRows) {
-            push('delivery', ev.stage, ev.notes || '', ev.created_at);
-        }
-
-        const { rows: [{ n: msgCount }] } = await pool.query(
-            `SELECT COUNT(*)::int AS n FROM messages WHERE order_id = $1 AND company = $2`,
-            [deal.order_id, deal.producer_company]
-        );
-        if (msgCount > 0) {
-            const { rows: [{ last_at }] } = await pool.query(
-                `SELECT MAX(created_at) AS last_at FROM messages WHERE order_id = $1 AND company = $2`,
-                [deal.order_id, deal.producer_company]
-            );
-            push('chat', 'Переписка по сделке', `${msgCount} сообщ.`, last_at);
-        }
-
-        if (deal.completion_status === 'completed') {
-            push('complete', 'Сделка завершена', 'Заказчик подтвердил выполнение', deliveryRows.at(-1)?.created_at || deal.proposal_created_at);
-        }
-
-        const { rows: reviewRows } = await pool.query(
-            'SELECT score, text, from_company, created_at FROM reviews WHERE order_id = $1 ORDER BY created_at ASC',
-            [deal.order_id]
-        );
-        for (const rv of reviewRows) {
-            push('review', `Отзыв: ${'★'.repeat(rv.score)}`, `${rv.from_company}${rv.text ? ' — ' + rv.text.slice(0, 80) : ''}`, rv.created_at);
-        }
-
-        events.sort((a, b) => new Date(a.at) - new Date(b.at));
-        res.json({ events, currentStage: deal.delivery_stage || 'КП принят', completionStatus: deal.completion_status || 'active' });
-    } catch (e) { next(e); }
-});
-
-// ===================== ДОСТАВКА =====================
-
-const DELIVERY_STAGES = ['КП принят','В производстве','Готов к отгрузке','Отгружен','Доставлен','Принят заказчиком'];
-
-app.get('/api/deals/:proposalId/delivery', requireAuth, async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [p] } = await pool.query(`
-            SELECT p.id, p.order_id, p.price, p.days, p.company AS producer_company,
-                   p.status, p.delivery_stage, p.tracking_number, p.created_at,
-                   o.title, o.quantity, o.category, o.company AS customer_company
-            FROM proposals p JOIN orders o ON o.id = p.order_id
-            WHERE p.id = $1 AND p.status = 'Выигран'
-        `, [proposalId]);
-        if (!p) return res.status(404).json({ error: 'Сделка не найдена' });
-
-        const { company, role } = req.user;
-        if (role !== 'admin' && company !== p.producer_company && company !== p.customer_company)
-            return res.status(403).json({ error: 'Нет доступа' });
-
-        const { rows: events } = await pool.query(
-            'SELECT * FROM delivery_events WHERE proposal_id = $1 ORDER BY created_at ASC', [proposalId]
-        );
-        res.json({ deal: p, events });
-    } catch (e) { next(e); }
-});
-
-app.post('/api/deals/:proposalId/delivery/stage', requireAuth, async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { stage, notes = '', trackingNumber = '' } = req.body;
-        if (!DELIVERY_STAGES.includes(stage)) return res.status(400).json({ error: 'Неверный этап' });
-
-        const { rows: [p] } = await pool.query(`
-            SELECT p.*, o.company AS customer_company, o.title AS order_title
-            FROM proposals p JOIN orders o ON o.id = p.order_id
-            WHERE p.id = $1 AND p.status = 'Выигран'
-        `, [proposalId]);
-        if (!p) return res.status(404).json({ error: 'Сделка не найдена' });
-
-        const { company, role } = req.user;
-        if (stage === 'Принят заказчиком') {
-            if (role !== 'customer' || company !== p.customer_company)
-                return res.status(403).json({ error: 'Только заказчик подтверждает получение' });
-        } else {
-            if (role !== 'producer' || company !== p.company)
-                return res.status(403).json({ error: 'Только поставщик обновляет статус доставки' });
-        }
-
-        const currentIdx = DELIVERY_STAGES.indexOf(p.delivery_stage);
-        const newIdx = DELIVERY_STAGES.indexOf(stage);
-        if (newIdx <= currentIdx) return res.status(400).json({ error: 'Нельзя вернуться на предыдущий этап' });
-
-        await pool.query(
-            "UPDATE proposals SET delivery_stage = $1, tracking_number = COALESCE(NULLIF($2,''), tracking_number) WHERE id = $3",
-            [stage, trackingNumber, proposalId]
-        );
-        await pool.query(
-            'INSERT INTO delivery_events (proposal_id, stage, notes, updated_by) VALUES ($1,$2,$3,$4)',
-            [proposalId, stage, notes, company]
-        );
-
-        if (stage === 'Принят заказчиком') {
-            await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
-        }
-
-        const title = plainTitle(p.order_title);
-        const notifyCompany = stage === 'Принят заказчиком' ? p.company : p.customer_company;
-        await addNotification(notifyCompany, `Статус доставки по «${title}» изменён: ${stage}.`);
-
-        res.json({ message: 'Статус обновлён', stage });
     } catch (e) { next(e); }
 });
 
