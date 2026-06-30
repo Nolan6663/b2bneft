@@ -965,6 +965,7 @@ function popupHtml(p) {
             updateMapSummary(filtered);
             updateMapKpis();
             renderMcpList(filtered);
+            if (window.innerWidth <= 720) closeMapFilterDrawer();
         }
 
         function updateMapSummary(list) {

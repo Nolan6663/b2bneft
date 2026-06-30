@@ -656,6 +656,7 @@
                 if (!r.ok) { resultEl.style.color='#e07070'; resultEl.textContent=d.error||'Ошибка'; return; }
                 resultEl.style.color='var(--accent-green)'; resultEl.textContent='Отзыв сохранён!';
                 setTimeout(closeReviewModal, 900);
+                dismissReviewBanner();
                 // Update button
                 const inner = document.getElementById('ddpReviewBtnInner');
                 if (inner) { inner.textContent=`Ваш отзыв: ${'★'.repeat(_reviewStar)}`; inner.style.color='#FF6A00'; }
@@ -712,7 +713,7 @@
         function openDealChat() {
             if (!currentDeal) return;
             const company = currentDeal.supplier && currentDeal.supplier !== '—' ? currentDeal.supplier : '';
-            window.location.href = `messages.html?orderId=${currentDeal.id}&company=${encodeURIComponent(company)}&title=${encodeURIComponent(currentDeal.title)}`;
+            window.location.href = `messages.html?orderId=${currentDeal.orderId}&company=${encodeURIComponent(company)}&title=${encodeURIComponent(currentDeal.title)}`;
         }
 
         function closePanel() {
