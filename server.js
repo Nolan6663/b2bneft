@@ -250,7 +250,11 @@ const httpServer = http.createServer(app);
 const socketOrigin = IS_PRODUCTION
     ? Array.from(ALLOWED_ORIGINS)
     : [...Array.from(ALLOWED_ORIGINS), 'http://localhost:3000', 'http://localhost:5000', 'http://127.0.0.1:5000'];
-const io = Server ? new Server(httpServer, { cors: { origin: socketOrigin } }) : null;
+const io = Server ? new Server(httpServer, {
+    cors: { origin: socketOrigin, credentials: true },
+    pingInterval: 10000,
+    pingTimeout: 5000,
+}) : null;
 
 if (io) {
     io.use(async (socket, next) => {

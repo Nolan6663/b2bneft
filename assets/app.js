@@ -424,6 +424,9 @@ if (typeof io === 'function' && hasSession()) {
     socket = io(SERVER_URL.replace(/\/api$/, ''), {
       withCredentials: true,
       transports: ['websocket', 'polling'],
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
     window.socket = socket;
 
@@ -431,6 +434,10 @@ if (typeof io === 'function' && hasSession()) {
       if (currentCompanyName !== 'Гость') socket.emit('join-company', currentCompanyName);
       if (activeChatOrderId != null) socket.emit('join-chat', { orderId: activeChatOrderId, company: activeChatCompany });
       document.dispatchEvent(new CustomEvent('tz:socket:connect'));
+    });
+
+    socket.on('disconnect', () => {
+      document.dispatchEvent(new CustomEvent('tz:socket:disconnect'));
     });
 
     socket.on('connect_error', (err) => {
@@ -628,7 +635,10 @@ function openGlobalChat(orderId, orderTitle, company) {
   if (socket) socket.emit('join-chat', { orderId, company });
   renderChatHistory();
   if (chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(renderChatHistory, 15000);
+  chatPollInterval = setInterval(() => {
+    if (window.socket?.connected) return;
+    renderChatHistory();
+  }, 3000);
 }
 
 function goToFullChat() {

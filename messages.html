@@ -271,7 +271,20 @@ function msgToast(msg) {
         function onTzSocketConnect() {
             if (activeConv && window.socket) {
                 window.socket.emit('join-chat', { orderId: activeConv.orderId, company: activeConv.company });
+                fetchMessages(activeConv);
             }
+        }
+
+        function onTzSocketDisconnect() { /* polling fallback takes over */ }
+
+        function startConvPoll() {
+            if (convPollInterval) clearInterval(convPollInterval);
+            convPollInterval = setInterval(() => {
+                if (document.visibilityState !== 'visible') return;
+                if (window.socket?.connected) return;
+                loadConversations();
+                if (activeConv) fetchMessages(activeConv);
+            }, 3000);
         }
 
         function closeMobileChat() {
@@ -295,13 +308,8 @@ function msgToast(msg) {
             document.addEventListener('tz:message', onTzMessage);
             document.addEventListener('tz:conversation:update', onTzConversationUpdate);
             document.addEventListener('tz:socket:connect', onTzSocketConnect);
-            if (convPollInterval) clearInterval(convPollInterval);
-            convPollInterval = setInterval(() => {
-                if (document.visibilityState === 'visible') {
-                    loadConversations();
-                    if (activeConv) fetchMessages(activeConv);
-                }
-            }, 8000);
+            document.addEventListener('tz:socket:disconnect', onTzSocketDisconnect);
+            startConvPoll();
         });
 
         window.__pageInit = function() {
@@ -313,18 +321,14 @@ function msgToast(msg) {
             document.addEventListener('tz:message', onTzMessage);
             document.addEventListener('tz:conversation:update', onTzConversationUpdate);
             document.addEventListener('tz:socket:connect', onTzSocketConnect);
-            if (convPollInterval) clearInterval(convPollInterval);
-            convPollInterval = setInterval(() => {
-                if (document.visibilityState === 'visible') {
-                    loadConversations();
-                    if (activeConv) fetchMessages(activeConv);
-                }
-            }, 8000);
+            document.addEventListener('tz:socket:disconnect', onTzSocketDisconnect);
+            startConvPoll();
 
             window.__pageCleanup = function() {
                 document.removeEventListener('tz:message', onTzMessage);
                 document.removeEventListener('tz:conversation:update', onTzConversationUpdate);
                 document.removeEventListener('tz:socket:connect', onTzSocketConnect);
+                document.removeEventListener('tz:socket:disconnect', onTzSocketDisconnect);
                 if (convPollInterval) { clearInterval(convPollInterval); convPollInterval = null; }
             };
         };
