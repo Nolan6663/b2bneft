@@ -255,31 +255,12 @@
                         </tr>
                     </thead>
                     <tbody id="weekResultsBody">
-                        <tr style="border-bottom:1px solid var(--inner-border);">
-                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">НефтеПромСнаб</td>
-                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">325 000 ₽</td>
-                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(5,150,105,.12);color:var(--accent-green);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">Завершён</span></td>
-                        </tr>
-                        <tr style="border-bottom:1px solid var(--inner-border);">
-                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">ПАО Завод РТИ</td>
-                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">184 500 ₽</td>
-                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(5,150,105,.12);color:var(--accent-green);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">Завершён</span></td>
-                        </tr>
-                        <tr style="border-bottom:1px solid var(--inner-border);">
-                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">АО РегионСнаб</td>
-                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">97 200 ₽</td>
-                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(234,179,8,.1);color:#ca8a04;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">В работе</span></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">ООО ТехноПром</td>
-                            <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">52 800 ₽</td>
-                            <td style="padding:7px 0;text-align:center;"><span style="background:rgba(234,179,8,.1);color:#ca8a04;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">В работе</span></td>
-                        </tr>
+                        <tr><td colspan="3" style="padding:12px 0;color:var(--text-secondary);font-size:12px;">Загрузка...</td></tr>
                     </tbody>
                 </table>
                 <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px;">
                     <span style="color:var(--text-secondary);">Итого за неделю:</span>
-                    <span style="font-weight:700;color:var(--accent-green);font-family:'JetBrains Mono',monospace;">659 500 ₽</span>
+                    <span id="weekResultsTotal" style="font-weight:700;color:var(--accent-green);font-family:'JetBrains Mono',monospace;">—</span>
                 </div>
             </div>
 
@@ -627,8 +608,55 @@
             }
         }
 
+        function weekStatusBadge(completionStatus) {
+            const done = completionStatus === 'completed';
+            if (done) {
+                return '<span style="background:rgba(5,150,105,.12);color:var(--accent-green);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">Завершён</span>';
+            }
+            return '<span style="background:rgba(234,179,8,.1);color:#ca8a04;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:12px;">В работе</span>';
+        }
+
+        async function loadWeekResults() {
+            const body = document.getElementById('weekResultsBody');
+            const totalEl = document.getElementById('weekResultsTotal');
+            if (!body) return;
+
+            try {
+                const r = await apiFetch(`${SERVER_URL}/deals`);
+                if (!r.ok) throw new Error('deals request failed');
+                const deals = await r.json();
+                const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                const weekDeals = deals
+                    .filter(d => d.dealDate && new Date(d.dealDate).getTime() >= weekAgo)
+                    .sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+
+                if (!weekDeals.length) {
+                    body.innerHTML = '<tr><td colspan="3" style="padding:12px 0;color:var(--text-secondary);font-size:12px;">За неделю сделок нет</td></tr>';
+                    if (totalEl) totalEl.textContent = '0 ₽';
+                    return;
+                }
+
+                const total = weekDeals.reduce((s, d) => s + Number(d.price || 0), 0);
+                body.innerHTML = weekDeals.slice(0, 4).map((d, i) => {
+                    const border = i < Math.min(weekDeals.length, 4) - 1 ? 'border-bottom:1px solid var(--inner-border);' : '';
+                    const price = d.price ? Number(d.price).toLocaleString('ru-RU') + ' ₽' : '—';
+                    return `<tr style="${border}">
+                        <td style="padding:7px 0;color:var(--text-primary);font-weight:500;">${escapeHtml(d.counterparty || '—')}</td>
+                        <td style="padding:7px 0;text-align:right;font-weight:700;font-family:'JetBrains Mono',monospace;">${price}</td>
+                        <td style="padding:7px 0;text-align:center;">${weekStatusBadge(d.completionStatus)}</td>
+                    </tr>`;
+                }).join('');
+                if (totalEl) totalEl.textContent = total.toLocaleString('ru-RU') + ' ₽';
+            } catch {
+                body.innerHTML = '<tr><td colspan="3" style="padding:12px 0;color:var(--text-secondary);font-size:12px;">Не удалось загрузить</td></tr>';
+                if (totalEl) totalEl.textContent = '—';
+            }
+        }
+
         async function loadWidgets() {
             if (!hasSession()) return;
+
+            loadWeekResults();
 
             // Новые КП — берём из активных заказов
             try {
