@@ -7,7 +7,7 @@ const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const htmlFiles = fs.readdirSync(root).filter(file => file.endsWith('.html')).sort();
-const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'routes/auth.js', 'assets/app.js', 'assets/deals-page.css', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'routes/auth.js', 'routes/orders.js', 'routes/proposals.js', 'assets/app.js', 'assets/deals-page.css', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
 
 function fail(message) {
   throw new Error(message);

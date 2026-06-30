@@ -28,6 +28,9 @@ const { buildOrdersPdf, buildProposalsPdf } = require('./export-pdf');
 const { startTelegramBot } = require('./telegram-bot');
 const { JWT_SECRET, getAccessToken } = require('./lib/auth-tokens');
 const createAuthRouter = require('./routes/auth');
+const createOrdersRouter = require('./routes/orders');
+const createProposalsRouter = require('./routes/proposals');
+const { createOrderProposalsRouter } = require('./routes/proposals');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -1144,456 +1147,43 @@ app.use('/api/auth', createAuthRouter({
     APP_URL,
 }));
 
-// ===================== ORDERS =====================
+const routesDeps = {
+    pool,
+    storage,
+    requireAuth,
+    requireRole,
+    requireVerifiedEmail,
+    handleDrawingUpload,
+    handleKPUpload,
+    persistUpload,
+    deleteDrawingFile,
+    canAccessOrderDrawing,
+    canAccessProposal,
+    getOrderAccessRow,
+    rowToOrder,
+    rowToProposal,
+    rowToCompany,
+    computeMatchScore,
+    computeMatchReasons,
+    matchedProducers,
+    computePriceBenchmark,
+    plainTitle,
+    htmlEscape,
+    notifyCompanyEmail,
+    withTransaction,
+    addNotification,
+    getCompanyEmail,
+    sendEmail,
+    getUserIdsByCompany,
+    sendPush,
+    sendTelegramNotification,
+    triggerIntegrations,
+    APP_URL,
+};
 
-app.get('/api/orders/public', async (req, res, next) => {
-    try {
-        const category = req.query.category || '';
-        const params = [];
-        let where = "status = 'Активный'";
-        if (category) { params.push(category); where += ` AND category = $${params.length}`; }
-        const { rows } = await pool.query(
-            `SELECT id, title, category, deadline, quantity, responses, created_at
-             FROM orders WHERE ${where} ORDER BY created_at DESC LIMIT 30`,
-            params
-        );
-        res.json(rows);
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders', requireAuth, async (req, res, next) => {
-    try {
-        let rows;
-        if (req.user.role === 'customer') {
-            ({ rows } = await pool.query('SELECT * FROM orders WHERE company = $1 ORDER BY created_at DESC', [req.user.company]));
-        } else {
-            ({ rows } = await pool.query('SELECT * FROM orders ORDER BY created_at DESC'));
-        }
-        res.json(rows.map(rowToOrder));
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders/match-scores', requireAuth, requireRole('producer'), async (req, res, next) => {
-    try {
-        const { rows: [meRow] } = await pool.query("SELECT * FROM companies WHERE company = $1 AND role = 'producer'", [req.user.company]);
-        const me = meRow ? rowToCompany(meRow) : null;
-        const { rows: orders } = await pool.query('SELECT * FROM orders');
-        const scores = {};
-        orders.map(rowToOrder).forEach(o => { scores[o.id] = me ? computeMatchScore(o, me) : 0; });
-        res.json(scores);
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders/:orderId/drawing', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        if (!(await canAccessOrderDrawing(req.user, orderId))) {
-            return res.status(403).json({ error: 'Нет доступа к чертежу этой закупки' });
-        }
-        const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [orderId]);
-        if (!row || !row.drawing) return res.status(404).json({ error: 'Файл не найден' });
-        const drawing = JSON.parse(row.drawing);
-        if (!storage.isRemote() && !storage.existsLocally(drawing.storedName)) {
-            return res.status(404).json({ error: 'Файл был удалён с сервера' });
-        }
-        const inline = req.query.inline === '1';
-        await storage.streamToResponse(drawing.storedName, res, drawing.originalName, { inline });
-    } catch (e) { next(e); }
-});
-
-app.post('/api/orders', requireAuth, requireRole('customer'), requireVerifiedEmail, handleDrawingUpload, async (req, res, next) => {
-    try {
-        const { title, category, deadline, quantity, description } = req.body;
-        if (!title || !category || !deadline) return res.status(400).json({ error: 'Заполните все поля заявки' });
-
-        const drawing = await persistUpload(req.file, 'drawings');
-        const { rows: [newRow] } = await pool.query(
-            'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-            [title, category, deadline, quantity ? Number(quantity) : null,
-             description ? String(description).slice(0, 1000) : '', req.user.company, drawing]
-        );
-        const newOrder = rowToOrder(newRow);
-
-        const MATCH_NOTIFY_THRESHOLD = 50;
-        const matched = await matchedProducers(newOrder, MATCH_NOTIFY_THRESHOLD);
-        const orderTitle = plainTitle(newOrder.title);
-        await Promise.all(matched.map(m =>
-            notifyCompanyEmail(
-                m.company,
-                `🧩 Новая подходящая прямая закупка (${m.score}% совпадение): «${orderTitle}»`,
-                `Новая прямая закупка (${m.score}% совп.) — ТехЗаказ`,
-                `<p style="color:#444;font-size:14px;line-height:1.5;">Появилась закупка, которая подходит вашему профилю на <strong>${m.score}%</strong>:</p>
-                 <p style="font-size:15px;font-weight:600;color:#1E3A5F;">«${htmlEscape(orderTitle)}»</p>
-                 <p style="color:#666;font-size:13px;">Категория: ${htmlEscape(newOrder.category || '—')}</p>
-                 <p style="margin-top:16px;"><a href="${APP_URL}/producer.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть заявки →</a></p>`
-            )
-        ));
-
-        res.status(201).json(newOrder);
-    } catch (e) { next(e); }
-});
-
-app.put('/api/orders/:orderId', requireAuth, requireRole('customer'), handleDrawingUpload, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const { title, category, deadline, quantity, description } = req.body;
-        if (!title || !category || !deadline) return res.status(400).json({ error: 'Заполните все поля заявки' });
-
-        const { rows: [row] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-        if (!row) return res.status(404).json({ error: 'Заявка не найдена' });
-        const order = rowToOrder(row);
-        if (order.company && order.company !== req.user.company) return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
-        if (order.status === 'Закрыта' || order.status === 'Отменена') return res.status(400).json({ error: 'Закрытую или отменённую закупку нельзя редактировать' });
-
-        let drawingJson = row.drawing;
-        if (req.file) {
-            deleteDrawingFile(order.drawing);
-            drawingJson = await persistUpload(req.file, 'drawings');
-        }
-
-        await pool.query(
-            'UPDATE orders SET title=$1,category=$2,deadline=$3,quantity=$4,description=$5,drawing=$6 WHERE id=$7',
-            [title, category, deadline, quantity ? Number(quantity) : null,
-             description !== undefined ? String(description).slice(0, 1000) : (order.description || ''),
-             drawingJson, orderId]
-        );
-        const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-        res.json(rowToOrder(updated));
-    } catch (e) { next(e); }
-});
-
-app.post('/api/orders/:orderId/cancel', requireAuth, requireRole('customer'), async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const { rows: [row] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-        if (!row) return res.status(404).json({ error: 'Заявка не найдена' });
-        const order = rowToOrder(row);
-        if (order.company && order.company !== req.user.company) return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
-        if (order.status === 'Закрыта')  return res.status(400).json({ error: 'Закупка уже завершена, отменить её нельзя' });
-        if (order.status === 'Отменена') return res.status(400).json({ error: 'Закупка уже отменена' });
-
-        const title = plainTitle(order.title);
-        const notifs = [];
-
-        await withTransaction(async (client) => {
-            await client.query("UPDATE orders SET status = 'Отменена' WHERE id = $1", [orderId]);
-            const { rows: pending } = await client.query(
-                "SELECT * FROM proposals WHERE order_id = $1 AND status = 'Ожидает ответа'", [orderId]
-            );
-            for (const p of pending) {
-                await client.query("UPDATE proposals SET status = 'Отозвана заказчиком' WHERE id = $1", [p.id]);
-                notifs.push({ company: p.company, text: `Закупка «${title}» отменена заказчиком, ваше предложение по ней снято с рассмотрения.` });
-            }
-        });
-
-        await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
-        const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-        res.json(rowToOrder(updated));
-    } catch (e) { next(e); }
-});
-
-// ===================== PROPOSALS =====================
-
-app.get('/api/proposals/:proposalId/file', requireAuth, async (req, res, next) => {
-    try {
-        const { rows: [row] } = await pool.query(`
-            SELECT p.*, o.company AS order_company
-            FROM proposals p
-            JOIN orders o ON o.id = p.order_id
-            WHERE p.id = $1
-        `, [Number(req.params.proposalId)]);
-        if (!row || !row.kp_file) return res.status(404).json({ error: 'Файл не найден' });
-        if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этому файлу' });
-        const kpFile = JSON.parse(row.kp_file);
-        if (!storage.isRemote() && !storage.existsLocally(kpFile.storedName)) {
-            return res.status(404).json({ error: 'Файл был удалён с сервера' });
-        }
-        await storage.streamToResponse(kpFile.storedName, res, kpFile.originalName);
-    } catch (e) { next(e); }
-});
-
-app.post('/api/proposals', requireAuth, requireRole('producer'), requireVerifiedEmail, handleKPUpload, async (req, res, next) => {
-    try {
-        const { orderId, orderTitle, price, days } = req.body;
-        if (!orderId || !price || !days) return res.status(400).json({ error: 'Не указаны ID заявки, цена или сроки' });
-
-        const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [Number(orderId)]);
-        if (!orderRow) return res.status(404).json({ error: 'Заявка с таким ID не найдена' });
-        if (orderRow.status !== 'Активный') {
-            return res.status(400).json({ error: 'Нельзя подать КП на закрытую или отменённую закупку' });
-        }
-
-        const { rows: [existing] } = await pool.query('SELECT id FROM proposals WHERE order_id = $1 AND company = $2', [Number(orderId), req.user.company]);
-        if (existing) return res.status(409).json({ error: 'Вы уже подали КП на эту закупку. Отредактируйте существующее предложение.' });
-
-        const kpFile = await persistUpload(req.file, 'kp');
-
-        const newRow = await withTransaction(async (client) => {
-            const { rows: [r] } = await client.query(
-                'INSERT INTO proposals (order_id,order_title,price,days,company,kp_file) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-                [Number(orderId), orderTitle || orderRow.title, Number(price), Number(days), req.user.company, kpFile]
-            );
-            await client.query('UPDATE orders SET responses = responses + 1 WHERE id = $1', [Number(orderId)]);
-            return r;
-        });
-
-        const newProposal = rowToProposal(newRow);
-        if (orderRow.company) {
-            const title = plainTitle(orderRow.title);
-            await addNotification(orderRow.company, `Получен новый отклик на «${title}» от ${req.user.company}.`);
-            const email = await getCompanyEmail(orderRow.company);
-            if (email) await sendEmail(email, `Новый отклик на закупку «${title}»`,
-                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-                  <h3 style="color:#41bd97">Новый отклик на закупку</h3>
-                  <p>Компания <strong>${htmlEscape(req.user.company)}</strong> подала коммерческое предложение по закупке <strong>«${htmlEscape(title)}»</strong>.</p>
-                  <p>Цена: <strong>${Number(newProposal.price).toLocaleString('ru-RU')} ₽</strong> · Срок: <strong>${newProposal.days} дн.</strong></p>
-                  <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
-                </div>`
-            );
-            // Push: уведомить заказчика о новом КП
-            getUserIdsByCompany(orderRow.company).then(ids =>
-                ids.forEach(id => {
-                    sendPush(id, 'Новое коммерческое предложение', `«${orderRow.title}» — получен новый отклик`, `${APP_URL}/index`);
-                    sendTelegramNotification(id, `📨 <b>Новое КП</b> по закупке «${orderRow.title}»\nПоставщик: ${req.user.company}\nЦена: ${Number(newProposal.price).toLocaleString('ru-RU')} руб.`);
-                })
-            ).catch(() => {});
-        }
-        res.status(201).json(newProposal);
-    } catch (e) { next(e); }
-});
-
-app.get('/api/proposals', requireAuth, async (req, res, next) => {
-    try {
-        const { rows } = await pool.query('SELECT * FROM proposals WHERE company = $1', [req.user.company]);
-        res.json(rows.map(rowToProposal));
-    } catch (e) { next(e); }
-});
-
-app.get('/api/order-proposals/:orderId', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const orderRow = await getOrderAccessRow(orderId);
-        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
-        let rows;
-        if (req.user.role === 'admin' || orderRow.company === req.user.company) {
-            ({ rows } = await pool.query('SELECT * FROM proposals WHERE order_id = $1', [orderId]));
-        } else if (req.user.role === 'producer') {
-            ({ rows } = await pool.query(
-                'SELECT * FROM proposals WHERE order_id = $1 AND company = $2',
-                [orderId, req.user.company]
-            ));
-        } else {
-            return res.status(403).json({ error: 'Нет доступа к предложениям этой закупки' });
-        }
-
-        const orderObj = rowToOrder(orderRow);
-        const withMatch = (req.user.role === 'customer' || req.user.role === 'admin') && rows.length > 0;
-        let producerByName = null;
-        if (withMatch) {
-            const companies = rows.map(r => r.company);
-            const { rows: prodRows } = await pool.query(
-                "SELECT * FROM companies WHERE role = 'producer' AND company = ANY($1::text[])",
-                [companies]
-            );
-            producerByName = new Map(prodRows.map(r => [r.company, rowToCompany(r)]));
-        }
-
-        res.json(rows.map(r => {
-            const p = rowToProposal(r);
-            if (withMatch) {
-                const producer = producerByName.get(p.company);
-                p.matchScore = producer ? computeMatchScore(orderObj, producer) : 0;
-                p.matchReasons = producer ? computeMatchReasons(orderObj, producer) : [];
-            }
-            return p;
-        }));
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders/:orderId/matched-suppliers', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const orderRow = await getOrderAccessRow(orderId);
-        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
-        if (req.user.role !== 'admin' && orderRow.company !== req.user.company) {
-            return res.status(403).json({ error: 'Нет доступа к этой закупке' });
-        }
-        const orderObj = rowToOrder(orderRow);
-        const minScore = Math.max(0, Math.min(100, Number(req.query.min) || 30));
-        const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 8));
-        const matched = await matchedProducers(orderObj, minScore, true);
-        res.json(matched.slice(0, limit));
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders/:orderId/price-benchmark', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const orderRow = await getOrderAccessRow(orderId);
-        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
-        if (req.user.role !== 'admin' && orderRow.company !== req.user.company) {
-            return res.status(403).json({ error: 'Нет доступа к этой закупке' });
-        }
-        const orderObj = rowToOrder(orderRow);
-        const benchmark = await computePriceBenchmark(orderObj.category, orderId);
-
-        const { rows: currentProps } = await pool.query(
-            `SELECT price FROM proposals WHERE order_id = $1 AND price IS NOT NULL AND price > 0`,
-            [orderId]
-        );
-        const currentPrices = currentProps.map(r => Number(r.price)).filter(v => v > 0);
-        if (currentPrices.length) {
-            benchmark.currentMin = Math.min(...currentPrices);
-            benchmark.currentMax = Math.max(...currentPrices);
-        }
-
-        res.json(benchmark);
-    } catch (e) { next(e); }
-});
-
-app.get('/api/orders/:orderId/producer-benchmark', requireAuth, requireRole('producer'), async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const orderRow = await getOrderAccessRow(orderId);
-        if (!orderRow) return res.status(404).json({ error: 'Закупка не найдена' });
-        if (orderRow.status !== 'Активный') {
-            return res.status(400).json({ error: 'Бенчмарк доступен только для активных закупок' });
-        }
-        const benchmark = await computePriceBenchmark(orderRow.category, orderId);
-        res.json(benchmark);
-    } catch (e) { next(e); }
-});
-
-app.post('/api/proposals/:proposalId/accept', requireAuth, requireRole('customer'), async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [proposalRow] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        if (!proposalRow) return res.status(404).json({ error: 'Предложение не найдено' });
-
-        const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [proposalRow.order_id]);
-        if (!orderRow) return res.status(404).json({ error: 'Связанная заявка не найдена' });
-        if (orderRow.company && orderRow.company !== req.user.company) return res.status(403).json({ error: 'Принимать предложения может только владелец закупки' });
-        if (orderRow.status === 'Закрыта' || orderRow.status === 'Отменена') {
-            return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
-        }
-
-        const title = plainTitle(orderRow.title);
-        const notifs = [];
-
-        await withTransaction(async (client) => {
-            await client.query("UPDATE orders SET status = 'Закрыта' WHERE id = $1", [orderRow.id]);
-            const { rows: allProposals } = await client.query('SELECT * FROM proposals WHERE order_id = $1', [orderRow.id]);
-            for (const p of allProposals) {
-                if (p.id === proposalId) {
-                    await client.query("UPDATE proposals SET status = 'Выигран' WHERE id = $1", [p.id]);
-                    await client.query(
-                        "INSERT INTO delivery_events (proposal_id, stage, notes, updated_by) VALUES ($1, 'КП принят', $2, 'system')",
-                        [p.id, `КП принят заказчиком. Сумма: ${p.price ? p.price.toLocaleString('ru-RU') + ' ₽' : '—'}, срок: ${p.days} дн.`]
-                    );
-                    notifs.push({ company: p.company, text: `Ваше предложение по «${title}» принято! Заказ выигран.` });
-                } else {
-                    await client.query("UPDATE proposals SET status = 'Отклонен' WHERE id = $1", [p.id]);
-                    notifs.push({ company: p.company, text: `Ваше предложение по «${title}» отклонено.` });
-                }
-            }
-        });
-
-        // Fire integrations (Bitrix24, AmoCRM) — non-blocking
-        const wonProposal = { id: proposalId, company: proposalRow.company, price: proposalRow.price, days: proposalRow.days };
-        triggerIntegrations(req.user.company, wonProposal, orderRow).catch(() => {});
-
-        await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
-        await Promise.all(notifs.map(async n => {
-            const email = await getCompanyEmail(n.company);
-            const won = n.text.includes('принято');
-            if (email) await sendEmail(email, won ? `Предложение принято — «${title}»` : `Предложение отклонено — «${title}»`,
-                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-                  <h3 style="color:${won ? '#41bd97' : '#e07070'}">${won ? 'Ваше предложение принято!' : 'Предложение отклонено'}</h3>
-                  <p>${won
-                    ? `Поздравляем! Заказчик выбрал ваше предложение по закупке <strong>«${htmlEscape(title)}»</strong>.`
-                    : `К сожалению, заказчик выбрал другого поставщика по закупке <strong>«${htmlEscape(title)}»</strong>.`
-                  }</p>
-                  <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
-                </div>`
-            );
-        }));
-        // Push: уведомить поставщика о принятом КП
-        getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => {
-                sendPush(id, 'КП принято!', `Ваше предложение по заявке «${title}» принято`, `${APP_URL}/deals`);
-                sendTelegramNotification(id, `✅ <b>КП принято!</b>\nЗакупка: «${title}»\nЗаказчик выбрал ваше предложение.`);
-            })
-        ).catch(() => {});
-        res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
-    } catch (e) { next(e); }
-});
-
-app.post('/api/proposals/:proposalId/reject', requireAuth, requireRole('customer'), async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [proposalRow] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        if (!proposalRow) return res.status(404).json({ error: 'Предложение не найдено' });
-
-        const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [proposalRow.order_id]);
-        if (!orderRow) return res.status(404).json({ error: 'Связанная заявка не найдена' });
-        if (orderRow.company && orderRow.company !== req.user.company) return res.status(403).json({ error: 'Отклонять предложения может только владелец закупки' });
-        if (proposalRow.status !== 'Ожидает ответа') return res.status(400).json({ error: 'Можно отклонить только предложение в статусе "Ожидает ответа"' });
-
-        const rejectTitle = plainTitle(orderRow.title);
-        await pool.query("UPDATE proposals SET status = 'Отклонен' WHERE id = $1", [proposalId]);
-        await addNotification(proposalRow.company, `Ваше предложение по «${rejectTitle}» отклонено.`);
-        const rejectEmail = await getCompanyEmail(proposalRow.company);
-        if (rejectEmail) await sendEmail(rejectEmail, `Предложение отклонено — «${rejectTitle}»`,
-            `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-              <h3 style="color:#e07070">Предложение отклонено</h3>
-              <p>Заказчик отклонил ваше предложение по закупке <strong>«${htmlEscape(rejectTitle)}»</strong>.</p>
-              <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
-            </div>`
-        );
-        // Push: уведомить поставщика об отклонённом КП
-        getUserIdsByCompany(proposalRow.company).then(ids =>
-            ids.forEach(id => {
-                sendPush(id, 'КП отклонено', `Предложение по заявке «${rejectTitle}» отклонено`, `${APP_URL}/proposals`);
-                sendTelegramNotification(id, `❌ <b>КП отклонено</b>\nЗакупка: «${rejectTitle}»`);
-            })
-        ).catch(() => {});
-        const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        res.json(rowToProposal(updated));
-    } catch (e) { next(e); }
-});
-
-app.put('/api/proposals/:proposalId', requireAuth, requireRole('producer'), async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { price, days } = req.body;
-        if (!price || !days) return res.status(400).json({ error: 'Не указаны цена или сроки' });
-
-        const { rows: [row] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
-        if (row.company !== req.user.company) return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
-        if (row.status !== 'Ожидает ответа') return res.status(400).json({ error: 'Можно редактировать только предложения в статусе "Ожидает ответа"' });
-
-        await pool.query('UPDATE proposals SET price = $1, days = $2 WHERE id = $3', [Number(price), Number(days), proposalId]);
-        const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        res.json(rowToProposal(updated));
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/proposals/:proposalId', requireAuth, requireRole('producer'), async (req, res, next) => {
-    try {
-        const proposalId = Number(req.params.proposalId);
-        const { rows: [row] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
-        if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
-        if (row.company !== req.user.company) return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
-
-        await withTransaction(async (client) => {
-            await client.query('DELETE FROM proposals WHERE id = $1', [proposalId]);
-            await client.query('UPDATE orders SET responses = GREATEST(0, responses - 1) WHERE id = $1', [row.order_id]);
-        });
-
-        res.json({ message: 'Предложение отозвано' });
-    } catch (e) { next(e); }
-});
+app.use('/api/orders', createOrdersRouter(routesDeps));
+app.use('/api/proposals', createProposalsRouter(routesDeps));
+app.use('/api/order-proposals', createOrderProposalsRouter(routesDeps));
 
 // ===================== COMPANIES =====================
 
