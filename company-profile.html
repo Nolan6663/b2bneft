@@ -315,7 +315,7 @@
 
         const userRole = localStorage.getItem('userRole');
         const myCompany = localStorage.getItem('userCompany');
-        const companyId = new URLSearchParams(window.location.search).get('id');
+        let companyId = new URLSearchParams(window.location.search).get('id');
         let currentData = null;
         let verificationStatus = null;
         let editEquipment = [];
@@ -333,24 +333,52 @@
             { key: 'weld',   label: 'Сварка',    icon: '∿' },
         ];
 
-        window.addEventListener('DOMContentLoaded', () => {
+        async function resolveCompanyId() {
+            if (companyId) return companyId;
+            const cached = localStorage.getItem('_myCompanyId');
+            if (cached) {
+                companyId = cached;
+                return companyId;
+            }
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/me`);
+                if (!r.ok) return null;
+                const me = await r.json();
+                if (me.companyId) {
+                    companyId = String(me.companyId);
+                    localStorage.setItem('_myCompanyId', companyId);
+                    return companyId;
+                }
+            } catch { /* ignore */ }
+            return null;
+        }
+
+        async function bootProfilePage() {
             const mainLink = document.getElementById('mainCabinetLink');
             if (mainLink) mainLink.href = userRole === 'customer' ? 'index.html' : 'producer.html';
 
-            if (!companyId) {
-                document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Компания не указана</div>';
+            const id = await resolveCompanyId();
+            if (!id) {
+                document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Профиль компании не найден. Обновите страницу или войдите снова.</div>';
                 return;
             }
+            if (!window.location.search.includes('id=')) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('id', id);
+                window.history.replaceState(null, '', url.pathname + url.search);
+            }
+            companyId = id;
             loadProfile();
             initNotifications();
             initSidebarBadges();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            bootProfilePage();
         });
 
         window.__pageInit = function() {
-            if (!companyId) return;
-            loadProfile();
-            initNotifications();
-            initSidebarBadges();
+            bootProfilePage();
         };
 
         async function loadProfile() {
