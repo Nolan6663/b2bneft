@@ -467,7 +467,7 @@
                             </div>
                             <div style="flex:1;">
                                 <div class="export-label" onclick="exportAnalytics()">Отчёт по аналитике</div>
-                                <div class="export-sub">CSV (демо-данные)</div>
+                                <div class="export-sub" id="exportAnalyticsSub">CSV</div>
                             </div>
                         </div>
                         <div class="export-item">
@@ -1034,28 +1034,30 @@
 
         /* ══ EXPORT ══ */
         function exportAnalytics() {
+            const data = REAL || MOCK;
             const rows = [
                 ['Показатель','Значение','Изменение'],
-                ...MOCK.kpi.map(k => [k.label, k.value, '+' + k.delta + (k.unit ? ' ' + k.unit : '%')]),
+                ...data.kpi.map(k => [k.label, k.value, (k.delta >= 0 ? '+' : '') + k.delta + (k.unit ? ' ' + k.unit : '%')]),
                 [],
                 ['Топ поставщиков'],
                 ['Поставщик','Выиграно (млн ₽)','Доля (%)'],
-                ...MOCK.suppliers.map(s => [s.name, s.amount, s.share]),
+                ...(data.suppliers || []).map(s => [s.name, s.amount, s.share]),
                 [],
                 ['Воронка закупок'],
                 ['Этап','Кол-во','%'],
-                ...MOCK.funnel.map(f => [f.label, f.count, f.pct]),
+                ...(data.funnel || []).map(f => [f.label, f.count, f.pct]),
             ];
             const csv = rows.map(r => r.join(';')).join('\n');
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}));
             a.download = 'analytics_report.csv';
             a.click();
-            showToast('Отчёт скачан в формате CSV');
+            showToast(REAL ? 'Отчёт по реальным данным скачан (CSV)' : 'Отчёт скачан в формате CSV');
         }
 
         function exportDetailed() {
-            const d = MOCK.dynamics[dynPeriod];
+            const data = REAL || MOCK;
+            const d = data.dynamics[dynPeriod] || { labels: [], volumes: [], economy: [] };
             const rows = [
                 ['Период','Объём закупок (млн ₽)','Экономия (млн ₽)'],
                 ...d.labels.map((l,i) => [l, d.volumes[i], d.economy[i]]),
@@ -1436,13 +1438,13 @@
                         label: 'Среднее время производства',
                         value: d.avgDays != null ? d.avgDays + ' дн.' : '—',
                         baseNum: d.avgDays || 0, delta: 0, unit: 'дн.', color: '#F59E0B', bg: '#FFF8E8',
-                        spark: [],
+                        spark: (d.dynamics || []).map(r => r.avgDays || 0).filter(v => v > 0),
                     },
                     {
                         label: 'Конверсия в договоры',
                         value: conversion + '%',
                         baseNum: conversion, delta: 0, unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE',
-                        spark: [],
+                        spark: (d.dynamics || []).map(r => r.conversion || 0),
                     },
                 ],
                 dynamics: {
@@ -1485,6 +1487,8 @@
             renderRatings(REAL);
             renderHeatmap(REAL);
             renderInsights(REAL);
+            const exportSub = document.getElementById('exportAnalyticsSub');
+            if (exportSub) exportSub.textContent = 'CSV по данным БД';
         }
 
         /* ══ INIT ══ */

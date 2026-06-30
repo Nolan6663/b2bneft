@@ -172,6 +172,8 @@ company_photos       — фотографии компаний
 
 delivery_events      — этапы трекинга поставок
 
+order_events         — аудит статусов закупок (event_type, title, detail, actor)
+
 verification_requests — заявки на верификацию
 
 refresh_tokens       — JWT refresh токены
@@ -549,22 +551,47 @@ Nginx (обязательно на prod для WebSocket):
 Проверка в браузере: DevTools → Network → WS → /socket.io/ статус 101.
 -------------------------------
   [ ] AI-помощник для составления ТЗ (Gemini не работает — проблема с ключом)
-  [ ] UI-карточка риска поставщика (API /api/risk/:inn уже есть)
+  [x] UI-карточка риска поставщика (API /api/risk/:inn — catalog + company-profile)
   [ ] Обратный аукцион для прямых закупок (reverse auction)
   [ ] Тарифы / оплата (страница tariff.html есть; launchMode=true — всё бесплатно;
       биллинг и реальные платежи не подключены)
   [ ] Мобильное приложение (долгосрочно)
-  [ ] Web Push уведомления (UI-заглушка есть, логика не реализована)
+  [x] Web Push уведомления (settings.html + assets/sw.js + /api/push/* при VAPID в .env)
   [ ] Telegram-бот
   [ ] Разбить CSS на tokens/components/layout
-  [ ] Единая sticky-кнопка «Сохранить» на настройках
-  [ ] Пустые состояния и skeleton-загрузка
-  [ ] Таблицы → карточки на mobile (список заказов)
-  [ ] Command palette, таймлайн сделки
+  [x] Единая sticky-кнопка «Сохранить» на настройках
+  [x] Пустые состояния и skeleton-загрузка
+  [x] Таблицы → карточки на mobile (список заказов index.html ≤720px)
+  [x] Command palette, таймлайн сделки
 
 
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — backlog sprint)
+  ----------------------------------------------------------------
+  P1 — UX:
+  • index.html — мобильные карточки закупок (orders-mobile-list, ≤720px, как deals.html)
+  • index.html — черновик закупки в localStorage (tz_order_draft_*), баннер «Восстановить»
+  • catalog.html — фильтр «Только проверенные» (verifiedByPlatform / verifiedEgrul)
+  • catalog.html — бейдж риска поставщика через GET /api/risk/:inn
+  • db.js — таблица order_events; логирование create/update/cancel/close
+  • routes/deals.js — таймлайн дополнен событиями order_events (аудит статусов)
+
+  P2 — аналитика и polish:
+  • GET /api/customer/analytics — dynamics[].avgDays и conversion по месяцам (sparklines)
+  • analytics.html — CSV-экспорт по REAL-данным API; sparkline для времени и конверсии
+  • catalog.html, deals.html — skeleton при загрузке; empty states (ранее index/deals)
+
+  P3:
+  • settings-page.css — sticky .form-row-actions для кнопок «Сохранить»
+  • assets/app.js — command palette: карта, «Создать закупку», маршрут index.html?create=1
+  • Web Push — уже wired (sw.js, settings, /api/push/*); нужны VAPID_* в .env на prod
+
+  DEPLOY (nginx WebSocket): см. раздел REAL-TIME — location /socket.io/ обязателен на prod.
+
+  Проверка: npm run check
+
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — top-3 product features)
   ----------------------------------------------------------------

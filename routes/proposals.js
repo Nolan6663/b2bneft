@@ -30,6 +30,7 @@ function createProposalsRouter(deps) {
         sendTelegramNotification,
         triggerIntegrations,
         APP_URL,
+        logOrderEvent,
     } = deps;
 
     const router = express.Router();
@@ -150,6 +151,14 @@ function createProposalsRouter(deps) {
                     }
                 }
             });
+
+            await logOrderEvent(
+                orderRow.id,
+                'closed',
+                'Закупка закрыта — КП принято',
+                `${proposalRow.company} · ${Number(proposalRow.price).toLocaleString('ru-RU')} ₽`,
+                req.user.company
+            );
 
             const wonProposal = { id: proposalId, company: proposalRow.company, price: proposalRow.price, days: proposalRow.days };
             triggerIntegrations(req.user.company, wonProposal, orderRow).catch(() => {});

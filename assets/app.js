@@ -1330,6 +1330,7 @@ const DEAL_TIMELINE_ICONS = {
   chat: '💬',
   complete: '✅',
   review: '⭐',
+  status: '📝',
 };
 
 function renderDealTimeline(events) {
@@ -1643,6 +1644,8 @@ function dismissObChecklist() {
     profile:  _svg('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),
     company:  _svg('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/>'),
     settings: _svg('<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>'),
+    map:     _svg('<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>'),
+    create:  _svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'),
     order:    _svg('<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>'),
   };
 
@@ -1658,9 +1661,14 @@ function dismissObChecklist() {
     { title: 'Аналитика',       sub: 'Статистика и отчёты',      href: 'analytics.html',       icon: CP_ICONS.analytics, roles: ['customer','producer'] },
     { title: 'Сообщения',       sub: 'Чаты с контрагентами',     href: 'messages.html',        icon: CP_ICONS.messages,  roles: ['customer','producer'] },
     { title: 'Избранное',       sub: 'Сохранённые компании',     href: 'favorites.html',       icon: CP_ICONS.favorites, roles: ['customer','producer'] },
+    { title: 'Карта',           sub: 'Производства на карте',    href: 'map.html',             icon: CP_ICONS.map,       roles: ['customer','producer'] },
     { title: 'Профиль компании',sub: 'Реквизиты и настройки',    href: 'company-profile.html', icon: CP_ICONS.company,   roles: ['customer','producer'] },
     { title: 'Настройки',       sub: 'Профиль, уведомления',     href: 'settings.html',        icon: CP_ICONS.settings,  roles: ['customer','producer'] },
   ].filter(it => it.roles.includes(role) || it.roles.includes('all'));
+
+  const ACTION_ITEMS = role === 'customer' ? [
+    { title: 'Создать закупку', sub: 'Новая прямая закупка', href: 'index.html?create=1', icon: CP_ICONS.create },
+  ] : [];
 
   /* ── Build DOM ───────────────────────────────────────────────────── */
   const backdrop = document.createElement('div');
@@ -1717,6 +1725,11 @@ function dismissObChecklist() {
     results.innerHTML = '';
     const ql = (q || '').toLowerCase().trim();
 
+    /* Action shortcuts */
+    const actionMatches = ACTION_ITEMS.filter(it =>
+      !ql || it.title.toLowerCase().includes(ql) || it.sub.toLowerCase().includes(ql)
+    );
+
     /* Navigation matches */
     const navMatches = NAV_ITEMS.filter(it =>
       !ql || it.title.toLowerCase().includes(ql) || it.sub.toLowerCase().includes(ql)
@@ -1731,12 +1744,31 @@ function dismissObChecklist() {
         ).slice(0, 5)
       : [];
 
-    if (!navMatches.length && !orderMatches.length) {
+    if (!actionMatches.length && !navMatches.length && !orderMatches.length) {
       results.innerHTML = `<div class="cp-empty">Ничего не найдено по запросу «${escapeHtml(q)}»</div>`;
       return;
     }
 
     const frag = document.createDocumentFragment();
+
+    if (actionMatches.length) {
+      const lbl = document.createElement('div');
+      lbl.className = 'cp-section-label';
+      lbl.textContent = 'Действия';
+      frag.appendChild(lbl);
+      actionMatches.forEach(it => {
+        const a = document.createElement('a');
+        a.className = 'cp-item';
+        a.href = it.href;
+        a.innerHTML = `
+          <div class="cp-item-icon cp-item-icon-svg">${it.icon}</div>
+          <div class="cp-item-body">
+            <div class="cp-item-title">${highlight(it.title, q)}</div>
+            <div class="cp-item-sub">${escapeHtml(it.sub)}</div>
+          </div>`;
+        frag.appendChild(a);
+      });
+    }
 
     if (navMatches.length) {
       const lbl = document.createElement('div');

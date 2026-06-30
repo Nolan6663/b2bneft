@@ -804,7 +804,15 @@
         window.__pageInit = async function() {
             const pt = document.getElementById('pageTitle');
             if (pt) pt.textContent = userRole === 'customer' ? 'Заказы' : 'Выигранные сделки';
-            renderTable();
+            const tbody = document.getElementById('ordersTableBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="9"><div class="skeleton-line" style="height:42px;border-radius:8px;display:block;"></div></td>';
+                    tbody.appendChild(tr);
+                }
+            }
             try {
                 const r = await apiFetch(`${SERVER_URL}/deals`);
                 if (r.ok) {

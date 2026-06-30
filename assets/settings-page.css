@@ -193,6 +193,12 @@
     margin-top: 18px;
     gap: 10px;
     flex-wrap: wrap;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--card-bg);
+    padding: 12px 0 4px;
+    border-top: 1px solid var(--inner-border);
 }
 
 .alert-inline {

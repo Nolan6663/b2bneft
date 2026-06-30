@@ -165,6 +165,15 @@ function createDealsRouter(deps) {
                 push('delivery', ev.stage, ev.notes || '', ev.created_at);
             }
 
+            const { rows: orderEventRows } = await pool.query(
+                'SELECT event_type, title, detail, actor, created_at FROM order_events WHERE order_id = $1 ORDER BY created_at ASC',
+                [deal.order_id]
+            );
+            for (const ev of orderEventRows) {
+                if (ev.event_type === 'created') continue;
+                push('status', ev.title, ev.detail || ev.actor || '', ev.created_at);
+            }
+
             const { rows: [{ n: msgCount }] } = await pool.query(
                 `SELECT COUNT(*)::int AS n FROM messages WHERE order_id = $1 AND company = $2`,
                 [deal.order_id, deal.producer_company]

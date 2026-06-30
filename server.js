@@ -18,7 +18,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
-const { pool, initDb } = require('./db');
+const { pool, initDb, logOrderEvent } = require('./db');
 const storage = require('./storage');
 const speakeasy = require('speakeasy');
 const QRCode    = require('qrcode');
@@ -1155,6 +1155,7 @@ const routesDeps = {
     sendPush,
     sendTelegramNotification,
     triggerIntegrations,
+    logOrderEvent,
     getIo: () => io,
     APP_URL,
 };
@@ -1525,7 +1526,11 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
                     to_char(date_trunc('month', o.created_at), 'Mon YYYY') AS label,
                     date_trunc('month', o.created_at) AS month_dt,
                     COUNT(o.id) AS order_count,
-                    COALESCE(SUM(p.price) FILTER (WHERE p.status='Выигран'), 0) AS volume
+                    COALESCE(SUM(p.price) FILTER (WHERE p.status='Выигран'), 0) AS volume,
+                    ROUND(AVG(p.days) FILTER (WHERE p.status='Выигран')) AS avg_days,
+                    CASE WHEN COUNT(o.id) > 0
+                        THEN ROUND(COUNT(o.id) FILTER (WHERE o.status='Закрыта')::numeric / COUNT(o.id) * 100)
+                        ELSE 0 END AS conversion
                 FROM orders o
                 LEFT JOIN proposals p ON p.order_id = o.id AND p.status='Выигран'
                 WHERE o.company=$1 AND o.created_at >= NOW()-INTERVAL '6 months'
@@ -1570,6 +1575,8 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
                 label:      r.label,
                 orderCount: Number(r.order_count),
                 volume:     Math.round(Number(r.volume) / 1e6 * 100) / 100,
+                avgDays:    r.avg_days != null ? Number(r.avg_days) : null,
+                conversion: r.conversion != null ? Number(r.conversion) : null,
             })),
             categories: categoryRows.map(r => ({ label: r.category, count: Number(r.cnt) })),
             suppliers: supplierRows.map(r => ({

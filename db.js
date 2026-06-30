@@ -242,6 +242,15 @@ async function initDb() {
             subscription  JSONB       NOT NULL,
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS order_events (
+            id            SERIAL      PRIMARY KEY,
+            order_id      INTEGER     NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+            event_type    TEXT        NOT NULL,
+            title         TEXT        NOT NULL,
+            detail        TEXT        NOT NULL DEFAULT '',
+            actor         TEXT        NOT NULL DEFAULT '',
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
@@ -276,6 +285,7 @@ async function initDb() {
 
     await pool.query(`
         CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_order_events_order_id ON order_events(order_id);
     `);
 
     await pool.query(`
@@ -320,4 +330,12 @@ async function initDb() {
     console.log('✓ База данных готова');
 }
 
-module.exports = { pool, initDb };
+async function logOrderEvent(orderId, eventType, title, detail = '', actor = '') {
+    if (!orderId || !eventType || !title) return;
+    await pool.query(
+        'INSERT INTO order_events (order_id, event_type, title, detail, actor) VALUES ($1,$2,$3,$4,$5)',
+        [orderId, eventType, title, String(detail || '').slice(0, 500), String(actor || '').slice(0, 200)]
+    );
+}
+
+module.exports = { pool, initDb, logOrderEvent };

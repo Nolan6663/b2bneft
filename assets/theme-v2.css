@@ -2246,6 +2246,35 @@ table {
   .orders-table td:nth-child(9) { display: none; }
 }
 
+/* Index.html — mobile order cards (mirror deals.html) */
+.orders-mobile-list { display: none; }
+@media (max-width: 720px) {
+  #orders-table-body { display: none !important; }
+  #ordersMobileList.orders-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 0 12px;
+  }
+  #ordersMobileList .orders-mobile-card {
+    background: var(--inner-bg);
+    border: 1px solid var(--inner-border);
+    border-radius: var(--radius-inner);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  #ordersMobileList .orders-mobile-card.selected {
+    border-color: rgba(255,106,0,.35);
+    background: rgba(255,106,0,.05);
+  }
+  #ordersMobileList .omc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  #ordersMobileList .omc-num { font-size: 11px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+  #ordersMobileList .omc-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; line-height: 1.35; }
+  #ordersMobileList .omc-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 4px; }
+  #ordersMobileList .omc-date { font-size: 11.5px; color: var(--text-muted); }
+}
+
 /* ══════════════════════════════════════════════════════════════════
    HUMANIZATION — убираем деревянность
    ══════════════════════════════════════════════════════════════════ */

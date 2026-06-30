@@ -391,6 +391,10 @@
                     <select class="filter-select"><option>Выбрать регион</option></select>
                 </div>
                 <div class="filter-group">
+                    <div class="filter-title">Верификация</div>
+                    <label class="filter-check"><input type="checkbox" id="verifiedOnlyFilter" onchange="toggleVerifiedFilter(this.checked)"> Только проверенные</label>
+                </div>
+                <div class="filter-group">
                     <div class="filter-title">Сертификаты и стандарты</div>
                     <label class="filter-check"><input type="checkbox"> ISO 9001</label>
                     <label class="filter-check"><input type="checkbox"> ГОСТ Р ИСО</label>
@@ -475,6 +479,8 @@
         let showCount    = 6;
         let aiMode       = false;
         let aiResults    = [];
+        let verifiedOnly = false;
+        const _riskCache = {};
 
         const GRADIENTS = [
             'linear-gradient(135deg,#FF6A00,#F04B00)',
@@ -484,7 +490,23 @@
             'linear-gradient(135deg,#DC2626,#F87171)',
         ];
 
+        function showCatalogSkeleton() {
+            const grid = document.getElementById('producersGrid');
+            if (!grid) return;
+            grid.innerHTML = Array.from({ length: 6 }, () =>
+                `<div class="skeleton-card" style="min-height:220px;padding:16px;border-radius:14px;border:1px solid var(--card-border);">
+                    <div style="display:flex;gap:12px;margin-bottom:12px;">
+                        <div class="skeleton-avatar" style="width:48px;height:48px;border-radius:12px;"></div>
+                        <div style="flex:1;"><div class="skeleton-line" style="width:70%;height:14px;margin-bottom:8px;"></div><div class="skeleton-line" style="width:45%;height:10px;"></div></div>
+                    </div>
+                    <div class="skeleton-line" style="width:90%;height:10px;margin-bottom:6px;"></div>
+                    <div class="skeleton-line" style="width:75%;height:10px;"></div>
+                </div>`
+            ).join('');
+        }
+
         async function loadCatalog() {
+            showCatalogSkeleton();
             try {
                 const res = await apiFetch(`${SERVER_URL}/catalog`);
                 if (!res.ok) throw new Error();
@@ -517,9 +539,18 @@
             render();
         }
 
+        function toggleVerifiedFilter(checked) {
+            verifiedOnly = !!checked;
+            showCount = 6;
+            render();
+        }
+
         function resetCatalogFilters() {
             searchQuery = '';
             activeFilter = '';
+            verifiedOnly = false;
+            const verifiedCb = document.getElementById('verifiedOnlyFilter');
+            if (verifiedCb) verifiedCb.checked = false;
             const search = document.getElementById('catalogSearch');
             if (search) search.value = '';
             document.querySelectorAll('.filter-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
@@ -551,6 +582,9 @@
                     const caps = (p.capabilities || []).join(' ') + ' ' + (p.specialization || '');
                     return sidebarCategories.some(c => caps.toLowerCase().includes(c.toLowerCase().split(' ')[0]));
                 });
+            }
+            if (verifiedOnly) {
+                list = list.filter(p => p.verifiedByPlatform || p.verifiedEgrul);
             }
             return list;
         }
@@ -653,6 +687,37 @@
 
             const btn = document.getElementById('showMoreBtn');
             if (btn) btn.style.display = visible.length < list.length ? '' : 'none';
+            loadCatalogRiskBadges();
+        }
+
+        async function loadCatalogRiskBadges() {
+            document.querySelectorAll('.catalog-risk-slot[data-inn]').forEach(async slot => {
+                const inn = slot.dataset.inn;
+                if (!inn || slot.dataset.loaded) return;
+                slot.dataset.loaded = '1';
+                try {
+                    let data = _riskCache[inn];
+                    if (!data) {
+                        const r = await apiFetch(`${SERVER_URL}/risk/${encodeURIComponent(inn)}`);
+                        if (!r.ok) return;
+                        data = await r.json();
+                        _riskCache[inn] = data;
+                    }
+                    const labels = { low: 'Риск: низкий', medium: 'Риск: средний', high: 'Риск: высокий' };
+                    const key = ['low', 'medium', 'high'].includes(data.level) ? data.level : 'unknown';
+                    slot.innerHTML = `<button type="button" class="risk-pill risk-pill--${key}" style="font-size:10.5px;padding:3px 9px;cursor:pointer;border:none;font-family:inherit;" onclick="openCatalogRiskModal('${inn.replace(/'/g, '')}')">${escapeHtml(labels[data.level] || 'Проверка риска')}</button>`;
+                } catch {}
+            });
+        }
+
+        function openCatalogRiskModal(inn) {
+            const data = _riskCache[inn];
+            if (!data) return;
+            const levelCfg = {
+                low: 'Низкий', medium: 'Средний', high: 'Высокий',
+            }[data.level] || '—';
+            const checks = (data.checks || []).slice(0, 4).map(c => `• ${c.name}: ${c.detail}`).join('\n');
+            showToast(`Риск ${levelCfg} (${data.score}/100). ${checks.slice(0, 120)}`, data.level === 'high' ? 'warn' : 'success');
         }
 
         function cardHTML(p, aiReason) {
@@ -714,6 +779,10 @@
                 ? `<div class="ai-reason-badge"><span>✦ AI:</span>${escapeHtml(aiReason)}</div>`
                 : '';
 
+            const riskSlot = p.inn
+                ? `<div class="catalog-risk-slot" data-inn="${escapeHtml(String(p.inn))}" style="margin-top:6px;"></div>`
+                : '';
+
             return `
             <div class="catalog-card">
                 <div class="catalog-card-top">
@@ -721,6 +790,7 @@
                     <div class="catalog-card-main">
                         <div class="catalog-card-name">${escapeHtml(p.company || '—')}</div>
                         <div class="catalog-card-loc">${escapeHtml(locParts.join(' · '))}</div>
+                        ${riskSlot}
                     </div>
                     ${verBadge}
                 </div>

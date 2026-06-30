@@ -31,6 +31,7 @@ module.exports = function createOrdersRouter(deps) {
         sendTelegramNotification,
         getOrderAccessRow,
         APP_URL,
+        logOrderEvent,
     } = deps;
 
     const router = express.Router();
@@ -174,6 +175,7 @@ module.exports = function createOrdersRouter(deps) {
                  description ? String(description).slice(0, 1000) : '', req.user.company, drawing]
             );
             const newOrder = rowToOrder(newRow);
+            await logOrderEvent(newOrder.id, 'created', 'Закупка опубликована', newOrder.category || '', req.user.company);
 
             const MATCH_NOTIFY_THRESHOLD = 50;
             const HOT_MATCH_THRESHOLD = 70;
@@ -248,6 +250,7 @@ module.exports = function createOrdersRouter(deps) {
                  drawingJson, orderId]
             );
             const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+            await logOrderEvent(orderId, 'updated', 'Закупка изменена', title, req.user.company);
             res.json(rowToOrder(updated));
         } catch (e) { next(e); }
     });
@@ -277,6 +280,7 @@ module.exports = function createOrdersRouter(deps) {
             });
 
             await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
+            await logOrderEvent(orderId, 'cancelled', 'Закупка отменена', title, req.user.company);
             const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
             res.json(rowToOrder(updated));
         } catch (e) { next(e); }

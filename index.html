@@ -165,6 +165,7 @@
                 <div></div>
             </div>
             <div id="orders-table-body"></div>
+            <div class="orders-mobile-list" id="ordersMobileList"></div>
             <div class="proc-list-more" id="ordersShowMore" style="display:none;" onclick="showMoreOrders()">Показать ещё ⌄</div>
         </div>
 
@@ -342,6 +343,11 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                 <input type="checkbox" id="saveAsTemplate" style="accent-color:#FF6A00;width:14px;height:14px;">
                 <label for="saveAsTemplate" style="font-size:13px;color:var(--text-secondary);cursor:pointer;">Сохранить как шаблон</label>
+            </div>
+            <div id="orderDraftBanner" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(11,143,206,.08);border:1px solid rgba(11,143,206,.25);border-radius:8px;font-size:12.5px;color:var(--text-secondary);">
+                <span>Есть несохранённый черновик.</span>
+                <button type="button" onclick="restoreOrderDraft()" style="margin-left:8px;background:none;border:none;color:var(--accent-cyan);font-weight:600;cursor:pointer;font-family:inherit;">Восстановить</button>
+                <button type="button" onclick="clearOrderDraft(true)" style="margin-left:6px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:inherit;">Удалить</button>
             </div>
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeModal()">Отмена</button>
@@ -544,6 +550,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             updateStatusCounts();
             renderOrdersTable();
+            bindOrderDraftAutosave();
+            updateOrderDraftBanner();
 
             loadOrders().then(() => loadWidgets());
             loadAnalytics();
@@ -551,6 +559,12 @@
             initNotifications();
             initSidebarBadges();
             document.addEventListener('tz:proposal:new', onTzProposalNew);
+
+            const params = new URLSearchParams(location.search);
+            if (params.get('create') === '1') {
+                openModal();
+                history.replaceState(null, '', location.pathname);
+            }
         });
 
         window.__pageInit = function() {
@@ -741,11 +755,77 @@
             document.getElementById('orderFileExisting').style.display = 'none';
         }
 
+        const ORDER_DRAFT_KEY = 'tz_order_draft';
+
+        function getOrderDraftKey() {
+            const company = localStorage.getItem('userCompany') || 'guest';
+            return `${ORDER_DRAFT_KEY}_${company}`;
+        }
+
+        function saveOrderDraft() {
+            if (editingOrderId) return;
+            const title = document.getElementById('orderName')?.value?.trim();
+            const category = document.getElementById('orderCategory')?.value;
+            const quantity = document.getElementById('orderQuantity')?.value;
+            const deadline = document.getElementById('orderDeadline')?.value;
+            const description = document.getElementById('orderDescription')?.value?.trim();
+            if (!title && !description && !deadline && !quantity) {
+                localStorage.removeItem(getOrderDraftKey());
+                updateOrderDraftBanner();
+                return;
+            }
+            localStorage.setItem(getOrderDraftKey(), JSON.stringify({
+                title, category, quantity, deadline, description, savedAt: Date.now(),
+            }));
+            updateOrderDraftBanner();
+        }
+
+        function restoreOrderDraft() {
+            try {
+                const raw = localStorage.getItem(getOrderDraftKey());
+                if (!raw) return false;
+                const d = JSON.parse(raw);
+                if (d.title) document.getElementById('orderName').value = d.title;
+                if (d.category) document.getElementById('orderCategory').value = d.category;
+                if (d.quantity) document.getElementById('orderQuantity').value = d.quantity;
+                if (d.deadline) document.getElementById('orderDeadline').value = d.deadline;
+                if (d.description) document.getElementById('orderDescription').value = d.description;
+                showToast('Черновик восстановлен', 'success');
+                return true;
+            } catch { return false; }
+        }
+
+        function clearOrderDraft(silent) {
+            localStorage.removeItem(getOrderDraftKey());
+            updateOrderDraftBanner();
+            if (!silent) showToast('Черновик удалён');
+        }
+
+        function updateOrderDraftBanner() {
+            const banner = document.getElementById('orderDraftBanner');
+            if (!banner) return;
+            const hasDraft = !editingOrderId && !!localStorage.getItem(getOrderDraftKey());
+            banner.style.display = hasDraft ? 'block' : 'none';
+        }
+
+        function bindOrderDraftAutosave() {
+            ['orderName', 'orderCategory', 'orderQuantity', 'orderDeadline', 'orderDescription'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.dataset.draftBound) {
+                    el.dataset.draftBound = '1';
+                    el.addEventListener('input', saveOrderDraft);
+                    el.addEventListener('change', saveOrderDraft);
+                }
+            });
+        }
+
         function openModal() {
             editingOrderId = null;
             document.getElementById('orderModalTitle').innerText = 'Новая прямая закупка';
             document.getElementById('orderSubmitBtn').innerText = 'Добавить';
             resetOrderForm();
+            bindOrderDraftAutosave();
+            updateOrderDraftBanner();
             document.getElementById('orderModal').style.display = 'flex';
         }
 
@@ -822,8 +902,10 @@
             });
 
             const tableBody = document.getElementById('orders-table-body');
+            const mobileList = document.getElementById('ordersMobileList');
             if (!tableBody) return;
             tableBody.innerHTML = '';
+            if (mobileList) mobileList.innerHTML = '';
 
             const showMore = document.getElementById('ordersShowMore');
 
@@ -851,6 +933,7 @@
 
             function renderRows() {
                 tableBody.innerHTML = '';
+                if (mobileList) mobileList.innerHTML = '';
                 window._sortedOrders.slice(0, visibleCount).forEach(order => {
                     const row = document.createElement('div');
                     row.className = 'proc-row proc-grid-cols';
@@ -860,20 +943,24 @@
                     const dFmt = formatDeadline(order.deadline);
                     const dColor = order.deadline && (new Date(order.deadline) - Date.now()) < 3 * 86400000
                         ? 'var(--accent-orange)' : 'var(--text-primary)';
+                    const statusPill = `<span class="status-dot status-pill ${statusCls}">${escapeHtml(order.status)}</span>`;
+                    const orderNum = `ЗК-${String(order.id).padStart(5,'0')}`;
 
-                    row.onclick = () => {
-                        document.querySelectorAll('#orders-table-body .proc-row').forEach(r => r.classList.remove('row-selected'));
+                    const selectOrder = () => {
+                        document.querySelectorAll('#orders-table-body .proc-row, #ordersMobileList .orders-mobile-card').forEach(r => r.classList.remove('row-selected', 'selected'));
                         row.classList.add('row-selected');
                         showDetailPanel(order);
                     };
 
+                    row.onclick = selectOrder;
+
                     row.innerHTML = `
                         <div>
                             <div class="proc-row-title">${escapeHtml(order.title)}</div>
-                            <div class="proc-row-num">ЗК-${String(order.id).padStart(5,'0')}</div>
+                            <div class="proc-row-num">${orderNum}</div>
                         </div>
                         <div class="proc-row-cat">${escapeHtml(order.category)}</div>
-                        <div><span class="status-dot status-pill ${statusCls}">${escapeHtml(order.status)}</span></div>
+                        <div>${statusPill}</div>
                         <div class="proc-row-resp">${order.responses ?? 0}</div>
                         <div>
                             <div class="proc-row-deadline" style="color:${dColor};">${dFmt}</div>
@@ -887,6 +974,29 @@
                             </button>` : ''}
                         </div>`;
                     tableBody.appendChild(row);
+
+                    if (mobileList) {
+                        const card = document.createElement('div');
+                        card.className = 'orders-mobile-card';
+                        card.dataset.orderId = order.id;
+                        card.innerHTML = `
+                            <div class="omc-top">
+                                <span class="omc-num">${orderNum}</span>
+                                ${statusPill}
+                            </div>
+                            <div class="omc-title">${escapeHtml(order.title)}</div>
+                            <div class="omc-meta">
+                                <span>${escapeHtml(order.category)}</span>
+                                <span>${order.responses ?? 0} откл.</span>
+                            </div>
+                            <div class="omc-date">Дедлайн: ${dFmt}</div>`;
+                        card.onclick = () => {
+                            document.querySelectorAll('#orders-table-body .proc-row, #ordersMobileList .orders-mobile-card').forEach(r => r.classList.remove('row-selected', 'selected'));
+                            card.classList.add('selected');
+                            showDetailPanel(order);
+                        };
+                        mobileList.appendChild(card);
+                    }
                 });
 
                 if (showMore) {
@@ -1274,7 +1384,9 @@
                         }).catch(() => {});
                         document.getElementById('saveAsTemplate').checked = false;
                     }
-                    closeModal(); loadOrders();
+                    closeModal();
+                    clearOrderDraft(true);
+                    loadOrders();
                 } else {
                     const err = await response.json();
                     showToast(err.error || (isEdit ? 'Не удалось сохранить изменения' : 'Не удалось создать закупку'), 'error');
