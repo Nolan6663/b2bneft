@@ -427,16 +427,30 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
 
 /* ── BUTTONS ───────────────────────────────────────────────────────── */
 .btn-primary, .btn-respond, .btn-modal-submit {
-  background: var(--accent-gradient); color: var(--accent-on-button); border: none;
-  padding: 0 22px; height: 42px; border-radius: var(--radius-btn);
+  background: var(--tz-stamp-orange); color: var(--accent-on-button); border: none;
+  padding: 0 22px; height: 42px; border-radius: 4px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
   font-size: 13px; font-weight: 700; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(255,106,0,.2);
+  box-shadow: 3px 3px 0 var(--tz-ink-navy);
+  transform: translate(0, 0);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .15s ease;
 }
-.btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,106,0,.3); }
-.btn-primary:active, .btn-respond:active, .btn-modal-submit:active  { transform: scale(.96) !important; box-shadow: none !important; transition-duration: .06s !important; }
-.btn-primary:disabled, .btn-respond:disabled { background: var(--inner-bg); color: var(--text-muted); box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover {
+  background: var(--tz-stamp-orange);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--tz-ink-navy);
+}
+.btn-primary:active, .btn-respond:active, .btn-modal-submit:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 0 0 0 var(--tz-ink-navy) !important;
+  transition-duration: .06s !important;
+}
+.btn-primary:disabled, .btn-respond:disabled {
+  background: var(--inner-bg); color: var(--text-muted); box-shadow: none;
+  cursor: not-allowed; transform: none;
+}
 
 .btn-secondary, .btn-chat-secondary, .btn-modal-cancel {
   background: var(--card-bg); color: var(--secondary-btn-text);
@@ -2580,19 +2594,20 @@ table {
    HUMANIZATION — убираем деревянность
    ══════════════════════════════════════════════════════════════════ */
 
-/* 1. Кнопки — глубина вместо flat */
+/* 1. Кнопки — плоская заливка + жёсткая «штамповая» тень вместо soft-gradient pill */
 .btn-primary, .btn-respond, .btn-modal-submit {
-  background: linear-gradient(160deg, #FF7A1A 0%, #E54400 100%) !important;
-  box-shadow: 0 2px 0 #A83200, 0 4px 16px rgba(255,106,0,.22) !important;
+  background: var(--tz-stamp-orange) !important;
+  box-shadow: 3px 3px 0 var(--tz-ink-navy) !important;
   letter-spacing: .01em;
 }
 .btn-primary:hover, .btn-respond:hover, .btn-modal-submit:hover {
-  box-shadow: 0 3px 0 #A83200, 0 8px 24px rgba(255,106,0,.32) !important;
-  transform: translateY(-1px) !important;
+  background: var(--tz-stamp-orange) !important;
+  box-shadow: 4px 4px 0 var(--tz-ink-navy) !important;
+  transform: translate(-1px, -1px) !important;
 }
 .btn-primary:active, .btn-respond:active, .btn-modal-submit:active {
-  box-shadow: 0 1px 0 #A83200, 0 2px 8px rgba(255,106,0,.18) !important;
-  transform: translateY(1px) !important;
+  box-shadow: 0 0 0 var(--tz-ink-navy) !important;
+  transform: translate(3px, 3px) !important;
 }
 
 /* 2. KPI — числа крупнее, с характером */

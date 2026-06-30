@@ -187,9 +187,12 @@
   .lp-cta:hover { transform: translateY(-2px); }
   .lp-cta-primary {
     background: #FF6A00; color: #fff;
-    box-shadow: 0 8px 20px rgba(255,106,0,0.28);
+    border-radius: 4px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+    box-shadow: 4px 4px 0 #071B2A;
   }
-  .lp-cta-primary:hover { box-shadow: 0 12px 28px rgba(255,106,0,0.36); }
+  .lp-cta-primary:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #071B2A; }
+  .lp-cta-primary:active { transform: translate(4px,4px); box-shadow: 0 0 0 #071B2A; transition-duration: .06s; }
   .lp-cta-secondary {
     background: #fff; color: #071B2A; border: 1px solid rgba(7,27,42,0.14);
   }
