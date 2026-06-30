@@ -96,7 +96,7 @@
                     <section class="sp-hero">
                         <h1>${esc(c.company)}</h1>
                         <div class="sp-meta">
-                            ${c.city ? `<span class="sp-badge">📍 ${esc(c.city)}</span>` : ''}
+                            ${c.city ? `<span class="sp-badge ui-icon-label"><svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(c.city)}</span></span>` : ''}
                             ${c.specialization ? `<span class="sp-badge">${esc(c.specialization)}</span>` : ''}
                             ${c.verified ? '<span class="sp-badge verified">✓ Проверен ТехЗаказ</span>' : ''}
                             ${c.rating ? `<span class="sp-badge">Рейтинг ${esc(c.rating)}</span>` : ''}

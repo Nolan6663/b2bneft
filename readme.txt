@@ -568,6 +568,25 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — UI без emoji)
+  ----------------------------------------------------------------
+  • assets/app.js — хелпер uiIcon() / uiIconLabel(); SVG вместо emoji в toast,
+    уведомлениях, match-score, сравнении КП, таймлайне сделок, переключателе темы
+  • index.html — блок «Бенчмарк по платформе», аукцион, ссылки на файл КП
+  • producer.html, tariff.html, favorites.html, proposals.html, messages.html,
+    supplier-public.html, zakupki/*.html — emoji заменены на SVG или текстовые метки
+  • routes/orders.js — уведомления о матче без emoji в тексте
+
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — UI без emoji)
+  ----------------------------------------------------------------
+  • assets/app.js — uiIcon(), uiIconLabel(), setAuctionBtnLabel(), kpFileLinkHtml()
+  • Эмодзи в интерфейсе заменены на SVG-иконки (Feather-style) или текст
+  • index.html — бенчмарк, аукцион, ссылки на файлы КП
+  • producer.html, tariff.html, catalog.html, messages.html, company-profile.html
+  • zakupki/*.html — метаданные карточек без emoji
+  • routes/orders.js — уведомления о матче без emoji в тексте
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — backlog sprint)
   ----------------------------------------------------------------
   P1 — UX:

@@ -188,9 +188,8 @@ module.exports = function createOrdersRouter(deps) {
                     ? `<ul style="margin:8px 0 0;padding-left:18px;color:#555;font-size:13px;">${m.reasons.map(r => `<li>${htmlEscape(r)}</li>`).join('')}</ul>`
                     : '';
                 const isHot = m.score >= HOT_MATCH_THRESHOLD;
-                const emoji = isHot ? '🔥' : '🧩';
                 const label = isHot ? 'Горячий матч' : 'Подходящая закупка';
-                const notifText = `${emoji} ${label} (${m.score}%): «${orderTitle}»${m.reasons?.length ? ' — ' + m.reasons[0] : ''}`;
+                const notifText = `${label} (${m.score}%): «${orderTitle}»${m.reasons?.length ? ' — ' + m.reasons[0] : ''}`;
 
                 await addNotification(m.company, notifText);
                 await notifyCompanyEmail(
@@ -208,8 +207,8 @@ module.exports = function createOrdersRouter(deps) {
                     const userIds = await getUserIdsByCompany(m.company);
                     const pushBody = `${m.score}% · ${orderTitle}${m.reasons?.[0] ? ' · ' + m.reasons[0] : ''}`;
                     await Promise.all(userIds.map(id => {
-                        sendPush(id, `${emoji} Горячий матч ${m.score}%`, pushBody.slice(0, 120), orderUrl);
-                        sendTelegramNotification(id, `${emoji} <b>Горячий матч ${m.score}%</b>\n«${orderTitle}»\n${(m.reasons || []).slice(0, 2).join('\n')}`);
+                        sendPush(id, `Горячий матч ${m.score}%`, pushBody.slice(0, 120), orderUrl);
+                        sendTelegramNotification(id, `<b>Горячий матч ${m.score}%</b>\n«${orderTitle}»\n${(m.reasons || []).slice(0, 2).join('\n')}`);
                     }));
                 }
             }));

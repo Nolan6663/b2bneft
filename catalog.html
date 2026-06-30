@@ -413,7 +413,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         AI-поиск
                     </button>
-                    <button class="btn-secondary" onclick="saveSearch()">♡ Сохранить поиск</button>
+                    <button class="btn-secondary ui-icon-label" onclick="saveSearch()" style="display:inline-flex;align-items:center;gap:6px;"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Сохранить поиск</span></button>
                 </div>
                 <div class="catalog-toolbar">
                     <span id="catalogCount">Найдено: —</span>
@@ -455,9 +455,9 @@
             <div class="catalog-bottom-panel">
                 <div class="catalog-panel-title">Популярные категории <a style="font-size:12px;color:var(--accent-blue);" href="#">Все категории →</a></div>
                 <div class="catalog-mini-list">
-                    <div class="catalog-mini-item"><b>⚙</b><span>Трубопроводная арматура<br><small>128 поставщиков</small></span></div>
-                    <div class="catalog-mini-item"><b>▣</b><span>Насосное оборудование<br><small>96 поставщиков</small></span></div>
-                    <div class="catalog-mini-item"><b>◌</b><span>РТИ и уплотнения<br><small>62 поставщика</small></span></div>
+                    <div class="catalog-mini-item"><b><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></b><span>Трубопроводная арматура<br><small>128 поставщиков</small></span></div>
+                    <div class="catalog-mini-item"><b><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></b><span>Насосное оборудование<br><small>96 поставщиков</small></span></div>
+                    <div class="catalog-mini-item"><b><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg></b><span>РТИ и уплотнения<br><small>62 поставщика</small></span></div>
                 </div>
             </div>
             <div class="catalog-bottom-panel" id="recentPanel" style="display:none;">
@@ -776,7 +776,7 @@
                 : '';
 
             const aiBlock = aiReason
-                ? `<div class="ai-reason-badge"><span>✦ AI:</span>${escapeHtml(aiReason)}</div>`
+                ? `<div class="ai-reason-badge"><span class="ui-icon-label"><svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>AI:</span></span>${escapeHtml(aiReason)}</div>`
                 : '';
 
             const riskSlot = p.inn

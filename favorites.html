@@ -418,7 +418,7 @@
                         </div>
                         <button class="fav-unstar" onclick="removeFav(event,${c.id})">★</button>
                     </div>
-                    ${c.city?`<div class="fav-meta"><span>📍 ${escapeHtml(c.city)}</span>${c.yearsExperience?`<span>Опыт: ${c.yearsExperience} лет</span>`:''}</div>`:''}
+                    ${c.city?`<div class="fav-meta"><span class="ui-icon-label">${uiIcon('pin', 12)}<span>${escapeHtml(c.city)}</span></span>${c.yearsExperience?`<span>Опыт: ${c.yearsExperience} лет</span>`:''}</div>`:''}
                     ${c.specialization?`<div class="fav-spec">${escapeHtml(c.specialization)}</div>`:''}
                     <div class="fav-footer">
                         <span class="fav-rating">${c.rating?'★ '+c.rating:''}</span>

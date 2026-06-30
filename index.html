@@ -203,7 +203,10 @@
             </div>
 
             <div id="detPanelBenchmark" style="display:none;margin-top:14px;padding:12px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
-                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">📊 Бенчмарк по платформе</div>
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Бенчмарк по платформе
+                </div>
                 <div id="detPanelBenchmarkBody"></div>
             </div>
 
@@ -211,7 +214,10 @@
             <!-- Auction block -->
             <div id="detPanelAuction" style="display:none;margin-top:14px;padding:14px;background:rgba(255,106,0,.06);border:1px solid rgba(255,106,0,.25);border-radius:12px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div style="font-size:13px;font-weight:700;color:#FF6A00;">⚡ Обратный аукцион</div>
+                    <div style="font-size:13px;font-weight:700;color:#FF6A00;display:flex;align-items:center;gap:6px;">
+                        <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Обратный аукцион
+                    </div>
                     <div id="auctionTimer" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#FF6A00;"></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:10px;">
@@ -233,7 +239,8 @@
                     Все КП
                 </button>
                 <button onclick="openAuctionModal()" id="detPanelAuctionBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#FF6A00;border:none;color:#fff;font-weight:700;font-size:12.5px;padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;">
-                    ⚡ Аукцион
+                    <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Аукцион
                 </button>
             </div>
         </div>
@@ -430,7 +437,10 @@
     <div class="modal" id="auctionModal" style="display:none;">
         <div class="modal-content" style="width:440px;max-width:96vw;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-                <h3 style="margin:0;font-size:16px;">⚡ Запустить аукцион</h3>
+                <h3 style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px;">
+                    <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Запустить аукцион
+                </h3>
                 <button onclick="closeAuctionModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-secondary);">✕</button>
             </div>
             <p style="font-size:13px;color:var(--text-secondary);margin:0 0 18px;">Поставщики увидят заявку с вашей стартовой ценой и будут снижать ставку. Победит тот, кто предложит минимальную цену.</p>
@@ -448,7 +458,10 @@
                     </select>
                 </label>
             </div>
-            <button onclick="launchAuction()" style="width:100%;margin-top:20px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">⚡ Запустить</button>
+            <button onclick="launchAuction()" style="width:100%;margin-top:20px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Запустить
+            </button>
         </div>
     </div>
 
@@ -1309,7 +1322,7 @@
                         }
 
                         const fileLink = prop.kpFile
-                            ? `<a href="${SERVER_URL}/proposals/${prop.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline; white-space:nowrap;">📎 Файл КП</a>`
+                            ? kpFileLinkHtml(`${SERVER_URL}/proposals/${prop.id}/file`)
                             : '';
 
                         const row = document.createElement('tr');
@@ -1561,7 +1574,7 @@
                 const auction = list.find(a => a.order_id === orderId);
 
                 if (auction && auction.status === 'active') {
-                    btn.textContent = '⚡ Аукцион активен';
+                    setAuctionBtnLabel(btn, 'Аукцион активен');
                     btn.disabled = true;
                     btn.style.background = 'var(--text-secondary)';
                     block.style.display = 'block';
@@ -1569,7 +1582,7 @@
                     joinAuctionSocket(auction.id);
                 } else {
                     block.style.display = 'none';
-                    btn.textContent = '⚡ Аукцион';
+                    setAuctionBtnLabel(btn, 'Аукцион');
                     btn.disabled = false;
                     btn.style.background = '#FF6A00';
                 }

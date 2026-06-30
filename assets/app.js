@@ -65,7 +65,7 @@ function syncThemeUI(isDark) {
   const checkbox = document.getElementById('themeCheckbox');
   if (checkbox) checkbox.checked = isDark;
   const label = document.getElementById('themeLabel');
-  if (label) label.innerText = isDark ? '🌙 Тёмная тема' : '☀️ Светлая тема';
+  if (label) label.innerText = isDark ? 'Тёмная тема' : 'Светлая тема';
   const icon = document.getElementById('themeIcon');
   if (icon) icon.innerHTML = isDark ? _SUN_SVG : _MOON_SVG;
 }
@@ -320,6 +320,64 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/* Inline SVG icons (Feather-style, matches nav icons) */
+const _UI_ICON_PATHS = {
+  chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  coin: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  puzzle: '<path d="M12 2a2 2 0 0 1 2 2v1h1a3 3 0 0 1 3 3v1h1a2 2 0 0 1 0 4h-1v1a3 3 0 0 1-3 3h-1v1a2 2 0 0 1-4 0v-1H9a3 3 0 0 1-3-3v-1H5a2 2 0 0 1 0-4h1V8a3 3 0 0 1 3-3h1V4a2 2 0 0 1 2-2z"/>',
+  clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+  mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  truck: '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  paperclip: '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  package: '<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+  undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  close: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  warn: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  circle: '<circle cx="12" cy="12" r="10"/>',
+  droplet: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+  square: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>',
+  inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+};
+
+function uiIcon(name, size = 16, className = '') {
+  const paths = _UI_ICON_PATHS[name];
+  if (!paths) return '';
+  const cls = 'ui-icon' + (className ? ' ' + className : '');
+  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+}
+
+function uiIconLabel(iconName, text, iconSize = 14) {
+  return `<span class="ui-icon-label">${uiIcon(iconName, iconSize)}<span>${escapeHtml(text)}</span></span>`;
+}
+
+function setAuctionBtnLabel(btn, text) {
+  if (!btn) return;
+  btn.innerHTML = uiIconLabel('zap', text, 14);
+}
+
+function kpFileLinkHtml(url, label = 'Файл КП') {
+  return `<a href="${url}" target="_blank" class="kp-file-link" style="color:var(--accent-bright);font-size:11px;text-decoration:underline;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">${uiIcon('paperclip', 12)}${escapeHtml(label)}</a>`;
+}
+
 /* ── Empty state helper ─────────────────────────────────────────────── */
 function createEmptyState({ icon, title, desc, ctaText, ctaAction, ctaHref }) {
   const el = document.createElement('div');
@@ -389,14 +447,14 @@ function showToast(text, type, opts = {}) {
   for (const el of container.querySelectorAll('.toast-text')) {
     if (el.textContent === text) return;
   }
-  const icons = { error: '✕', warn: '⚠', success: '✓', info: 'ℹ' };
-  const icon = icons[type] || '●';
+  const icons = { error: 'close', warn: 'warn', success: 'check', info: 'info' };
+  const icon = uiIcon(icons[type] || 'info', 15);
   const toast = document.createElement('div');
   toast.className = 'toast' + (type ? ' toast-' + type : '');
   const actionHtml = opts.action
     ? `<button class="toast-action">${escapeHtml(opts.action.label)}</button>`
     : '';
-  toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text">${escapeHtml(text)}</div>${actionHtml}<button class="toast-close" aria-label="Закрыть">✕</button>`;
+  toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-text">${escapeHtml(text)}</div>${actionHtml}<button class="toast-close" aria-label="Закрыть">${uiIcon('close', 14)}</button>`;
   const dismiss = () => {
     toast.classList.add('toast-out');
     setTimeout(() => toast.remove(), 220);
@@ -584,7 +642,7 @@ async function openNotificationsModal() {
     const items = await response.json();
 
     if (items.length === 0) {
-      listEl.innerHTML = '<div class="notif-empty"><div class="notif-empty-icon">🔔</div>Уведомлений пока нет</div>';
+      listEl.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">${uiIcon('bell', 28)}</div>Уведомлений пока нет</div>`;
       return;
     }
 
@@ -1079,7 +1137,8 @@ function matchScoreBadge(score, reasons) {
   const tip = Array.isArray(reasons) && reasons.length
     ? reasons.join(' · ')
     : 'Совпадение профиля поставщика с закупкой';
-  return `<span style="display:inline-flex;align-items:center;gap:3px;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;${style}" title="${escapeHtml(tip)}">🧩 ${score}%</span>`;
+  const iconName = score >= 70 ? 'flame' : 'puzzle';
+  return `<span style="display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;${style}" title="${escapeHtml(tip)}">${uiIcon(iconName, 12)} ${score}%</span>`;
 }
 
 function normalizeProposalForCompare(p) {
@@ -1204,11 +1263,11 @@ function renderKpCompareTable(proposals, options = {}) {
   const bestPrice = scored.find(p => p._price === minP)?._name || '—';
   const fastest = scored.find(p => p._days === minD)?._name || '—';
   const summaryHtml = [
-    { icon: '💰', label: 'Лучшая цена', val: escapeHtml(bestPrice), color: '#12A866' },
-    { icon: '⚡', label: 'Быстрее всех', val: escapeHtml(fastest), color: '#3B82F6' },
-    { icon: '🏆', label: 'Рекомендуем', val: escapeHtml(scored[0]?._name || '—'), color: '#FF6A00' },
+    { icon: 'coin', label: 'Лучшая цена', val: escapeHtml(bestPrice), color: '#12A866' },
+    { icon: 'zap', label: 'Быстрее всех', val: escapeHtml(fastest), color: '#3B82F6' },
+    { icon: 'trophy', label: 'Рекомендуем', val: escapeHtml(scored[0]?._name || '—'), color: '#FF6A00' },
   ].map(b => `<div style="background:var(--inner-bg);border:1px solid var(--card-border);border-radius:10px;padding:10px 14px;flex:1;min-width:140px;">
-    <div style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">${b.icon} ${b.label}</div>
+    <div style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:5px;">${uiIcon(b.icon, 13)} ${b.label}</div>
     <div style="font-size:13px;font-weight:700;color:${b.color};">${b.val}</div>
   </div>`).join('');
 
@@ -1264,7 +1323,7 @@ function renderKpCompareTable(proposals, options = {}) {
     <div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(18,168,102,.15);border:1px solid #12A866;"></div>Лучшая цена</div>
       <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);"><div style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,.15);border:1px solid #3B82F6;"></div>Лучший срок</div>
-      ${showMatch ? '<div style="font-size:11px;color:var(--text-secondary);">🧩 — совпадение специализации с закупкой</div>' : ''}
+      ${showMatch ? `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);">${uiIcon('puzzle', 12)} совпадение специализации с закупкой</div>` : ''}
     </div>`;
 }
 
@@ -1323,14 +1382,14 @@ function renderProducerPriceHint(price, benchmark) {
 }
 
 const DEAL_TIMELINE_ICONS = {
-  order: '📋',
-  proposal: '📨',
-  proposal_other: '↩️',
-  delivery: '🚚',
-  chat: '💬',
-  complete: '✅',
-  review: '⭐',
-  status: '📝',
+  order: 'clipboard',
+  proposal: 'mail',
+  proposal_other: 'undo',
+  delivery: 'truck',
+  chat: 'message',
+  complete: 'checkCircle',
+  review: 'star',
+  status: 'edit',
 };
 
 function renderDealTimeline(events) {
@@ -1344,7 +1403,7 @@ function renderDealTimeline(events) {
   };
   return `<div class="deal-timeline">${events.map((ev, i) => {
     const isLast = i === events.length - 1;
-    const icon = DEAL_TIMELINE_ICONS[ev.type] || '•';
+    const icon = DEAL_TIMELINE_ICONS[ev.type] ? uiIcon(DEAL_TIMELINE_ICONS[ev.type], 13) : '•';
     return `<div class="deal-tl-item${isLast ? ' is-last' : ''}">
       <div class="deal-tl-dot">${icon}</div>
       <div class="deal-tl-body">

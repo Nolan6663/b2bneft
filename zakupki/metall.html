@@ -121,9 +121,9 @@ fetch('/api/orders/public?category=' + encodeURIComponent(CATEGORY))
         </div>
         <h2 class="zc-card-title" itemprop="name">${o.title}</h2>
         <div class="zc-card-meta">
-          ${o.deadline ? `<span>📅 до ${new Date(o.deadline).toLocaleDateString('ru-RU')}</span>` : ''}
-          ${o.quantity ? `<span>📦 ${o.quantity}</span>` : ''}
-          <span>💬 ${o.responses || 0} предложений</span>
+          ${o.deadline ? `<span>Срок: до ${new Date(o.deadline).toLocaleDateString('ru-RU')}</span>` : ''}
+          ${o.quantity ? `<span>Кол-во: ${o.quantity}</span>` : ''}
+          <span>${o.responses || 0} предложений</span>
         </div>
         <div class="zc-card-footer">
           <span class="zc-company">••••••••</span>

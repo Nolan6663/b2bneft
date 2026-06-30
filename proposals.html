@@ -281,7 +281,7 @@
                     : `<span style="color:var(--text-muted); font-size:12px;">Блокировано</span>`;
 
                 const fileLink = p.kpFile
-                    ? `<div style="margin-top:4px;"><a href="${SERVER_URL}/proposals/${p.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline;">📎 Файл КП</a></div>`
+                    ? `<div style="margin-top:4px;">${kpFileLinkHtml(`${SERVER_URL}/proposals/${p.id}/file`)}</div>`
                     : '';
 
                 tr.innerHTML = `
@@ -324,7 +324,7 @@
                     : `<div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:8px;">Редактирование недоступно</div>`;
 
                 const mobileFileLink = p.kpFile
-                    ? `<div><a href="${SERVER_URL}/proposals/${p.id}/file" target="_blank" style="color:var(--accent-bright); font-size:11px; text-decoration:underline;">📎 Файл КП</a></div>`
+                    ? `<div>${kpFileLinkHtml(`${SERVER_URL}/proposals/${p.id}/file`)}</div>`
                     : '';
 
                 card.innerHTML = `

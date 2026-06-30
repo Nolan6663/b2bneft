@@ -331,14 +331,14 @@
         let editQualCerts = [];
 
         const CAPABILITIES = [
-            { key: 'lathe',  label: 'Токарные',  icon: '⚙' },
-            { key: 'mill',   label: 'Фрезерные', icon: '◈' },
-            { key: 'laser',  label: 'Лазерные',  icon: '✦' },
-            { key: 'rti',    label: 'РТИ',       icon: '◉' },
-            { key: 'cast',   label: 'Литьё',     icon: '◐' },
-            { key: 'stamp',  label: 'Штамповка', icon: '▪' },
-            { key: 'paint',  label: 'Покраска',  icon: '◊' },
-            { key: 'weld',   label: 'Сварка',    icon: '∿' },
+            { key: 'lathe',  label: 'Токарные',  icon: 'settings' },
+            { key: 'mill',   label: 'Фрезерные', icon: 'grid' },
+            { key: 'laser',  label: 'Лазерные',  icon: 'star' },
+            { key: 'rti',    label: 'РТИ',       icon: 'circle' },
+            { key: 'cast',   label: 'Литьё',     icon: 'package' },
+            { key: 'stamp',  label: 'Штамповка', icon: 'square' },
+            { key: 'paint',  label: 'Покраска',  icon: 'droplet' },
+            { key: 'weld',   label: 'Сварка',    icon: 'zap' },
         ];
 
         async function resolveCompanyId() {
@@ -493,7 +493,7 @@
                 const capCardsHtml = CAPABILITIES.map(cap => {
                     const active = caps.includes(cap.key);
                     return `<div class="capability-card${active ? ' active' : ''}">
-                        <div class="cap-icon">${cap.icon}</div>
+                        <div class="cap-icon">${uiIcon(cap.icon, 20)}</div>
                         <div class="cap-label">${cap.label}</div>
                         <div class="cap-check">${active ? '✓' : ''}</div>
                     </div>`;
