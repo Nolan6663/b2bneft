@@ -7,7 +7,8 @@ const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const htmlFiles = fs.readdirSync(root).filter(file => file.endsWith('.html')).sort();
-const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'routes/auth.js', 'routes/orders.js', 'routes/proposals.js', 'assets/app.js', 'assets/deals-page.css', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const jsFiles = ['server.js', 'db.js', 'storage.js', 'export-pdf.js', 'lib/auth-tokens.js', 'routes/auth.js', 'routes/orders.js', 'routes/proposals.js', 'assets/app.js', 'scripts/static-checks.js', 'scripts/mvp-api-smoke.js'];
+const cssFiles = ['assets/theme-v2.css', 'assets/deals-page.css'];
 
 function fail(message) {
   throw new Error(message);
@@ -28,6 +29,11 @@ function isExecutableScript(openTag) {
     || type === 'module';
 }
 
+function normalizeInlineScript(code) {
+  // Server-rendered placeholders (supplier-public.html) are valid in prod, not in vm.Script.
+  return code.replace(/<!--[A-Z0-9_]+-->/g, '0');
+}
+
 function checkInlineScripts() {
   let count = 0;
   const scriptRe = /<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi;
@@ -38,7 +44,7 @@ function checkInlineScripts() {
     while ((match = scriptRe.exec(html)) !== null) {
       if (!isExecutableScript(match[1])) continue;
       index += 1;
-      new vm.Script(match[2], { filename: `${file}#script${index}` });
+      new vm.Script(normalizeInlineScript(match[2]), { filename: `${file}#script${index}` });
       count += 1;
     }
   }
@@ -52,6 +58,7 @@ function checkLocalReferences() {
     const refs = [...html.matchAll(/(?:src|href)=['"]([^'"]+)['"]/gi)].map(match => match[1]);
     for (const ref of refs) {
       if (ref.includes('${')) continue;
+      if (/^<!--[A-Z0-9_]+-->$/.test(ref)) continue;
       if (/^(https?:|mailto:|tel:|#|javascript:|\/api\/|\/socket\.io\/)/i.test(ref)) continue;
       if (ref.startsWith('/')) continue;
       const clean = ref.split('#')[0].split('?')[0];
@@ -64,21 +71,23 @@ function checkLocalReferences() {
 }
 
 function checkCssBalance() {
-  const css = fs.readFileSync(path.join(root, 'assets/theme-v2.css'), 'utf8');
-  let depth = 0;
-  let min = 0;
-  for (const ch of css) {
-    if (ch === '{') depth += 1;
-    if (ch === '}') {
-      depth -= 1;
-      min = Math.min(min, depth);
+  for (const file of cssFiles) {
+    const css = fs.readFileSync(path.join(root, file), 'utf8');
+    let depth = 0;
+    let min = 0;
+    for (const ch of css) {
+      if (ch === '{') depth += 1;
+      if (ch === '}') {
+        depth -= 1;
+        min = Math.min(min, depth);
+      }
     }
+    if (depth !== 0 || min < 0) fail(`Unbalanced CSS braces in ${file}: depth=${depth}, min=${min}`);
   }
-  if (depth !== 0 || min < 0) fail(`Unbalanced CSS braces in assets/theme-v2.css: depth=${depth}, min=${min}`);
 }
 
 function checkEncodingArtifacts() {
-  const files = [...htmlFiles, ...jsFiles, 'assets/theme-v2.css'];
+  const files = [...htmlFiles, ...jsFiles, ...cssFiles];
   const badTokens = [
     '\uFFFD',
     '\u0420\u045C',
@@ -118,7 +127,10 @@ function checkProductionGuardrails() {
 }
 
 function checkAccessGuardrails() {
-  const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  const routeFiles = ['server.js', 'routes/orders.js', 'routes/proposals.js'];
+  const combined = routeFiles
+    .map(file => fs.readFileSync(path.join(root, file), 'utf8'))
+    .join('\n');
   const requiredSnippets = [
     'function canAccessProposal',
     'async function canAccessOrderThread',
@@ -128,17 +140,17 @@ function checkAccessGuardrails() {
     'await canAccessOrderDrawing(req.user, orderId)',
     'Чат доступен только с поставщиком, подавшим КП',
   ];
-  const missing = requiredSnippets.filter(snippet => !server.includes(snippet));
+  const missing = requiredSnippets.filter(snippet => !combined.includes(snippet));
   if (missing.length) fail(`Missing access guardrails:\n${missing.join('\n')}`);
 }
 
-function checkSpaPageStyles() {
-  const spaPages = htmlFiles.filter(file => {
+function checkMpaPageStyles() {
+  const appPages = htmlFiles.filter(file => {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
     return html.includes('id="spa-content"');
   });
   const missing = [];
-  for (const file of spaPages) {
+  for (const file of appPages) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
     const hasInline = /<style[^>]*data-spa-page/i.test(html);
     const hasPageCss = /data-spa-page-css/i.test(html);
@@ -147,10 +159,10 @@ function checkSpaPageStyles() {
     }
   }
   const appJs = fs.readFileSync(path.join(root, 'assets/app.js'), 'utf8');
-  if (!appJs.includes('syncSpaPageHead') || !appJs.includes('markCurrentPageStyles')) {
-    fail('SPA head sync helpers missing in assets/app.js');
+  if (!appJs.includes('window.__spaNavigate')) {
+    fail('MPA navigate stub missing in assets/app.js');
   }
-  if (missing.length) fail(`SPA pages missing page style markers:\n${missing.join('\n')}`);
+  if (missing.length) fail(`App pages missing page style markers:\n${missing.join('\n')}`);
 }
 
 function main() {
@@ -162,7 +174,7 @@ function main() {
   checkServerCanBeImported();
   checkProductionGuardrails();
   checkAccessGuardrails();
-  checkSpaPageStyles();
+  checkMpaPageStyles();
   console.log(`Static checks passed: ${htmlFiles.length} HTML files, ${inlineScripts} inline scripts`);
 }
 
