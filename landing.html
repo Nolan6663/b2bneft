@@ -230,14 +230,30 @@
   .lp-scene-hub {
     background: linear-gradient(155deg,#0B2233,#071B2A); border-color: transparent; color: #fff;
   }
-  .lp-scene-hub h4 { color: #fff; }
-  .lp-scene-hub h4 span { color: #FF6A00; }
+  .lp-scene-hub h4 { color: #fff; margin-top: 12px; }
+  .lp-scene-hub .lp-brand-accent { color: #FF6A00; }
   .lp-scene-hub p { color: rgba(255,255,255,0.55); }
+
+  .lp-logo-mark {
+    position: relative; width: 44px; height: 44px; margin: 0 auto;
+    border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(150deg, #0B2233, #071B2A);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+  }
+  .lp-logo-mark > span {
+    font-weight: 800; font-size: 22px; color: #fff; letter-spacing: -1px; line-height: 1;
+  }
+  .lp-logo-mark::after {
+    content: ''; position: absolute; right: 6px; bottom: 6px;
+    width: 12px; height: 12px; background: #FF6A00;
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+  .lp-brand-word { font-weight: 800; font-size: 13px; letter-spacing: 0.5px; line-height: 1.2; }
   .lp-scene-ico {
     width: 40px; height: 40px; margin: 0 auto; border-radius: 10px;
     background: #F1F5F9; display: flex; align-items: center; justify-content: center;
   }
-  .lp-scene-hub .lp-scene-ico { background: rgba(255,255,255,0.08); }
   .lp-scene-arrow { color: #FF6A00; font-size: 18px; font-weight: 800; opacity: .85; }
   .lp-scene-kp {
     display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; justify-content: center;
@@ -473,10 +489,8 @@
             </article>
             <div class="lp-scene-arrow" aria-hidden="true">→</div>
             <article class="lp-scene-card lp-scene-hub">
-              <div class="lp-scene-ico">
-                <span style="font-weight:800; font-size:18px; color:#fff;">Т</span>
-              </div>
-              <h4><span>ТЕХ</span>ЗАКАЗ</h4>
+              <div class="lp-logo-mark" aria-hidden="true"><span>Т</span></div>
+              <h4 class="lp-brand-word">ТЕХ<span class="lp-brand-accent">ЗАКАЗ</span></h4>
               <p>Подбор и рассылка запроса</p>
             </article>
             <div class="lp-scene-arrow" aria-hidden="true">→</div>
