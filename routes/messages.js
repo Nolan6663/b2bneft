@@ -22,6 +22,7 @@ function createMessagesRouter(deps) {
         try {
             const { role, company } = req.user;
             const whereClause = role === 'producer' ? 'm.company=$1' : 'o.company=$1';
+            const whereClauseOrig = role === 'producer' ? 'orig.company=$1' : 'o.company=$1';
             const todayStart  = "date_trunc('day', NOW())";
 
             const [{ rows: [convRow] }, { rows: [todayRow] }, { rows: [avgRow] }] = await Promise.all([
@@ -38,7 +39,7 @@ function createMessagesRouter(deps) {
                     JOIN messages reply ON reply.order_id=orig.order_id AND reply.company=orig.company
                         AND reply.sender!=orig.sender AND reply.created_at>orig.created_at
                     JOIN orders o ON o.id=orig.order_id
-                    WHERE ${whereClause} AND orig.sender=$2
+                    WHERE ${whereClauseOrig} AND orig.sender=$2
                         AND reply.created_at = (
                             SELECT MIN(created_at) FROM messages
                             WHERE order_id=orig.order_id AND company=orig.company
