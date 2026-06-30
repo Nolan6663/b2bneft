@@ -756,18 +756,29 @@
 
         function fmt2(n) { return n.toFixed(2).replace('.', ','); }
 
+        function fmtScore(score) {
+            if (score == null || score === '' || Number.isNaN(Number(score))) return '—';
+            return Number(score).toFixed(1).replace('.', ',');
+        }
+
+        function sparkValues(values) {
+            const arr = (values || []).map(v => Number(v) || 0);
+            if (arr.length >= 2) return arr;
+            if (arr.length === 1) return [arr[0], arr[0]];
+            return [0, 0];
+        }
+
         function sparkSVG(values, color) {
-            const w=80, h=32, pad=3;
-            const safe = (values && values.length ? values : [0]).map(v => Number(v) || 0);
-            if (safe.length === 1) {
-                const y = (h / 2).toFixed(1);
-                return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><circle cx="${(w / 2).toFixed(1)}" cy="${y}" r="2" fill="${color}"/></svg>`;
-            }
-            const max=Math.max(...safe,1), min=Math.min(...safe,0), range=(max-min)||1;
-            const step=(w-pad*2)/(safe.length-1);
-            const pts=safe.map((v,i)=>`${(pad+i*step).toFixed(1)},${(h-pad-((v-min)/range)*(h-pad*2)).toFixed(1)}`).join(' ');
-            const last=pts.split(' ').pop().split(',');
-            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${color}"/></svg>`;
+            const w = 80, h = 32, pad = 3;
+            const safe = sparkValues(values);
+            const max = Math.max(...safe, 1), min = Math.min(...safe, 0), range = (max - min) || 1;
+            const allFlat = safe.every(v => v === safe[0]);
+            const stroke = allFlat && safe[0] === 0 ? (cssVar('--text-muted') || '#94A3B8') : color;
+            const step = (w - pad * 2) / (safe.length - 1);
+            const pts = safe.map((v, i) => `${(pad + i * step).toFixed(1)},${(h - pad - ((v - min) / range) * (h - pad * 2)).toFixed(1)}`).join(' ');
+            const last = pts.split(' ').pop().split(',');
+            const opacity = allFlat && safe[0] === 0 ? '0.45' : '1';
+            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${stroke}" opacity="${opacity}"/></svg>`;
         }
 
         /* ══ FILTER LOGIC ══ */
@@ -1061,10 +1072,10 @@
             document.getElementById('ratingsModalBody').innerHTML = sorted.map((r,i) => `
                 <tr>
                     <td><span class="rat-num">${i+1}</span></td>
-                    <td style="text-align:left;font-size:12.5px;color:var(--text-primary);">${r.name}</td>
-                    <td style="${ratSortKey==='rt'?'color:var(--accent-bright);font-weight:700;':''}">${r.rt} ч</td>
+                    <td style="text-align:left;font-size:12.5px;color:var(--text-primary);">${escapeHtml(r.name)}</td>
+                    <td style="${ratSortKey==='rt'?'color:var(--accent-bright);font-weight:700;':''}">${r.rt != null ? r.rt + ' ч' : '—'}</td>
                     <td style="${ratSortKey==='conv'?'color:var(--accent-bright);font-weight:700;':''}">${r.conv}%</td>
-                    <td style="${ratSortKey==='score'?'color:#F59E0B;font-weight:700;':''}"><span class="rat-star">★</span> ${r.score}</td>
+                    <td style="${ratSortKey==='score'?'color:#F59E0B;font-weight:700;':''}"><span class="rat-star">★</span> ${fmtScore(r.score)}</td>
                     <td><button class="an-link" style="margin:0;" onclick="showToast('Переход в профиль поставщика')">Открыть →</button></td>
                 </tr>`).join('');
         }
@@ -1216,13 +1227,17 @@
         }
 
         function renderRatings(data = MOCK) {
+            if (!data.ratings?.length) {
+                document.getElementById('ratingsBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);font-size:12.5px;padding:16px 0;">Пока нет завершённых сделок для рейтинга</td></tr>';
+                return;
+            }
             document.getElementById('ratingsBody').innerHTML = data.ratings.map((r,i) => `
-                <tr style="cursor:pointer;" onclick="showToast('${r.name} — переход в профиль')">
+                <tr style="cursor:pointer;" onclick="showToast('${escapeHtml(r.name)} — переход в профиль')">
                     <td><span class="rat-num">${i+1}</span></td>
-                    <td style="text-align:left;font-size:12px;color:var(--text-secondary);">${r.name}</td>
-                    <td>${r.rt}</td>
+                    <td style="text-align:left;font-size:12px;color:var(--text-secondary);">${escapeHtml(r.name)}</td>
+                    <td>${r.rt != null ? r.rt : '—'}</td>
                     <td>${r.conv}%</td>
-                    <td><span class="rat-star">★</span> ${r.score}</td>
+                    <td><span class="rat-star">★</span> ${fmtScore(r.score)}</td>
                 </tr>`).join('');
         }
 
@@ -1379,6 +1394,14 @@
 
             const dynMonthLabels  = (d.dynamics || []).map(r => r.label);
             const dynMonthVolumes = (d.dynamics || []).map(r => r.volume || 0);
+            const dynOrderCounts  = (d.dynamics || []).map(r => r.orderCount || 0);
+            const sparkVolume = sparkValues(dynMonthVolumes);
+            const sparkEconomy = sparkValues(dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100));
+            const sparkConv = sparkValues(
+                dynOrderCounts.length >= 2
+                    ? dynOrderCounts.map(() => conversion)
+                    : [conversion, conversion]
+            );
 
             REAL = {
                 kpi: [
@@ -1386,25 +1409,25 @@
                         label: 'Объём закупок за период',
                         value: totalVolume > 0 ? fmt2(totalVolume) + ' млн ₽' : '0 ₽',
                         baseNum: totalVolume, delta: 0, unit: '', color: '#FF6A00', bg: '#FFF4EC',
-                        spark: dynMonthVolumes.length ? dynMonthVolumes : [0],
+                        spark: sparkVolume,
                     },
                     {
                         label: d.savings != null ? 'Экономия (% от среднего)' : 'Экономия',
                         value: d.savings != null ? d.savings + '%' : '—',
                         baseNum: d.savings || 0, delta: 0, unit: '%', color: '#12A866', bg: '#F0FDF4',
-                        spark: dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100),
+                        spark: sparkEconomy,
                     },
                     {
                         label: 'Среднее время производства',
                         value: d.avgDays != null ? d.avgDays + ' дн.' : '—',
                         baseNum: d.avgDays || 0, delta: 0, unit: 'дн.', color: '#F59E0B', bg: '#FFF8E8',
-                        spark: [0],
+                        spark: d.avgDays != null ? [d.avgDays, d.avgDays] : [0, 0],
                     },
                     {
                         label: 'Конверсия в договоры',
                         value: conversion + '%',
                         baseNum: conversion, delta: 0, unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE',
-                        spark: [0],
+                        spark: sparkConv,
                     },
                 ],
                 dynamics: {
@@ -1426,7 +1449,12 @@
                     : { labels: [], data: [], colors: [] },
                 suppliers: d.suppliers && d.suppliers.length ? d.suppliers : [],
                 ratings: d.suppliers && d.suppliers.length
-                    ? d.suppliers.map(s => ({ name: s.name, rt: s.deals || 0, conv: s.deals > 0 ? Math.round(s.deals / (proposals || 1) * 100) : 0, score: s.avgScore || null }))
+                    ? d.suppliers.map(s => ({
+                        name: s.name,
+                        rt: s.avgResponseHours != null ? s.avgResponseHours : null,
+                        conv: proposals > 0 ? Math.round((s.deals || 0) / proposals * 100) : 0,
+                        score: s.avgScore,
+                    }))
                     : [],
                 regions: [],
             };

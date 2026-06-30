@@ -28,10 +28,10 @@
             display: grid;
             grid-template-columns: 220px 1fr 290px;
             gap: 16px;
-            height: calc(100vh - 140px);
-            min-height: 480px;
-            max-height: 800px;
-            align-items: start;
+            height: min(calc(100vh - 300px), 620px);
+            min-height: 420px;
+            align-items: stretch;
+            margin-bottom: 16px;
         }
 
         /* ── Left filter sidebar ────────────────────────────────────── */
@@ -43,6 +43,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            min-height: 0;
+            overflow-y: auto;
         }
         .mf-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
         .mf-section { display: flex; flex-direction: column; gap: 8px; }
@@ -93,11 +95,10 @@
             overflow: hidden;
             border: 1px solid var(--card-border);
             position: relative;
-            height: calc(100vh - 160px);
-            min-height: 480px;
-            max-height: 780px;
+            height: 100%;
+            min-height: 0;
         }
-        #map { width: 100%; height: 100%; min-height: 480px; z-index: 0; background: #111827; }
+        #map { width: 100%; height: 100%; min-height: 0; z-index: 0; background: #111827; }
         .map-production-summary {
             position: absolute;
             left: 14px;
@@ -122,17 +123,18 @@
         .map-summary-pill b { color: var(--accent-bright); }
         .map-empty-state {
             position: absolute;
-            inset: 76px 18px 18px;
+            inset: 0;
             z-index: 401;
             display: none;
             align-items: center;
             justify-content: center;
             text-align: center;
             pointer-events: none;
+            padding: 52px 18px 18px;
         }
         .map-empty-card {
             width: min(360px, 100%);
-            background: rgba(255,255,255,.96);
+            background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
             box-shadow: var(--shadow-card);
@@ -149,6 +151,8 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            height: 100%;
+            min-height: 0;
         }
         .mcp-header {
             padding: 14px 16px 10px;
@@ -264,6 +268,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 16px;
+            clear: both;
+            position: relative;
+            z-index: 1;
         }
         .map-stat-card {
             background: var(--card-bg); border: 1px solid var(--card-border);
@@ -320,14 +327,14 @@
             .map-stats-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 720px) {
-            .map-layout { grid-template-columns: 1fr; }
+            .map-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
             .map-filter-panel { display: none; }
-            .map-company-panel { display: flex; min-height: 360px; }
+            .map-company-panel { display: flex; min-height: 360px; height: auto; }
             .map-stats-grid { grid-template-columns: 1fr; }
             .map-production-summary { position: static; margin: 0 0 10px; pointer-events: auto; }
-            .map-empty-state { position: static; inset:auto; min-height:160px; }
-            .map-center { display:flex; flex-direction:column; padding:10px; gap:10px; }
-            #map { border-radius: var(--radius-inner); overflow:hidden; min-height:420px; border:1px solid var(--inner-border); }
+            .map-empty-state { position: static; inset: auto; min-height: 160px; padding: 12px; }
+            .map-center { display: flex; flex-direction: column; padding: 10px; gap: 10px; height: auto; min-height: 460px; }
+            #map { border-radius: var(--radius-inner); overflow: hidden; min-height: 420px; border: 1px solid var(--inner-border); flex: 1; }
         }
     </style>
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>

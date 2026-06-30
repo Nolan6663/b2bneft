@@ -1535,11 +1535,21 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
             pool.query(`SELECT category, COUNT(*) AS cnt
                 FROM orders WHERE company=$1
                 GROUP BY category ORDER BY cnt DESC LIMIT 6`, [company]),
-            // Top suppliers by won deal value
-            pool.query(`SELECT p.company, COUNT(*) AS deals, SUM(p.price) AS total
-                FROM proposals p JOIN orders o ON o.id=p.order_id
-                WHERE o.company=$1 AND p.status='Выигран'
-                GROUP BY p.company ORDER BY total DESC LIMIT 5`, [company]),
+            // Top suppliers by won deal value + ratings
+            pool.query(`SELECT p.company,
+                    COUNT(*) AS deals,
+                    SUM(p.price) AS total,
+                    ROUND(AVG(p.days)) AS avg_days,
+                    ROUND(AVG(EXTRACT(EPOCH FROM (p.created_at - o.created_at)) / 3600)) AS avg_response_hours,
+                    (SELECT ROUND(AVG(rv.score)::numeric, 1)
+                     FROM reviews rv
+                     WHERE rv.to_company = p.company AND rv.from_company = $1) AS avg_score
+                FROM proposals p
+                JOIN orders o ON o.id = p.order_id
+                WHERE o.company = $1 AND p.status = 'Выигран'
+                GROUP BY p.company
+                ORDER BY total DESC
+                LIMIT 5`, [company]),
         ]);
 
         const validRows = savingsRows.filter(r => r.win_price && r.avg_price && r.avg_price > 0);
@@ -1567,6 +1577,9 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
                 deals:  Number(r.deals),
                 amount: Math.round(Number(r.total) / 1e6 * 100) / 100,
                 share:  totalSupply > 0 ? Math.round(Number(r.total) / totalSupply * 1000) / 10 : 0,
+                avgScore: r.avg_score != null ? Number(r.avg_score) : null,
+                avgResponseHours: r.avg_response_hours != null ? Number(r.avg_response_hours) : null,
+                avgDays: r.avg_days != null ? Number(r.avg_days) : null,
             })),
         });
     } catch (e) { next(e); }
