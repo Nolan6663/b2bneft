@@ -67,6 +67,7 @@
         .oc-badge-direct { background: rgba(255,106,0,.1); color: var(--accent-cyan); }
         .oc-badge-cat    { background: var(--inner-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); }
         .oc-badge-match  { background: rgba(52,211,153,.12); color: #059669; }
+        .oc-badge-hot    { background: rgba(255,106,0,.14); color: #ea580c; font-weight: 700; }
         .oc-status {
             display: inline-flex; align-items: center; gap: 5px;
             font-size: 11.5px; font-weight: 600; padding: 3px 10px;
@@ -498,7 +499,16 @@
                         const scoresResponse = await apiFetch(`${SERVER_URL}/orders/match-scores`);
                         if (scoresResponse.ok) {
                             const scores = await scoresResponse.json();
-                            orders.forEach(o => { o.matchScore = scores[o.id] != null ? scores[o.id] : null; });
+                            orders.forEach(o => {
+                                const m = scores[o.id];
+                                if (m && typeof m === 'object') {
+                                    o.matchScore = m.score;
+                                    o.matchReasons = m.reasons || [];
+                                } else {
+                                    o.matchScore = m != null ? Number(m) : null;
+                                    o.matchReasons = [];
+                                }
+                            });
                             orders.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
                         }
                     } catch (e) { /* матчинг недоступен */ }
@@ -532,8 +542,12 @@
                 else { statusCls = 'ocs-open'; statusLabel = order.status || 'Активна'; }
 
                 // Match badge
-                const matchBadge = (order.matchScore > 0)
-                    ? `<span class="oc-badge oc-badge-match">🧩 ${order.matchScore}% совпадение</span>` : '';
+                const reasonTip = (order.matchReasons || []).join(' · ');
+                const matchBadge = (order.matchScore >= 70)
+                    ? `<span class="oc-badge oc-badge-hot" title="${escapeHtml(reasonTip)}">🔥 ${order.matchScore}% — горячий матч</span>`
+                    : (order.matchScore > 0)
+                        ? `<span class="oc-badge oc-badge-match" title="${escapeHtml(reasonTip)}">🧩 ${order.matchScore}% совпадение</span>`
+                        : '';
 
                 // Deadline color
                 const dl = order.deadline ? new Date(order.deadline) : null;

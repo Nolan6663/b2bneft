@@ -143,6 +143,15 @@
             height: 100%; border-radius: 4px;
             background: var(--accent-gradient); transition: width .4s ease;
         }
+        .catalog-load-bar { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+        .catalog-load-labels {
+            display: flex; justify-content: space-between; font-size: 11px;
+            color: var(--text-secondary); font-weight: 600;
+        }
+        .catalog-load-track {
+            height: 6px; border-radius: 3px; background: var(--inner-border); overflow: hidden;
+        }
+        .catalog-load-fill { height: 100%; border-radius: 3px; }
 
         /* ── Card CTA ── */
         .catalog-btn {
@@ -678,6 +687,23 @@
                    </div>`
                 : '';
 
+            let loadBlock = '';
+            if (p.productionLoad != null && Number.isFinite(p.productionLoad)) {
+                const load = Math.min(100, Math.max(0, p.productionLoad));
+                const free = 100 - load;
+                const col = load < 50 ? '#4ade80' : load < 80 ? '#facc15' : '#f87171';
+                loadBlock = `
+                <div class="catalog-load-bar">
+                    <div class="catalog-load-labels">
+                        <span>Загрузка производства</span>
+                        <span style="color:${col};">свободно ~${free}%</span>
+                    </div>
+                    <div class="catalog-load-track">
+                        <div class="catalog-load-fill" style="width:${load}%;background:${col};"></div>
+                    </div>
+                </div>`;
+            }
+
             const aboutBlock = p.about
                 ? `<div class="catalog-about">${escapeHtml(p.about)}</div>`
                 : '';
@@ -699,6 +725,7 @@
                 ${caps ? `<div class="catalog-caps">${caps}</div>` : ''}
                 ${aboutBlock}
                 ${aiBlock}
+                ${loadBlock}
                 ${capacityBlock}
                 <div style="display:flex;gap:8px;margin-top:auto;">
                     <a href="company-profile.html?id=${p.id}" class="btn-secondary catalog-btn" style="flex:1;" onclick="trackRecentProducer(${p.id})">Открыть профиль →</a>

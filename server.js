@@ -24,7 +24,7 @@ const speakeasy = require('speakeasy');
 const QRCode    = require('qrcode');
 const cron      = require('node-cron');
 const ExcelJS   = require('exceljs');
-const { buildOrdersPdf, buildProposalsPdf } = require('./export-pdf');
+const { buildOrdersPdf, buildProposalsPdf, buildCompareKpPdf } = require('./export-pdf');
 const { startTelegramBot } = require('./telegram-bot');
 const { JWT_SECRET, getAccessToken } = require('./lib/auth-tokens');
 const createAuthRouter = require('./routes/auth');
@@ -726,6 +726,11 @@ function computeMatchScore(order, producer) {
         if (avgFree >= 30) score += 10;
     }
 
+    // Бонус за низкую загрузку производства (поле productionLoad = % занятости)
+    if (producer.productionLoad != null && producer.productionLoad < 80) {
+        score += producer.productionLoad < 50 ? 10 : 5;
+    }
+
     return Math.min(100, score);
 }
 
@@ -756,6 +761,11 @@ function computeMatchReasons(order, producer) {
     if (cap.length > 0) {
         const avgFree = cap.reduce((s, c) => s + (c.percent || 0), 0) / cap.length;
         if (avgFree >= 30) reasons.push(`Свободные мощности ~${Math.round(avgFree)}%`);
+    }
+
+    if (producer.productionLoad != null && producer.productionLoad < 80) {
+        const free = 100 - producer.productionLoad;
+        reasons.push(`Загрузка цеха ${producer.productionLoad}% — свободно ~${free}%`);
     }
 
     return reasons;
@@ -2030,6 +2040,38 @@ app.get('/api/export/proposals.pdf', requireAuth, async (req, res, next) => {
                 [req.user.company]
               );
         buildProposalsPdf(rows, res, isProducer);
+    } catch (e) { next(e); }
+});
+
+app.get('/api/export/compare-kp.pdf', requireAuth, requireRole('customer'), async (req, res, next) => {
+    try {
+        const orderId = Number(req.query.orderId);
+        if (!orderId) return res.status(400).json({ error: 'Укажите orderId' });
+        const { rows: [order] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+        if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
+        if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
+
+        const { rows } = await pool.query(
+            `SELECT p.company AS supplier, p.price, p.days, p.status, p.created_at
+             FROM proposals p WHERE p.order_id = $1 ORDER BY p.price ASC NULLS LAST`,
+            [orderId]
+        );
+        if (rows.length < 2) return res.status(400).json({ error: 'Нужно минимум 2 КП для сравнения' });
+
+        const orderObj = rowToOrder(order);
+        const benchmark = await computePriceBenchmark(orderObj.category, orderId);
+        const { rows: producers } = await pool.query("SELECT * FROM companies WHERE role = 'producer'");
+        const producerMap = new Map(producers.map(r => [r.company, rowToCompany(r)]));
+        const enriched = rows.map(r => ({
+            ...r,
+            match_score: producerMap.has(r.supplier) ? computeMatchScore(orderObj, producerMap.get(r.supplier)) : null,
+        }));
+
+        buildCompareKpPdf(
+            { orderId, orderTitle: plainTitle(order.title), benchmark },
+            enriched,
+            res
+        );
     } catch (e) { next(e); }
 });
 

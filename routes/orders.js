@@ -16,6 +16,7 @@ module.exports = function createOrdersRouter(deps) {
         rowToOrder,
         rowToCompany,
         computeMatchScore,
+        computeMatchReasons,
         matchedProducers,
         computePriceBenchmark,
         plainTitle,
@@ -23,11 +24,23 @@ module.exports = function createOrdersRouter(deps) {
         notifyCompanyEmail,
         withTransaction,
         addNotification,
+        getUserIdsByCompany,
+        sendPush,
+        sendTelegramNotification,
         getOrderAccessRow,
         APP_URL,
     } = deps;
 
     const router = express.Router();
+
+    router.get('/public/category-benchmark', async (req, res, next) => {
+        try {
+            const category = String(req.query.category || '').trim();
+            if (!category) return res.json({ enough: false, sampleSize: 0, category: '' });
+            const benchmark = await computePriceBenchmark(category, 0);
+            res.json(benchmark);
+        } catch (e) { next(e); }
+    });
 
     router.get('/public', async (req, res, next) => {
         try {
@@ -50,7 +63,16 @@ module.exports = function createOrdersRouter(deps) {
             const me = meRow ? rowToCompany(meRow) : null;
             const { rows: orders } = await pool.query('SELECT * FROM orders');
             const scores = {};
-            orders.map(rowToOrder).forEach(o => { scores[o.id] = me ? computeMatchScore(o, me) : 0; });
+            orders.map(rowToOrder).forEach(o => {
+                if (!me) {
+                    scores[o.id] = { score: 0, reasons: [] };
+                    return;
+                }
+                scores[o.id] = {
+                    score: computeMatchScore(o, me),
+                    reasons: computeMatchReasons(o, me),
+                };
+            });
             res.json(scores);
         } catch (e) { next(e); }
     });
@@ -152,19 +174,41 @@ module.exports = function createOrdersRouter(deps) {
             const newOrder = rowToOrder(newRow);
 
             const MATCH_NOTIFY_THRESHOLD = 50;
-            const matched = await matchedProducers(newOrder, MATCH_NOTIFY_THRESHOLD);
+            const HOT_MATCH_THRESHOLD = 70;
+            const matched = await matchedProducers(newOrder, MATCH_NOTIFY_THRESHOLD, true);
             const orderTitle = plainTitle(newOrder.title);
-            await Promise.all(matched.map(m =>
-                notifyCompanyEmail(
+            const orderUrl = `${APP_URL}/producer.html`;
+
+            await Promise.all(matched.map(async (m) => {
+                const reasonsHtml = (m.reasons || []).length
+                    ? `<ul style="margin:8px 0 0;padding-left:18px;color:#555;font-size:13px;">${m.reasons.map(r => `<li>${htmlEscape(r)}</li>`).join('')}</ul>`
+                    : '';
+                const isHot = m.score >= HOT_MATCH_THRESHOLD;
+                const emoji = isHot ? '🔥' : '🧩';
+                const label = isHot ? 'Горячий матч' : 'Подходящая закупка';
+                const notifText = `${emoji} ${label} (${m.score}%): «${orderTitle}»${m.reasons?.length ? ' — ' + m.reasons[0] : ''}`;
+
+                await addNotification(m.company, notifText);
+                await notifyCompanyEmail(
                     m.company,
-                    `🧩 Новая подходящая прямая закупка (${m.score}% совпадение): «${orderTitle}»`,
-                    `Новая прямая закупка (${m.score}% совп.) — ТехЗаказ`,
-                    `<p style="color:#444;font-size:14px;line-height:1.5;">Появилась закупка, которая подходит вашему профилю на <strong>${m.score}%</strong>:</p>
+                    notifText,
+                    `${label} (${m.score}%) — ТехЗаказ`,
+                    `<p style="color:#444;font-size:14px;line-height:1.5;">${isHot ? '<strong>Горячий матч</strong> — закупка хорошо подходит вашему профилю' : 'Появилась закупка, которая подходит вашему профилю'} на <strong>${m.score}%</strong>:</p>
                      <p style="font-size:15px;font-weight:600;color:#1E3A5F;">«${htmlEscape(orderTitle)}»</p>
                      <p style="color:#666;font-size:13px;">Категория: ${htmlEscape(newOrder.category || '—')}</p>
-                     <p style="margin-top:16px;"><a href="${APP_URL}/producer.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть заявки →</a></p>`
-                )
-            ));
+                     ${reasonsHtml}
+                     <p style="margin-top:16px;"><a href="${orderUrl}" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
+                );
+
+                if (isHot) {
+                    const userIds = await getUserIdsByCompany(m.company);
+                    const pushBody = `${m.score}% · ${orderTitle}${m.reasons?.[0] ? ' · ' + m.reasons[0] : ''}`;
+                    await Promise.all(userIds.map(id => {
+                        sendPush(id, `${emoji} Горячий матч ${m.score}%`, pushBody.slice(0, 120), orderUrl);
+                        sendTelegramNotification(id, `${emoji} <b>Горячий матч ${m.score}%</b>\n«${orderTitle}»\n${(m.reasons || []).slice(0, 2).join('\n')}`);
+                    }));
+                }
+            }));
 
             res.status(201).json(newOrder);
         } catch (e) { next(e); }

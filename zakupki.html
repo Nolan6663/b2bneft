@@ -114,6 +114,21 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 /* ── Main layout ── */
 .zk-main { max-width: 1200px; margin: 0 auto; padding: 32px 64px 64px; }
 
+.zk-benchmark {
+    background: linear-gradient(135deg, rgba(255,106,0,.08), rgba(11,34,51,.04));
+    border: 1px solid rgba(255,106,0,.22);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #334155;
+    display: none;
+}
+.zk-benchmark strong { color: #FF6A00; }
+.zk-benchmark-stats { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+.zk-benchmark-stats span { font-weight: 700; color: #071B2A; }
+
 /* ── Order card ── */
 .zk-card {
     background: #fff; border: 1px solid #E2E8F0; border-radius: 14px;
@@ -241,6 +256,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 
 <!-- Main -->
 <main class="zk-main">
+    <div id="categoryBenchmark" class="zk-benchmark"></div>
     <div id="ordersList"></div>
 
     <!-- CTA banner -->
@@ -343,8 +359,37 @@ function renderSkeleton() {
         </div>`).join('');
 }
 
+async function loadCategoryBenchmark(category) {
+    const el = document.getElementById('categoryBenchmark');
+    if (!el) return;
+    if (!category) {
+        el.style.display = 'none';
+        return;
+    }
+    el.style.display = 'block';
+    el.innerHTML = 'Загрузка рыночного бенчмарка…';
+    try {
+        const res = await fetch('/api/orders/public/category-benchmark?category=' + encodeURIComponent(category));
+        const b = await res.json();
+        if (!b.enough) {
+            el.innerHTML = `<strong>${escHtml(category)}</strong> — пока мало закрытых сделок для бенчмарка. Разместите заявку первым.`;
+            return;
+        }
+        const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
+        el.innerHTML = `
+            <div><strong>Бенчмарк по категории «${escHtml(category)}»</strong> — на основе ${b.sampleSize} закрытых сделок за ${b.periodMonths} мес.</div>
+            <div class="zk-benchmark-stats">
+                <div>Медиана: <span>${fmt(b.median)} ₽</span></div>
+                <div>Диапазон: <span>${fmt(b.min)}–${fmt(b.max)} ₽</span></div>
+            </div>`;
+    } catch {
+        el.style.display = 'none';
+    }
+}
+
 async function loadOrders(category = '') {
     renderSkeleton();
+    loadCategoryBenchmark(category);
     try {
         const url = '/api/orders/public' + (category ? `?category=${encodeURIComponent(category)}` : '');
         const res = await fetch(url);

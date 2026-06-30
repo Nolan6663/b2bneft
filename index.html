@@ -449,7 +449,8 @@
         <div class="modal-content" style="width:820px;max-width:94vw;">
             <h3 id="compareModalTitle">Сравнение КП</h3>
             <div id="compareTableWrap" style="overflow-x:auto;margin-top:4px;"></div>
-            <div class="modal-actions">
+            <div class="modal-actions" style="justify-content:space-between;">
+                <button class="btn-secondary" id="comparePdfBtn" style="display:none;height:36px;font-size:12px;" onclick="exportCompareKpPdf()">↓ PDF для согласования</button>
                 <button class="btn-modal-cancel" onclick="document.getElementById('compareModal').style.display='none'">Закрыть</button>
             </div>
         </div>
@@ -1045,7 +1046,17 @@
             document.getElementById('compareTableWrap').innerHTML = renderKpCompareTable(currentProposalsList, {
                 acceptFn: 'acceptProposalFromCompare',
             });
+            const pdfBtn = document.getElementById('comparePdfBtn');
+            if (pdfBtn) pdfBtn.style.display = currentProposalsList.length >= 2 ? '' : 'none';
             document.getElementById('compareModal').style.display = 'flex';
+        }
+
+        function exportCompareKpPdf() {
+            if (!currentProposalsOrderId || currentProposalsList.length < 2) {
+                showToast('Нужно минимум 2 КП', 'warn');
+                return;
+            }
+            window.location.href = `${SERVER_URL}/export/compare-kp.pdf?orderId=${currentProposalsOrderId}`;
         }
 
         function compareFromProposalsModal() {
