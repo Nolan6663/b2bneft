@@ -2173,6 +2173,7 @@ table {
   border-left: 3px solid var(--tz-blueprint-blue);
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 .ai-tz-panel::before {
   content: '';
