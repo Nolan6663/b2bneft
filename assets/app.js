@@ -1420,7 +1420,7 @@ function _initObChecklist(role) {
     <div class="ob-cl-head" onclick="toggleObChecklist()">
       <div class="ob-cl-head-left">
         <div class="ob-cl-ring" style="--pct:${percent}">
-          <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--inner-border)" stroke-width="3"/><circle class="ob-cl-arc" cx="18" cy="18" r="14" fill="none" stroke="url(#obGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${Math.round(percent * 0.879)} 100" transform="rotate(-90 18 18"/><defs><linearGradient id="obGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF6A00"/><stop offset="100%" stop-color="#0B8FCE"/></linearGradient></defs></svg>
+          <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--inner-border)" stroke-width="3"/><circle class="ob-cl-arc" cx="18" cy="18" r="14" fill="none" stroke="url(#obGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${Math.round(percent * 0.879)} 100" transform="rotate(-90 18 18)"/><defs><linearGradient id="obGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FF6A00"/><stop offset="100%" stop-color="#0B8FCE"/></linearGradient></defs></svg>
           <span>${doneCount}/${steps.length}</span>
         </div>
         <span class="ob-cl-title">Начало работы</span>
