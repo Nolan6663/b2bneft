@@ -227,8 +227,16 @@ S3_PUBLIC_URL=https://cdn.texzakaz.ru
 MAP_PROVIDER=yandex
 YANDEX_MAPS_API_KEY=
 
-# AI (Gemini — нужен ключ формата AIzaSy... из Google AI Studio)
+# AI (Gemini — поиск поставщиков в каталоге; ключ AIzaSy... из Google AI Studio)
 GEMINI_API_KEY=
+
+# AI для генерации ТЗ закупки (отдельно от Gemini)
+# DeepSeek: https://platform.deepseek.com — ключ sk-...
+# OpenAI: AI_TZ_BASE_URL=https://api.openai.com/v1  AI_TZ_MODEL=gpt-4o-mini
+# OpenRouter: AI_TZ_BASE_URL=https://openrouter.ai/api/v1  AI_TZ_MODEL=...
+AI_TZ_API_KEY=
+AI_TZ_BASE_URL=https://api.deepseek.com
+AI_TZ_MODEL=deepseek-chat
 
 # Google Search Console / SEO
 GOOGLE_SERVICE_ACCOUNT_JSON=
@@ -368,6 +376,8 @@ Auth:
 
 AI:
   POST /api/ai-search            — поиск поставщиков через Gemini
+  POST /api/ai/generate-tz       — генерация ТЗ закупки (DeepSeek / OpenAI-compatible)
+  GET  /api/ai/tz-status         — настроен ли AI для ТЗ, имя модели
 
 Уведомления:
   GET    /api/notifications/:company
@@ -550,7 +560,7 @@ Nginx (обязательно на prod для WebSocket):
 
 Проверка в браузере: DevTools → Network → WS → /socket.io/ статус 101.
 -------------------------------
-  [ ] AI-помощник для составления ТЗ (Gemini не работает — проблема с ключом)
+  [x] AI-помощник для составления ТЗ (DeepSeek / OpenAI-compatible — AI_TZ_API_KEY)
   [x] UI-карточка риска поставщика (API /api/risk/:inn — catalog + company-profile)
   [ ] Обратный аукцион для прямых закупок (reverse auction)
   [ ] Тарифы / оплата (страница tariff.html есть; launchMode=true — всё бесплатно;
@@ -567,6 +577,45 @@ Nginx (обязательно на prod для WebSocket):
 
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (01.07.2026 — визуальная идентичность v3 «Чертёжный цех»)
+  ----------------------------------------------------------------------------
+  Дизайн-направление выбрано и задокументировано (без смены HTML-структуры,
+  без новых шрифтов/библиотек) — см. docs/design/texzakaz-visual-identity.md.
+
+  • assets/theme-v2.css — новый блок токенов «TZ VISUAL IDENTITY v3» в :root:
+    --tz-stamp-orange/ink-navy/blueprint-blue/paper/graphite/verified-green,
+    --tz-surface-elevated, --tz-border-strong, --tz-shadow-stamp, --tz-focus-ring,
+    --tz-tick-size/color, --tz-stamp-tilt, --tz-mono-tracking. Существующие
+    переменные не переопределены, только дополнение.
+  • landing.html — hero: штамп-полоса (.lp-stamp-strip) вместо трёх одинаковых
+    stat-карточек (#lp-stats); угловые «crop-mark» засечки на #lp-hero
+    (.lp-crop-mark, скрыты на ≤900px); FAQ-панель (.lp-faq-panel) — убран
+    backdrop-filter: blur, заменён на непрозрачный navy + чертёжная сетка.
+  • .ai-tz-panel, .kp-rec-card, .cp-hero — хардкод #0B8FCE заменён на
+    var(--tz-blueprint-blue); .kp-rec-card — убран backdrop-filter: blur
+    (тот же анти-паттерн, что и в FAQ-панели лендинга).
+  • Verified-бейджи (company-profile.html, catalog.html) — вид «оттиска
+    печати» вместо круглой пилюли: .platform-verified-badge / .catalog-verified
+    (моноширинный uppercase, двойная рамка, поворот -2deg) + модификатор
+    --egrul для verified_egrul (синий) против оранжевого verified_by_platform.
+  • index.html — .proc-detail-panel: одна угловая чертёжная засечка (::after),
+    скрыта в mobile bottom-sheet (≤640px).
+
+  Проверка: npm run check. Вручную — десктоп и ≤520px лендинг, FAQ-аккордеон,
+  verified-бейджи на company-profile/catalog, sticky-панель закупки при скролле,
+  bottom-sheet на мобиле (≤640px).
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — AI-помощник ТЗ, DeepSeek)
+  ----------------------------------------------------------------
+  • lib/ai-client.js — OpenAI-compatible API (по умолчанию DeepSeek deepseek-chat)
+  • POST /api/ai/generate-tz — генерация title + description + checklist по brief
+  • GET /api/ai/tz-status — статус конфигурации
+  • index.html — панель «AI-помощник для ТЗ» в модалке создания закупки
+  • env: AI_TZ_API_KEY, AI_TZ_BASE_URL, AI_TZ_MODEL (Gemini только для ai-search)
+
+  Проверка: npm run check
+
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — демо, онбординг, рекомендация КП)
   ----------------------------------------------------------------

@@ -382,13 +382,20 @@
   }
 
   .lp-faq-panel {
+    position: relative; overflow: hidden;
     padding: 10px; border-radius: 20px;
-    background: rgba(255,255,255,0.03);
+    background: #0A2236;
     border: 1px solid rgba(255,255,255,0.09);
     box-shadow: 0 24px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
-    backdrop-filter: blur(14px);
   }
-  .lp-faq-list { display: flex; flex-direction: column; gap: 8px; }
+  .lp-faq-panel::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .lp-faq-list { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
 
   .lp-faq-card {
     border-radius: 14px;
@@ -445,6 +452,35 @@
 
   .lp-nv { transition: color .15s ease; }
   .lp-nv:hover { color: #FF6A00 !important; }
+
+  /* ─── TZ VISUAL IDENTITY v3 — чертёжная рамка + штамп-полоса ──── */
+  #lp-hero { position: relative; }
+  .lp-crop-mark { position: absolute; width: 14px; height: 14px; pointer-events: none; }
+  .lp-crop-mark::before, .lp-crop-mark::after { content: ''; position: absolute; background: rgba(7,27,42,0.28); }
+  .lp-crop-mark::before { width: 14px; height: 1.5px; }
+  .lp-crop-mark::after  { width: 1.5px; height: 14px; }
+  .lp-crop-tl { top: 22px; left: 0; }
+  .lp-crop-tl::before, .lp-crop-tl::after { top: 0; left: 0; }
+  .lp-crop-tr { top: 22px; right: 0; }
+  .lp-crop-tr::before, .lp-crop-tr::after { top: 0; right: 0; }
+  .lp-crop-bl { bottom: 22px; left: 0; }
+  .lp-crop-bl::before, .lp-crop-bl::after { bottom: 0; left: 0; }
+  .lp-crop-br { bottom: 22px; right: 0; }
+  .lp-crop-br::before, .lp-crop-br::after { bottom: 0; right: 0; }
+
+  .lp-stamp-strip { margin-top: 42px; padding-top: 16px; border-top: 1px solid rgba(7,27,42,0.14); }
+  .lp-stamp-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: #94A3B8; margin-bottom: 10px;
+  }
+  .lp-stamp-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .lp-stamp-field { display: flex; align-items: baseline; gap: 7px; }
+  .lp-stamp-num {
+    font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 19px;
+    letter-spacing: -0.3px; color: #071B2A;
+  }
+  .lp-stamp-unit { font-size: 12px; color: #4A5D6E; font-weight: 600; }
+  .lp-stamp-div { width: 1px; height: 16px; background: rgba(7,27,42,0.16); flex-shrink: 0; }
 
   /* ─── Interactive demo (#lp-demo) ─────────────────────────────── */
   .lp-demo-overlay {
@@ -680,6 +716,7 @@
     #lp-hero    { grid-template-columns: 1fr !important; padding: 28px 24px 36px !important; gap: 24px !important; }
     #lp-h1      { font-size: 42px !important; letter-spacing: -0.6px !important; }
     #lp-hero-right { display: none !important; }
+    .lp-crop-mark { display: none !important; }
     #lp-steps   { flex-wrap: wrap !important; gap: 14px !important; }
     .lp-arrow   { display: none !important; }
     #lp-steps > div:not(.lp-arrow) { flex: 1 1 calc(50% - 8px) !important; min-width: 0 !important; }
@@ -695,7 +732,8 @@
     #lp-hero    { padding: 20px 16px 28px !important; }
     #lp-h1      { font-size: 30px !important; letter-spacing: -0.2px !important; line-height: 1.1 !important; }
     #lp-hero p  { font-size: 16px !important; }
-    #lp-stats   { flex-wrap: wrap !important; gap: 14px 24px !important; }
+    .lp-stamp-row { gap: 12px 16px !important; }
+    .lp-stamp-div { display: none !important; }
     #lp-ctas    { flex-direction: column !important; gap: 10px !important; }
     #lp-ctas > a { justify-content: center !important; width: 100% !important; }
     #lp-steps > div:not(.lp-arrow) { flex: 1 1 100% !important; }
@@ -754,6 +792,10 @@
 
     <!-- ═══ HERO ═══ -->
     <section id="lp-hero" style="display:grid; grid-template-columns:540px 1fr; gap:56px; padding:54px 64px 60px; align-items:center;">
+      <span class="lp-crop-mark lp-crop-tl" aria-hidden="true"></span>
+      <span class="lp-crop-mark lp-crop-tr" aria-hidden="true"></span>
+      <span class="lp-crop-mark lp-crop-bl" aria-hidden="true"></span>
+      <span class="lp-crop-mark lp-crop-br" aria-hidden="true"></span>
 
       <!-- LEFT -->
       <div style="display:flex; flex-direction:column; gap:0;">
@@ -782,18 +824,14 @@
           </a>
         </div>
 
-        <div id="lp-stats" style="display:flex; gap:40px; margin-top:46px; padding-top:30px; border-top:1px solid rgba(7,27,42,0.08);">
-          <div>
-            <div style="font-weight:800; font-size:28px; color:#071B2A;">1 200+</div>
-            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">проверенных заводов</div>
-          </div>
-          <div>
-            <div style="font-weight:800; font-size:28px; color:#071B2A;">0%</div>
-            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">наценок посредников</div>
-          </div>
-          <div>
-            <div style="font-weight:800; font-size:28px; color:#071B2A;">48 ч</div>
-            <div style="font-size:13px; color:#4A5D6E; font-weight:500;">до первых КП</div>
+        <div id="lp-stats" class="lp-stamp-strip">
+          <div class="lp-stamp-label">Спецификация · ТЕХЗАКАЗ-01</div>
+          <div class="lp-stamp-row">
+            <span class="lp-stamp-field"><span class="lp-stamp-num">1 200+</span><span class="lp-stamp-unit">проверенных заводов</span></span>
+            <span class="lp-stamp-div" aria-hidden="true"></span>
+            <span class="lp-stamp-field"><span class="lp-stamp-num">0%</span><span class="lp-stamp-unit">наценок посредников</span></span>
+            <span class="lp-stamp-div" aria-hidden="true"></span>
+            <span class="lp-stamp-field"><span class="lp-stamp-num">48 ч</span><span class="lp-stamp-unit">до первых КП</span></span>
           </div>
         </div>
       </div>

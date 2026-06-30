@@ -340,6 +340,25 @@
                 <label>Дедлайн поставки</label>
                 <input type="date" id="orderDeadline">
             </div>
+            <div class="ai-tz-panel" id="aiTzPanel">
+                <div class="ai-tz-head">
+                    <div class="ai-tz-head-left">
+                        <span class="ai-tz-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5V11h3a7 7 0 1 1-7 7 7 7 0 0 1-7-7h3V9.5C6.8 8.8 6 7.5 6 6a4 4 0 0 1 4-4z"/></svg></span>
+                        <div>
+                            <div class="ai-tz-title">AI-помощник для ТЗ</div>
+                            <div class="ai-tz-sub" id="aiTzModelHint">Сгенерирует техтребования по вашему описанию</div>
+                        </div>
+                    </div>
+                </div>
+                <label class="ai-tz-label" for="aiTzBrief">Опишите задачу в 2–3 предложениях</label>
+                <textarea id="aiTzBrief" class="ai-tz-brief" rows="3" placeholder="Например: нужны манжеты РТИ DN150 для насосного агрегата, рабочая среда — нефть с H2S, партия 200 шт., срок 30 дней"></textarea>
+                <div class="ai-tz-actions">
+                    <button type="button" class="ai-tz-btn" id="aiTzGenerateBtn" onclick="generateOrderTzWithAi()">
+                        <span class="ai-tz-btn-label">Сгенерировать ТЗ</span>
+                    </button>
+                </div>
+                <div class="ai-tz-checklist" id="aiTzChecklist" style="display:none;"></div>
+            </div>
             <div class="form-group">
                 <label>Описание / Технические требования</label>
                 <textarea id="orderDescription" placeholder="Материал, ГОСТ, допуски, условия поставки..."></textarea>
@@ -768,6 +787,84 @@
             document.getElementById('orderDescription').value = '';
             document.getElementById('orderFile').value = '';
             document.getElementById('orderFileExisting').style.display = 'none';
+            const brief = document.getElementById('aiTzBrief');
+            const checklist = document.getElementById('aiTzChecklist');
+            if (brief) brief.value = '';
+            if (checklist) { checklist.style.display = 'none'; checklist.innerHTML = ''; }
+        }
+
+        async function loadAiTzStatus() {
+            const panel = document.getElementById('aiTzPanel');
+            const hint = document.getElementById('aiTzModelHint');
+            const btn = document.getElementById('aiTzGenerateBtn');
+            if (!panel) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/ai/tz-status`);
+                const data = r.ok ? await r.json() : { configured: false };
+                if (!data.configured) {
+                    panel.classList.add('ai-tz-panel--off');
+                    if (hint) hint.textContent = 'AI не настроен на сервере — заполните ТЗ вручную';
+                    if (btn) btn.disabled = true;
+                    return;
+                }
+                panel.classList.remove('ai-tz-panel--off');
+                if (hint) hint.textContent = data.model ? `Модель: ${data.model}` : 'Сгенерирует техтребования по вашему описанию';
+                if (btn) btn.disabled = false;
+            } catch {
+                panel.classList.add('ai-tz-panel--off');
+            }
+        }
+
+        async function generateOrderTzWithAi() {
+            const briefEl = document.getElementById('aiTzBrief');
+            const btn = document.getElementById('aiTzGenerateBtn');
+            const checklistEl = document.getElementById('aiTzChecklist');
+            const brief = briefEl?.value?.trim();
+            if (!brief) {
+                showToast('Опишите задачу в поле AI-помощника', 'error');
+                briefEl?.focus();
+                return;
+            }
+            const label = btn?.querySelector('.ai-tz-btn-label');
+            const prevLabel = label?.textContent || 'Сгенерировать ТЗ';
+            if (btn) { btn.disabled = true; btn.classList.add('ai-tz-btn--loading'); }
+            if (label) label.textContent = 'Генерация…';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/ai/generate-tz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        brief,
+                        category: document.getElementById('orderCategory')?.value,
+                        quantity: document.getElementById('orderQuantity')?.value,
+                        title: document.getElementById('orderName')?.value?.trim(),
+                    }),
+                });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                    showToast(data.error || 'Ошибка генерации ТЗ', 'error');
+                    return;
+                }
+                if (data.title && !document.getElementById('orderName').value.trim()) {
+                    document.getElementById('orderName').value = data.title;
+                }
+                if (data.description) {
+                    document.getElementById('orderDescription').value = data.description;
+                    saveOrderDraft();
+                }
+                if (data.checklist?.length && checklistEl) {
+                    checklistEl.style.display = 'block';
+                    checklistEl.innerHTML = `
+                        <div class="ai-tz-checklist-title">Проверьте перед публикацией</div>
+                        <ul>${data.checklist.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>`;
+                }
+                showToast('ТЗ сгенерировано — проверьте и отредактируйте при необходимости', 'success');
+            } catch {
+                showToast('Не удалось связаться с сервером', 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.classList.remove('ai-tz-btn--loading'); }
+                if (label) label.textContent = prevLabel;
+            }
         }
 
         const ORDER_DRAFT_KEY = 'tz_order_draft';
@@ -841,6 +938,9 @@
             resetOrderForm();
             bindOrderDraftAutosave();
             updateOrderDraftBanner();
+            const aiPanel = document.getElementById('aiTzPanel');
+            if (aiPanel) aiPanel.style.display = '';
+            loadAiTzStatus();
             document.getElementById('orderModal').style.display = 'flex';
         }
 
@@ -865,6 +965,8 @@
             } else {
                 existingEl.style.display = 'none';
             }
+            const aiPanel = document.getElementById('aiTzPanel');
+            if (aiPanel) aiPanel.style.display = 'none';
             document.getElementById('orderModal').style.display = 'flex';
         }
 

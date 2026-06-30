@@ -37,6 +37,7 @@ const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
 const createDealsRouter = require('./routes/deals');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
+const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -243,6 +244,7 @@ const aiLimiter = rateLimit({
     message: { error: 'Слишком много AI-запросов. Подождите минуту.' }
 });
 app.post('/api/ai-search', aiLimiter);
+app.post('/api/ai/generate-tz', aiLimiter);
 
 // ===================== WEBSOCKET =====================
 let Server = null;
@@ -1373,6 +1375,57 @@ ${catalog}
             return res.status(429).json({ error: 'Превышен лимит запросов Gemini. Попробуйте позже.' });
         return res.status(500).json({ error: `AI ошибка: ${msg} (status: ${e.status || 'n/a'})` });
     }
+});
+
+app.post('/api/ai/generate-tz', requireAuth, async (req, res, next) => {
+    try {
+        if (req.user.role !== 'customer') {
+            return res.status(403).json({ error: 'Генерация ТЗ доступна только заказчикам' });
+        }
+        if (!tzAi.isTzAiConfigured()) {
+            return res.status(503).json({
+                error: 'AI для ТЗ не настроен. Добавьте AI_TZ_API_KEY в .env (DeepSeek, OpenAI или OpenRouter).',
+            });
+        }
+
+        const { brief, category, quantity, title } = req.body || {};
+        if (!brief || !String(brief).trim()) {
+            return res.status(400).json({ error: 'Опишите задачу в поле brief (2–3 предложения)' });
+        }
+        if (String(brief).trim().length > 2000) {
+            return res.status(400).json({ error: 'Слишком длинный запрос (макс. 2000 символов)' });
+        }
+
+        const result = await tzAi.generateProcurementTz({
+            brief: String(brief).trim(),
+            category: String(category || 'Прочее').slice(0, 80),
+            quantity: quantity != null && quantity !== '' ? Number(quantity) : null,
+            title: title ? String(title).slice(0, 200) : '',
+        });
+
+        const cfg = tzAi.getTzAiConfig();
+        res.json({ ...result, model: cfg.model });
+    } catch (e) {
+        console.error('[ai/generate-tz]', e.message, e.status || '', e.code || '');
+        if (e.code === 'AI_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI для ТЗ не настроен' });
+        }
+        if (e.code === 'AI_AUTH' || e.status === 401) {
+            return res.status(400).json({ error: 'Неверный AI_TZ_API_KEY. Проверьте ключ и base URL.' });
+        }
+        if (e.code === 'AI_RATE_LIMIT' || e.status === 429) {
+            return res.status(429).json({ error: 'Превышен лимит запросов к AI. Подождите минуту.' });
+        }
+        if (e.code === 'AI_PARSE' || e.code === 'AI_EMPTY') {
+            return res.status(500).json({ error: e.message || 'Не удалось сгенерировать ТЗ' });
+        }
+        return res.status(500).json({ error: e.message || 'Ошибка генерации ТЗ' });
+    }
+});
+
+app.get('/api/ai/tz-status', requireAuth, (req, res) => {
+    const cfg = tzAi.getTzAiConfig();
+    res.json({ configured: cfg.configured, model: cfg.configured ? cfg.model : null });
 });
 
 // ===================== SEO =====================

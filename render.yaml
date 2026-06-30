@@ -22,6 +22,12 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: AI_TZ_API_KEY
+        sync: false
+      - key: AI_TZ_BASE_URL
+        sync: false
+      - key: AI_TZ_MODEL
+        sync: false
       - key: GOOGLE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: GOOGLE_SITE_URL

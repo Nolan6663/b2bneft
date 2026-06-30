@@ -77,6 +77,33 @@
   --sidebar-text-active: #0F172A;
 }
 
+/* =====================================================================
+   TZ VISUAL IDENTITY v3 — tokens
+   Направление «Чертёжный цех». См. docs/design/texzakaz-visual-identity.md
+   Только дополняет :root выше — ничего из существующих переменных не переопределено.
+   ===================================================================== */
+:root {
+  /* Именованная палитра (4 из 6 — роли поверх уже существующих значений) */
+  --tz-stamp-orange:    var(--accent-bright);   /* = #FF6A00, без изменений */
+  --tz-ink-navy:        #071B2A;                /* тёмные индустриальные блоки лендинга */
+  --tz-blueprint-blue:  #0B8FCE;                /* промотан из хардкода .lp-cta-demo / .ai-tz-panel */
+  --tz-paper:           var(--bg-secondary);    /* = #F8FAFC */
+  --tz-graphite:        var(--text-tertiary);   /* = #475569 */
+  --tz-verified-green:  var(--accent-green);    /* = #059669 */
+
+  /* Поверхности и рамки для signature-элемента (corner ticks / stamp badge) */
+  --tz-surface-elevated: var(--card-bg);
+  --tz-border-strong:    rgba(7,27,42,.18);
+  --tz-shadow-stamp:     0 1px 2px rgba(7,27,42,.12), 0 6px 18px rgba(7,27,42,.08);
+  --tz-focus-ring:       0 0 0 3px rgba(11,143,206,.25);
+
+  /* Геометрия чертёжной засечки / штампа — параметры, не сами элементы */
+  --tz-tick-size:     14px;
+  --tz-tick-color:    var(--tz-border-strong);
+  --tz-stamp-tilt:    -2deg;
+  --tz-mono-tracking: 1.6px;
+}
+
 
 /* ── БАЗОВЫЕ СТИЛИ ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -649,9 +676,21 @@ tbody tr:hover { background: var(--bg-section); }
 
 .platform-verified-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(255,106,0,.1); border: 1px solid rgba(255,106,0,.25);
-  color: var(--accent-cyan); font-size: 11.5px; font-weight: 700;
-  padding: 4px 12px; border-radius: 20px;
+  background: rgba(255,106,0,.07);
+  border: 1.5px solid rgba(255,106,0,.45);
+  box-shadow: inset 0 0 0 2px rgba(255,106,0,.12);
+  color: var(--accent-bright);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase;
+  padding: 4px 11px; border-radius: 5px;
+  white-space: nowrap;
+  transform: rotate(var(--tz-stamp-tilt));
+}
+.platform-verified-badge--egrul {
+  background: rgba(11,143,206,.07);
+  border-color: rgba(11,143,206,.45);
+  box-shadow: inset 0 0 0 2px rgba(11,143,206,.12);
+  color: var(--tz-blueprint-blue);
 }
 
 .capabilities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 4px; }
@@ -1130,6 +1169,15 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 }
 .proc-detail-panel::-webkit-scrollbar { width: 4px; }
 .proc-detail-panel::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+.proc-detail-panel::after {
+  content: '';
+  position: absolute;
+  top: 10px; left: 10px;
+  width: var(--tz-tick-size); height: var(--tz-tick-size);
+  border-top: 1.5px solid var(--tz-tick-color);
+  border-left: 1.5px solid var(--tz-tick-color);
+  pointer-events: none;
+}
 .proc-proposal-row {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 8px; border-radius: 8px;
@@ -1157,6 +1205,7 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
   .proc-panel-backdrop.backdrop-visible {
     opacity: 1; pointer-events: auto;
   }
+  .proc-detail-panel::after { display: none; }
   .proc-detail-panel {
     position: fixed !important;
     bottom: 0; left: 0; right: 0; top: auto !important;
@@ -1684,9 +1733,7 @@ table {
     border-radius: 14px;
     overflow: hidden;
     margin-bottom: 16px;
-    background: color-mix(in srgb, var(--card-bg) 88%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--card-bg);
     border: 1px solid rgba(255, 106, 0, 0.35);
     box-shadow: 0 10px 32px rgba(7, 27, 42, 0.1);
 }
@@ -1695,7 +1742,7 @@ table {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 4px;
-    background: linear-gradient(180deg, #FF6A00, #0B8FCE);
+    background: linear-gradient(180deg, var(--tz-stamp-orange), var(--tz-blueprint-blue));
 }
 .kp-rec-inner {
     padding: 16px 18px 16px 22px;
@@ -2091,6 +2138,88 @@ table {
   color: var(--accent-cyan);
 }
 .drawing-link-btn-primary:hover { background: rgba(255,106,0,.14); }
+
+/* =====================================================================
+   AI TZ — помощник генерации ТЗ в модалке закупки
+   ===================================================================== */
+.ai-tz-panel {
+  margin-bottom: 16px;
+  padding: 16px 16px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(11, 143, 206, .22);
+  background: linear-gradient(135deg, rgba(11, 143, 206, .07) 0%, rgba(255, 106, 0, .04) 100%);
+  border-left: 3px solid var(--tz-blueprint-blue);
+  position: relative;
+  overflow: hidden;
+}
+.ai-tz-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255, 106, 0, .08), transparent 55%);
+  pointer-events: none;
+}
+.ai-tz-panel--off { opacity: .72; border-left-color: var(--text-muted); }
+.ai-tz-head { position: relative; margin-bottom: 12px; }
+.ai-tz-head-left { display: flex; align-items: flex-start; gap: 10px; }
+.ai-tz-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: rgba(11, 143, 206, .12);
+  color: var(--tz-blueprint-blue);
+}
+.ai-tz-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.ai-tz-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+.ai-tz-label {
+  display: block; position: relative;
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.ai-tz-brief {
+  position: relative; width: 100%; box-sizing: border-box;
+  min-height: 72px; padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: inherit; font-size: 13px; line-height: 1.5;
+  resize: vertical; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ai-tz-brief:focus {
+  border-color: var(--tz-blueprint-blue);
+  box-shadow: 0 0 0 3px rgba(11, 143, 206, .15);
+}
+.ai-tz-actions { position: relative; margin-top: 10px; }
+.ai-tz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 38px; padding: 0 16px;
+  border: none; border-radius: 10px;
+  background: linear-gradient(135deg, var(--tz-blueprint-blue) 0%, #0870a8 100%);
+  color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(11, 143, 206, .28);
+  transition: transform .14s, box-shadow .14s, opacity .14s;
+}
+.ai-tz-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(11, 143, 206, .35);
+}
+.ai-tz-btn:disabled { opacity: .55; cursor: not-allowed; }
+.ai-tz-btn--loading .ai-tz-btn-label { opacity: .85; }
+.ai-tz-checklist {
+  position: relative; margin-top: 12px; padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 106, 0, .06);
+  border: 1px solid rgba(255, 106, 0, .2);
+  font-size: 12px; color: var(--text-secondary);
+}
+.ai-tz-checklist-title {
+  font-weight: 700; color: var(--accent-bright); margin-bottom: 6px; font-size: 11.5px;
+}
+.ai-tz-checklist ul { margin: 0; padding-left: 18px; line-height: 1.55; }
+.ai-tz-checklist li { margin-bottom: 2px; }
 
 /* =====================================================================
    ОНБОРДИНГ — welcome overlay + checklist widget
@@ -2752,7 +2881,7 @@ input:focus, textarea:focus, select:focus {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent-bright) 0%, #0B8FCE 100%);
+  background: linear-gradient(90deg, var(--accent-bright) 0%, var(--tz-blueprint-blue) 100%);
   opacity: .9;
 }
 .cp-hero::after {
