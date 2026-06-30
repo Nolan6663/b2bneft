@@ -57,7 +57,7 @@
   --avatar-blue:  linear-gradient(135deg, #2563EB, #60A5FA);
   --avatar-gold:  linear-gradient(135deg, #B45309, #D97706);
 
-  --radius-card:  16px;
+  --radius-card:  12px;
   --radius-inner: 12px;
   --radius-btn:   9px;
   --radius-input: 9px;
@@ -743,17 +743,25 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   z-index: 1000; animation: modalFadeIn .18s ease;
 }
 .modal-content {
+  position: relative;
   background: var(--card-bg); border: 1px solid var(--card-border); padding: 32px;
   border-radius: var(--radius-card); width: 460px; max-width: 95vw;
   display: flex; flex-direction: column; gap: 18px;
   box-shadow: var(--shadow-modal); animation: modalScaleIn .22s ease;
   max-height: 90vh; overflow-y: auto;
 }
+.modal-content::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--tz-stamp-orange) 0%, var(--tz-blueprint-blue) 100%);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  opacity: .9;
+}
 .modal-content h3 { font-size: 16px; font-weight: 700; color: var(--text-primary-alt); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
 
 /* ── Chat modal (переработанный) ── */
-#chatModal .modal-content { width: 520px; max-width: 96vw; padding: 0; border-radius: 16px; overflow: hidden; }
+#chatModal .modal-content { width: 520px; max-width: 96vw; padding: 0; border-radius: 12px; overflow: hidden; }
 .cmp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--card-bg); border-bottom: 1px solid var(--card-border); gap: 10px; }
 .cmp-header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .cmp-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 800; flex-shrink: 0; letter-spacing: -.5px; }
@@ -1159,7 +1167,7 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 .proc-detail-panel {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(15,23,42,.07);
   position: sticky;
@@ -1230,7 +1238,7 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 }
 
 /* ── PROC LIST PANEL (grid-rows table replacement) ─────────────────── */
-.proc-list-panel { border-radius: 16px !important; padding: 22px !important; }
+.proc-list-panel { border-radius: 12px !important; padding: 22px !important; }
 .proc-list-panel > .proc-list-head-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .proc-list-panel > .proc-list-head-row h3 { font-size: 18px !important; font-weight: 700 !important; margin: 0; }
 
@@ -3139,7 +3147,7 @@ html.tz-nav-loading .main-content { pointer-events: none; }
     width: 100%;
     max-width: 100%;
     max-height: calc(100dvh - var(--mobile-bottom-nav-height));
-    border-radius: 16px 16px 0 0;
+    border-radius: 12px 12px 0 0;
   }
   #chatModal .cmp-messages {
     height: min(360px, calc(100dvh - 220px));
