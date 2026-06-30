@@ -297,6 +297,10 @@ function createOrderProposalsRouter(deps) {
                     const producer = producerByName.get(p.company);
                     p.matchScore = producer ? computeMatchScore(orderObj, producer) : 0;
                     p.matchReasons = producer ? computeMatchReasons(orderObj, producer) : [];
+                    if (producer) {
+                        p.verifiedByPlatform = producer.verifiedByPlatform;
+                        p.verifiedEgrul = producer.verifiedEgrul;
+                    }
                 }
                 return p;
             }));

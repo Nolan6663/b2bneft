@@ -83,6 +83,18 @@
                 </div>
             </div>        </div>
 
+        <!-- Review prompt banner -->
+        <div id="reviewPromptBanner" style="display:none;margin-bottom:14px;padding:14px 18px;background:rgba(255,106,0,.08);border:1px solid rgba(255,106,0,.25);border-radius:12px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <div style="font-size:14px;font-weight:700;color:var(--text-primary);">Оцените поставщика</div>
+                <div id="reviewBannerText" style="font-size:12.5px;color:var(--text-secondary);margin-top:4px;"></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-primary" id="reviewBannerBtn" style="height:36px;">Оставить отзыв</button>
+                <button class="btn-secondary" onclick="dismissReviewBanner()" style="height:36px;">Позже</button>
+            </div>
+        </div>
+
         <!-- KPI Row -->
         <div class="kpi-row">
             <div class="kpi-card">
@@ -129,7 +141,7 @@
                     </div>
                 </div>
 
-                <div style="overflow-x:auto;">
+                <div style="overflow-x:auto;" class="orders-table-scroll">
                 <table class="orders-table">
                     <thead>
                         <tr>
@@ -147,6 +159,7 @@
                     <tbody id="ordersTableBody"></tbody>
                 </table>
                 </div>
+                <div class="orders-mobile-list" id="ordersMobileList"></div>
                 <div class="orders-table-footer" onclick="showAllOrders()">Показать все <span id="totalOrdersCount">0</span> заказов ↓</div>
             </div>
 
@@ -243,7 +256,11 @@
             <div style="margin-bottom:16px;">
                 <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Оценка</div>
                 <div id="reviewStars" style="display:flex;gap:6px;">
-                    ${[1,2,3,4,5].map(i => `<span data-val="${i}" onclick="setReviewStar(${i})" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>`).join('')}
+                    <span data-val="1" onclick="setReviewStar(1)" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>
+                    <span data-val="2" onclick="setReviewStar(2)" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>
+                    <span data-val="3" onclick="setReviewStar(3)" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>
+                    <span data-val="4" onclick="setReviewStar(4)" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>
+                    <span data-val="5" onclick="setReviewStar(5)" style="font-size:28px;cursor:pointer;color:#CBD5E1;transition:color .15s;">★</span>
                 </div>
             </div>
             <div style="margin-bottom:18px;">
@@ -271,7 +288,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=10"></script>
+    <script src="assets/app.js?v=11"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -341,7 +358,9 @@
             document.getElementById('tabCountAll').textContent = allDeals.length;
 
             const tbody = document.getElementById('ordersTableBody');
+            const mobileList = document.getElementById('ordersMobileList');
             tbody.innerHTML = '';
+            if (mobileList) mobileList.innerHTML = '';
 
             if (filtered.length === 0) {
                 const isEmpty = allDeals.length === 0;
@@ -389,6 +408,24 @@
                     </td>`;
                 tr.onclick = () => openPanel(d);
                 tbody.appendChild(tr);
+
+                if (mobileList) {
+                    const card = document.createElement('div');
+                    card.className = 'orders-mobile-card' + (d.id === selectedId ? ' selected' : '');
+                    card.innerHTML = `
+                        <div class="omc-top">
+                            <span class="omc-num">${escapeHtml(d.num)}</span>
+                            <span class="st-pill ${st.cls}">${st.label}</span>
+                        </div>
+                        <div class="omc-title">${escapeHtml(d.title)}</div>
+                        <div class="omc-meta">
+                            <span>${fmtPrice(d.price)}</span>
+                            <span>${escapeHtml(d.supplier || '—')}</span>
+                        </div>
+                        <div class="omc-date">Срок: ${fmtDate(d.deadline)}</div>`;
+                    card.onclick = () => openPanel(d);
+                    mobileList.appendChild(card);
+                }
             });
 
             updateKPI();
@@ -511,7 +548,7 @@
                 if (d.status === 'completed' && d.supplier) {
                     reviewBtn.style.display = '';
                     // Check if already reviewed
-                    apiFetch(`${SERVER_URL}/reviews/check/${d.id}/${encodeURIComponent(d.supplier)}`)
+                    apiFetch(`${SERVER_URL}/reviews/check/${d.orderId}/${encodeURIComponent(d.supplier)}`)
                         .then(r => r.ok ? r.json() : null)
                         .then(existing => {
                             const inner = document.getElementById('ddpReviewBtnInner');
@@ -609,7 +646,7 @@
                     method:'POST',
                     headers:{'Content-Type':'application/json'},
                     body: JSON.stringify({
-                        orderId:   currentDeal.id,
+                        orderId:   currentDeal.orderId,
                         toCompany: currentDeal.supplier,
                         score:     _reviewStar,
                         text:      document.getElementById('reviewText').value.trim(),
@@ -623,6 +660,41 @@
                 const inner = document.getElementById('ddpReviewBtnInner');
                 if (inner) { inner.textContent=`Ваш отзыв: ${'★'.repeat(_reviewStar)}`; inner.style.color='#FF6A00'; }
             } catch { resultEl.style.color='#e07070'; resultEl.textContent='Ошибка сети'; }
+        }
+
+        let _reviewBannerDeal = null;
+
+        function dismissReviewBanner() {
+            const banner = document.getElementById('reviewPromptBanner');
+            if (banner) banner.style.display = 'none';
+            if (_reviewBannerDeal) {
+                sessionStorage.setItem(`reviewDismissed_${_reviewBannerDeal.orderId}`, '1');
+            }
+        }
+
+        async function checkPendingReviews() {
+            if (userRole !== 'customer') return;
+            const banner = document.getElementById('reviewPromptBanner');
+            if (!banner) return;
+            const completed = allDeals.filter(d => d.status === 'completed' && d.supplier && d.supplier !== '—');
+            for (const d of completed) {
+                if (sessionStorage.getItem(`reviewDismissed_${d.orderId}`)) continue;
+                try {
+                    const r = await apiFetch(`${SERVER_URL}/reviews/check/${d.orderId}/${encodeURIComponent(d.supplier)}`);
+                    if (r.ok && !(await r.json())) {
+                        _reviewBannerDeal = d;
+                        document.getElementById('reviewBannerText').textContent =
+                            `Поделитесь впечатлением о работе с «${d.supplier}» по заказу «${d.title}».`;
+                        document.getElementById('reviewBannerBtn').onclick = () => {
+                            openPanel(d);
+                            openReviewModal();
+                        };
+                        banner.style.display = 'flex';
+                        return;
+                    }
+                } catch { /* не блокируем UI */ }
+            }
+            banner.style.display = 'none';
         }
 
         async function acceptKp(proposalId, orderId, supplier) {
@@ -705,12 +777,20 @@
                     const data = await r.json();
                     allDeals = Array.isArray(data) ? data.map(mapDealFromApi) : [];
                     renderTable();
+                    checkPendingReviews();
                 }
             } catch {
             }
 
             initNotifications();
             initSidebarBadges();
+
+            document.addEventListener('tz:deal:status', () => {
+                apiFetch(`${SERVER_URL}/deals`).then(r => r.ok ? r.json() : []).then(data => {
+                    allDeals = Array.isArray(data) ? data.map(mapDealFromApi) : [];
+                    renderTable();
+                }).catch(() => {});
+            });
         });
 
         window.__pageCleanup = function() {
@@ -730,6 +810,7 @@
                     const data = await r.json();
                     allDeals = Array.isArray(data) ? data.map(mapDealFromApi) : [];
                     renderTable();
+                    checkPendingReviews();
                 }
             } catch {}
             initNotifications();

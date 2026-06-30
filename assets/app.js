@@ -389,7 +389,7 @@ function showToast(text, type, opts = {}) {
   for (const el of container.querySelectorAll('.toast-text')) {
     if (el.textContent === text) return;
   }
-  const icons = { error: '✕', warn: '⚠', success: '✓' };
+  const icons = { error: '✕', warn: '⚠', success: '✓', info: 'ℹ' };
   const icon = icons[type] || '●';
   const toast = document.createElement('div');
   toast.className = 'toast' + (type ? ' toast-' + type : '');
@@ -468,6 +468,15 @@ if (typeof io === 'function' && hasSession()) {
       document.dispatchEvent(new CustomEvent('tz:proposal:new', { detail }));
     });
 
+    socket.on('deal:status', (detail) => {
+      const title = detail?.orderTitle || 'сделке';
+      const stage = detail?.stage || 'обновлён';
+      showToast(`Статус сделки «${title}»: ${stage}`, 'info');
+      document.dispatchEvent(new CustomEvent('tz:deal:status', { detail }));
+      refreshNotificationBadge();
+      initSidebarBadges();
+    });
+
     socket.on('conversation:update', (detail) => {
       document.dispatchEvent(new CustomEvent('tz:conversation:update', { detail }));
       if (activeChatOrderId != null
@@ -479,6 +488,21 @@ if (typeof io === 'function' && hasSession()) {
 
     socket.on('message', (msg) => {
       document.dispatchEvent(new CustomEvent('tz:message', { detail: msg }));
+      const onMessagesPage = /messages\.html/i.test(window.location.pathname);
+      const inActiveChat = activeChatOrderId != null
+          && Number(msg.orderId) === Number(activeChatOrderId)
+          && msg.company === activeChatCompany;
+      if (!onMessagesPage && !inActiveChat && msg.sender !== currentCompanyName) {
+        const preview = (msg.text || '').slice(0, 60);
+        showToast(`Новое сообщение от ${msg.sender || 'контрагента'}${preview ? ': ' + preview : ''}`, 'info', {
+          action: {
+            label: 'Открыть',
+            onClick: () => {
+              window.location.href = `messages.html?orderId=${msg.orderId}&company=${encodeURIComponent(msg.company || '')}`;
+            },
+          },
+        });
+      }
       if (activeChatOrderId != null
           && Number(msg.orderId) === Number(activeChatOrderId)
           && msg.company === activeChatCompany) {
@@ -1066,7 +1090,90 @@ function normalizeProposalForCompare(p) {
     _days: Number(p.leadTime != null ? p.leadTime : p.days) || 0,
     _match: p.matchScore != null ? Number(p.matchScore) : null,
     _matchReasons: Array.isArray(p.matchReasons) ? p.matchReasons : [],
+    _status: p.status || '—',
+    _verifiedPlatform: Boolean(p.verifiedByPlatform || p.verified_by_platform),
+    _verifiedEgrul: Boolean(p.verifiedEgrul || p.verified_egrul),
   };
+}
+
+function verificationBadgeHtml(p) {
+  const norm = p._verifiedPlatform != null ? p : normalizeProposalForCompare(p);
+  if (norm._verifiedPlatform) {
+    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.25);border-radius:6px;padding:2px 8px;">✓ Верифицирован</span>';
+  }
+  if (norm._verifiedEgrul) {
+    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#2563eb;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);border-radius:6px;padding:2px 8px;">ЕГРЮЛ</span>';
+  }
+  return '<span style="font-size:11px;color:var(--text-muted);">—</span>';
+}
+
+function proposalStatusBadgeHtml(status) {
+  let icon = '⏱', cls = 'waiting', label = status || '—';
+  if (status === 'Выигран' || status === 'Победитель') { icon = '✓'; cls = 'win'; }
+  else if (status === 'Отклонен' || status === 'Отклонено') { icon = '✗'; cls = 'loose'; }
+  else if (status === 'Отозвана заказчиком') { icon = '⊘'; cls = 'muted'; }
+  else if (status === 'Ожидает ответа' || status === 'На рассмотрении') { icon = '⏱'; cls = 'waiting'; }
+  return `<span class="status-icon ${cls}" style="font-size:11.5px;white-space:nowrap;">${icon} ${escapeHtml(label)}</span>`;
+}
+
+const _kpCompareSelected = new Set();
+
+function resetKpCompareSelection() {
+  _kpCompareSelected.clear();
+  document.querySelectorAll('.kp-compare-cb').forEach(cb => { cb.checked = false; });
+  updateKpCompareBar();
+}
+
+function toggleKpCompare(id, checked) {
+  const numId = Number(id);
+  if (checked) {
+    if (_kpCompareSelected.size >= 4) {
+      showToast('Максимум 4 КП для сравнения', 'warn');
+      const cb = document.querySelector(`.kp-compare-cb[data-id="${numId}"]`);
+      if (cb) cb.checked = false;
+      return;
+    }
+    _kpCompareSelected.add(numId);
+  } else {
+    _kpCompareSelected.delete(numId);
+  }
+  updateKpCompareBar();
+}
+
+function updateKpCompareBar() {
+  let bar = document.getElementById('kpCompareBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'kpCompareBar';
+    bar.className = 'kp-compare-bar';
+    bar.innerHTML = `
+      <span class="kp-compare-bar-text" id="kpCompareBarText">Выбрано: 0</span>
+      <button type="button" class="btn-primary kp-compare-bar-btn" id="kpCompareBarBtn" onclick="openSelectedKpCompare()">Сравнить</button>
+      <button type="button" class="btn-secondary kp-compare-bar-btn" onclick="resetKpCompareSelection()">Сбросить</button>`;
+    document.body.appendChild(bar);
+  }
+  const n = _kpCompareSelected.size;
+  bar.style.display = n > 0 ? 'flex' : 'none';
+  const textEl = document.getElementById('kpCompareBarText');
+  if (textEl) textEl.textContent = `Выбрано: ${n} из 4`;
+  const btn = document.getElementById('kpCompareBarBtn');
+  if (btn) btn.disabled = n < 2;
+}
+
+function getSelectedKpFromList(list) {
+  const arr = list || [];
+  if (_kpCompareSelected.size >= 2) {
+    return arr.filter(p => _kpCompareSelected.has(Number(p.id)));
+  }
+  return arr;
+}
+
+function openSelectedKpCompare() {
+  if (typeof openKpCompareWithList === 'function') {
+    openKpCompareWithList();
+  } else if (typeof compareKp === 'function') {
+    compareKp();
+  }
 }
 
 function renderKpCompareTable(proposals, options = {}) {
@@ -1085,6 +1192,8 @@ function renderKpCompareTable(proposals, options = {}) {
   const showMatch = props.some(p => p._match > 0);
   const acceptFn = options.acceptFn || 'acceptProposalFromCompare';
   const showAccept = options.showAccept !== false;
+  const showStatus = options.showStatus !== false;
+  const showVerified = options.showVerified !== false;
 
   const scored = props.map(p => {
     const ps = maxP > minP ? (p._price - minP) / (maxP - minP) : 0;
@@ -1124,9 +1233,11 @@ function renderKpCompareTable(proposals, options = {}) {
         <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(p._name)}</div>
         ${rank === 0 ? '<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;">✓ Рекомендуется</div>' : ''}
       </td>
+      ${showVerified ? `<td style="padding:11px 12px;">${verificationBadgeHtml(p)}</td>` : ''}
       ${showMatch ? `<td style="padding:11px 12px;">${matchScoreBadge(p._match, p._matchReasons)}</td>` : ''}
       <td style="padding:11px 12px;font-weight:700;font-family:'JetBrains Mono',monospace;${priceBg}">${priceFmt(p._price)}${isBP ? '<span style="color:#12A866;font-size:11px;"> лучшая</span>' : pDev}</td>
       <td style="padding:11px 12px;${daysBg}">${p._days ? p._days + ' дн.' : '—'}${isBD ? '<span style="color:#3B82F6;font-size:11px;"> быстрее</span>' : dDev}</td>
+      ${showStatus ? `<td style="padding:11px 12px;">${proposalStatusBadgeHtml(p._status)}</td>` : ''}
       <td style="padding:11px 12px;color:${starColor};font-size:14px;letter-spacing:2px;">${stars}</td>
       ${showAccept ? `<td style="padding:11px 12px;">${acceptCell}</td>` : ''}
     </tr>`;
@@ -1139,9 +1250,11 @@ function renderKpCompareTable(proposals, options = {}) {
         <thead><tr style="background:var(--inner-bg);">
           <th style="${thStyle}">#</th>
           <th style="${thStyle}">Поставщик</th>
+          ${showVerified ? `<th style="${thStyle}">Верификация</th>` : ''}
           ${showMatch ? `<th style="${thStyle}">Профиль</th>` : ''}
           <th style="${thStyle}">Цена</th>
           <th style="${thStyle}">Срок</th>
+          ${showStatus ? `<th style="${thStyle}">Статус</th>` : ''}
           <th style="${thStyle}">Рейтинг</th>
           ${showAccept ? `<th style="${thStyle}">Действие</th>` : ''}
         </tr></thead>

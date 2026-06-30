@@ -10,7 +10,13 @@ function createDealsRouter(deps) {
         requireAuth,
         requireRole,
         plainTitle,
+        htmlEscape,
         addNotification,
+        emitRealtime,
+        emitDashboardRefresh,
+        getCompanyEmail,
+        sendEmail,
+        APP_URL,
     } = deps;
 
     const router = express.Router();
@@ -82,7 +88,34 @@ function createDealsRouter(deps) {
             if (row.completion_status === 'completed') return res.status(400).json({ error: 'Сделка уже завершена' });
 
             await pool.query("UPDATE proposals SET completion_status = 'completed' WHERE id = $1", [proposalId]);
-            await addNotification(row.company, `Заказчик подтвердил выполнение заказа «${plainTitle(row.order_title)}».`);
+            const title = plainTitle(row.order_title);
+            await addNotification(row.company, `Заказчик подтвердил выполнение заказа «${title}».`);
+            emitDashboardRefresh(row.company);
+            emitDashboardRefresh(row.customer_company);
+            emitRealtime(row.company, 'deal:status', {
+                proposalId,
+                orderId: row.order_id,
+                orderTitle: title,
+                stage: 'Завершена',
+                completionStatus: 'completed',
+            });
+            emitRealtime(row.customer_company, 'deal:status', {
+                proposalId,
+                orderId: row.order_id,
+                orderTitle: title,
+                stage: 'Завершена',
+                completionStatus: 'completed',
+            });
+            const email = await getCompanyEmail(row.company);
+            if (email) {
+                await sendEmail(email, `Сделка завершена — «${title}»`,
+                    `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                      <h3 style="color:#41bd97">Сделка завершена</h3>
+                      <p>Заказчик подтвердил выполнение заказа <strong>«${htmlEscape(title)}»</strong>.</p>
+                      <a href="${APP_URL}/deals.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть сделки</a>
+                    </div>`
+                ).catch(() => {});
+            }
             res.json({ message: 'Сделка завершена' });
         } catch (e) { next(e); }
     });
@@ -227,6 +260,31 @@ function createDealsRouter(deps) {
             const title = plainTitle(p.order_title);
             const notifyCompany = stage === 'Принят заказчиком' ? p.company : p.customer_company;
             await addNotification(notifyCompany, `Статус доставки по «${title}» изменён: ${stage}.`);
+            emitDashboardRefresh(p.company);
+            emitDashboardRefresh(p.customer_company);
+            const statusPayload = {
+                proposalId,
+                orderId: p.order_id,
+                orderTitle: title,
+                stage,
+                completionStatus: stage === 'Принят заказчиком' ? 'completed' : (p.completion_status || 'active'),
+            };
+            emitRealtime(p.company, 'deal:status', statusPayload);
+            emitRealtime(p.customer_company, 'deal:status', statusPayload);
+
+            const criticalStages = ['Отгружен', 'Принят заказчиком'];
+            if (criticalStages.includes(stage)) {
+                const email = await getCompanyEmail(notifyCompany);
+                if (email) {
+                    await sendEmail(email, `Статус поставки: ${stage} — «${title}»`,
+                        `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                          <h3 style="color:#41bd97">Обновление поставки</h3>
+                          <p>По заказу <strong>«${htmlEscape(title)}»</strong> новый этап: <strong>${htmlEscape(stage)}</strong>.</p>
+                          <a href="${APP_URL}/delivery.html?id=${proposalId}" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Отследить доставку</a>
+                        </div>`
+                    ).catch(() => {});
+                }
+            }
 
             res.json({ message: 'Статус обновлён', stage });
         } catch (e) { next(e); }

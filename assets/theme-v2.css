@@ -1642,7 +1642,32 @@ table {
 }
 .toast-action:hover { background: var(--inner-bg); border-color: var(--accent-cyan); }
 .toast-success { border-left: 3px solid #16A34A; }
+.toast-info    { border-left: 3px solid var(--accent-cyan); }
 .toast-out { animation: toastOut 0.22s ease forwards; }
+
+/* Sticky bar — сравнение выбранных КП */
+.kp-compare-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9990;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    max-width: calc(100vw - 32px);
+}
+.kp-compare-bar-text { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.kp-compare-bar-btn { height: 36px; font-size: 12.5px; padding: 0 14px; }
+.kp-compare-bar-btn:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 600px) {
+    .kp-compare-bar { bottom: calc(16px + var(--mobile-bottom-nav-height, 0px)); flex-wrap: wrap; justify-content: center; }
+}
 @keyframes toastIn  { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 @keyframes toastOut { to   { opacity:0; transform:translateY(6px); } }
 

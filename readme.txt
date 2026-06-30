@@ -516,6 +516,7 @@ REAL-TIME (Socket.io)
   dashboard:refresh    — обновить badge сайдбара и уведомлений
   order:new            — новая подходящая закупка (поставщик)
   proposal:new         — новый отклик/КП (заказчик)
+  deal:status          — смена этапа поставки / завершение сделки
   message              — новое сообщение в чате (обе стороны)
   conversation:update  — обновить список диалогов (messages.html)
 
@@ -525,7 +526,7 @@ REAL-TIME (Socket.io)
   join-auction         — комната auction:{id}
 
 CustomEvents на фронте (document):
-  tz:message, tz:conversation:update, tz:order:new, tz:proposal:new
+  tz:message, tz:conversation:update, tz:order:new, tz:proposal:new, tz:deal:status
   tz:socket:connect, tz:socket:disconnect
 
 Поллинг — только запасной вариант при обрыве сокета:
@@ -564,6 +565,33 @@ Nginx (обязательно на prod для WebSocket):
 
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — top-3 product features)
+  ----------------------------------------------------------------
+  1. Сравнение КП (index.html, assets/app.js, assets/theme-v2.css):
+     - Чекбоксы в модалке откликов: выбор 2–4 КП
+     - Sticky-панель «Сравнить» внизу экрана (kp-compare-bar)
+     - Таблица сравнения: цена, срок, поставщик, верификация, статус, рейтинг
+     - API order-proposals отдаёт verifiedByPlatform / verifiedEgrul
+
+  2. Отзывы после сделок (deals.html):
+     - Баннер «Оцените поставщика» для завершённых сделок без отзыва
+     - GET /api/reviews/check/:orderId/:toCompany (исправлен orderId)
+     - Модалка звёзд 1–5 + текст, кнопка в панели сделки
+     - sessionStorage dismiss «Позже» — не блокирует основные потоки
+
+  3. Умные уведомления (assets/app.js, routes/deals.js):
+     - Toast при новом сообщении (если не на messages.html)
+     - Socket deal:status — смена этапа поставки / завершение сделки
+     - Email на критические этапы: Отгружен, Принят заказчиком, завершение
+     - proposal:new и notification — без изменений (уже работали)
+
+  4. Mobile UX:
+     - deals.html + deals-page.css — карточки заказов при ≤720px
+     - map.html — кнопка «Фильтры» + выдвижная панель категорий/региона
+
+  Проверка: npm run check
+
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — mobile responsive UX)
   ----------------------------------------------------------------

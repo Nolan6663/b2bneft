@@ -373,6 +373,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th style="width:36px;"></th>
                             <th>Поставщик</th>
                             <th>Совпадение</th>
                             <th>Цена</th>
@@ -481,7 +482,7 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="assets/app.js?v=6"></script>
+    <script src="assets/app.js?v=11"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
         authGuard('customer');
@@ -1051,21 +1052,27 @@
         }
 
         function compareKp() {
-            if (!currentProposalsOrderId || currentProposalsList.length < 2) {
-                showToast('Нужно минимум 2 КП для сравнения', 'warn');
+            openKpCompareWithList();
+        }
+
+        function openKpCompareWithList() {
+            const list = getSelectedKpFromList(currentProposalsList);
+            if (list.length < 2) {
+                showToast('Выберите от 2 до 4 КП для сравнения', 'warn');
                 return;
             }
             document.getElementById('compareModalTitle').textContent = `Сравнение КП — ${currentProposalsOrderTitle}`;
-            document.getElementById('compareTableWrap').innerHTML = renderKpCompareTable(currentProposalsList, {
+            document.getElementById('compareTableWrap').innerHTML = renderKpCompareTable(list, {
                 acceptFn: 'acceptProposalFromCompare',
             });
             const pdfBtn = document.getElementById('comparePdfBtn');
-            if (pdfBtn) pdfBtn.style.display = currentProposalsList.length >= 2 ? '' : 'none';
+            if (pdfBtn) pdfBtn.style.display = list.length >= 2 ? '' : 'none';
             document.getElementById('compareModal').style.display = 'flex';
         }
 
         function exportCompareKpPdf() {
-            if (!currentProposalsOrderId || currentProposalsList.length < 2) {
+            const list = getSelectedKpFromList(currentProposalsList);
+            if (!currentProposalsOrderId || list.length < 2) {
                 showToast('Нужно минимум 2 КП', 'warn');
                 return;
             }
@@ -1073,12 +1080,13 @@
         }
 
         function compareFromProposalsModal() {
-            if (currentProposalsList.length < 2) {
-                showToast('Нужно минимум 2 КП для сравнения', 'warn');
+            const list = getSelectedKpFromList(currentProposalsList);
+            if (list.length < 2) {
+                showToast('Выберите от 2 до 4 КП для сравнения', 'warn');
                 return;
             }
             document.getElementById('proposalsModal').style.display = 'none';
-            compareKp();
+            openKpCompareWithList();
         }
 
         async function acceptProposalFromCompare(proposalId, supplier) {
@@ -1140,9 +1148,10 @@
         async function viewProposals(orderId, orderTitle) {
             currentProposalsOrderId = orderId;
             currentProposalsOrderTitle = orderTitle;
+            resetKpCompareSelection();
             document.getElementById('proposalsModalTitle').innerText = `Отклики на: ${orderTitle}`;
             const tableBody = document.getElementById('proposals-table-body');
-            if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Загрузка...</td></tr>';
+            if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Загрузка...</td></tr>';
             document.getElementById('proposalsModal').style.display = 'flex';
 
             try {
@@ -1161,7 +1170,7 @@
 
                 tableBody.innerHTML = '';
                 if (proposals.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
                 } else {
                     proposals.forEach(prop => {
                         let icon = '✓', cls = 'win';
@@ -1195,6 +1204,9 @@
 
                         const row = document.createElement('tr');
                         row.innerHTML = `
+                            <td style="text-align:center;">
+                                <input type="checkbox" class="kp-compare-cb" data-id="${prop.id}" style="width:15px;height:15px;cursor:pointer;" onchange="toggleKpCompare(${prop.id}, this.checked)" onclick="event.stopPropagation()">
+                            </td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div>
                                 ${fileLink}
