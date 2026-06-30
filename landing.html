@@ -275,16 +275,133 @@
   #lp-steps > div:not(.lp-arrow):hover { transform: translateY(-4px); }
 
   .lp-faq {
-    width: 100%; background: linear-gradient(135deg,#071B2A 0%,#0B2233 100%);
-    padding: 80px 0 88px; position: relative; overflow: hidden;
+    width: 100%;
+    padding: 96px 0 104px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255,106,0,0.11) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 45% at 88% 75%, rgba(56,189,248,0.07) 0%, transparent 50%),
+      linear-gradient(165deg, #050f18 0%, #071B2A 42%, #0a1f32 100%);
+  }
+  .lp-faq-grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.45;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   }
   .lp-faq-glow {
     position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse 50% 70% at 95% 50%, rgba(255,106,0,.07) 0%, transparent 70%);
+    background: radial-gradient(ellipse 45% 55% at 72% 42%, rgba(255,106,0,0.14) 0%, transparent 68%);
   }
   .lp-faq-inner {
-    max-width: 1200px; margin: 0 auto; padding: 0 80px;
-    display: grid; grid-template-columns: 320px 1fr; gap: 80px; align-items: start; position: relative;
+    max-width: 1320px; margin: 0 auto; padding: 0 64px;
+    display: grid; grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 64px; align-items: start; position: relative; z-index: 1;
+  }
+  .lp-faq-aside { position: sticky; top: 40px; }
+  .lp-faq-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border-radius: 999px; margin-bottom: 22px;
+    background: rgba(255,106,0,0.1); border: 1px solid rgba(255,106,0,0.28);
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    letter-spacing: 2px; color: #FF8A3D; text-transform: uppercase;
+  }
+  .lp-faq-eyebrow::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%; background: #FF6A00;
+    box-shadow: 0 0 12px rgba(255,106,0,0.7);
+  }
+  .lp-faq-title {
+    margin: 0 0 18px; font-size: clamp(32px, 3.6vw, 46px); font-weight: 800;
+    line-height: 1.08; letter-spacing: -0.8px; color: #fff;
+  }
+  .lp-faq-lead {
+    margin: 0 0 28px; font-size: 16px; line-height: 1.65;
+    color: rgba(255,255,255,0.58); font-weight: 500; max-width: 34ch;
+  }
+  .lp-faq-trust {
+    display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px;
+  }
+  .lp-faq-trust span {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.72);
+  }
+  .lp-faq-trust svg { flex-shrink: 0; color: #FF6A00; }
+  .lp-faq-mail {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: #fff; text-decoration: none; font-size: 14px; font-weight: 700;
+    padding: 13px 22px; border-radius: 12px;
+    background: linear-gradient(135deg, #FF6A00, #E85D00);
+    box-shadow: 0 10px 28px rgba(255,106,0,0.32);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .lp-faq-mail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(255,106,0,0.4);
+  }
+
+  .lp-faq-panel {
+    padding: 10px; border-radius: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+  }
+  .lp-faq-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .lp-faq-card {
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.02);
+    transition: background .22s ease, border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  }
+  .lp-faq-card:hover { background: rgba(255,255,255,0.045); }
+  .lp-faq-card.is-open {
+    background: linear-gradient(135deg, rgba(255,106,0,0.12), rgba(255,106,0,0.04));
+    border-color: rgba(255,106,0,0.32);
+    box-shadow: 0 12px 36px rgba(255,106,0,0.12);
+  }
+
+  .lp-faq-q {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 20px 22px; cursor: pointer; text-align: left;
+    background: none; border: none; font-family: inherit;
+  }
+  .lp-faq-q-text {
+    font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.92);
+    line-height: 1.4; transition: color .2s ease;
+  }
+  .lp-faq-card.is-open .lp-faq-q-text { color: #fff; }
+
+  .lp-faq-toggle {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.65);
+    transition: background .22s ease, border-color .22s ease, color .22s ease, transform .25s ease;
+  }
+  .lp-faq-card.is-open .lp-faq-toggle {
+    background: #FF6A00; border-color: #FF6A00; color: #fff;
+    transform: rotate(180deg);
+  }
+
+  .lp-faq-a {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .32s cubic-bezier(.22,1,.36,1);
+  }
+  .lp-faq-card.is-open .lp-faq-a { grid-template-rows: 1fr; }
+  .lp-faq-a-inner { overflow: hidden; }
+  .lp-faq-a-inner p {
+    margin: 0; padding: 0 22px 20px;
+    font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.62); font-weight: 500;
+  }
+  .lp-faq-card.is-open .lp-faq-a-inner p { color: rgba(255,255,255,0.78); }
+
+  .lp-faq-q:focus-visible,
+  .lp-faq-mail:focus-visible {
+    outline: 2px solid #FF6A00; outline-offset: 3px;
   }
 
   .lp-nv { transition: color .15s ease; }
@@ -292,7 +409,10 @@
 
   @media (prefers-reduced-motion: reduce) {
     .lp-rise, .lp-kp-chip, .lp-industrial, .lp-dot-pulse { animation: none !important; }
-    .lp-cta:hover, .lp-scene-card:hover, #lp-steps > div:not(.lp-arrow):hover { transform: none; }
+    .lp-cta:hover, .lp-scene-card:hover, #lp-steps > div:not(.lp-arrow):hover,
+    .lp-faq-mail:hover, .lp-faq-card:hover { transform: none; }
+    .lp-faq-a { transition: none; }
+    .lp-faq-toggle { transition: none; }
   }
 
   /* ─── Responsive ─────────────────────────────────────────────── */
@@ -306,9 +426,9 @@
   @media (max-width: 900px) {
     #lp-header  { padding: 16px 24px !important; }
     .lp-nv      { display: none !important; }
-    .lp-faq-inner > div:first-child { position: static !important; }
-    .lp-faq { padding: 48px 0 56px !important; }
-    .lp-faq-inner { grid-template-columns: 1fr !important; gap: 36px !important; padding: 0 24px; }
+    .lp-faq-aside { position: static !important; }
+    .lp-faq { padding: 56px 0 64px !important; }
+    .lp-faq-inner { grid-template-columns: 1fr !important; gap: 32px !important; padding: 0 24px; }
     #lp-hero    { grid-template-columns: 1fr !important; padding: 28px 24px 36px !important; gap: 24px !important; }
     #lp-h1      { font-size: 42px !important; letter-spacing: -0.6px !important; }
     #lp-hero-right { display: none !important; }
@@ -666,107 +786,126 @@
 
     <!-- ─── FAQ (full width) ─────────────────────────────────────── -->
     <section id="faq" class="lp-faq">
+      <div class="lp-faq-grid" aria-hidden="true"></div>
       <div class="lp-faq-glow" aria-hidden="true"></div>
       <div class="lp-faq-inner">
 
-        <!-- Left: title -->
-        <div style="position:sticky; top:32px;">
-          <p style="margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.1em; color:#FF6A00; text-transform:uppercase;">FAQ</p>
-          <h2 style="margin:0 0 20px; font-size:clamp(28px,3vw,38px); font-weight:800; line-height:1.15; color:#fff;">Частые<br>вопросы</h2>
-          <p style="margin:0 0 36px; font-size:15px; line-height:1.6; color:rgba(255,255,255,.55); font-weight:500;">Остались вопросы? Напишите нам — ответим в течение рабочего дня.</p>
-          <a href="mailto:hello@texzakaz.ru" style="display:inline-flex; align-items:center; gap:8px; color:#FF6A00; text-decoration:none; font-size:14px; font-weight:700; border:1px solid rgba(255,106,0,.35); border-radius:10px; padding:11px 20px; transition:background .18s;" onmouseover="this.style.background='rgba(255,106,0,.1)'" onmouseout="this.style.background='transparent'">
+        <aside class="lp-faq-aside lp-rise" style="--d:0;">
+          <div class="lp-faq-eyebrow">FAQ · поддержка</div>
+          <h2 class="lp-faq-title">Частые<br>вопросы</h2>
+          <p class="lp-faq-lead">Коротко о размещении заказов, проверке поставщиков и работе с платформой.</p>
+          <div class="lp-faq-trust">
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              Бесплатно для заказчиков
+            </span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Ответ в течение рабочего дня
+            </span>
+          </div>
+          <a class="lp-faq-mail" href="mailto:hello@texzakaz.ru">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Написать нам
           </a>
-        </div>
+        </aside>
 
-        <!-- Right: accordion -->
-        <div id="faq-list" style="display:flex; flex-direction:column; gap:0;">
+        <div class="lp-faq-panel lp-rise" style="--d:1;">
+          <div class="lp-faq-list" id="faq-list">
 
-          <div class="faq-item" style="border-bottom:1px solid rgba(255,255,255,.08);">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Сколько стоит размещение заказа?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Для заказчиков размещение заявок и получение коммерческих предложений — бесплатно. Платформа работает по модели подписки для поставщиков, желающих получать уведомления о новых прямых закупках.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Сколько стоит размещение заказа?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Для заказчиков размещение заявок и получение коммерческих предложений — бесплатно. Платформа работает по модели подписки для поставщиков, желающих получать уведомления о новых прямых закупках.</p>
+              </div></div>
             </div>
-          </div>
 
-          <div class="faq-item" style="border-bottom:1px solid rgba(255,255,255,.08);">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Как быстро я получу первые предложения?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Первые КП поступают в течение 48 часов после размещения заявки. В среднем заказчики получают 3–7 предложений от разных производителей по каждому запросу.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Как быстро я получу первые предложения?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Первые КП поступают в течение 48 часов после размещения заявки. В среднем заказчики получают 3–7 предложений от разных производителей по каждому запросу.</p>
+              </div></div>
             </div>
-          </div>
 
-          <div class="faq-item" style="border-bottom:1px solid rgba(255,255,255,.08);">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Платформа только для крупных компаний?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Нет. ТЕХЗАКАЗ работает с компаниями любого размера — от небольших производственных предприятий до крупных нефтесервисных холдингов. Минимального объёма закупок нет.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Платформа только для крупных компаний?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Нет. ТЕХЗАКАЗ работает с компаниями любого размера — от небольших производственных предприятий до крупных нефтесервисных холдингов. Минимального объёма закупок нет.</p>
+              </div></div>
             </div>
-          </div>
 
-          <div class="faq-item" style="border-bottom:1px solid rgba(255,255,255,.08);">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Как проверяются поставщики на платформе?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Каждый поставщик проходит верификацию: проверка юридического лица, производственных мощностей и опыта выполненных заказов. На платформе представлено 1200+ проверенных производителей.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Как проверяются поставщики на платформе?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Каждый поставщик проходит верификацию: проверка юридического лица, производственных мощностей и опыта выполненных заказов. На платформе представлено 1200+ проверенных производителей.</p>
+              </div></div>
             </div>
-          </div>
 
-          <div class="faq-item" style="border-bottom:1px solid rgba(255,255,255,.08);">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Какое оборудование и запчасти можно заказать?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Любое промышленное оборудование и запчасти: металлообработка и сварка, насосное и компрессорное оборудование, трубопроводная арматура, электрооборудование, нестандартные металлоконструкции и детали по чертежам.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Какое оборудование и запчасти можно заказать?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Любое промышленное оборудование и запчасти: металлообработка и сварка, насосное и компрессорное оборудование, трубопроводная арматура, электрооборудование, нестандартные металлоконструкции и детали по чертежам.</p>
+              </div></div>
             </div>
-          </div>
 
-          <div class="faq-item">
-            <button class="faq-q" aria-expanded="false" style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; background:none; border:none; padding:24px 0; cursor:pointer; text-align:left; font-family:inherit;">
-              <span style="font-size:16px; font-weight:700; color:#fff; line-height:1.35;">Нужно ли заключать договор с ТЕХЗАКАЗ?</span>
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg class="faq-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" style="transition:transform .25s;"><path d="M5 8l5 5 5-5"/></svg>
-              </div>
-            </button>
-            <div class="faq-a" style="display:none; padding:0 0 24px;">
-              <p style="margin:0; font-size:15px; line-height:1.65; color:rgba(255,255,255,.6); font-weight:500;">Нет. Договор заключается напрямую между заказчиком и выбранным производителем. ТЕХЗАКАЗ — инструмент для поиска и коммуникации, а не посредник в сделке.</p>
+            <div class="lp-faq-card">
+              <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-q-text">Нужно ли заключать договор с ТЕХЗАКАЗ?</span>
+                <span class="lp-faq-toggle" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+                </span>
+              </button>
+              <div class="lp-faq-a"><div class="lp-faq-a-inner">
+                <p>Нет. Договор заключается напрямую между заказчиком и выбранным производителем. ТЕХЗАКАЗ — инструмент для поиска и коммуникации, а не посредник в сделке.</p>
+              </div></div>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     </section>
 
 </main>
 <script>
-document.querySelectorAll('.faq-q').forEach(btn => {
+document.querySelectorAll('.lp-faq-q').forEach(btn => {
   btn.addEventListener('click', () => {
+    const card = btn.closest('.lp-faq-card');
     const expanded = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', !expanded);
-    btn.nextElementSibling.style.display = expanded ? 'none' : 'block';
-    btn.querySelector('.faq-arrow').style.transform = expanded ? '' : 'rotate(180deg)';
+
+    document.querySelectorAll('.lp-faq-card.is-open').forEach(openCard => {
+      if (openCard !== card) {
+        openCard.classList.remove('is-open');
+        openCard.querySelector('.lp-faq-q').setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    card.classList.toggle('is-open', !expanded);
+    btn.setAttribute('aria-expanded', String(!expanded));
   });
 });
 
