@@ -562,7 +562,8 @@ Nginx (обязательно на prod для WebSocket):
   [ ] Command palette, таймлайн сделки
 
 
-  • landing.html — FAQ: glass-панель, карточки-аккордеон, сетка, градиентный фон
+  • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
+  • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — mobile responsive UX)
   ----------------------------------------------------------------
