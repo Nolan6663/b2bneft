@@ -1,5 +1,13 @@
 /* build: 2026-06-29-page-loader */
 
+// View Transitions (navigation: auto): fast clicks cancel the transition — harmless AbortError
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  if (reason?.name === 'AbortError' && /transition/i.test(String(reason.message || ''))) {
+    event.preventDefault();
+  }
+});
+
 const SIDEBAR_SCROLL_KEY = 'tzSidebarScroll';
 
 const SERVER_URL = (
