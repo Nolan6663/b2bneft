@@ -181,6 +181,77 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     content: ''; width: 8px; height: 8px; border-radius: 50%; background: #FF6A00; flex-shrink: 0;
 }
 
+/* ── Pricing ── */
+.ps-pricing { background: #fff; padding: 72px 64px; border-top: 1px solid rgba(7,27,42,.07); }
+.ps-pricing-banner {
+    background: linear-gradient(135deg, rgba(255,106,0,.08), rgba(11,34,51,.04));
+    border: 1px solid rgba(255,106,0,.22);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 36px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #2E4259;
+    max-width: 720px;
+}
+.ps-pricing-banner strong { color: #FF6A00; }
+.ps-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 40px;
+}
+.ps-price-card {
+    background: #F7FAFC;
+    border: 1px solid rgba(7,27,42,.09);
+    border-radius: 18px;
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform .15s, box-shadow .15s;
+}
+.ps-price-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(7,27,42,.08); }
+.ps-price-card.featured {
+    background: #fff;
+    border-color: rgba(255,106,0,.45);
+    box-shadow: 0 8px 28px rgba(255,106,0,.1);
+}
+.ps-price-pin {
+    position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+    padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800;
+    white-space: nowrap; letter-spacing: .02em;
+}
+.ps-price-pin.now { background: linear-gradient(135deg, #FF6A00, #e55e00); color: #fff; }
+.ps-price-pin.soon { background: #E8EEF4; color: #4A5D6E; }
+.ps-price-name {
+    font-size: 13px; font-weight: 800; letter-spacing: .06em;
+    text-transform: uppercase; color: #4A5D6E; margin-bottom: 10px;
+}
+.ps-price-amount {
+    font-size: 36px; font-weight: 900; color: #071B2A; line-height: 1; margin-bottom: 6px;
+}
+.ps-price-amount sub { font-size: 15px; font-weight: 500; color: #4A5D6E; vertical-align: baseline; }
+.ps-price-amount.custom { font-size: 22px; margin-top: 8px; }
+.ps-price-cycle { font-size: 13px; color: #4A5D6E; font-weight: 500; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(7,27,42,.08); }
+.ps-price-soon { font-size: 11px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 14px; }
+.ps-price-features { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; display: flex; flex-direction: column; gap: 9px; }
+.ps-price-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; color: #071B2A; font-weight: 500; }
+.ps-price-features li.off { color: #8A9BAA; }
+.ps-price-features .fi { flex-shrink: 0; font-weight: 800; font-size: 12px; margin-top: 2px; }
+.ps-price-features li:not(.off) .fi { color: #FF6A00; }
+.ps-price-cta {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer; border: none; transition: background .18s, opacity .18s;
+}
+.ps-price-cta.primary { background: #FF6A00; color: #fff; }
+.ps-price-cta.primary:hover { background: #e55e00; }
+.ps-price-cta.secondary { background: transparent; border: 1px solid rgba(7,27,42,.14); color: #4A5D6E; }
+.ps-price-cta.secondary:hover { border-color: rgba(7,27,42,.28); color: #071B2A; }
+.ps-price-cta:disabled, .ps-price-cta.current { background: #E8EEF4; color: #4A5D6E; cursor: default; border: none; }
+.ps-pricing-note { margin-top: 20px; font-size: 13px; color: #4A5D6E; font-weight: 500; line-height: 1.55; }
+
 /* ── CTA ── */
 .ps-cta {
     margin: 0 64px 72px; border-radius: 20px;
@@ -208,7 +279,8 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     .ps-nav { display: none; }
     .ps-hero { padding: 48px 24px 56px; }
     .ps-hero-stats { gap: 24px; flex-wrap: wrap; }
-    .ps-section, .ps-how, .ps-cats { padding: 48px 24px; }
+    .ps-section, .ps-how, .ps-cats, .ps-pricing { padding: 48px 24px; }
+    .ps-pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
     .ps-benefits-grid { grid-template-columns: 1fr 1fr; }
     .ps-benefit { border-bottom: 1px solid rgba(7,27,42,.07); }
     .ps-steps { grid-template-columns: 1fr; gap: 40px; }
@@ -230,6 +302,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     <a href="/zakupki">Закупки</a>
     <a href="/map">Карта предприятий</a>
     <a href="/dlya-postavshchikov" class="active">Для поставщиков</a>
+    <a href="/dlya-postavshchikov#tarify">Тарифы</a>
   </nav>
   <a href="/login#register" class="ps-header-cta">Зарегистрироваться</a>
 </header>
@@ -364,6 +437,15 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     <p style="margin-top:20px; font-size:13px; color:#4A5D6E; font-weight:500;">И другие категории промышленного оборудования и запчастей</p>
   </section>
 
+  <!-- Pricing -->
+  <section class="ps-pricing" id="tarify">
+    <p class="ps-section-label">Тарифы</p>
+    <h2 class="ps-section-title">Прозрачные условия для поставщиков</h2>
+    <div class="ps-pricing-banner" id="psPricingBanner"></div>
+    <div class="ps-pricing-grid" id="psPricingGrid"></div>
+    <p class="ps-pricing-note">Для заказчиков размещение заявок и получение КП — <strong>бесплатно</strong>. Комиссии с суммы сделки нет.</p>
+  </section>
+
   <!-- CTA -->
   <div class="ps-cta">
     <div>
@@ -387,9 +469,70 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     <a href="/map">Карта предприятий</a>
     <a href="/login">Войти</a>
     <a href="/login#register">Регистрация</a>
+    <a href="/dlya-postavshchikov#tarify">Тарифы</a>
   </div>
   <span class="ps-footer-copy">© 2024 ТЕХЗАКАЗ</span>
 </footer>
+
+<script src="/assets/tariffs.js"></script>
+<script>
+(function () {
+    const cfg = window.TZ_TARIFFS;
+    if (!cfg) return;
+
+    const banner = document.getElementById('psPricingBanner');
+    if (banner && cfg.launchMode) {
+        banner.innerHTML = '<strong>Сейчас — период раннего доступа.</strong> Все функции бесплатно, пока платформа набирает аудиторию. ' + cfg.earlyAdopterNote;
+    } else if (banner) {
+        banner.style.display = 'none';
+    }
+
+    const grid = document.getElementById('psPricingGrid');
+    if (!grid) return;
+
+    const fmt = n => Number(n).toLocaleString('ru-RU');
+    const plans = cfg.launchMode
+        ? [cfg.plans.launch, cfg.plans.business, cfg.plans.enterprise]
+        : [cfg.plans.start, cfg.plans.business, cfg.plans.enterprise];
+
+    grid.innerHTML = plans.map(plan => {
+        const isLaunch = plan.id === 'launch';
+        const isFuture = cfg.launchMode && plan.id !== 'launch';
+        const isEnterprise = plan.id === 'enterprise';
+        const pin = isLaunch
+            ? '<div class="ps-price-pin now">Сейчас бесплатно</div>'
+            : (plan.popular ? '<div class="ps-price-pin soon">Популярный</div>' : (isFuture ? '<div class="ps-price-pin soon">Скоро</div>' : ''));
+
+        const price = plan.priceMonthly == null
+            ? '<div class="ps-price-amount custom">По запросу</div>'
+            : `<div class="ps-price-amount">${fmt(plan.priceMonthly)} <sub>₽/мес</sub></div>`;
+
+        const features = plan.features.slice(0, 6).map(f =>
+            `<li class="${f.ok ? '' : 'off'}"><span class="fi">${f.ok ? '✓' : '—'}</span>${f.text}</li>`
+        ).join('');
+
+        let cta;
+        if (isLaunch) {
+            cta = '<a href="/login#register" class="ps-price-cta primary">Зарегистрироваться бесплатно</a>';
+        } else if (isEnterprise) {
+            cta = '<a href="mailto:billing@texzakaz.ru" class="ps-price-cta secondary">Связаться с нами</a>';
+        } else {
+            cta = '<a href="/login#register" class="ps-price-cta secondary">Узнать о запуске</a>';
+        }
+
+        return `
+            <article class="ps-price-card ${isLaunch ? 'featured' : ''}">
+                ${pin}
+                <div class="ps-price-name">${plan.name}</div>
+                ${price}
+                <div class="ps-price-cycle">${plan.tagline}</div>
+                ${isFuture ? '<div class="ps-price-soon">Планируемая цена</div>' : ''}
+                <ul class="ps-price-features">${features}</ul>
+                ${cta}
+            </article>`;
+    }).join('');
+})();
+</script>
 
 </body>
 </html>
