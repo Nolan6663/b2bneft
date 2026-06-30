@@ -6,7 +6,7 @@
     <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title>Техзаказ — Администратор</title>
     <link rel="stylesheet" href="assets/theme-v2.css?v=8">
@@ -102,10 +102,18 @@
 
         @media(max-width:768px) {
             .adm-topbar { padding:0 14px; }
-            .adm-main { padding:16px 14px; }
+            .adm-main { padding:16px 14px 24px; }
             .adm-kpi-row { grid-template-columns:repeat(2,1fr); }
             .req-card { padding:14px 16px; }
             .usr-table th:nth-child(4), .usr-table td:nth-child(4) { display:none; }
+            .req-actions .btn-approve,
+            .req-actions .btn-reject-open { min-height: 44px; }
+        }
+        @media(max-width:480px) {
+            .adm-kpi-row { grid-template-columns: 1fr; }
+            .adm-tabs { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .usr-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .usr-table { min-width: 520px; }
         }
     </style>
 </head>

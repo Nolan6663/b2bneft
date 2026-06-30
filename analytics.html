@@ -5,7 +5,7 @@
     <script>if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark");if(localStorage.getItem("sidebarCollapsed")==="1")document.documentElement.setAttribute("data-sidebar-collapsed","1");var _r=localStorage.getItem("userRole");if(_r==="customer")document.documentElement.setAttribute("data-user-role","customer");if(_r==="producer")document.documentElement.setAttribute("data-user-role","producer");</script>
     <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title>Техзаказ — Аналитика</title>
     
@@ -219,6 +219,30 @@
         @media (max-width: 1300px) { .an-row { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 900px)  { .an-kpi-row { grid-template-columns: 1fr 1fr; } .an-body { flex-direction: column; } .an-insights-panel { width: 100%; } }
         @media (max-width: 600px)  { .an-kpi-row { grid-template-columns: 1fr; } .an-row { grid-template-columns: 1fr; } }
+        @media (max-width: 720px) {
+            .an-filters { flex-direction: column; align-items: stretch; gap: 12px; }
+            .an-filter-sep { display: none; }
+            .an-select-wrap,
+            .an-select-wrap--category,
+            .an-select-wrap--region,
+            .an-select-wrap--stype { width: 100%; min-width: 0; }
+            .an-filter-select { width: 100%; min-width: 0; font-size: 16px; }
+            .an-period-btn,
+            .an-filter-reset { min-height: 44px; width: 100%; justify-content: center; }
+            .an-card { padding: 16px; }
+            .an-card canvas { max-height: 220px; width: 100% !important; }
+            .chart-legend { flex-wrap: wrap; gap: 10px; }
+            .period-tabs { flex-wrap: wrap; }
+            .funnel-lbl { width: 72px; font-size: 11px; }
+            .heat-name { width: 90px; }
+            .an-card:has(.sup-tbl),
+            .an-card:has(.rat-tbl) {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .sup-tbl, .rat-tbl { min-width: 300px; }
+        }
+        .an-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
@@ -761,24 +785,22 @@
             return Number(score).toFixed(1).replace('.', ',');
         }
 
-        function sparkValues(values) {
+        function hasSparkTrend(values) {
             const arr = (values || []).map(v => Number(v) || 0);
-            if (arr.length >= 2) return arr;
-            if (arr.length === 1) return [arr[0], arr[0]];
-            return [0, 0];
+            if (arr.length < 2) return false;
+            const min = Math.min(...arr), max = Math.max(...arr);
+            return max - min > 0.001;
         }
 
         function sparkSVG(values, color) {
+            if (!hasSparkTrend(values)) return '';
             const w = 80, h = 32, pad = 3;
-            const safe = sparkValues(values);
+            const safe = (values || []).map(v => Number(v) || 0);
             const max = Math.max(...safe, 1), min = Math.min(...safe, 0), range = (max - min) || 1;
-            const allFlat = safe.every(v => v === safe[0]);
-            const stroke = allFlat && safe[0] === 0 ? (cssVar('--text-muted') || '#94A3B8') : color;
             const step = (w - pad * 2) / (safe.length - 1);
             const pts = safe.map((v, i) => `${(pad + i * step).toFixed(1)},${(h - pad - ((v - min) / range) * (h - pad * 2)).toFixed(1)}`).join(' ');
             const last = pts.split(' ').pop().split(',');
-            const opacity = allFlat && safe[0] === 0 ? '0.45' : '1';
-            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${stroke}" opacity="${opacity}"/></svg>`;
+            return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32" aria-hidden="true" title="Динамика за период"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${color}"/></svg>`;
         }
 
         /* ══ FILTER LOGIC ══ */
@@ -1394,14 +1416,7 @@
 
             const dynMonthLabels  = (d.dynamics || []).map(r => r.label);
             const dynMonthVolumes = (d.dynamics || []).map(r => r.volume || 0);
-            const dynOrderCounts  = (d.dynamics || []).map(r => r.orderCount || 0);
-            const sparkVolume = sparkValues(dynMonthVolumes);
-            const sparkEconomy = sparkValues(dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100));
-            const sparkConv = sparkValues(
-                dynOrderCounts.length >= 2
-                    ? dynOrderCounts.map(() => conversion)
-                    : [conversion, conversion]
-            );
+            const economySeries   = dynMonthVolumes.map(v => Math.round(v * 0.16 * 100) / 100);
 
             REAL = {
                 kpi: [
@@ -1409,25 +1424,25 @@
                         label: 'Объём закупок за период',
                         value: totalVolume > 0 ? fmt2(totalVolume) + ' млн ₽' : '0 ₽',
                         baseNum: totalVolume, delta: 0, unit: '', color: '#FF6A00', bg: '#FFF4EC',
-                        spark: sparkVolume,
+                        spark: dynMonthVolumes,
                     },
                     {
                         label: d.savings != null ? 'Экономия (% от среднего)' : 'Экономия',
                         value: d.savings != null ? d.savings + '%' : '—',
                         baseNum: d.savings || 0, delta: 0, unit: '%', color: '#12A866', bg: '#F0FDF4',
-                        spark: sparkEconomy,
+                        spark: economySeries,
                     },
                     {
                         label: 'Среднее время производства',
                         value: d.avgDays != null ? d.avgDays + ' дн.' : '—',
                         baseNum: d.avgDays || 0, delta: 0, unit: 'дн.', color: '#F59E0B', bg: '#FFF8E8',
-                        spark: d.avgDays != null ? [d.avgDays, d.avgDays] : [0, 0],
+                        spark: [],
                     },
                     {
                         label: 'Конверсия в договоры',
                         value: conversion + '%',
                         baseNum: conversion, delta: 0, unit: 'п.п.', color: '#7C3AED', bg: '#F3F0FE',
-                        spark: sparkConv,
+                        spark: [],
                     },
                 ],
                 dynamics: {

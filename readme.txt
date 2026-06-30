@@ -562,13 +562,45 @@ Nginx (обязательно на prod для WebSocket):
   [ ] Command palette, таймлайн сделки
 
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — mobile responsive UX)
+  ----------------------------------------------------------------
+  Мобильная вёрстка (без изменений desktop вне @media):
+
+  • assets/theme-v2.css — блок MOBILE UX ENHANCEMENTS:
+      - --mobile-bottom-nav-height (safe-area)
+      - touch targets ≥44px (кнопки, пагинация, proc-row)
+      - font-size 16px в полях ввода (без zoom на iOS)
+      - модалки / command palette — bottom sheet на ≤600–520px
+      - toast над нижней навигацией
+      - табы, уведомления, dropdown на всю ширину экрана
+      - графики max-height, профильные сетки в 1–2 колонки
+
+  • messages.html — чат fullscreen с корректным отступом под bottom nav,
+    кнопка «Назад» 44px, ширина пузырей 88%
+
+  • map.html — заголовок/поиск в колонку, карта vh-based, список заводов
+    с touch-friendly карточками
+
+  • analytics.html — фильтры столбиком, графики и таблицы со скроллом
+
+  • company-profile.html — hero и мета на узком экране
+
+  • admin.html — KPI 1 колонка ≤480px, горизонтальный скролл таблицы
+
+  • viewport meta на всех страницах кабинета/лендинга:
+    width=device-width, initial-scale=1.0, viewport-fit=cover
+
+  Breakpoints: 980 / 768 / 720 / 600 / 520 / 480 px
+  Ручная проверка: iPhone Safari, Android Chrome, планшет 768px.
+
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — company-profile без ?id=)
   ----------------------------------------------------------------
   • company-profile.html — при открытии без ?id= подставляет ID своей
     компании из /api/auth/me или кеша _myCompanyId
   • UI профиля: светлая карточка вместо тёмного градиента; бейдж риска — SVG-иконки
   • map.html — фикс съезжающей вёрстки: карта/панели одной высоты, статистика не наезжает
-  • analytics.html — null в рейтинге → «—»; sparkline вместо одиночной точки; API: avgScore, avgResponseHours
+  • analytics.html — null в рейтинге → «—»; sparkline скрыт без динамики; API: avgScore, avgResponseHours
 
 
 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — автоверификация ЕГРЮЛ)

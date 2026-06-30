@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/favicon.svg">
     <meta property="og:site_name" content="ТехЗаказ">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Карта заводов РТИ и мехобработки — ТехЗаказ</title>
     <meta name="description" content="Карта заводов РФ по РТИ и мехобработке на texzakaz.ru. Находите проверенных производителей в вашем регионе — 1200+ предприятий.">
     <link rel="canonical" href="https://texzakaz.ru/map.html">
@@ -329,12 +329,23 @@
         @media (max-width: 720px) {
             .map-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
             .map-filter-panel { display: none; }
-            .map-company-panel { display: flex; min-height: 360px; height: auto; }
-            .map-stats-grid { grid-template-columns: 1fr; }
+            .map-company-panel { display: flex; min-height: 320px; max-height: 50vh; height: auto; }
+            .map-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .map-production-summary { position: static; margin: 0 0 10px; pointer-events: auto; }
             .map-empty-state { position: static; inset: auto; min-height: 160px; padding: 12px; }
-            .map-center { display: flex; flex-direction: column; padding: 10px; gap: 10px; height: auto; min-height: 460px; }
-            #map { border-radius: var(--radius-inner); overflow: hidden; min-height: 420px; border: 1px solid var(--inner-border); flex: 1; }
+            .map-center { display: flex; flex-direction: column; padding: 10px; gap: 10px; height: auto; min-height: min(52vh, 420px); }
+            #map { border-radius: var(--radius-inner); overflow: hidden; min-height: min(48vh, 380px); border: 1px solid var(--inner-border); flex: 1; }
+            .map-header-row { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; width: 100%; }
+            .map-header-row .map-search-inp { width: 100% !important; max-width: 100%; box-sizing: border-box; font-size: 16px; }
+            .header .map-header-row + .header-right,
+            .header > .header-right { width: 100%; justify-content: flex-end; }
+            .mf-apply-btn { min-height: 44px; }
+            .mcp-card { padding: 14px; }
+            .mcp-write-btn { min-height: 44px; padding: 10px 0; display: flex; align-items: center; justify-content: center; }
+        }
+        @media (max-width: 520px) {
+            .map-stats-grid { grid-template-columns: 1fr; }
+            .map-company-panel { max-height: none; min-height: 280px; }
         }
     </style>
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
@@ -387,7 +398,7 @@
         <!-- Header -->
         <div class="header">
             <button class="burger-btn" aria-label="Меню" onclick="toggleMobileSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-            <div style="display:flex;align-items:center;gap:16px;">
+            <div class="map-header-row" style="display:flex;align-items:center;gap:16px;">
                 <h1 style="font-size:inherit;font-weight:inherit;margin:0;">Карта промышленных предприятий</h1>
                 <input class="map-search-inp" id="mapSearch" type="text" placeholder="Поиск по городу или компании..." style="width:260px;">
             </div>
