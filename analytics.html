@@ -758,9 +758,14 @@
 
         function sparkSVG(values, color) {
             const w=80, h=32, pad=3;
-            const max=Math.max(...values,1), min=Math.min(...values,0), range=(max-min)||1;
-            const step=(w-pad*2)/(values.length-1);
-            const pts=values.map((v,i)=>`${(pad+i*step).toFixed(1)},${(h-pad-((v-min)/range)*(h-pad*2)).toFixed(1)}`).join(' ');
+            const safe = (values && values.length ? values : [0]).map(v => Number(v) || 0);
+            if (safe.length === 1) {
+                const y = (h / 2).toFixed(1);
+                return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><circle cx="${(w / 2).toFixed(1)}" cy="${y}" r="2" fill="${color}"/></svg>`;
+            }
+            const max=Math.max(...safe,1), min=Math.min(...safe,0), range=(max-min)||1;
+            const step=(w-pad*2)/(safe.length-1);
+            const pts=safe.map((v,i)=>`${(pad+i*step).toFixed(1)},${(h-pad-((v-min)/range)*(h-pad*2)).toFixed(1)}`).join(' ');
             const last=pts.split(' ').pop().split(',');
             return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="80" height="32"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="2" fill="${color}"/></svg>`;
         }
@@ -1146,6 +1151,7 @@
             const d = data.dynamics[dynPeriod];
             const txt = cssVar('--text-secondary'), grid = cssVar('--border-subtle');
             if (chartDynamics) chartDynamics.destroy();
+            if (!d.labels.length) return;
             chartDynamics = new Chart(document.getElementById('dynamicsChart').getContext('2d'), {
                 type:'bar',
                 data:{ labels:d.labels, datasets:[
@@ -1168,6 +1174,10 @@
         function renderCategories(data = MOCK) {
             const c = data.categories;
             if (chartCategories) chartCategories.destroy();
+            if (!c.labels.length) {
+                document.getElementById('donutLegend').innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">Нет данных по категориям</div>';
+                return;
+            }
             chartCategories = new Chart(document.getElementById('categoriesChart').getContext('2d'), {
                 type:'doughnut',
                 data:{ labels:c.labels, datasets:[{ data:c.data, backgroundColor:c.colors, borderColor:cssVar('--card-bg'), borderWidth:3, hoverOffset:4 }] },
@@ -1232,7 +1242,11 @@
         }
 
         function renderHeatmap(data = MOCK) {
-            const regions = [...data.regions];
+            const regions = [...(data.regions || [])];
+            if (!regions.length) {
+                document.getElementById('heatmapRows').innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">Нет данных по регионам</div>';
+                return;
+            }
             if (heatSortMode === 'alpha') regions.sort((a,b) => a.name.localeCompare(b.name, 'ru'));
             else regions.sort((a,b) => b.count - a.count);
 
@@ -1261,46 +1275,61 @@
 
         /* ══ INSIGHTS (computed from data) ══ */
         function renderInsights(data = MOCK) {
-            // --- Ключевые выводы ---
-            const maxCatIdx  = data.categories.data.indexOf(Math.max(...data.categories.data));
-            const topCat     = data.categories.labels[maxCatIdx];
-            const topCatPct  = data.categories.data[maxCatIdx];
-            const convRate   = Math.round(data.funnel[4].count / data.funnel[0].count * 100);
-            const volKpi     = data.kpi[0];
-            const savKpi     = data.kpi[1];
+            const catData   = data.categories?.data || [];
+            const catLabels = data.categories?.labels || [];
+            const funnel0   = data.funnel?.[0]?.count || 0;
+            const funnel4   = data.funnel?.[4]?.count || 0;
+            const volKpi    = data.kpi?.[0] || { label: 'Объём закупок', value: '—', delta: 0 };
+            const timeKpi   = data.kpi?.[2] || { value: '—', delta: 0 };
+            const dynM      = data.dynamics?.month || { labels: [], volumes: [] };
+            const len       = dynM.volumes.length;
+            const last      = len ? dynM.volumes[len - 1] : 0;
+            const prev      = len > 1 ? dynM.volumes[len - 2] : last;
+            const isUp      = last >= prev;
+            const topSup    = data.suppliers?.[0];
+            const regions   = data.regions || [];
 
-            const conclusions = [
-                { icon:'✓', cls:'check', text:`Категория «${topCat}» — лидер: ${topCatPct}% объёма закупок` },
-                { icon:'✓', cls:'check', text:`${volKpi.label}: ${volKpi.value}, рост ↑${volKpi.delta}%` },
-                { icon:'✓', cls:'check', text:`Конверсия из откликов в договоры: ${convRate}%` },
-            ];
+            const conclusions = [];
+            if (catData.length) {
+                const maxCatIdx = catData.indexOf(Math.max(...catData));
+                const topCat    = catLabels[maxCatIdx] || '—';
+                const topCatPct = catData[maxCatIdx] || 0;
+                const totalCat  = catData.reduce((s, n) => s + n, 0);
+                const topPct    = totalCat > 0 ? Math.round(topCatPct / totalCat * 100) : 0;
+                conclusions.push({ icon:'✓', cls:'check', text:`Категория «${topCat}» — лидер: ${topPct}% закупок` });
+            } else {
+                conclusions.push({ icon:'✓', cls:'check', text:'Пока нет данных по категориям закупок' });
+            }
+            conclusions.push({ icon:'✓', cls:'check', text:`${volKpi.label}: ${volKpi.value}${volKpi.delta ? `, рост ↑${volKpi.delta}%` : ''}` });
+            const convRate = funnel0 > 0 ? Math.round(funnel4 / funnel0 * 100) : 0;
+            conclusions.push({ icon:'✓', cls:'check', text:`Конверсия в договоры: ${convRate}%` });
 
-            // --- Тренды ---
-            const dynM  = data.dynamics.month;
-            const len   = dynM.volumes.length;
-            const last  = dynM.volumes[len-1];
-            const prev  = dynM.volumes[len-2] || last;
-            const isUp  = last >= prev;
-            const topSup = data.suppliers[0];
-            const timeKpi = data.kpi[2];
+            const trends = [];
+            if (len) {
+                trends.push({ icon: isUp ? '↑' : '↓', cls: isUp ? 'up' : 'down', text: `Закупки в ${dynM.labels[len - 1]}: ${last} млн ₽ — ${isUp ? 'рост' : 'снижение'} к предыдущему периоду` });
+            } else {
+                trends.push({ icon:'—', cls:'check', text:'Динамика по месяцам появится после первых закупок' });
+            }
+            if (topSup) {
+                trends.push({ icon:'↑', cls:'up', text:`Лидер по объёму: «${topSup.name}» — ${fmt2(topSup.amount || 0)} млн ₽` });
+            } else {
+                trends.push({ icon:'—', cls:'check', text:'Пока нет закрытых сделок с поставщиками' });
+            }
+            trends.push({ icon:'↓', cls:'down', text:`Среднее время производства: ${timeKpi.value}${timeKpi.delta ? ` (−${timeKpi.delta}%)` : ''}` });
 
-            const trends = [
-                { icon: isUp ? '↑' : '↓', cls: isUp ? 'up' : 'down', text: `Закупки в ${dynM.labels[len-1]}: ${last} млн ₽ — ${isUp?'рост':'снижение'} к предыдущему периоду` },
-                { icon:'↑', cls:'up', text:`Лидер по объёму: «${topSup.name}» — ${fmt2(topSup.amount)} млн ₽` },
-                { icon:'↓', cls:'down', text:`Время отклика сократилось до ${timeKpi.value} (−${timeKpi.delta}%)` },
-            ];
-
-            // --- Рекомендации ---
-            const minCatIdx = data.categories.data.indexOf(Math.min(...data.categories.data));
-            const minCat    = data.categories.labels[minCatIdx];
-            const funnelGap = data.funnel[1].count - data.funnel[2].count;
-            const lowRegion = [...data.regions].sort((a,b)=>a.count-b.count)[0];
-
-            const recs = [
-                { text:`Расширить пул поставщиков в категории «${minCat}» — наименьший объём` },
-                { text:`Квалификационный этап отсеивает ${funnelGap} откликов — рекомендована предквалификация` },
-                { text:`Регион «${lowRegion.name}» — низкая активность (${lowRegion.count} откл.), потенциал роста` },
-            ];
+            const recs = [];
+            if (catData.length) {
+                const minCatIdx = catData.indexOf(Math.min(...catData));
+                const minCat    = catLabels[minCatIdx] || '—';
+                recs.push({ text:`Расширить пул поставщиков в категории «${minCat}» — наименьший объём` });
+            }
+            const funnelGap = (data.funnel?.[1]?.count || 0) - (data.funnel?.[2]?.count || 0);
+            if (funnelGap > 0) recs.push({ text:`Квалификационный этап отсеивает ${funnelGap} откликов — рекомендована предквалификация` });
+            if (regions.length) {
+                const lowRegion = [...regions].sort((a, b) => a.count - b.count)[0];
+                recs.push({ text:`Регион «${lowRegion.name}» — низкая активность (${lowRegion.count} откл.), потенциал роста` });
+            }
+            if (!recs.length) recs.push({ text:'Создайте больше закупок и примите КП — рекомендации появятся автоматически' });
 
             document.getElementById('insightConclusions').innerHTML = conclusions.map(c =>
                 `<div class="insights-item"><div class="insights-icon ${c.cls}">${c.icon}</div><span class="insights-text">${c.text}</span></div>`

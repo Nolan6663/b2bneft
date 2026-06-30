@@ -50,14 +50,18 @@ CI/CD:
   - render.yaml — опциональный деплой на Render (health: GET /api/health)
 
 Тесты:
-  - npm test / npm run check — статические проверки (scripts/static-checks.js)
+  - npm test / npm run check — статические проверки (scripts/static-checks.js):
+      синтаксис JS (server, db, lib/*, routes/*), inline-скрипты в HTML,
+      баланс CSS-скобок, guardrails доступа, import server.js
   - npm run smoke:api — smoke API
   - npm run test:e2e — Playwright (tests/e2e/)
 
 
 СТРУКТУРА ФАЙЛОВ
 ----------------
-server.js          — весь бэкенд (Express роуты, Socket.io, логика)
+server.js          — точка входа Express: middleware, Socket.io, оставшиеся
+                     inline-роуты (dashboard, catalog, SEO, reviews, team…),
+                     монтирование роутеров из routes/
 export-pdf.js      — генерация PDF-отчётов (закупки, КП)
 db.js              — инициализация БД, CREATE TABLE, ALTER TABLE, seed данные
 storage.js         — абстракция хранения файлов (локально / S3)
@@ -65,15 +69,33 @@ package.json       — зависимости
 ecosystem.config.js — конфиг PM2
 .env               — переменные окружения (не в git; шаблон — раздел ниже)
 
+lib/
+  auth-tokens.js   — JWT, cookies, hash/verify паролей, prod-проверка JWT_SECRET
+  company-enrich.js — enrichCompany(): рейтинг, stats, фото, isFavorite
+
+routes/
+  auth.js          — все /api/auth/*
+  orders.js        — все /api/orders/*
+  proposals.js     — /api/proposals/* + createOrderProposalsRouter → /api/order-proposals/*
+  companies.js     — /api/companies/* + createTopSuppliersRouter → /api/top-suppliers
+  messages.js      — все /api/messages/* (включая /stats)
+  deals.js         — все /api/deals/* (список, complete, timeline, delivery)
+
 assets/
   app.js           — общий JS для всех страниц (apiFetch, escapeHtml,
-                     showToast, initNotifications, shouldUseMockData и др.)
+                     showToast, initNotifications, shouldUseMockData,
+                     window.__spaNavigate — заглушка MPA, без SPA-роутера)
   theme-v2.css     — глобальные стили (тёмная/светлая тема)
+  deals-page.css, settings-page.css — page-specific CSS (атрибут data-spa-page-css)
   zakupki-cat.css, fonts.css, ui-animations.js
 
 seo/               — GSC, Yandex Webmaster, SEO-аудит, интенты (auditor.js, gsc.js…)
-scripts/           — static-checks.js, mvp-api-smoke.js
+scripts/           — static-checks.js (npm run check), mvp-api-smoke.js
 tests/e2e/         — Playwright e2e
+
+УДАЛЕНО (мёртвый код, не использовался в runtime):
+  users.json, orders.json, companies.json, proposals.json, messages.json,
+  favorites.json, notifications.json — legacy JSON в корне репозитория
 
 Страницы (HTML):
   index.html           — личный кабинет заказчика (закупки, КП, чат)
@@ -478,6 +500,65 @@ SEO:
   [ ] Command palette, таймлайн сделки
 
 
+ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — рефакторинг backend + UI/SEO)
+-----------------------------------------------------------------
+  См. также update.txt — журнал фич до 23.06.
+
+  РЕФАКТОРИНГ server.js (поэтапный, API не менялся — только структура кода):
+
+  Шаг 1 — auth + чистка:
+    • lib/auth-tokens.js — cookies, JWT, hash/verify, проверка JWT_SECRET в prod
+    • routes/auth.js — все 16 эндпоинтов /api/auth/*
+    • server.js — app.use('/api/auth', createAuthRouter(...))
+    • assets/app.js — удалён отключённый SPA-роутер (~60 строк);
+      осталась заглушка window.__spaNavigate = url => location.assign(url)
+    • Удалены мёртвые JSON в корне: users.json, orders.json, companies.json,
+      proposals.json, messages.json, favorites.json, notifications.json
+
+  Шаг 2 — orders + proposals:
+    • routes/orders.js — /api/orders/* (public, CRUD, drawing, match-scores,
+      matched-suppliers, price-benchmark, producer-benchmark, cancel)
+    • routes/proposals.js — /api/proposals/* + createOrderProposalsRouter
+      для /api/order-proposals/:orderId
+    • server.js — routesDeps + app.use для трёх роутеров;
+      inline-обработчики orders/proposals удалены из server.js
+
+  Шаг 3 — companies + messages + deals:
+    • lib/company-enrich.js — computeProducerRating, enrichCompany и др.
+      (используется роутерами и оставшимися inline-роутами: public/companies, favorites)
+    • routes/companies.js — /api/companies/*, фото; createTopSuppliersRouter → /api/top-suppliers
+    • routes/messages.js — /api/messages/* (conversations, thread, post, read, stats)
+    • routes/deals.js — /api/deals/* (список, complete, timeline, delivery/stage)
+    • server.js — расширен routesDeps (optionalAuth, enrichCompany, geocodeCity,
+      handlePhotoUpload, canAccessOrderThread, rowToMessage, getIo);
+      inline companies/messages/deals удалены
+
+  Что ОСТАЛОСЬ в server.js (ещё не вынесено):
+    dashboard, public/stats, catalog, map, capacity, SEO, CRM, reviews,
+    templates, export, team, favorites, integrations, tasks, notifications,
+    verification, admin, Socket.io, cron, статика
+
+  scripts/static-checks.js — починен npm run check (раньше всегда падал):
+    • deals-page.css убран из node --check (был ERR_UNKNOWN_FILE_EXTENSION)
+    • CSS проверяется отдельно (theme-v2.css + deals-page.css)
+    • Плейсхолдеры supplier-public.html (<!--COMPANY_ID-->, <!--CANONICAL_URL-->)
+    • Guardrails доступа ищутся в server.js + routes/orders|proposals|messages.js
+    • SPA-проверка заменена на MPA: window.__spaNavigate в app.js
+    • settings.html — добавлен data-spa-page-css на settings-page.css
+
+  UI / SEO (тот же период, без смены API):
+    • index.html — «Итоги недели» из /api/deals (7 дней), без фейковых поставщиков
+    • catalog.html — выравнивание строки поиска (иконка + поле + кнопка AI)
+    • theme-v2.css — при свёрнутом сайдбаре скрывается только текст логотипа, не «Т»
+    • SEO meta: landing, zakupki, dlya-postavshchikov, catalog, map
+      (РТИ/мехобработка, texzakaz.ru, чертёж→КП, 1200+ заводов)
+
+  Проверка перед деплоем:
+    npm run check
+    → Static checks passed: N HTML files, M inline scripts
+
+  Деплой: push main → GitHub Actions → /var/www/neft → pm2 restart neft
+
 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — design refresh)
 ----------------------------------------------------
   См. также update.txt — подробный журнал.
@@ -574,6 +655,7 @@ SEO:
   nano /var/www/neft/.env   (добавить/изменить строку KEY=value)
   pm2 restart all
 ================================================================================
-Обновлено: 29.06.2026 — design refresh (сайдбар, CSS, KPI)
-Подробности: update.txt, TEST-REPORT.md
+Обновлено: 29.06.2026 — рефакторинг routes/ (auth, orders, proposals, companies,
+messages, deals), lib/, починка static-checks, UI/SEO
+Подробности: update.txt (фичи до 23.06), TEST-REPORT.md
 ================================================================================
