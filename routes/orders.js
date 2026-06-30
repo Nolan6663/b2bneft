@@ -24,6 +24,8 @@ module.exports = function createOrdersRouter(deps) {
         notifyCompanyEmail,
         withTransaction,
         addNotification,
+        emitRealtime,
+        emitDashboardRefresh,
         getUserIdsByCompany,
         sendPush,
         sendTelegramNotification,
@@ -209,6 +211,13 @@ module.exports = function createOrdersRouter(deps) {
                     }));
                 }
             }));
+
+            const orderSummary = { id: newOrder.id, title: orderTitle, category: newOrder.category, deadline: newOrder.deadline };
+            const notifiedCompanies = [...new Set(matched.map(m => m.company))];
+            for (const company of notifiedCompanies) {
+                emitDashboardRefresh(company);
+                emitRealtime(company, 'order:new', orderSummary);
+            }
 
             res.status(201).json(newOrder);
         } catch (e) { next(e); }

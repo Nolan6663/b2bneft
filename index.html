@@ -532,6 +532,14 @@
             });
         }
 
+        function onTzProposalNew(e) {
+            const detail = e.detail;
+            loadOrders();
+            if (detail?.orderId && currentProposalsOrderId === detail.orderId) {
+                viewProposals(detail.orderId, currentProposalsOrderTitle || detail.orderTitle);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             updateStatusCounts();
             renderOrdersTable();
@@ -541,6 +549,7 @@
             loadTopSuppliers();
             initNotifications();
             initSidebarBadges();
+            document.addEventListener('tz:proposal:new', onTzProposalNew);
         });
 
         window.__pageInit = function() {
@@ -552,8 +561,10 @@
             loadTopSuppliers();
             initNotifications();
             initSidebarBadges();
+            document.addEventListener('tz:proposal:new', onTzProposalNew);
 
             window.__pageCleanup = function() {
+                document.removeEventListener('tz:proposal:new', onTzProposalNew);
                 if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
             };
         };

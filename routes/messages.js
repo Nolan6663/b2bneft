@@ -13,6 +13,7 @@ function createMessagesRouter(deps) {
         sendPush,
         sendTelegramNotification,
         getIo,
+        emitRealtime,
         APP_URL,
     } = deps;
 
@@ -166,6 +167,10 @@ function createMessagesRouter(deps) {
             const msg = rowToMessage(newRow);
             const io = getIo();
             if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);
+
+            const convUpdate = { orderId: oid, company: threadCompany };
+            emitRealtime(order.company, 'conversation:update', convUpdate);
+            emitRealtime(threadCompany, 'conversation:update', convUpdate);
 
             (async () => {
                 try {

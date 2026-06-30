@@ -404,6 +404,8 @@
             });
         }
 
+        function onTzOrderNew() { loadOrdersForProducers(); }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
             loadOrdersForProducers();
@@ -411,6 +413,7 @@
             initSidebarBadges();
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
+            document.addEventListener('tz:order:new', onTzOrderNew);
         });
 
         window.__pageInit = function() {
@@ -421,8 +424,10 @@
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
+            document.addEventListener('tz:order:new', onTzOrderNew);
 
             window.__pageCleanup = function() {
+                document.removeEventListener('tz:order:new', onTzOrderNew);
                 if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
             };
         };

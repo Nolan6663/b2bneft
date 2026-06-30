@@ -21,6 +21,8 @@ function createProposalsRouter(deps) {
         htmlEscape,
         withTransaction,
         addNotification,
+        emitRealtime,
+        emitDashboardRefresh,
         getCompanyEmail,
         sendEmail,
         getUserIdsByCompany,
@@ -94,6 +96,15 @@ function createProposalsRouter(deps) {
                         sendTelegramNotification(id, `📨 <b>Новое КП</b> по закупке «${orderRow.title}»\nПоставщик: ${req.user.company}\nЦена: ${Number(newProposal.price).toLocaleString('ru-RU')} руб.`);
                     })
                 ).catch(() => {});
+                emitDashboardRefresh(orderRow.company);
+                emitRealtime(orderRow.company, 'proposal:new', {
+                    id: newProposal.id,
+                    orderId: newProposal.orderId,
+                    orderTitle: title,
+                    company: req.user.company,
+                    price: newProposal.price,
+                    days: newProposal.days,
+                });
             }
             res.status(201).json(newProposal);
         } catch (e) { next(e); }

@@ -416,6 +416,8 @@ function showToast(text, type, opts = {}) {
    --------------------------------------------------------------------- */
 const currentCompanyName = localStorage.getItem('userCompany') || 'Гость';
 let socket = null;
+let socketConnectWarned = false;
+let sidebarBadgePoll = null;
 
 if (typeof io === 'function' && hasSession()) {
   try {
@@ -423,10 +425,18 @@ if (typeof io === 'function' && hasSession()) {
       withCredentials: true,
       transports: ['websocket', 'polling'],
     });
+    window.socket = socket;
 
     socket.on('connect', () => {
       if (currentCompanyName !== 'Гость') socket.emit('join-company', currentCompanyName);
       if (activeChatOrderId != null) socket.emit('join-chat', { orderId: activeChatOrderId, company: activeChatCompany });
+    });
+
+    socket.on('connect_error', (err) => {
+      if (!socketConnectWarned) {
+        socketConnectWarned = true;
+        console.warn('[socket] connect error:', err.message);
+      }
     });
 
     socket.on('notification', (entry) => {
@@ -435,12 +445,37 @@ if (typeof io === 'function' && hasSession()) {
       refreshNotificationBadge();
     });
 
+    socket.on('dashboard:refresh', () => {
+      refreshNotificationBadge();
+      initSidebarBadges();
+    });
+
+    socket.on('order:new', (detail) => {
+      showToast(`Новая закупка: «${detail.title || 'заявка'}»`, 'success');
+      document.dispatchEvent(new CustomEvent('tz:order:new', { detail }));
+    });
+
+    socket.on('proposal:new', (detail) => {
+      showToast(`Новый отклик на «${detail.orderTitle || 'закупку'}»`, 'success');
+      document.dispatchEvent(new CustomEvent('tz:proposal:new', { detail }));
+    });
+
+    socket.on('conversation:update', (detail) => {
+      document.dispatchEvent(new CustomEvent('tz:conversation:update', { detail }));
+    });
+
     socket.on('message', (msg) => {
+      document.dispatchEvent(new CustomEvent('tz:message', { detail: msg }));
       if (activeChatOrderId != null && msg.orderId === activeChatOrderId && msg.company === activeChatCompany) {
         renderChatHistory();
       }
     });
   } catch { /* socket.io недоступен — поллинг */ }
+}
+
+if (hasSession()) {
+  if (sidebarBadgePoll) clearInterval(sidebarBadgePoll);
+  sidebarBadgePoll = setInterval(initSidebarBadges, 20000);
 }
 
 /* ---------------------------------------------------------------------
@@ -453,7 +488,7 @@ function initNotifications() {
   if (currentCompanyName === 'Гость') return;
   refreshNotificationBadge();
   if (notifPollInterval) clearInterval(notifPollInterval);
-  notifPollInterval = setInterval(refreshNotificationBadge, 25000);
+  notifPollInterval = setInterval(refreshNotificationBadge, 12000);
 }
 
 async function refreshNotificationBadge() {

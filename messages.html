@@ -234,7 +234,24 @@ function msgToast(msg) {
 
         let allConversations = [];
         let activeConv       = null;
-        let chatSocket       = null;
+        let convPollInterval = null;
+
+        function onTzMessage(e) {
+            const msg = e.detail;
+            if (!msg) return;
+            if (msg.orderId === activeConv?.orderId && msg.company === activeConv?.company) {
+                appendMessage(msg);
+                markRead(activeConv);
+                scrollToBottom();
+            }
+            updateConvPreview(msg);
+        }
+
+        function onTzConversationUpdate() {
+            if (document.visibilityState !== 'visible') return;
+            loadConversations();
+            loadMsgStats();
+        }
 
         function closeMobileChat() {
             document.getElementById('chatPanel').classList.remove('mobile-open');
@@ -253,6 +270,13 @@ function msgToast(msg) {
             initSidebarBadges();
             loadConversations();
             loadMsgStats();
+
+            document.addEventListener('tz:message', onTzMessage);
+            document.addEventListener('tz:conversation:update', onTzConversationUpdate);
+            if (convPollInterval) clearInterval(convPollInterval);
+            convPollInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') loadConversations();
+            }, 20000);
         });
 
         window.__pageInit = function() {
@@ -261,10 +285,17 @@ function msgToast(msg) {
             loadConversations();
             loadMsgStats();
 
+            document.addEventListener('tz:message', onTzMessage);
+            document.addEventListener('tz:conversation:update', onTzConversationUpdate);
+            if (convPollInterval) clearInterval(convPollInterval);
+            convPollInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') loadConversations();
+            }, 20000);
+
             window.__pageCleanup = function() {
-                if (typeof chatSocket !== 'undefined' && chatSocket) {
-                    chatSocket.off();
-                }
+                document.removeEventListener('tz:message', onTzMessage);
+                document.removeEventListener('tz:conversation:update', onTzConversationUpdate);
+                if (convPollInterval) { clearInterval(convPollInterval); convPollInterval = null; }
             };
         };
 
@@ -433,19 +464,9 @@ function msgToast(msg) {
                     </div>
                 </div>`;
 
-            // Join socket room
-            if (chatSocket) chatSocket.off('message');
-            if (typeof io !== 'undefined') {
-                if (!chatSocket) chatSocket = io();
-                chatSocket.emit('joinChat', { orderId: conv.orderId, company: conv.company });
-                chatSocket.on('message', (msg) => {
-                    if (msg.orderId === activeConv?.orderId && msg.company === activeConv?.company) {
-                        appendMessage(msg);
-                        markRead(conv);
-                        scrollToBottom();
-                    }
-                    updateConvPreview(msg);
-                });
+            // Join socket room via global socket from app.js
+            if (window.socket) {
+                window.socket.emit('join-chat', { orderId: conv.orderId, company: conv.company });
             }
 
             // Load messages and side panel in parallel

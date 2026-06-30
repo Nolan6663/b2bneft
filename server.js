@@ -271,6 +271,7 @@ if (io) {
     });
 
     io.on('connection', (socket) => {
+        if (socket.user?.company) socket.join(socket.user.company);
         socket.on('join-company', (company) => {
             if (company && company === socket.user.company) socket.join(company);
         });
@@ -998,6 +999,15 @@ async function computePriceBenchmark(category, excludeOrderId) {
     };
 }
 
+function emitRealtime(company, event, payload) {
+    if (!io || !company) return;
+    io.to(company).emit(event, payload);
+}
+
+function emitDashboardRefresh(company) {
+    emitRealtime(company, 'dashboard:refresh', { at: new Date().toISOString() });
+}
+
 async function addNotification(company, text) {
     if (!company) return;
     const { rows } = await pool.query(
@@ -1130,6 +1140,8 @@ const routesDeps = {
     notifyCompanyEmail,
     withTransaction,
     addNotification,
+    emitRealtime,
+    emitDashboardRefresh,
     getCompanyEmail,
     sendEmail,
     getUserIdsByCompany,
