@@ -17,6 +17,11 @@
 PM2 процесс: neft
 Альтернатива: render.yaml (Render.com) — legacy/тестовый стенд, не основной prod
 
+ВАЖНО — ВЕДЕНИЕ ДОКУМЕНТАЦИИ:
+  После каждого существенного изменения кода дополнять этот README.txt
+  (раздел «ПОСЛЕДНИЕ ОБНОВЛЕНИЯ» + при необходимости API/деплой/известные проблемы).
+  Сделал — дополнил. Не копить правки «в голове».
+
 
 СТЕК ТЕХНОЛОГИЙ
 ---------------
@@ -72,6 +77,7 @@ ecosystem.config.js — конфиг PM2
 lib/
   auth-tokens.js   — JWT, cookies, hash/verify паролей, prod-проверка JWT_SECRET
   company-enrich.js — enrichCompany(): рейтинг, stats, фото, isFavorite
+  egrul-verify.js  — fetchEgrulData (ФНС), evaluateAutoVerification (автоверификация)
 
 routes/
   auth.js          — все /api/auth/*
@@ -84,12 +90,15 @@ routes/
 assets/
   app.js           — общий JS для всех страниц (apiFetch, escapeHtml,
                      showToast, initNotifications, shouldUseMockData,
+                     window.socket (Socket.io), tz:* CustomEvents,
                      window.__spaNavigate — заглушка MPA, без SPA-роутера)
+  tariffs.js       — конфиг тарифов (launchMode, планы, цены)
   theme-v2.css     — глобальные стили (тёмная/светлая тема)
   deals-page.css, settings-page.css — page-specific CSS (атрибут data-spa-page-css)
   zakupki-cat.css, fonts.css, ui-animations.js
 
 seo/               — GSC, Yandex Webmaster, SEO-аудит, интенты (auditor.js, gsc.js…)
+docs/              — competitors.md, architecture.md, api.md, roadmap.md…
 scripts/           — static-checks.js (npm run check), mvp-api-smoke.js
 tests/e2e/         — Playwright e2e
 
@@ -131,7 +140,8 @@ users                — аккаунты (email, password hash, role, company, 
                        team_role, digest_frequency)
 
 companies            — профили компаний (реквизиты, специализация, оборудование,
-                       фото, сертификаты, геокоординаты, verified_by_platform)
+                       фото, сертификаты, геокоординаты, verified_by_platform,
+                       verified_egrul, egrul_verified_at)
 
 orders               — заявки на закупку (title, category, status, deadline,
                        quantity, description, drawing, company)
@@ -340,11 +350,13 @@ Auth:
   GET /api/export/proposals.xlsx  — Excel КП (заказчик или поставщик)
   GET /api/export/orders.pdf      — PDF закупок (заказчик)
   GET /api/export/proposals.pdf   — PDF КП (заказчик или поставщик)
+  GET /api/export/compare-kp.pdf  — PDF сравнения КП по заявке (заказчик)
   GET /api/export/1c/:proposalId  — CommerceML XML для 1С
 
 Закупки (доп.):
   GET /api/orders/:orderId/matched-suppliers  — match-score поставщиков для заявки
   GET /api/orders/:orderId/price-benchmark    — бенчмарк цен по категории (6 мес.)
+  GET /api/orders/public/category-benchmark   — публичный бенчмарк по категории
 
 Риск (без UI):
   GET /api/risk/:inn              — базовая проверка по ЕГРЮЛ
@@ -365,9 +377,10 @@ AI:
   POST   /api/favorites
   DELETE /api/favorites/:companyId
 
-Верификация компаний (admin.html):
-  POST /api/verification/request   — подать заявку (поставщик)
-  GET  /api/verification/status
+Верификация компаний (admin.html + авто ЕГРЮЛ):
+  POST /api/verification/request   — автопроверка ЕГРЮЛ или заявка платформе
+                                     (body: { platformTier: true } — только ручная)
+  GET  /api/verification/status    — none | pending | approved_egrul | approved | rejected
   GET  /api/verification/requests  — очередь (admin)
   POST /api/verification/:id/approve
   POST /api/verification/:id/reject
@@ -408,13 +421,17 @@ SEO (admin.html):
 
 Закупки (доп.):
   [x] Match-score для заказчика + блок «Кому подходит закупка»
+  [x] Match-score с причинами (reasons[]) для поставщика
+  [x] «Горячий матч» ≥70% — push/Telegram + выделение в UI (producer.html)
   [x] Бенчмарк цен по платформе (медиана / диапазон по категории)
+  [x] Публичный бенчмарк на zakupki.html
+  [x] PDF сравнения КП (export-pdf.js, кнопка в index.html)
   [x] Автозакрытие заявок по deadline (cron 08:00 МСК) + email
   [x] Напоминание заказчику за 3 дня до дедлайна
   [x] Email поставщику о новой подходящей закупке (match ≥ 50%)
 
 Переписка:
-  [x] Real-time чат через Socket.io
+  [x] Real-time чат через Socket.io (см. раздел REAL-TIME ниже)
   [x] Email уведомления при новом сообщении получателю
   [x] Контекстная панель (реквизиты поставщика, задачи, КП файл)
   [x] Задачи по сделке (create, toggle done)
@@ -439,7 +456,9 @@ SEO (admin.html):
   [x] Загрузка фотографий производства
   [x] ISO и качественные сертификаты
   [x] Производственные мощности
-  [x] Верификация платформой
+  [x] Верификация платформой (ручная, admin.html)
+  [x] Автоверификация по ЕГРЮЛ (бесплатно, lib/egrul-verify.js) — знак «Проверено по ЕГРЮЛ»
+  [x] Два уровня: verified_egrul (авто) и verified_by_platform (ручная, выше)
   [x] Рейтинг надёжности (A+/A/B+/B/C) на основе статистики КП
   [x] Отзывы от заказчиков (с датой, компанией, звёздами)
   [x] Геокодирование (Yandex) и карта
@@ -482,14 +501,57 @@ SEO:
   [x] Карта поставщиков (Yandex Maps)
   [x] Избранные поставщики
   [x] Тёмная/светлая тема
+  [x] Тарифы UI (tariff.html, assets/tariffs.js) — режим launchMode: всё бесплатно
+  [x] Блок тарифов на dlya-postavshchikov.html#tarify
+  [x] Анализ конкурентов: docs/competitors.md
 
 
-ЧТО НЕ РЕАЛИЗОВАНО / В ПЛАНАХ
+REAL-TIME (Socket.io)
+---------------------
+Клиент: assets/app.js — единый window.socket (withCredentials, JWT из httpOnly cookie).
+Сервер: server.js — auth middleware на handshake, auto-join в комнату компании.
+
+События сервер → клиент (в комнату company name):
+  notification         — новое уведомление в колокольчике
+  dashboard:refresh    — обновить badge сайдбара и уведомлений
+  order:new            — новая подходящая закупка (поставщик)
+  proposal:new         — новый отклик/КП (заказчик)
+  message              — новое сообщение в чате (обе стороны)
+  conversation:update  — обновить список диалогов (messages.html)
+
+События клиент → сервер:
+  join-company         — комната компании (дублирует auto-join на connect)
+  join-chat            — комната chat:{orderId}:{company} (модалка / messages.html)
+  join-auction         — комната auction:{id}
+
+CustomEvents на фронте (document):
+  tz:message, tz:conversation:update, tz:order:new, tz:proposal:new
+  tz:socket:connect, tz:socket:disconnect
+
+Поллинг — только запасной вариант при обрыве сокета:
+  messages.html — каждые 3 с (список + открытый чат), если socket.connected === false
+  app.js modal chat — каждые 3 с, если сокет отключён
+  badge уведомлений — 12 с; sidebar counts — 20 с
+
+Нормальная задержка доставки: <1 с. Задержка ~7–8 с = сокет не работает, срабатывает поллинг.
+
+Nginx (обязательно на prod для WebSocket):
+  location /socket.io/ {
+      proxy_pass http://127.0.0.1:5000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Host $host;
+  }
+  После правки: nginx -t && systemctl reload nginx
+
+Проверка в браузере: DevTools → Network → WS → /socket.io/ статус 101.
 -------------------------------
   [ ] AI-помощник для составления ТЗ (Gemini не работает — проблема с ключом)
   [ ] UI-карточка риска поставщика (API /api/risk/:inn уже есть)
   [ ] Обратный аукцион для прямых закупок (reverse auction)
-  [ ] Тарифы / оплата (страница tariff.html есть; биллинг не подключён)
+  [ ] Тарифы / оплата (страница tariff.html есть; launchMode=true — всё бесплатно;
+      биллинг и реальные платежи не подключены)
   [ ] Мобильное приложение (долгосрочно)
   [ ] Web Push уведомления (UI-заглушка есть, логика не реализована)
   [ ] Telegram-бот
@@ -498,6 +560,55 @@ SEO:
   [ ] Пустые состояния и skeleton-загрузка
   [ ] Таблицы → карточки на mobile (список заказов)
   [ ] Command palette, таймлайн сделки
+
+
+ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — автоверификация ЕГРЮЛ)
+----------------------------------------------------------------
+  • lib/egrul-verify.js — запрос к egrul.nalog.ru (бесплатно), правила автопроверки
+  • db.js — companies.verified_egrul, egrul_verified_at
+  • POST /api/verification/request:
+      - по умолчанию: авто ЕГРЮЛ (ИНН, действующая, возраст ≥6 мес., ОГРН, профиль)
+      - при успехе: verified_egrul=true, status approved_auto, уведомление + email
+      - при сбое ФНС / молодая компания: pending на ручную модерацию
+      - platformTier:true — сразу ручная заявка (расширенная верификация)
+  • UI: company-profile (две кнопки/бейджа), catalog, index, admin (approved_auto)
+  • Платный API (DaData/Kontur) не требуется для базового уровня
+
+  Деплой: push main → pm2 restart neft (миграция ALTER TABLE при старте db.js)
+
+
+ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — realtime, багфиксы, тарифы, дифференциация)
+--------------------------------------------------------------------------------
+  Багфиксы:
+    • assets/app.js — unhandledrejection для AbortError (View Transitions)
+    • assets/app.js — SVG rotate в onboarding checklist (закрывающая скобка)
+    • routes/messages.js — GET /api/messages/stats 500 (алиас orig vs m в SQL)
+
+  Тарифы (UI, без оплаты):
+    • assets/tariffs.js — launchMode: true (ранний доступ, всё бесплатно)
+    • tariff.html — планы: Ранний доступ / Старт / Бизнес / Корпоративный
+    • dlya-postavshchikov.html — публичный блок #tarify из tariffs.js
+
+  Дифференциация vs конкуренты:
+    • docs/competitors.md — сравнение с B2B-Center, Supl, Enex и др.
+    • routes/orders.js — hot match ≥70% (push/Telegram), match-scores + reasons[]
+    • GET /api/orders/public/category-benchmark, UI на zakupki.html
+    • export-pdf.js — buildCompareKpPdf; GET /api/export/compare-kp.pdf
+    • catalog.html — production load bar; producer.html — hot match badges
+
+  Real-time (несколько итераций):
+    • server.js — emitRealtime(), emitDashboardRefresh(); auto-join company на connect
+    • routes/orders.js — order:new + dashboard:refresh поставщикам при новой заявке
+    • routes/proposals.js — proposal:new + dashboard:refresh заказчику при новом КП
+    • routes/messages.js — message + conversation:update в комнаты обеих компаний
+      (раньше message шёл только в chat:* — без join-chat сообщения не доходили)
+    • assets/app.js — window.socket, tz:* CustomEvents, поллинг только без сокета
+    • messages.html — убран второй io() без auth; join-chat; dedup по msg.id
+    • producer.html / index.html — слушатели tz:order:new / tz:proposal:new
+    • Задержка ~7 с на prod = поллинг-фолбэк; норма <1 с при рабочем WebSocket
+
+  Деплой: push main → GitHub Actions → pm2 restart neft
+  Проверка: npm run check; DevTools WS /socket.io/ → 101
 
 
 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — рефакторинг backend + UI/SEO)
@@ -611,6 +722,9 @@ SEO:
 
 ИЗВЕСТНЫЕ ПРОБЛЕМЫ
 ------------------
+  - Real-time на prod: если сообщения приходят с задержкой 3–8 с — WebSocket не
+    проксируется nginx (см. раздел REAL-TIME). Нужен location /socket.io/
+
   - Сайдбар при MPA-переходах: частично смягчено (View Transitions, prefetch,
     единый partial). При дальнейших правках — node scripts/sync-sidebar.js
 
@@ -627,6 +741,7 @@ SEO:
 ВАЖНЫЕ УТИЛИТЫ (assets/app.js)
 -------------------------------
   SERVER_URL           — базовый URL API (автоопределяется по хосту)
+  window.socket        — глобальный Socket.io клиент (null если нет сессии)
   apiFetch(url, opts)  — fetch с credentials: include и авторефрешем сессии
   hasSession()         — есть ли активная сессия (httpOnly cookies)
   applyAuthSession()   — сохранить userRole/company после login
@@ -655,7 +770,6 @@ SEO:
   nano /var/www/neft/.env   (добавить/изменить строку KEY=value)
   pm2 restart all
 ================================================================================
-Обновлено: 29.06.2026 — рефакторинг routes/ (auth, orders, proposals, companies,
-messages, deals), lib/, починка static-checks, UI/SEO
-Подробности: update.txt (фичи до 23.06), TEST-REPORT.md
+Обновлено: 29.06.2026 — автоверификация ЕГРЮЛ (verified_egrul), realtime, тарифы
+Подробности: update.txt (фичи до 23.06), docs/competitors.md, TEST-REPORT.md
 ================================================================================

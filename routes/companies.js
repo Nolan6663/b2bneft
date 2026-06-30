@@ -14,6 +14,7 @@ function createTopSuppliersRouter({ pool }) {
                     c.specialization,
                     c.city,
                     c.verified_by_platform,
+                    c.verified_egrul,
                     COUNT(p.id)                                           AS total_proposals,
                     COUNT(p.id) FILTER (WHERE p.status = 'Принято')      AS won_deals
                 FROM companies c
@@ -28,7 +29,9 @@ function createTopSuppliersRouter({ pool }) {
                 company:    r.company,
                 spec:       r.specialization || '',
                 city:       r.city || '',
-                verified:   r.verified_by_platform,
+                verified:   Boolean(r.verified_by_platform || r.verified_egrul),
+                verifiedEgrul: Boolean(r.verified_egrul),
+                verifiedPlatform: Boolean(r.verified_by_platform),
                 deals:      Number(r.won_deals),
                 proposals:  Number(r.total_proposals),
             })));

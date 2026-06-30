@@ -54,6 +54,7 @@
         .req-badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; }
         .req-badge.pending  { background:rgba(250,204,21,.12); color:#facc15; border:1px solid rgba(250,204,21,.3); }
         .req-badge.approved { background:rgba(74,222,128,.1);  color:#4ade80; border:1px solid rgba(74,222,128,.28); }
+        .req-badge.approved_auto { background:rgba(11,143,206,.12); color:#0B8FCE; border:1px solid rgba(11,143,206,.35); }
         .req-badge.rejected { background:rgba(248,113,113,.1); color:#f87171; border:1px solid rgba(248,113,113,.28); }
 
         .req-details { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:8px; margin-bottom:14px; }
@@ -241,7 +242,7 @@
     }
 
     function renderVerifCard(r) {
-        const statusLabel = { pending:'Ожидает', approved:'Одобрено', rejected:'Отклонено' }[r.status] || r.status;
+        const statusLabel = { pending:'Ожидает', approved:'Одобрено', approved_auto:'Авто (ЕГРЮЛ)', rejected:'Отклонено' }[r.status] || r.status;
         const roleText = r.companyRole === 'producer' ? 'Производитель' : 'Заказчик';
         const dateStr = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
         const reviewStr = r.reviewedAt ? new Date(r.reviewedAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}) : '';

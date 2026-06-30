@@ -661,7 +661,9 @@
 
             const verBadge = p.verifiedByPlatform
                 ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>`
-                : '';
+                : (p.verifiedEgrul
+                    ? `<span class="catalog-verified" style="background:rgba(11,143,206,.12);color:#0B8FCE;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">ЕГРЮЛ ✓</span></span>`
+                    : '');
 
             const caps = (p.capabilities || []).slice(0, 5)
                 .map(c => `<span class="catalog-cap-chip">${escapeHtml(c)}</span>`)

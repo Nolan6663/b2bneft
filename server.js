@@ -36,6 +36,7 @@ const createCompaniesRouter = require('./routes/companies');
 const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
 const createDealsRouter = require('./routes/deals');
+const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -171,6 +172,8 @@ function rowToCompany(r) {
         capabilities: JSON.parse(r.capabilities || '[]'),
         productionLoad: r.production_load ?? null,
         verifiedByPlatform: Boolean(r.verified_by_platform),
+        verifiedEgrul: Boolean(r.verified_egrul),
+        egrulVerifiedAt: r.egrul_verified_at,
         freeCapacity: JSON.parse(r.free_capacity || '[]'),
         lat: r.lat ?? null,
         lng: r.lng ?? null,
@@ -1223,7 +1226,7 @@ app.get('/api/map', async (req, res, next) => {
             SELECT *
             FROM companies
             WHERE role = 'producer'
-            ORDER BY verified_by_platform DESC, company ASC
+            ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC
         `);
         const cityIndexes = new Map();
         const result = rows.map(r => {
@@ -1252,6 +1255,7 @@ app.get('/api/map', async (req, res, next) => {
                 categories: categories.length ? categories : ['Прочее'],
                 status: producer.status,
                 verified: producer.verifiedByPlatform,
+                verifiedEgrul: producer.verifiedEgrul,
                 lat: point.lat,
                 lng: point.lng,
                 productionLoad: producer.productionLoad,
@@ -1279,6 +1283,7 @@ app.get('/api/capacity', optionalAuth, async (req, res, next) => {
         const list = rows.map(rowToCompany).map(c => ({
             id: c.id, company: c.company, city: c.city, specialization: c.specialization,
             status: c.status, verifiedByPlatform: c.verifiedByPlatform,
+            verifiedEgrul: c.verifiedEgrul,
             freeCapacity: c.freeCapacity,
         }));
         res.json(list);
@@ -1292,7 +1297,7 @@ app.get('/api/catalog', requireAuth, async (req, res, next) => {
         const { rows } = await pool.query(`
             SELECT * FROM companies
             WHERE role = 'producer'
-            ORDER BY verified_by_platform DESC, company ASC
+            ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC
         `);
         res.json(rows.map(rowToCompany));
     } catch (e) { next(e); }
@@ -1704,39 +1709,7 @@ async function closeExpiredAuctions() {
     } catch (e) { console.error('[cron:auctions]', e.message); }
 }
 
-// ── Risk assessment ─────────────────────────────────────────────────────────
-async function fetchEgrulData(inn) {
-    return new Promise((resolve) => {
-        const https = require('https');
-        const body = `query=${encodeURIComponent(inn)}&page=1&cnt=&vpagesz=10`;
-        const options = {
-            hostname: 'egrul.nalog.ru',
-            path: '/search.do',
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) },
-            timeout: 5000,
-        };
-        const req2 = https.request(options, (r) => {
-            let data = '';
-            r.on('data', chunk => data += chunk);
-            r.on('end', () => {
-                try {
-                    const json = JSON.parse(data);
-                    const row = (json.rows || [])[0];
-                    if (!row) return resolve(null);
-                    const isLiquidated = !!(row.e || (row.g && row.g !== ''));
-                    const regDate = row.r ? row.r.split('.').reverse().join('-') : null;
-                    resolve({ name: row.n, active: !isLiquidated, regDate, ogrn: row.o });
-                } catch { resolve(null); }
-            });
-        });
-        req2.on('error', () => resolve(null));
-        req2.on('timeout', () => { req2.destroy(); resolve(null); });
-        req2.write(body);
-        req2.end();
-    });
-}
-
+// ── Risk assessment (ЕГРЮЛ + платформа + отзывы) ────────────────────────────
 app.get('/api/risk/:inn', async (req, res, next) => {
     try {
         const { inn } = req.params;
@@ -1774,14 +1747,17 @@ app.get('/api/risk/:inn', async (req, res, next) => {
 
         // 2. Platform verification
         const { rows: compRows } = await pool.query(
-            'SELECT verified_by_platform, company FROM companies WHERE inn = $1 LIMIT 1', [inn]
+            'SELECT verified_by_platform, verified_egrul, company FROM companies WHERE inn = $1 LIMIT 1', [inn]
         );
         const comp = compRows[0];
         if (comp && comp.verified_by_platform) {
             checks.push({ name: 'Верификация платформы', status: 'ok', detail: 'Компания проверена командой ТехЗаказ' });
             score += 20;
+        } else if (comp && comp.verified_egrul) {
+            checks.push({ name: 'Верификация ЕГРЮЛ', status: 'ok', detail: 'Компания проверена автоматически по реестру ФНС' });
+            score += 12;
         } else {
-            checks.push({ name: 'Верификация платформы', status: 'warn', detail: 'Компания не верифицирована платформой' });
+            checks.push({ name: 'Верификация', status: 'warn', detail: 'Компания не верифицирована' });
         }
 
         // 3. Reviews
@@ -1855,6 +1831,7 @@ app.get('/api/public/companies/:id', async (req, res, next) => {
             capabilities: c.capabilities || [],
             productionLoad: c.production_load,
             verified: Boolean(c.verified_by_platform),
+            verifiedEgrul: Boolean(c.verified_egrul),
             status: c.status,
             rating: c.rating,
             ratingLabel: c.ratingLabel,
@@ -2712,31 +2689,138 @@ app.post('/api/verification/request', requireAuth, async (req, res, next) => {
     try {
         if (req.user.role === 'admin') return res.status(403).json({ error: 'Недоступно для администраторов' });
 
-        const { rows: [company] } = await pool.query('SELECT * FROM companies WHERE company = $1 AND role = $2', [req.user.company, req.user.role]);
+        const platformTier = req.body?.platformTier === true;
+
+        const { rows: [company] } = await pool.query(
+            'SELECT * FROM companies WHERE company = $1 AND role = $2',
+            [req.user.company, req.user.role]
+        );
         if (!company) return res.status(404).json({ error: 'Профиль компании не найден' });
-        if (company.verified_by_platform) return res.status(400).json({ error: 'Компания уже верифицирована' });
+        if (company.verified_by_platform) {
+            return res.status(400).json({ error: 'Компания уже верифицирована платформой' });
+        }
 
-        const { rows: [existing] } = await pool.query('SELECT * FROM verification_requests WHERE company_id = $1', [company.id]);
-        if (existing && existing.status === 'pending') return res.status(400).json({ error: 'Заявка уже отправлена и ожидает рассмотрения' });
-        if (existing) await pool.query('DELETE FROM verification_requests WHERE company_id = $1', [company.id]);
+        const { rows: [existing] } = await pool.query(
+            'SELECT * FROM verification_requests WHERE company_id = $1',
+            [company.id]
+        );
+        if (existing && existing.status === 'pending') {
+            return res.status(400).json({ error: 'Заявка уже отправлена и ожидает рассмотрения' });
+        }
+        if (existing) {
+            await pool.query('DELETE FROM verification_requests WHERE company_id = $1', [company.id]);
+        }
 
-        await pool.query("INSERT INTO verification_requests (company_id, status) VALUES ($1, 'pending')", [company.id]);
-        res.json({ message: 'Заявка на верификацию отправлена' });
+        // Расширенная верификация платформой (ручная) — для тех, у кого уже есть ЕГРЮЛ
+        if (platformTier || company.verified_egrul) {
+            await pool.query(
+                "INSERT INTO verification_requests (company_id, status) VALUES ($1, 'pending')",
+                [company.id]
+            );
+            return res.json({
+                tier: 'platform',
+                status: 'pending',
+                message: 'Заявка на верификацию платформой отправлена. Мы проверим профиль вручную.',
+            });
+        }
+
+        // Автопроверка по ЕГРЮЛ (бесплатно)
+        const egrul = await fetchEgrulData(String(company.inn || '').trim());
+        const evaluation = evaluateAutoVerification(company, req.user, egrul);
+
+        if (evaluation.pass) {
+            await withTransaction(async (client) => {
+                await client.query(
+                    'UPDATE companies SET verified_egrul = true, egrul_verified_at = NOW() WHERE id = $1',
+                    [company.id]
+                );
+                await client.query(
+                    "INSERT INTO verification_requests (company_id, status, reviewed_at) VALUES ($1, 'approved_auto', NOW())",
+                    [company.id]
+                );
+            });
+
+            const checksText = evaluation.checks.map(c => c.detail).filter(Boolean).join(' · ');
+            await addNotification(
+                company.company,
+                `✓ Компания проверена по ЕГРЮЛ${checksText ? ': ' + checksText : ''}`
+            );
+            const email = await getCompanyEmail(company.company);
+            if (email) {
+                await sendEmail(email, 'Верификация по ЕГРЮЛ — ТехЗаказ',
+                    `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                      <h3 style="color:#0B8FCE">Проверено по ЕГРЮЛ</h3>
+                      <p>Компания <strong>${htmlEscape(company.company)}</strong> прошла автоматическую проверку в реестре ФНС.</p>
+                      <p style="color:#555;font-size:14px;">${htmlEscape(checksText || 'Компания действующая')}</p>
+                      <p style="font-size:13px;color:#888;">Для знака «Верифицирован платформой» заполните профиль и подайте заявку на расширенную проверку.</p>
+                      <a href="${APP_URL}/company-profile.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#0B8FCE;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть профиль</a>
+                    </div>`
+                );
+            }
+
+            return res.json({
+                tier: 'egrul',
+                status: 'approved_egrul',
+                autoApproved: true,
+                checks: evaluation.checks,
+                message: 'Компания проверена автоматически по ЕГРЮЛ. Знак отображается в профиле и каталоге.',
+            });
+        }
+
+        if (evaluation.manual) {
+            await pool.query(
+                "INSERT INTO verification_requests (company_id, status, admin_comment) VALUES ($1, 'pending', $2)",
+                [company.id, evaluation.reason || 'Требуется ручная проверка']
+            );
+            return res.json({
+                tier: 'platform',
+                status: 'pending',
+                manual: true,
+                message: evaluation.reason
+                    || 'Не удалось проверить по ЕГРЮЛ автоматически — заявка передана модератору.',
+            });
+        }
+
+        return res.status(400).json({
+            error: evaluation.reason || 'Автоматическая проверка не пройдена',
+            checks: evaluation.checks,
+        });
     } catch (e) { next(e); }
 });
 
 app.get('/api/verification/status', requireAuth, async (req, res, next) => {
     try {
-        if (req.user.role === 'admin') return res.json({ status: 'none' });
+        if (req.user.role === 'admin') return res.json({ status: 'none', tier: null });
 
-        const { rows: [company] } = await pool.query('SELECT * FROM companies WHERE company = $1 AND role = $2', [req.user.company, req.user.role]);
-        if (!company) return res.json({ status: 'none' });
-        if (company.verified_by_platform) return res.json({ status: 'approved' });
+        const { rows: [company] } = await pool.query(
+            'SELECT * FROM companies WHERE company = $1 AND role = $2',
+            [req.user.company, req.user.role]
+        );
+        if (!company) return res.json({ status: 'none', tier: null });
 
-        const { rows: [vr] } = await pool.query('SELECT * FROM verification_requests WHERE company_id = $1', [company.id]);
-        if (!vr) return res.json({ status: 'none' });
+        if (company.verified_by_platform) {
+            return res.json({ status: 'approved', tier: 'platform' });
+        }
+        if (company.verified_egrul) {
+            return res.json({
+                status: 'approved_egrul',
+                tier: 'egrul',
+                egrulVerifiedAt: company.egrul_verified_at,
+            });
+        }
 
-        res.json({ status: vr.status, comment: vr.admin_comment || '', requestedAt: vr.requested_at });
+        const { rows: [vr] } = await pool.query(
+            'SELECT * FROM verification_requests WHERE company_id = $1',
+            [company.id]
+        );
+        if (!vr) return res.json({ status: 'none', tier: null });
+
+        return res.json({
+            status: vr.status === 'approved_auto' ? 'approved_egrul' : vr.status,
+            tier: vr.status === 'approved_auto' ? 'egrul' : (vr.status === 'pending' ? 'platform' : null),
+            comment: vr.admin_comment || '',
+            requestedAt: vr.requested_at,
+        });
     } catch (e) { next(e); }
 });
 

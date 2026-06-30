@@ -445,8 +445,10 @@
                 .join('');
 
             const verifiedBadge = c.verifiedByPlatform
-                ? `<span class="platform-verified-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg><span class="nav-label">Верифицирован платформой</span></span>`
-                : '';
+                ? `<span class="platform-verified-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg><span class="nav-label">Верифицирован платформой</span></span>`
+                : (c.verifiedEgrul
+                    ? `<span class="platform-verified-badge" style="background:rgba(11,143,206,.12);color:#0B8FCE;border-color:rgba(11,143,206,.35);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg><span class="nav-label">Проверено по ЕГРЮЛ</span></span>`
+                    : '');
 
             // Producer-only sections
             let producerSections = '';
@@ -532,7 +534,7 @@
                             ${c.inn ? `<div id="riskBadgeWrap" onclick="openRiskModal()" style="cursor:pointer;" title="Проверка надёжности"><span id="riskBadge" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;background:var(--inner-bg);border:1px solid var(--card-border);color:var(--text-secondary);">⏳ Проверка…</span></div>` : ''}
                             ${!isOwn ? `<button class="btn-secondary ${c.isFavorite ? 'active' : ''}" id="favoriteToggleBtn" onclick="toggleFavorite()">${c.isFavorite ? '★ В избранном' : '☆ В избранное'}</button>` : ''}
                             ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
-                            ${isOwn && !c.verifiedByPlatform ? renderVerifyBtn() : ''}
+                            ${isOwn && !c.verifiedByPlatform ? renderVerifyBtn(c) : ''}
                         </div>
                     </div>
                 </div>
@@ -811,26 +813,45 @@
             ).join('');
         }
 
-        function renderVerifyBtn() {
+        function renderVerifyBtn(c) {
             if (!verificationStatus) return '';
             const vs = verificationStatus.status;
             if (vs === 'approved') return '';
+            if (vs === 'approved_egrul' || (c && c.verifiedEgrul)) {
+                return `<button class="btn-secondary" onclick="requestVerification(true)" style="border-color:var(--accent-bright); color:var(--accent-bright);">★ Верификация платформой</button>`;
+            }
             if (vs === 'pending') return `<span class="badge" style="background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.3); padding:7px 12px;">⏱ Заявка на рассмотрении</span>`;
             if (vs === 'rejected') return `
                 <div style="text-align:right;">
                     <span class="badge" style="background:rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.3); padding:7px 12px; display:block; margin-bottom:6px;">✗ Отклонено${verificationStatus.comment ? ': ' + escapeHtml(verificationStatus.comment) : ''}</span>
-                    <button class="btn-secondary" onclick="requestVerification(true)">↺ Подать заявку повторно</button>
+                    <button class="btn-secondary" onclick="requestVerification(false)">↺ Проверить снова</button>
                 </div>`;
-            return `<button class="btn-secondary" onclick="requestVerification(false)" style="border-color:var(--accent-bright); color:var(--accent-bright);">✓ Запросить верификацию</button>`;
+            return `<button class="btn-secondary" onclick="requestVerification(false)" style="border-color:var(--accent-bright); color:var(--accent-bright);">✓ Проверить по ЕГРЮЛ</button>`;
         }
 
-        async function requestVerification(isRetry) {
-            if (!confirm(isRetry ? 'Подать повторную заявку на верификацию?' : 'Запросить верификацию компании на платформе?')) return;
+        async function requestVerification(platformTier) {
+            const msg = platformTier
+                ? 'Запросить расширенную верификацию платформой? Модератор проверит профиль вручную.'
+                : 'Запустить автоматическую проверку компании по реестру ФНС (ЕГРЮЛ)?';
+            if (!confirm(msg)) return;
             try {
-                const r = await apiFetch(`${SERVER_URL}/verification/request`, { method: 'POST' });
+                const r = await apiFetch(`${SERVER_URL}/verification/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platformTier: !!platformTier }),
+                });
                 const data = await r.json();
                 if (!r.ok) return showToast(data.error || 'Ошибка', 'error');
-                verificationStatus = { status: 'pending' };
+                if (data.autoApproved || data.status === 'approved_egrul') {
+                    verificationStatus = { status: 'approved_egrul', tier: 'egrul' };
+                    if (currentData) currentData.verifiedEgrul = true;
+                    showToast(data.message || 'Проверено по ЕГРЮЛ', 'success');
+                } else if (data.status === 'pending') {
+                    verificationStatus = { status: 'pending', tier: 'platform' };
+                    showToast(data.message || 'Заявка отправлена', 'success');
+                } else {
+                    showToast(data.message || 'Готово', 'success');
+                }
                 renderProfile(currentData);
                 renderPhotoGallery(currentData.photos);
             } catch { showToast('Сервер недоступен', 'error'); }
