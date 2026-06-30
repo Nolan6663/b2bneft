@@ -2517,24 +2517,28 @@ input:focus, textarea:focus, select:focus {
 
 /* 8. Профиль компании — hero */
 .cp-hero {
-  background: linear-gradient(135deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 70%, var(--text-primary) 30%) 100%);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
-  padding: 32px 28px;
+  padding: 28px 24px;
   color: var(--text-primary);
   margin-bottom: 0;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 }
-.cp-hero::after {
+.cp-hero::before {
   content: '';
   position: absolute;
-  right: -40px;
-  top: -40px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--accent-bright) 12%, transparent);
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-bright) 0%, #0B8FCE 100%);
+  opacity: .9;
+}
+.cp-hero::after {
+  display: none;
 }
 .cp-hero .profile-name-row h2,
 .cp-hero-name {
@@ -2551,9 +2555,50 @@ input:focus, textarea:focus, select:focus {
 }
 .cp-hero-inn {
   font-family: 'JetBrains Mono', monospace;
-  opacity: .8;
+  opacity: .85;
 }
 .cp-hero .profile-meta span { color: var(--text-secondary); }
+
+.risk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+#riskBadgeWrap:hover .risk-pill {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+}
+.risk-pill svg { flex-shrink: 0; }
+.risk-pill--low {
+  color: #0d9668;
+  background: rgba(18, 168, 102, .1);
+  border-color: rgba(18, 168, 102, .22);
+}
+.risk-pill--medium {
+  color: #b45309;
+  background: rgba(245, 158, 11, .1);
+  border-color: rgba(245, 158, 11, .25);
+}
+.risk-pill--high {
+  color: #dc2626;
+  background: rgba(239, 68, 68, .08);
+  border-color: rgba(239, 68, 68, .2);
+}
+.risk-pill--unknown {
+  color: var(--text-secondary);
+  background: var(--inner-bg);
+  border-color: var(--card-border);
+}
+[data-theme="dark"] .risk-pill--low { color: #4ade80; }
+[data-theme="dark"] .risk-pill--medium { color: #fbbf24; }
+[data-theme="dark"] .risk-pill--high { color: #f87171; }
 
 /* 9. Аналитика — цветные KPI */
 .an-kpi-row .an-kpi-card:nth-child(1) { border-top: 3px solid var(--accent-bright); }

@@ -10,7 +10,7 @@
     <title>Техзаказ — Профиль компании</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=9">
     <style data-spa-page>
         .profile-header {
             display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
@@ -559,7 +559,7 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start;">
-                            ${c.inn ? `<div id="riskBadgeWrap" onclick="openRiskModal()" style="cursor:pointer;" title="Проверка надёжности"><span id="riskBadge" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;background:var(--inner-bg);border:1px solid var(--card-border);color:var(--text-secondary);">⏳ Проверка…</span></div>` : ''}
+                            ${c.inn ? `<div id="riskBadgeWrap" onclick="openRiskModal()" style="cursor:pointer;" title="Проверка надёжности"><span id="riskBadge" class="risk-pill risk-pill--unknown"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Проверка…</span></span></div>` : ''}
                             ${!isOwn ? `<button class="btn-secondary ${c.isFavorite ? 'active' : ''}" id="favoriteToggleBtn" onclick="toggleFavorite()">${c.isFavorite ? '★ В избранном' : '☆ В избранное'}</button>` : ''}
                             ${isOwn ? `<button class="btn-secondary" onclick="openEditProfile()">✎ Редактировать профиль</button>` : ''}
                             ${isOwn && !c.verifiedByPlatform ? renderVerifyBtn(c) : ''}
@@ -618,6 +618,18 @@
         // ── Risk assessment ──────────────────────────────────────────────────
         let _riskData = null;
 
+        const RISK_SVG = {
+            low: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+            medium: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+            high: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+            unknown: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        };
+
+        function renderRiskBadge(level, label) {
+            const key = ['low', 'medium', 'high'].includes(level) ? level : 'unknown';
+            return `<span class="risk-pill risk-pill--${key}">${RISK_SVG[key]}<span>${escapeHtml(label)}</span></span>`;
+        }
+
         async function loadRisk(inn) {
             try {
                 const r = await apiFetch(`${SERVER_URL}/risk/${inn}`);
@@ -625,15 +637,12 @@
                 _riskData = await r.json();
                 const badge = document.getElementById('riskBadge');
                 if (!badge) return;
-                const cfg = {
-                    low:    { label: 'Риск: Низкий',    color: '#12A866', bg: 'rgba(18,168,102,.12)', icon: '✓' },
-                    medium: { label: 'Риск: Средний',   color: '#F59E0B', bg: 'rgba(245,158,11,.12)', icon: '⚠' },
-                    high:   { label: 'Риск: Высокий',   color: '#ef4444', bg: 'rgba(239,68,68,.12)',  icon: '✗' },
-                }[_riskData.level] || { label: 'Риск неизвестен', color: 'var(--text-secondary)', bg: 'var(--inner-bg)', icon: '?' };
-                badge.style.background = cfg.bg;
-                badge.style.border = `1px solid ${cfg.color}`;
-                badge.style.color = cfg.color;
-                badge.textContent = `${cfg.icon} ${cfg.label}`;
+                const labels = {
+                    low: 'Риск: низкий',
+                    medium: 'Риск: средний',
+                    high: 'Риск: высокий',
+                };
+                badge.innerHTML = renderRiskBadge(_riskData.level, labels[_riskData.level] || 'Риск неизвестен');
             } catch {}
         }
 
