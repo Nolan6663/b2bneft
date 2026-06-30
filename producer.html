@@ -716,6 +716,7 @@
                 });
                 if (response.ok) {
                     closeRespondModal(); priceInput.value = ''; daysInput.value = '';
+                    if (typeof markOnboardingStep === 'function') markOnboardingStep('proposal');
                     loadOrdersForProducers(); loadMyProposals();
                 } else {
                     const err = await response.json();

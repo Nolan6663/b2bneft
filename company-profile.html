@@ -404,7 +404,10 @@
                 renderProfile(currentData);
                 renderPhotoGallery(currentData.photos);
                 loadReviews(currentData.company);
-                if (currentData.inn) loadRisk(currentData.inn);
+                if (currentData.inn) {
+                    loadRisk(currentData.inn);
+                    if (typeof markOnboardingStep === 'function') markOnboardingStep('profile');
+                }
             } catch (error) {
                 document.getElementById('profileContent').innerHTML = '<div class="section" style="text-align:center; color: var(--text-secondary); padding: 60px;">Не удалось загрузить профиль</div>';
             }
@@ -1032,6 +1035,7 @@
                     closeEditProfile();
                     renderProfile(currentData);
                     renderPhotoGallery(currentData.photos);
+                    if (typeof markOnboardingStep === 'function') markOnboardingStep('profile');
                 } else {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось сохранить профиль', 'error');

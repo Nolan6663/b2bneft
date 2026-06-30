@@ -568,6 +568,28 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — демо, онбординг, рекомендация КП)
+  ----------------------------------------------------------------
+  1. landing.html — интерактивное демо «Посмотреть демо» (4 шага без входа):
+     закупка Уплотнение РТИ DN150 → КП от 3 поставщиков → сравнение → рекомендация
+     + CTA «Зарегистрироваться бесплатно» (login.html#register); glass-панель, progress dots,
+     prefers-reduced-motion, мобильный bottom-sheet
+
+  2. Онбординг (assets/app.js, assets/theme-v2.css):
+     - ob_welcome_v2 / ob_checklist_v2 (миграция с ob_checklist)
+     - markOnboardingStep / obCompleteStep: авто-шаги при заказе, каталоге, профиле с ИНН,
+       настройках, просмотре заявок (producer), отправке КП
+     - fix openModal в чеклисте (index.html?create=1 fallback)
+     - celebration ob-cl-complete при 100%, safe-area над bottom nav
+
+  3. Рекомендация КП (assets/app.js, index.html, theme-v2.css):
+     - computeKpRecommendation() — веса: цена 40%, срок 25%, верификация 15%, рейтинг 10%, match 10%
+     - renderKpRecommendationCard() в панели закупки (2+ КП) и вверху таблицы сравнения
+     - kp-rank-badge вместо unicode-звёзд в renderKpCompareTable
+
+  Проверка: npm run check
+
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — UI без emoji)
   ----------------------------------------------------------------
   • assets/app.js — хелпер uiIcon() / uiIconLabel(); SVG вместо emoji в toast,
@@ -678,6 +700,23 @@ Nginx (обязательно на prod для WebSocket):
   • UI профиля: светлая карточка вместо тёмного градиента; бейдж риска — SVG-иконки
   • map.html — фикс съезжающей вёрстки: карта/панели одной высоты, статистика не наезжает
   • analytics.html — null в рейтинге → «—»; sparkline скрыт без динамики; API: avgScore, avgResponseHours
+
+
+ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (30.06.2026 — демо лендинга, онбординг, рекомендация КП)
+------------------------------------------------------------------------
+  • landing.html — интерактивное демо «Посмотреть демо»: 4 шага (закупка →
+    КП → сравнение → выбор), full-screen modal / mobile bottom sheet, swipe,
+    typewriter-анимация формы, prefers-reduced-motion
+  • assets/app.js — markOnboardingStep(id): автозавершение шагов (order,
+    catalog, profile, settings, browse, proposal); welcome ob_welcome_v2
+    с 4 шагами в сетке 2×2; fix data-action=openModal; celebration 100%
+  • assets/app.js — scoreProposalForRecommendation(), renderKpRecommendationCard(),
+    kp-rank-badge вместо ★★★; карточка в detPanel и compare modal
+  • assets/theme-v2.css — .kp-rec-card, .kp-rec-reasons; polish ob-modal/checklist;
+    checklist над mobile bottom nav
+  • index.html — рекомендация КП в панели деталей; markOnboardingStep при создании закупки
+  • company-profile.html — markOnboardingStep('profile') при ИНН / сохранении
+  • producer.html — markOnboardingStep('proposal') при отправке КП
 
 
 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (29.06.2026 — автоверификация ЕГРЮЛ)

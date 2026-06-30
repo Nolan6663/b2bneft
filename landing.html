@@ -199,6 +199,19 @@
   }
   .lp-cta-ghost:hover { background: #fff; }
 
+  .lp-cta-demo {
+    background: rgba(11, 143, 206, 0.08);
+    color: #0B8FCE;
+    border: 1px solid rgba(11, 143, 206, 0.35);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .lp-cta-demo:hover {
+    background: rgba(11, 143, 206, 0.14);
+    border-color: rgba(11, 143, 206, 0.55);
+    box-shadow: 0 6px 18px rgba(11, 143, 206, 0.12);
+  }
+
   .lp-industrial { position: relative; padding: 18px 20px 20px; border-radius: 16px; overflow: hidden;
     background: linear-gradient(155deg,#0B2233,#071B2A); animation: lp-glow 5s ease-in-out infinite; }
   .lp-industrial-grid { position: absolute; inset: 0; pointer-events: none;
@@ -433,12 +446,221 @@
   .lp-nv { transition: color .15s ease; }
   .lp-nv:hover { color: #FF6A00 !important; }
 
+  /* ─── Interactive demo (#lp-demo) ─────────────────────────────── */
+  .lp-demo-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(7,27,42,.72);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; visibility: hidden;
+    transition: opacity .32s ease, visibility .32s ease;
+  }
+  .lp-demo-overlay.is-open { opacity: 1; visibility: visible; }
+
+  .lp-demo-sheet {
+    position: relative; width: min(720px, 100%); max-height: min(88vh, 760px);
+    background: linear-gradient(165deg, rgba(255,255,255,.97) 0%, rgba(247,250,252,.94) 100%);
+    border: 1px solid rgba(7,27,42,.1);
+    border-radius: 22px;
+    box-shadow: 0 32px 100px rgba(7,27,42,.28), inset 0 1px 0 rgba(255,255,255,.9);
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(24px) scale(.97);
+    transition: transform .34s cubic-bezier(.22,1,.36,1);
+  }
+  .lp-demo-overlay.is-open .lp-demo-sheet { transform: none; }
+
+  .lp-demo-head {
+    padding: 22px 24px 16px;
+    background: linear-gradient(155deg, #0B2233 0%, #071B2A 100%);
+    border-bottom: 1px solid rgba(255,106,0,.2);
+    position: relative; overflow: hidden;
+  }
+  .lp-demo-head::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .lp-demo-head-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    position: relative; z-index: 1;
+  }
+  .lp-demo-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    color: rgba(255,255,255,.5); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .lp-demo-title { margin: 0; font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+  .lp-demo-close {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.75); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .lp-demo-close:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.28); }
+
+  .lp-demo-dots {
+    display: flex; align-items: center; gap: 8px; margin-top: 18px;
+    position: relative; z-index: 1;
+  }
+  .lp-demo-dot {
+    flex: 1; height: 3px; border-radius: 99px; background: rgba(255,255,255,.12);
+    overflow: hidden; position: relative;
+  }
+  .lp-demo-dot-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+    background: linear-gradient(90deg, #FF6A00, #0B8FCE);
+    border-radius: 99px; transition: width .45s cubic-bezier(.22,1,.36,1);
+  }
+  .lp-demo-dot.is-done .lp-demo-dot-fill { width: 100%; }
+  .lp-demo-dot.is-active .lp-demo-dot-fill { width: 100%; }
+
+  .lp-demo-body {
+    flex: 1; overflow: hidden; position: relative; min-height: 320px;
+    padding: 24px;
+  }
+  .lp-demo-step {
+    position: absolute; inset: 24px;
+    opacity: 0; visibility: hidden; transform: translateX(16px);
+    transition: opacity .38s ease, transform .38s ease, visibility .38s;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .lp-demo-step.is-active { opacity: 1; visibility: visible; transform: none; }
+  .lp-demo-step.is-prev { transform: translateX(-16px); }
+
+  .lp-demo-step-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    letter-spacing: 1.5px; color: #FF6A00; text-transform: uppercase; font-weight: 600;
+  }
+  .lp-demo-step h3 { margin: 0; font-size: 22px; font-weight: 800; color: #071B2A; letter-spacing: -.4px; }
+  .lp-demo-step p { margin: 0; font-size: 14px; color: #4A5D6E; line-height: 1.55; font-weight: 500; }
+
+  .lp-demo-form {
+    background: #fff; border: 1px solid rgba(7,27,42,.1); border-radius: 14px;
+    padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    box-shadow: 0 8px 24px rgba(7,27,42,.06);
+  }
+  .lp-demo-field label {
+    display: block; font-size: 11px; font-weight: 700; color: #4A5D6E;
+    margin-bottom: 5px; letter-spacing: .3px;
+  }
+  .lp-demo-field .lp-demo-val {
+    min-height: 38px; padding: 9px 12px; border-radius: 9px;
+    background: #F7FAFC; border: 1px solid rgba(7,27,42,.08);
+    font-size: 13.5px; font-weight: 600; color: #071B2A;
+    font-family: inherit;
+  }
+  .lp-demo-field .lp-demo-val.mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .lp-demo-cursor {
+    display: inline-block; width: 2px; height: 1em; background: #FF6A00;
+    margin-left: 1px; vertical-align: text-bottom;
+    animation: lp-demo-blink 1s step-end infinite;
+  }
+  @keyframes lp-demo-blink { 50% { opacity: 0; } }
+
+  .lp-demo-cards { display: flex; flex-direction: column; gap: 10px; }
+  .lp-demo-kp-card {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
+    padding: 14px 16px; border-radius: 12px;
+    background: #fff; border: 1px solid rgba(7,27,42,.1);
+    box-shadow: 0 4px 14px rgba(7,27,42,.05);
+    opacity: 0; transform: translateX(20px);
+    transition: opacity .4s ease, transform .4s cubic-bezier(.22,1,.36,1);
+  }
+  .lp-demo-kp-card.is-in { opacity: 1; transform: none; }
+  .lp-demo-kp-name { font-weight: 700; font-size: 13.5px; color: #071B2A; }
+  .lp-demo-kp-meta { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+  .lp-demo-kp-price { color: #071B2A; }
+  .lp-demo-kp-days { color: #0B8FCE; }
+
+  .lp-demo-table-wrap {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(7,27,42,.1); background: #fff;
+    box-shadow: 0 6px 20px rgba(7,27,42,.06);
+  }
+  .lp-demo-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .lp-demo-table th {
+    text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700;
+    color: #4A5D6E; background: #F7FAFC; border-bottom: 1px solid rgba(7,27,42,.08);
+  }
+  .lp-demo-table td { padding: 11px 12px; border-bottom: 1px solid rgba(7,27,42,.06); }
+  .lp-demo-table tr.lp-demo-rec td { background: rgba(255,106,0,.06); }
+  .lp-demo-table tr.lp-demo-rec td:first-child {
+    box-shadow: inset 3px 0 0 #FF6A00;
+  }
+  .lp-demo-table .mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+  .lp-demo-winner {
+    text-align: center; padding: 20px 16px;
+    background: linear-gradient(155deg, #0B2233, #071B2A);
+    border-radius: 16px; color: #fff; position: relative; overflow: hidden;
+  }
+  .lp-demo-winner::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(255,106,0,.22), transparent 70%);
+    pointer-events: none;
+  }
+  .lp-demo-winner-inner { position: relative; z-index: 1; }
+  .lp-demo-winner-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+    background: rgba(255,106,0,.15); border: 1px solid rgba(255,106,0,.35);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #FF8A3D;
+  }
+  .lp-demo-winner h4 { margin: 0 0 8px; font-size: 24px; font-weight: 800; }
+  .lp-demo-winner-stats {
+    display: flex; justify-content: center; gap: 24px; margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700;
+  }
+  .lp-demo-winner-stats span { color: rgba(255,255,255,.55); font-weight: 500; font-size: 11px; display: block; margin-bottom: 3px; font-family: 'Manrope', sans-serif; }
+
+  .lp-demo-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 24px 20px; border-top: 1px solid rgba(7,27,42,.08);
+    background: rgba(255,255,255,.6);
+  }
+  .lp-demo-nav-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer; border: 1px solid rgba(7,27,42,.14);
+    background: #fff; color: #071B2A; transition: border-color .15s, transform .15s;
+  }
+  .lp-demo-nav-btn:hover:not(:disabled) { border-color: rgba(7,27,42,.28); transform: translateY(-1px); }
+  .lp-demo-nav-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .lp-demo-nav-btn.primary {
+    background: #FF6A00; border-color: #FF6A00; color: #fff;
+    box-shadow: 0 6px 16px rgba(255,106,0,.28);
+  }
+  .lp-demo-nav-btn.primary:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(255,106,0,.36); }
+  .lp-demo-step-hint { font-size: 12px; color: #4A5D6E; font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .lp-demo-overlay { align-items: flex-end; padding: 0; }
+    .lp-demo-sheet {
+      width: 100%; max-height: 92dvh; border-radius: 20px 20px 0 0;
+      transform: translateY(100%);
+    }
+    .lp-demo-overlay.is-open .lp-demo-sheet { transform: none; }
+    .lp-demo-body { min-height: 280px; padding: 20px 18px; }
+    .lp-demo-step { inset: 20px 18px; }
+    .lp-demo-foot { padding: 14px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
+    .lp-demo-drag {
+      width: 36px; height: 4px; border-radius: 99px; background: rgba(7,27,42,.15);
+      margin: 0 auto 12px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .lp-rise, .lp-kp-chip, .lp-industrial, .lp-dot-pulse { animation: none !important; }
+    .lp-rise, .lp-kp-chip, .lp-industrial, .lp-dot-pulse,
+    .lp-demo-overlay, .lp-demo-panel, .lp-demo-stage, .lp-demo-kp-card { animation: none !important; }
     .lp-cta:hover, .lp-scene-card:hover, #lp-steps > div:not(.lp-arrow):hover,
     .lp-faq-mail:hover, .lp-faq-card:hover { transform: none; }
     .lp-faq-a { transition: none; }
     .lp-faq-toggle { transition: none; }
+    .lp-demo-overlay, .lp-demo-sheet, .lp-demo-step, .lp-demo-kp-card, .lp-demo-dot-fill { transition: none !important; }
+    .lp-demo-cursor { animation: none; opacity: 0; }
   }
 
   /* ─── Responsive ─────────────────────────────────────────────── */
@@ -549,7 +771,11 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             Разместить чертёж
           </a>
-          <a href="#lp-process" class="lp-cta lp-cta-secondary">Как это работает</a>
+          <button type="button" class="lp-cta lp-cta-demo" id="lp-demo-open" aria-haspopup="dialog" aria-controls="lp-demo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Посмотреть демо
+          </button>
+          <a href="#lp-process" class="lp-cta lp-cta-ghost">Как это работает</a>
           <a href="zakupki.html" class="lp-cta lp-cta-ghost">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Смотреть закупки
@@ -918,6 +1144,129 @@
     </section>
 
 </main>
+
+<!-- Interactive demo modal -->
+<div class="lp-demo-overlay" id="lp-demo" role="dialog" aria-modal="true" aria-labelledby="lp-demo-title" hidden>
+  <div class="lp-demo-sheet">
+    <div class="lp-demo-drag" aria-hidden="true"></div>
+    <div class="lp-demo-head">
+      <div class="lp-demo-head-top">
+        <div>
+          <div class="lp-demo-eyebrow">Интерактив · без регистрации</div>
+          <h2 class="lp-demo-title" id="lp-demo-title">Как работает ТехЗаказ</h2>
+        </div>
+        <button type="button" class="lp-demo-close" id="lp-demo-close" aria-label="Закрыть демо">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="lp-demo-dots" id="lp-demo-dots" aria-hidden="true">
+        <div class="lp-demo-dot" data-i="0"><div class="lp-demo-dot-fill"></div></div>
+        <div class="lp-demo-dot" data-i="1"><div class="lp-demo-dot-fill"></div></div>
+        <div class="lp-demo-dot" data-i="2"><div class="lp-demo-dot-fill"></div></div>
+        <div class="lp-demo-dot" data-i="3"><div class="lp-demo-dot-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="lp-demo-body" id="lp-demo-body">
+      <div class="lp-demo-step is-active" data-step="0">
+        <div class="lp-demo-step-label">Шаг 1 из 4</div>
+        <h3>Создайте закупку</h3>
+        <p>Опишите потребность — платформа разошлёт запрос подходящим производителям.</p>
+        <div class="lp-demo-form">
+          <div class="lp-demo-field">
+            <label>Категория</label>
+            <div class="lp-demo-val" id="lp-demo-cat"></div>
+          </div>
+          <div class="lp-demo-field">
+            <label>Наименование</label>
+            <div class="lp-demo-val" id="lp-demo-title-field"></div>
+          </div>
+          <div class="lp-demo-field">
+            <label>Количество</label>
+            <div class="lp-demo-val mono" id="lp-demo-qty"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-demo-step" data-step="1">
+        <div class="lp-demo-step-label">Шаг 2 из 4</div>
+        <h3>Получите КП</h3>
+        <p>Производители откликаются напрямую — без посредников и наценок.</p>
+        <div class="lp-demo-cards" id="lp-demo-kp-cards">
+          <div class="lp-demo-kp-card" data-kp="0">
+            <div class="lp-demo-kp-name">УралПром</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-price">142 000 ₽</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-days">18 дн.</div>
+          </div>
+          <div class="lp-demo-kp-card" data-kp="1">
+            <div class="lp-demo-kp-name">ТехноРТИ</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-price">118 500 ₽</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-days">14 дн.</div>
+          </div>
+          <div class="lp-demo-kp-card" data-kp="2">
+            <div class="lp-demo-kp-name">СибМаш</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-price">156 200 ₽</div>
+            <div class="lp-demo-kp-meta lp-demo-kp-days">21 дн.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-demo-step" data-step="2">
+        <div class="lp-demo-step-label">Шаг 3 из 4</div>
+        <h3>Сравните</h3>
+        <p>Цена, срок и верификация — в одной таблице. Рекомендация выделена автоматически.</p>
+        <div class="lp-demo-table-wrap">
+          <table class="lp-demo-table">
+            <thead><tr><th>Поставщик</th><th>Цена</th><th>Срок</th></tr></thead>
+            <tbody>
+              <tr class="lp-demo-rec"><td><strong>ТехноРТИ</strong></td><td class="mono">118 500 ₽</td><td class="mono">14 дн.</td></tr>
+              <tr><td>УралПром</td><td class="mono">142 000 ₽</td><td class="mono">18 дн.</td></tr>
+              <tr><td>СибМаш</td><td class="mono">156 200 ₽</td><td class="mono">21 дн.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="lp-demo-step" data-step="3">
+        <div class="lp-demo-step-label">Шаг 4 из 4</div>
+        <h3>Выберите исполнителя</h3>
+        <p>Заключайте сделку напрямую с производителем — платформа не берёт комиссию.</p>
+        <div class="lp-demo-winner">
+          <div class="lp-demo-winner-inner">
+            <div class="lp-demo-winner-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Рекомендация платформы
+            </div>
+            <h4>ТехноРТИ</h4>
+            <div class="lp-demo-winner-stats">
+              <div><span>Цена</span>118 500 ₽</div>
+              <div><span>Срок</span>14 дн.</div>
+            </div>
+            <ul style="margin:14px 0 0;padding:0 0 0 18px;font-size:13px;line-height:1.55;color:rgba(255,255,255,.75);">
+              <li>Цена на 12% ниже остальных</li>
+              <li>Верифицирован платформой</li>
+              <li>Срок 14 дней — быстрее среднего</li>
+            </ul>
+          </div>
+        </div>
+        <a href="login.html#register" class="lp-cta lp-cta-primary" style="justify-content:center;margin-top:4px;">Зарегистрироваться бесплатно</a>
+      </div>
+    </div>
+
+    <div class="lp-demo-foot">
+      <button type="button" class="lp-demo-nav-btn" id="lp-demo-prev" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Назад
+      </button>
+      <span class="lp-demo-step-hint" id="lp-demo-hint">1 / 4</span>
+      <button type="button" class="lp-demo-nav-btn primary" id="lp-demo-next">
+        Далее
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 document.querySelectorAll('.lp-faq-q').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -951,6 +1300,145 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     io.observe(el);
   });
 }
+
+/* ── Interactive demo ───────────────────────────────────────────── */
+(function initLpDemo() {
+  const overlay = document.getElementById('lp-demo');
+  const openBtn = document.getElementById('lp-demo-open');
+  const closeBtn = document.getElementById('lp-demo-close');
+  const prevBtn = document.getElementById('lp-demo-prev');
+  const nextBtn = document.getElementById('lp-demo-next');
+  const hintEl = document.getElementById('lp-demo-hint');
+  const dots = [...document.querySelectorAll('.lp-demo-dot')];
+  const steps = [...document.querySelectorAll('.lp-demo-step')];
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const DEMO_TEXT = {
+    cat: 'РТИ и уплотнения',
+    title: 'Уплотнение РТИ DN150',
+    qty: '24 шт.',
+  };
+
+  let step = 0;
+  let typeTimer = null;
+  let touchStartY = 0;
+
+  function setDots(n) {
+    dots.forEach((d, i) => {
+      d.classList.toggle('is-done', i < n);
+      d.classList.toggle('is-active', i === n);
+    });
+    hintEl.textContent = (n + 1) + ' / 4';
+    prevBtn.disabled = n === 0;
+    nextBtn.textContent = '';
+    nextBtn.innerHTML = n === 3
+      ? 'Зарегистрироваться бесплатно <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+      : 'Далее <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  }
+
+  function typeInto(el, text, speed) {
+    return new Promise(resolve => {
+      if (typeTimer) clearInterval(typeTimer);
+      el.textContent = '';
+      if (reduced) { el.textContent = text; resolve(); return; }
+      const cursor = document.createElement('span');
+      cursor.className = 'lp-demo-cursor';
+      el.appendChild(cursor);
+      let i = 0;
+      typeTimer = setInterval(() => {
+        if (i >= text.length) {
+          clearInterval(typeTimer);
+          typeTimer = null;
+          cursor.remove();
+          resolve();
+          return;
+        }
+        cursor.insertAdjacentText('beforebegin', text[i]);
+        i += 1;
+      }, speed);
+    });
+  }
+
+  async function runStepAnim(n) {
+    if (n === 0) {
+      const catEl = document.getElementById('lp-demo-cat');
+      const titleEl = document.getElementById('lp-demo-title-field');
+      const qtyEl = document.getElementById('lp-demo-qty');
+      catEl.textContent = '';
+      titleEl.textContent = '';
+      qtyEl.textContent = '';
+      await typeInto(catEl, DEMO_TEXT.cat, 70);
+      await new Promise(r => setTimeout(r, reduced ? 0 : 280));
+      await typeInto(titleEl, DEMO_TEXT.title, 38);
+      await new Promise(r => setTimeout(r, reduced ? 0 : 200));
+      await typeInto(qtyEl, DEMO_TEXT.qty, 55);
+    }
+    if (n === 1) {
+      document.querySelectorAll('.lp-demo-kp-card').forEach((card, i) => {
+        card.classList.remove('is-in');
+        if (reduced) { card.classList.add('is-in'); return; }
+        setTimeout(() => card.classList.add('is-in'), i * 180);
+      });
+    }
+  }
+
+  function goTo(n, dir) {
+    if (n < 0 || n > 3) return;
+    steps[step].classList.remove('is-active');
+    if (dir < 0) steps[step].classList.add('is-prev');
+    else steps[step].classList.remove('is-prev');
+    step = n;
+    steps.forEach((s, i) => {
+      s.classList.toggle('is-active', i === step);
+      if (i !== step) s.classList.remove('is-prev');
+    });
+    setDots(step);
+    runStepAnim(step);
+  }
+
+  function openDemo() {
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => overlay.classList.add('is-open'));
+    step = 0;
+    steps.forEach((s, i) => s.classList.toggle('is-active', i === 0));
+    setDots(0);
+    runStepAnim(0);
+    closeBtn.focus();
+  }
+
+  function closeDemo() {
+    overlay.classList.remove('is-open');
+    document.body.style.overflow = '';
+    if (typeTimer) clearInterval(typeTimer);
+    setTimeout(() => { overlay.hidden = true; }, reduced ? 0 : 320);
+  }
+
+  openBtn?.addEventListener('click', openDemo);
+  closeBtn?.addEventListener('click', closeDemo);
+  overlay?.addEventListener('click', e => { if (e.target === overlay) closeDemo(); });
+  prevBtn?.addEventListener('click', () => goTo(step - 1, -1));
+  nextBtn?.addEventListener('click', () => {
+    if (step < 3) goTo(step + 1, 1);
+    else window.location.href = 'login.html#register';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (overlay.hidden || !overlay.classList.contains('is-open')) return;
+    if (e.key === 'Escape') closeDemo();
+    if (e.key === 'ArrowRight' && step < 3) goTo(step + 1, 1);
+    if (e.key === 'ArrowLeft' && step > 0) goTo(step - 1, -1);
+  });
+
+  const body = document.getElementById('lp-demo-body');
+  body?.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  body?.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dy) < 50) return;
+    if (dy < 0 && step < 3) goTo(step + 1, 1);
+    if (dy > 0 && step > 0) goTo(step - 1, -1);
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>

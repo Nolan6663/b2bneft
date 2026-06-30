@@ -187,6 +187,8 @@
                 <div id="detPanelMatchedList"></div>
             </div>
 
+            <div id="detPanelKpRecommend" style="display:none;margin-top:14px;"></div>
+
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:10px;">
                 <span style="font-size:13px;font-weight:700;">Поступившие КП</span>
                 <div style="display:flex;align-items:center;gap:10px;">
@@ -880,6 +882,9 @@
                 ordersCache = [];
                 showDataLoadError('Не удалось загрузить закупки');
             }
+            if (ordersCache.length > 0 && typeof markOnboardingStep === 'function') {
+                markOnboardingStep('order');
+            }
             updateStatusCounts();
             renderOrdersTable();
             return true;
@@ -1097,6 +1102,8 @@
             if (!proposals.length) {
                 proposalsEl.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--text-secondary);font-size:13px;">Пока нет предложений</div>';
                 document.getElementById('detPanelChart').style.display = 'none';
+                const recEmpty = document.getElementById('detPanelKpRecommend');
+                if (recEmpty) { recEmpty.style.display = 'none'; recEmpty.innerHTML = ''; }
                 const matchedEl = document.getElementById('detPanelMatched');
                 const matchedList = document.getElementById('detPanelMatchedList');
                 if (matchedEl && matchedList) {
@@ -1117,6 +1124,20 @@
 
             const matchedEl = document.getElementById('detPanelMatched');
             if (matchedEl) matchedEl.style.display = 'none';
+
+            const recEl = document.getElementById('detPanelKpRecommend');
+            if (recEl) {
+                if (proposals.length >= 2) {
+                    recEl.style.display = 'block';
+                    recEl.innerHTML = renderKpRecommendationCard(proposals, {
+                        acceptFn: 'acceptProposalFromCompare',
+                        compareFn: 'compareKp',
+                    });
+                } else {
+                    recEl.style.display = 'none';
+                    recEl.innerHTML = '';
+                }
+            }
 
             proposalsEl.innerHTML = proposals.map((p, i) => {
                 const price = p.price ? new Intl.NumberFormat('ru-RU').format(p.price) + ' ₽' : '—';
@@ -1379,6 +1400,7 @@
             try {
                 const response = await apiFetch(url, { method, body: formData });
                 if (response.ok) {
+                    if (!isEdit && typeof markOnboardingStep === 'function') markOnboardingStep('order');
                     // Save as template if checkbox checked
                     if (!isEdit && document.getElementById('saveAsTemplate')?.checked) {
                         const deadlineDays = deadlineRaw

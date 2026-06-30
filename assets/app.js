@@ -1152,6 +1152,7 @@ function normalizeProposalForCompare(p) {
     _status: p.status || '—',
     _verifiedPlatform: Boolean(p.verifiedByPlatform || p.verified_by_platform),
     _verifiedEgrul: Boolean(p.verifiedEgrul || p.verified_egrul),
+    _rating: p.rating || p.supplierRating || null,
   };
 }
 
@@ -1235,6 +1236,113 @@ function openSelectedKpCompare() {
   }
 }
 
+function kpRankBadge(rank) {
+  const tier = rank === 0 ? 'gold' : rank === 1 ? 'silver' : 'bronze';
+  const label = rank === 0 ? 'Лучший выбор' : `Место ${rank + 1}`;
+  if (rank === 0) {
+    return `<span class="kp-rank-badge kp-rank-${tier}" title="${label}" aria-label="${label}">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </span>`;
+  }
+  return `<span class="kp-rank-badge kp-rank-${tier}" title="${label}" aria-label="${label}"><span>${rank + 1}</span></span>`;
+}
+
+function _kpRatingNorm(p) {
+  const raw = p.supplierRating ?? p.rating ?? p.producerRating;
+  if (typeof raw === 'number' && raw > 0) {
+    return raw <= 5 ? raw / 5 : Math.min(1, raw / 100);
+  }
+  const letter = String(raw || '').toUpperCase();
+  const map = { 'A+': 1, 'A': 0.85, 'B+': 0.65, 'B': 0.45, 'C': 0.25 };
+  return map[letter] ?? 0.5;
+}
+
+/** Weighted score: price 40%, delivery 25%, verification 15%, rating 10%, match 10%. */
+function scoreProposalForRecommendation(p, context = {}) {
+  const norm = p._price != null ? p : normalizeProposalForCompare(p);
+  const all = (context.all || [norm]).map(x => x._price != null ? x : normalizeProposalForCompare(x));
+  const prices = all.map(x => x._price).filter(v => v > 0);
+  const days = all.map(x => x._days).filter(v => v > 0);
+  const minP = prices.length ? Math.min(...prices) : 0;
+  const maxP = prices.length ? Math.max(...prices) : 0;
+  const minD = days.length ? Math.min(...days) : 0;
+  const maxD = days.length ? Math.max(...days) : 0;
+
+  const ps = maxP > minP && norm._price > 0 ? (maxP - norm._price) / (maxP - minP) : 1;
+  const ds = maxD > minD && norm._days > 0 ? (maxD - norm._days) / (maxD - minD) : 1;
+  const vs = norm._verifiedPlatform ? 1 : (norm._verifiedEgrul ? 0.55 : 0);
+  const rs = _kpRatingNorm(norm);
+  const ms = norm._match != null && norm._match > 0 ? norm._match / 100 : 0.5;
+  return ps * 0.40 + ds * 0.25 + vs * 0.15 + rs * 0.10 + ms * 0.10;
+}
+
+function _kpRecReasons(p, all) {
+  const prices = all.map(x => x._price).filter(v => v > 0);
+  const days = all.map(x => x._days).filter(v => v > 0);
+  const minP = prices.length ? Math.min(...prices) : 0;
+  const minD = days.length ? Math.min(...days) : 0;
+  const avgP = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+  const avgD = days.length ? days.reduce((a, b) => a + b, 0) / days.length : 0;
+  const reasons = [];
+
+  if (minP > 0 && p._price === minP) {
+    reasons.push('Лучшая цена среди всех КП');
+  } else if (avgP > 0 && p._price < avgP) {
+    const pct = Math.round((1 - p._price / avgP) * 100);
+    if (pct >= 3) reasons.push(`Цена на ${pct}% ниже остальных`);
+  }
+  if (p._verifiedPlatform) reasons.push('Верифицирован платформой');
+  else if (p._verifiedEgrul) reasons.push('Проверен по ЕГРЮЛ');
+  if (p._days > 0 && p._days <= minD && minD > 0) {
+    reasons.push(`Срок ${p._days} дней — быстрее среднего`);
+  } else if (p._days > 0 && avgD > 0 && p._days < avgD) {
+    reasons.push(`Срок ${p._days} дней — быстрее среднего`);
+  }
+  if (p._match >= 70) reasons.push(`Совпадение профиля ${p._match}%`);
+
+  return reasons.slice(0, 3);
+}
+
+function computeKpRecommendation(proposals) {
+  const props = (proposals || []).map(normalizeProposalForCompare);
+  if (props.length < 2) return null;
+  const ctx = { all: props };
+  const scored = props.map(p => ({ proposal: p, score: scoreProposalForRecommendation(p, ctx) }))
+    .sort((a, b) => b.score - a.score);
+  const winner = scored[0].proposal;
+  return { proposal: winner, score: scored[0].score, reasons: _kpRecReasons(winner, props) };
+}
+
+function renderKpRecommendationCard(proposals, options = {}) {
+  if (!proposals || !Array.isArray(proposals) || proposals.length < 2) return '';
+  const rec = computeKpRecommendation(proposals);
+  if (!rec) return '';
+
+  const acceptFn = options.acceptFn || 'acceptProposalFromCompare';
+  const compareFn = options.compareFn;
+  const compact = options.compact;
+  const p = rec.proposal;
+  const priceFmt = v => v ? new Intl.NumberFormat('ru-RU').format(v) + ' ₽' : '—';
+  const reasons = rec.reasons || [];
+
+  return `<div class="kp-rec-card${compact ? ' kp-rec-card--compact' : ''}">
+    <div class="kp-rec-accent" aria-hidden="true"></div>
+    <div class="kp-rec-inner">
+      <div class="kp-rec-head">${uiIcon('trophy', 14)} Рекомендация платформы</div>
+      <div class="kp-rec-company">${escapeHtml(p._name)}</div>
+      <div class="kp-rec-metrics">
+        <span class="kp-rec-price">${priceFmt(p._price)}</span>
+        ${p._days ? `<span class="kp-rec-days">${p._days} дн.</span>` : ''}
+      </div>
+      ${reasonsHtml ? `<ul class="kp-rec-reasons">${reasons.map(r => `<li class="kp-rec-reasons-item">${uiIcon('check', 13)}<span>${escapeHtml(r)}</span></li>`).join('')}</ul>` : ''}
+      <div class="kp-rec-actions">
+        <button type="button" class="btn-primary kp-rec-btn-primary" onclick="${acceptFn}(${p.id || 0}, ${JSON.stringify(p._name)})">Выбрать этого поставщика</button>
+        ${compareFn ? `<button type="button" class="kp-rec-btn-ghost" onclick="${compareFn}()">${uiIcon('grid', 14)} Сравнить все КП</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderKpCompareTable(proposals, options = {}) {
   const props = (proposals || []).map(normalizeProposalForCompare);
   if (props.length < 2) {
@@ -1260,6 +1368,12 @@ function renderKpCompareTable(proposals, options = {}) {
     return { ...p, _rankScore: ps * 0.5 + ds * 0.5 };
   }).sort((a, b) => a._rankScore - b._rankScore);
 
+  const recommendation = computeKpRecommendation(props);
+  const recCardHtml = recommendation
+    ? renderKpRecommendationCard(proposals, { acceptFn, compareFn: 'compareKp', compact: true })
+    : '';
+  const recWinner = recommendation?.proposal;
+
   const bestPrice = scored.find(p => p._price === minP)?._name || '—';
   const fastest = scored.find(p => p._days === minD)?._name || '—';
   const summaryHtml = [
@@ -1279,30 +1393,30 @@ function renderKpCompareTable(proposals, options = {}) {
     const isWD = p._days === maxD && props.length > 1 && maxD > minD;
     const pDev = minP > 0 && !isBP ? `<span style="color:#e07070;font-size:11px;"> +${Math.round((p._price - minP) / minP * 100)}%</span>` : '';
     const dDev = minD > 0 && !isBD ? `<span style="color:#94A3B8;font-size:11px;"> +${Math.round((p._days - minD) / minD * 100)}%</span>` : '';
-    const stars = rank === 0 ? '★★★' : rank === 1 ? '★★☆' : '★☆☆';
-    const starColor = rank === 0 ? '#FF6A00' : rank === 1 ? '#F59E0B' : '#94A3B8';
     const priceBg = isBP ? 'background:rgba(18,168,102,.1);' : isWP ? 'background:rgba(224,112,112,.07);' : '';
     const daysBg = isBD ? 'background:rgba(59,130,246,.1);' : isWD ? 'background:rgba(224,112,112,.07);' : '';
     const acceptCell = showAccept
       ? `<button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="${acceptFn}(${p.id || 0}, ${JSON.stringify(p._name)})">Выбрать</button>`
       : '';
-    return `<tr style="${rank === 0 ? 'background:rgba(255,106,0,.04);' : ''}border-bottom:1px solid var(--inner-border);">
+    const isRec = recWinner && (p.id === recWinner.id || p._name === recWinner._name);
+    return `<tr style="${isRec ? 'background:rgba(255,106,0,.04);' : ''}border-bottom:1px solid var(--inner-border);">
       <td style="padding:11px 12px;font-weight:700;color:var(--text-secondary);">${rank + 1}</td>
       <td style="padding:11px 12px;">
         <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(p._name)}</div>
-        ${rank === 0 ? '<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;">✓ Рекомендуется</div>' : ''}
+        ${isRec ? `<div style="font-size:11px;color:#FF6A00;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:4px;">${uiIcon('check', 11)} Рекомендуется</div>` : ''}
       </td>
       ${showVerified ? `<td style="padding:11px 12px;">${verificationBadgeHtml(p)}</td>` : ''}
       ${showMatch ? `<td style="padding:11px 12px;">${matchScoreBadge(p._match, p._matchReasons)}</td>` : ''}
       <td style="padding:11px 12px;font-weight:700;font-family:'JetBrains Mono',monospace;${priceBg}">${priceFmt(p._price)}${isBP ? '<span style="color:#12A866;font-size:11px;"> лучшая</span>' : pDev}</td>
       <td style="padding:11px 12px;${daysBg}">${p._days ? p._days + ' дн.' : '—'}${isBD ? '<span style="color:#3B82F6;font-size:11px;"> быстрее</span>' : dDev}</td>
       ${showStatus ? `<td style="padding:11px 12px;">${proposalStatusBadgeHtml(p._status)}</td>` : ''}
-      <td style="padding:11px 12px;color:${starColor};font-size:14px;letter-spacing:2px;">${stars}</td>
+      <td style="padding:11px 12px;">${kpRankBadge(rank)}</td>
       ${showAccept ? `<td style="padding:11px 12px;">${acceptCell}</td>` : ''}
     </tr>`;
   }).join('');
 
   return `
+    ${recCardHtml}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">${summaryHtml}</div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -1507,9 +1621,16 @@ window.__spaNavigate = (url) => { location.assign(url); };
    ОНБОРДИНГ — welcome-модалка + чеклист «Начало работы»
    ===================================================================== */
 
-const _OB_WELCOME_KEY = 'ob_welcome_v1';
-const _OB_CHECKLIST_KEY = 'ob_checklist';
+const _OB_WELCOME_KEY = 'ob_welcome_v2';
+const _OB_CHECKLIST_KEY = 'ob_checklist_v2';
+const _OB_CHECKLIST_LEGACY = 'ob_checklist';
 const _OB_COLLAPSED_KEY = 'ob_collapsed';
+
+function _obMigrateChecklist() {
+  if (localStorage.getItem(_OB_CHECKLIST_KEY)) return;
+  const legacy = localStorage.getItem(_OB_CHECKLIST_LEGACY);
+  if (legacy) localStorage.setItem(_OB_CHECKLIST_KEY, legacy);
+}
 
 function _obSteps(role) {
   if (role === 'producer') {
@@ -1521,7 +1642,7 @@ function _obSteps(role) {
     ];
   }
   return [
-    { id: 'order',    label: 'Разместите первую закупку',   desc: 'Опишите потребность — поставщики найдут вас сами',     href: '#', action: 'openModal' },
+    { id: 'order',    label: 'Разместите первую закупку',   desc: 'Опишите потребность — поставщики найдут вас сами',     href: 'index.html?create=1', action: 'openModal' },
     { id: 'catalog',  label: 'Изучите каталог поставщиков', desc: 'Более 100 верифицированных производителей РФ',          href: 'catalog.html' },
     { id: 'profile',  label: 'Заполните профиль компании',  desc: 'ИНН, реквизиты, контакты — для доверия поставщиков',   href: `company-profile.html?id=${localStorage.getItem('_myCompanyId')||''}` },
     { id: 'settings', label: 'Настройте уведомления',       desc: 'Email-дайджест и интеграции с вашей CRM',              href: 'settings.html' },
@@ -1534,11 +1655,77 @@ function _obDoneMap() {
 
 function _obSaveDone(id) {
   const done = _obDoneMap();
+  if (done[id]) return false;
   done[id] = true;
   localStorage.setItem(_OB_CHECKLIST_KEY, JSON.stringify(done));
+  return true;
+}
+
+/** Mark an onboarding checklist step complete — call from pages after user actions. */
+function markOnboardingStep(id) {
+  if (!_obSaveDone(id)) {
+    _obRefreshChecklist();
+    return;
+  }
+  _obRefreshChecklist();
+  const role = localStorage.getItem('userRole') || '';
+  const steps = _obSteps(role);
+  const done = _obDoneMap();
+  const doneCount = steps.filter(s => done[s.id]).length;
+  if (doneCount === steps.length) {
+    const w = document.getElementById('obChecklist');
+    if (w) {
+      w.classList.add('ob-cl-complete');
+      setTimeout(() => dismissObChecklist(), 3200);
+    }
+  }
+}
+window.markOnboardingStep = markOnboardingStep;
+window.obCompleteStep = markOnboardingStep;
+
+async function _obAutoCompleteFromPage() {
+  const page = location.pathname.split('/').pop() || 'index.html';
+  if (page === 'catalog.html') markOnboardingStep('catalog');
+  if (page === 'settings.html') markOnboardingStep('settings');
+  if (page === 'producer.html') markOnboardingStep('browse');
+
+  if (page === 'company-profile.html') {
+    try {
+      const id = new URLSearchParams(location.search).get('id') || localStorage.getItem('_myCompanyId');
+      if (id) {
+        const r = await apiFetch(`${SERVER_URL}/companies/${id}`);
+        if (r.ok) {
+          const c = await r.json();
+          if (c.inn) markOnboardingStep('profile');
+        }
+      }
+    } catch { /* тихо */ }
+  }
+
+  const role = localStorage.getItem('userRole') || '';
+  if (role === 'producer' && (page === 'producer.html' || page === 'proposals.html')) {
+    try {
+      const r = await apiFetch(`${SERVER_URL}/proposals`);
+      if (r.ok) {
+        const list = await r.json();
+        if (Array.isArray(list) && list.length > 0) markOnboardingStep('proposal');
+      }
+    } catch { /* тихо */ }
+  }
+
+  if (role === 'customer') {
+    try {
+      const r = await apiFetch(`${SERVER_URL}/orders`);
+      if (r.ok) {
+        const list = await r.json();
+        if (Array.isArray(list) && list.length > 0) markOnboardingStep('order');
+      }
+    } catch { /* тихо */ }
+  }
 }
 
 function initOnboarding() {
+  _obMigrateChecklist();
   const page = location.pathname.split('/').pop() || 'index.html';
   const role = localStorage.getItem('userRole') || '';
   if (role !== 'customer' && role !== 'producer') return;
@@ -1546,11 +1733,19 @@ function initOnboarding() {
   const mainPage = role === 'producer' ? 'producer.html' : 'index.html';
   const onMainPage = page === mainPage || page === '';
 
+  _obAutoCompleteFromPage();
   _initObChecklist(role);
 
   if (onMainPage && !localStorage.getItem(_OB_WELCOME_KEY)) {
     _showObWelcome(role);
   }
+}
+
+function _obStepHrefAttr(s) {
+  if (s.action === 'openModal') {
+    return `href="#" onclick="event.preventDefault();closeObWelcome();if(typeof openModal==='function')openModal();"`;
+  }
+  return `href="${escapeHtml(s.href)}" onclick="closeObWelcome()"`;
 }
 
 function _showObWelcome(role) {
@@ -1563,8 +1758,8 @@ function _showObWelcome(role) {
     ? 'Находите заявки, подавайте КП и выигрывайте контракты напрямую с заказчиками'
     : 'Размещайте закупки и получайте КП от проверенных поставщиков нефтесервисной отрасли';
 
-  const stepsHtml = steps.slice(0, 3).map((s, i) => `
-    <a class="ob-step" href="${escapeHtml(s.href)}"${s.action ? ` onclick="closeObWelcome();typeof ${s.action}==='function'&&${s.action}();return false;"` : ' onclick="closeObWelcome()"'}>
+  const stepsHtml = steps.map((s, i) => `
+    <a class="ob-step" ${_obStepHrefAttr(s)}>
       <div class="ob-step-num">${i + 1}</div>
       <div class="ob-step-body">
         <strong>${escapeHtml(s.label)}</strong>
@@ -1588,7 +1783,7 @@ function _showObWelcome(role) {
         <h2 class="ob-title">${greeting}</h2>
         <p class="ob-sub">${subtitle}</p>
       </div>
-      <div class="ob-steps">${stepsHtml}</div>
+      <div class="ob-steps ob-steps-grid">${stepsHtml}</div>
       <div class="ob-footer">
         <button class="btn-primary ob-cta" onclick="closeObWelcome()">Начать работу →</button>
         <button class="ob-skip" onclick="closeObWelcome()">Пропустить</button>
@@ -1616,12 +1811,19 @@ function closeObWelcome() {
 
 /* ---------- Чеклист «Начало работы» (виджет нижний правый) ---------- */
 
+function _obRefreshChecklist() {
+  const role = localStorage.getItem('userRole') || '';
+  if (role !== 'customer' && role !== 'producer') return;
+  const existing = document.getElementById('obChecklist');
+  if (existing) existing.remove();
+  _initObChecklist(role);
+}
+
 function _initObChecklist(role) {
   const steps = _obSteps(role);
   const done = _obDoneMap();
   const doneCount = steps.filter(s => done[s.id]).length;
 
-  // Не показывать если всё выполнено
   if (doneCount === steps.length) return;
 
   const collapsed = localStorage.getItem(_OB_COLLAPSED_KEY) === '1';
@@ -1629,9 +1831,10 @@ function _initObChecklist(role) {
 
   const itemsHtml = steps.map(s => {
     const isDone = !!done[s.id];
+    const actionAttr = s.action ? ` data-action="${s.action}"` : '';
     return `
-      <a class="ob-cl-item${isDone ? ' ob-cl-done' : ''}" href="${escapeHtml(s.href)}"
-         onclick="_obMarkDone('${s.id}')"${s.action ? ` data-action="${s.action}"` : ''}>
+      <a class="ob-cl-item${isDone ? ' ob-cl-done' : ''}" href="${escapeHtml(s.href)}"${actionAttr}
+         data-ob-id="${s.id}">
         <div class="ob-cl-check">
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
@@ -1658,11 +1861,20 @@ function _initObChecklist(role) {
       <button class="ob-cl-dismiss" onclick="dismissObChecklist()">Скрыть</button>
     </div>`;
 
-  document.body.appendChild(widget);
-}
+  widget.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-action]');
+    if (!item || item.classList.contains('ob-cl-done')) return;
+    const action = item.dataset.action;
+    if (!action) return;
+    e.preventDefault();
+    markOnboardingStep(item.dataset.obId || 'order');
+    if (action === 'openModal') {
+      if (typeof window.openModal === 'function') window.openModal();
+      else location.href = item.getAttribute('href') || 'index.html?create=1';
+    }
+  });
 
-function _obMarkDone(id) {
-  _obSaveDone(id);
+  document.body.appendChild(widget);
 }
 
 function toggleObChecklist() {
