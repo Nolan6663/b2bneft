@@ -12,7 +12,6 @@ function createMessagesRouter(deps) {
         getUserIdsByCompany,
         sendPush,
         sendTelegramNotification,
-        getIo,
         emitRealtime,
         APP_URL,
     } = deps;
@@ -165,8 +164,8 @@ function createMessagesRouter(deps) {
                 [oid, threadCompany, req.user.role, String(text).slice(0, 2000)]
             );
             const msg = rowToMessage(newRow);
-            const io = getIo();
-            if (io) io.to(`chat:${msg.orderId}:${msg.company}`).emit('message', msg);
+            emitRealtime(order.company, 'message', msg);
+            emitRealtime(threadCompany, 'message', msg);
 
             const convUpdate = { orderId: oid, company: threadCompany };
             emitRealtime(order.company, 'conversation:update', convUpdate);

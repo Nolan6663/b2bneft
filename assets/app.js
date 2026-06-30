@@ -430,6 +430,7 @@ if (typeof io === 'function' && hasSession()) {
     socket.on('connect', () => {
       if (currentCompanyName !== 'Гость') socket.emit('join-company', currentCompanyName);
       if (activeChatOrderId != null) socket.emit('join-chat', { orderId: activeChatOrderId, company: activeChatCompany });
+      document.dispatchEvent(new CustomEvent('tz:socket:connect'));
     });
 
     socket.on('connect_error', (err) => {
@@ -462,11 +463,18 @@ if (typeof io === 'function' && hasSession()) {
 
     socket.on('conversation:update', (detail) => {
       document.dispatchEvent(new CustomEvent('tz:conversation:update', { detail }));
+      if (activeChatOrderId != null
+          && Number(detail?.orderId) === Number(activeChatOrderId)
+          && detail?.company === activeChatCompany) {
+        renderChatHistory();
+      }
     });
 
     socket.on('message', (msg) => {
       document.dispatchEvent(new CustomEvent('tz:message', { detail: msg }));
-      if (activeChatOrderId != null && msg.orderId === activeChatOrderId && msg.company === activeChatCompany) {
+      if (activeChatOrderId != null
+          && Number(msg.orderId) === Number(activeChatOrderId)
+          && msg.company === activeChatCompany) {
         renderChatHistory();
       }
     });

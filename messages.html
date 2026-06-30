@@ -235,11 +235,21 @@ function msgToast(msg) {
         let allConversations = [];
         let activeConv       = null;
         let convPollInterval = null;
+        const seenMsgIds     = new Set();
+
+        function sameThread(a, b) {
+            if (!a || !b) return false;
+            return Number(a.orderId) === Number(b.orderId) && a.company === b.company;
+        }
 
         function onTzMessage(e) {
             const msg = e.detail;
             if (!msg) return;
-            if (msg.orderId === activeConv?.orderId && msg.company === activeConv?.company) {
+            if (msg.id) {
+                if (seenMsgIds.has(msg.id)) return;
+                seenMsgIds.add(msg.id);
+            }
+            if (sameThread(msg, activeConv)) {
                 appendMessage(msg);
                 markRead(activeConv);
                 scrollToBottom();
@@ -247,10 +257,21 @@ function msgToast(msg) {
             updateConvPreview(msg);
         }
 
-        function onTzConversationUpdate() {
+        function onTzConversationUpdate(e) {
             if (document.visibilityState !== 'visible') return;
+            const detail = e?.detail;
             loadConversations();
             loadMsgStats();
+            if (activeConv && detail && sameThread(activeConv, detail)) {
+                fetchMessages(activeConv);
+                markRead(activeConv);
+            }
+        }
+
+        function onTzSocketConnect() {
+            if (activeConv && window.socket) {
+                window.socket.emit('join-chat', { orderId: activeConv.orderId, company: activeConv.company });
+            }
         }
 
         function closeMobileChat() {
@@ -273,10 +294,14 @@ function msgToast(msg) {
 
             document.addEventListener('tz:message', onTzMessage);
             document.addEventListener('tz:conversation:update', onTzConversationUpdate);
+            document.addEventListener('tz:socket:connect', onTzSocketConnect);
             if (convPollInterval) clearInterval(convPollInterval);
             convPollInterval = setInterval(() => {
-                if (document.visibilityState === 'visible') loadConversations();
-            }, 20000);
+                if (document.visibilityState === 'visible') {
+                    loadConversations();
+                    if (activeConv) fetchMessages(activeConv);
+                }
+            }, 8000);
         });
 
         window.__pageInit = function() {
@@ -287,14 +312,19 @@ function msgToast(msg) {
 
             document.addEventListener('tz:message', onTzMessage);
             document.addEventListener('tz:conversation:update', onTzConversationUpdate);
+            document.addEventListener('tz:socket:connect', onTzSocketConnect);
             if (convPollInterval) clearInterval(convPollInterval);
             convPollInterval = setInterval(() => {
-                if (document.visibilityState === 'visible') loadConversations();
-            }, 20000);
+                if (document.visibilityState === 'visible') {
+                    loadConversations();
+                    if (activeConv) fetchMessages(activeConv);
+                }
+            }, 8000);
 
             window.__pageCleanup = function() {
                 document.removeEventListener('tz:message', onTzMessage);
                 document.removeEventListener('tz:conversation:update', onTzConversationUpdate);
+                document.removeEventListener('tz:socket:connect', onTzSocketConnect);
                 if (convPollInterval) { clearInterval(convPollInterval); convPollInterval = null; }
             };
         };
@@ -665,6 +695,8 @@ function msgToast(msg) {
         function renderMessages(msgs) {
             const container = document.getElementById('chatMessages');
             if (!container) return;
+            seenMsgIds.clear();
+            msgs.forEach(m => { if (m.id) seenMsgIds.add(m.id); });
             if (!msgs.length) {
                 container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:13px;">Нет сообщений. Напишите первым!</div>';
                 return;
@@ -686,7 +718,8 @@ function msgToast(msg) {
         function messageBubbleHtml(msg) {
             const isMine = msg.sender === userRole;
             const time   = new Date(msg.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            return `<div class="msg-row ${isMine ? 'mine' : 'theirs'}">
+            const idAttr = msg.id ? ` data-msg-id="${msg.id}"` : '';
+            return `<div class="msg-row ${isMine ? 'mine' : 'theirs'}"${idAttr}>
                 <div class="msg-bubble">${escapeHtml(msg.text)}</div>
                 <div class="msg-time">${time}${isMine && msg.read ? ' ✓✓' : isMine ? ' ✓' : ''}</div>
             </div>`;
@@ -695,6 +728,11 @@ function msgToast(msg) {
         function appendMessage(msg) {
             const container = document.getElementById('chatMessages');
             if (!container) return;
+            if (msg.id) {
+                if (seenMsgIds.has(msg.id)) return;
+                seenMsgIds.add(msg.id);
+                if (container.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+            }
             // Remove "no messages" placeholder if present
             if (container.children.length === 1 && container.children[0].tagName !== 'DIV'.split('').reverse().join('')) {
                 const first = container.firstChild;
@@ -759,12 +797,12 @@ function msgToast(msg) {
         // ── Update preview after new message ────────────────────────────
 
         function updateConvPreview(msg) {
-            const c = allConversations.find(x => x.orderId === msg.orderId && x.company === msg.company);
+            const c = allConversations.find(x => sameThread(x, msg));
             if (c) {
                 c.lastMessage = msg.text;
                 c.lastSender  = msg.sender;
                 c.lastAt      = msg.createdAt;
-                if (msg.sender !== userRole && !(activeConv?.orderId === msg.orderId && activeConv?.company === msg.company)) {
+                if (msg.sender !== userRole && !sameThread(activeConv, msg)) {
                     c.unreadCount = (c.unreadCount || 0) + 1;
                 }
                 // Move to top
