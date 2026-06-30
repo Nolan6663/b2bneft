@@ -572,7 +572,7 @@ Nginx (обязательно на prod для WebSocket):
       - font-size 16px в полях ввода (без zoom на iOS)
       - модалки / command palette — bottom sheet на ≤600–520px
       - toast над нижней навигацией
-      - табы, уведомления, dropdown на всю ширину экрана
+      - user-dropdown привязан к кнопке профиля в шапке (не к низу экрана)
       - графики max-height, профильные сетки в 1–2 колонки
 
   • messages.html — чат fullscreen с корректным отступом под bottom nav,
