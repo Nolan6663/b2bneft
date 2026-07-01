@@ -1785,8 +1785,9 @@ app.get('/api/auctions/:id', requireAuth, async (req, res, next) => {
 app.post('/api/auctions/:id/bid', requireAuth, async (req, res, next) => {
     try {
         if (req.user.role !== 'producer') return res.status(403).json({ error: 'Только поставщики могут делать ставки' });
-        const { price } = req.body;
+        const { price, days } = req.body;
         if (!price || isNaN(price)) return res.status(400).json({ error: 'Укажите цену' });
+        if (!days || isNaN(days) || Number(days) <= 0) return res.status(400).json({ error: 'Укажите срок поставки' });
 
         const { rows: [auction] } = await pool.query(
             "SELECT * FROM auctions WHERE id = $1 AND status = 'active' AND end_time > NOW()", [req.params.id]
@@ -1797,8 +1798,8 @@ app.post('/api/auctions/:id/bid', requireAuth, async (req, res, next) => {
         }
 
         const { rows: [bid] } = await pool.query(
-            'INSERT INTO auction_bids (auction_id, company, price) VALUES ($1,$2,$3) RETURNING *',
-            [req.params.id, req.user.company, price]
+            'INSERT INTO auction_bids (auction_id, company, price, days) VALUES ($1,$2,$3,$4) RETURNING *',
+            [req.params.id, req.user.company, price, days]
         );
         await pool.query('UPDATE auctions SET current_best = $1, winner_company = $2 WHERE id = $3', [price, req.user.company, req.params.id]);
 
