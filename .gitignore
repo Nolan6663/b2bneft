@@ -10,3 +10,5 @@ uploads/
 
 test-results/
 tests/e2e/admin-storage.json
+
+.worktrees/
