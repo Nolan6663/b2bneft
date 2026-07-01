@@ -37,6 +37,7 @@ const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
 const createDealsRouter = require('./routes/deals');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
+const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = process.env.GEMINI_API_KEY
@@ -1825,14 +1826,94 @@ app.get('/api/auctions/my/customer', requireAuth, async (req, res, next) => {
 
 // Auto-close expired auctions (called by cron)
 async function closeExpiredAuctions() {
+    let rows;
     try {
-        const { rows } = await pool.query(
-            "UPDATE auctions SET status = 'closed' WHERE status = 'active' AND end_time <= NOW() RETURNING id, winner_company, order_id"
-        );
-        for (const a of rows) {
-            if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company });
+        ({ rows } = await pool.query(
+            "UPDATE auctions SET status = 'closed' WHERE status = 'active' AND end_time <= NOW() RETURNING id, order_id, winner_company, current_best"
+        ));
+    } catch (e) { console.error('[cron:auctions]', e.message); return; }
+
+    for (const a of rows) {
+        try {
+            await handleClosedAuction(a);
+        } catch (e) {
+            console.error('[cron:auctions] failed for auction', a.id, e.message);
         }
-    } catch (e) { console.error('[cron:auctions]', e.message); }
+    }
+}
+
+async function handleClosedAuction(a) {
+    const { rows: [order] } = await pool.query('SELECT * FROM orders WHERE id = $1', [a.order_id]);
+    if (!order) return;
+    const title = plainTitle(order.title);
+
+    if (!a.winner_company) {
+        await addNotification(order.company, `Аукцион «${title}» завершён без ставок.`);
+        const email = await getCompanyEmail(order.company);
+        if (email) {
+            await sendEmail(email, `Аукцион завершён без ставок — «${title}»`,
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:#e07070">Аукцион завершён без ставок</h3>
+                  <p>По закупке <strong>«${htmlEscape(title)}»</strong> никто не сделал ставку в течение отведённого времени.</p>
+                  <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
+                </div>`
+            );
+        }
+        if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: null, orderId: a.order_id });
+        return;
+    }
+
+    const { rows: [winningBid] } = await pool.query(
+        'SELECT days FROM auction_bids WHERE auction_id = $1 AND company = $2 AND price = $3 ORDER BY created_at ASC LIMIT 1',
+        [a.id, a.winner_company, a.current_best]
+    );
+    const days = winningBid ? winningBid.days : 0;
+
+    const { rows: [newProposal] } = await pool.query(
+        "INSERT INTO proposals (order_id, order_title, price, days, company, status, kp_file) VALUES ($1,$2,$3,$4,$5,'Ожидает ответа',NULL) RETURNING id",
+        [a.order_id, order.title, a.current_best, days, a.winner_company]
+    );
+
+    const result = await acceptWonProposal(
+        { pool, withTransaction, addNotification, getCompanyEmail, sendEmail, getUserIdsByCompany, sendPush, sendTelegramNotification, triggerIntegrations, logOrderEvent, plainTitle, htmlEscape, APP_URL },
+        { proposalId: newProposal.id, actorCompany: 'Система (аукцион)' }
+    );
+    if (!result.ok) {
+        console.error('[cron:auctions] accept failed for auction', a.id, result.reason);
+        return;
+    }
+
+    await pool.query('UPDATE auctions SET winner_proposal_id = $1 WHERE id = $2', [newProposal.id, a.id]);
+    await addNotification(a.winner_company, `Вы выиграли аукцион «${title}»! Цена: ${Number(a.current_best).toLocaleString('ru-RU')} ₽.`);
+
+    await addNotification(order.company, `Аукцион «${title}» завершён. Победитель: ${a.winner_company}, ${Number(a.current_best).toLocaleString('ru-RU')} ₽.`);
+    const customerEmail = await getCompanyEmail(order.company);
+    if (customerEmail) {
+        await sendEmail(customerEmail, `Аукцион завершён — «${title}»`,
+            `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+              <h3 style="color:#41bd97">Аукцион завершён</h3>
+              <p>По закупке <strong>«${htmlEscape(title)}»</strong> определён победитель.</p>
+              <p>Поставщик: <strong>${htmlEscape(a.winner_company)}</strong> · Цена: <strong>${Number(a.current_best).toLocaleString('ru-RU')} ₽</strong></p>
+              <a href="${APP_URL}/deals.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть сделку</a>
+            </div>`
+        );
+    }
+    const customerIds = await getUserIdsByCompany(order.company);
+    for (const id of customerIds) {
+        sendTelegramNotification(id, `🏁 <b>Аукцион завершён</b>\n«${title}»\nПобедитель: ${a.winner_company}\nЦена: ${Number(a.current_best).toLocaleString('ru-RU')} ₽`);
+    }
+
+    const { rows: losers } = await pool.query(
+        'SELECT DISTINCT company FROM auction_bids WHERE auction_id = $1 AND company != $2',
+        [a.id, a.winner_company]
+    );
+    for (const l of losers) {
+        await addNotification(l.company, `Аукцион «${title}» завершён. Ваша ставка не победила.`);
+    }
+
+    if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company, price: a.current_best, orderId: a.order_id });
+    emitDashboardRefresh(a.winner_company);
+    emitDashboardRefresh(order.company);
 }
 
 async function notifyAuctionsEndingSoon() {
