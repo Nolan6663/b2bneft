@@ -431,6 +431,15 @@
 
         function onTzOrderNew() { loadOrdersForProducers(); }
 
+        function onAuctionClosed(data) {
+            if (data.winnerCompany) {
+                showToast(`Аукцион завершён. Победитель: ${data.winnerCompany}`, 'info');
+            } else {
+                showToast('Аукцион завершён без ставок', 'warn');
+            }
+            loadActiveAuctions();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
             loadOrdersForProducers();
@@ -439,6 +448,7 @@
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
+            if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
         });
 
         window.__pageInit = function() {
@@ -450,10 +460,11 @@
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
+            if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
 
             window.__pageCleanup = function() {
                 document.removeEventListener('tz:order:new', onTzOrderNew);
-                if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
+                if (typeof socket !== 'undefined' && socket) { socket.off('auction:bid'); socket.off('auction:closed'); }
             };
         };
 
