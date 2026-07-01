@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { acceptWonProposal } = require('../lib/proposal-accept');
 
 function createProposalsRouter(deps) {
     const {
@@ -132,59 +133,12 @@ function createProposalsRouter(deps) {
                 return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
             }
 
-            const title = plainTitle(orderRow.title);
-            const notifs = [];
-
-            await withTransaction(async (client) => {
-                await client.query("UPDATE orders SET status = 'Закрыта' WHERE id = $1", [orderRow.id]);
-                const { rows: allProposals } = await client.query('SELECT * FROM proposals WHERE order_id = $1', [orderRow.id]);
-                for (const p of allProposals) {
-                    if (p.id === proposalId) {
-                        await client.query("UPDATE proposals SET status = 'Выигран' WHERE id = $1", [p.id]);
-                        await client.query(
-                            "INSERT INTO delivery_events (proposal_id, stage, notes, updated_by) VALUES ($1, 'КП принят', $2, 'system')",
-                            [p.id, `КП принят заказчиком. Сумма: ${p.price ? p.price.toLocaleString('ru-RU') + ' ₽' : '—'}, срок: ${p.days} дн.`]
-                        );
-                        notifs.push({ company: p.company, text: `Ваше предложение по «${title}» принято! Заказ выигран.` });
-                    } else {
-                        await client.query("UPDATE proposals SET status = 'Отклонен' WHERE id = $1", [p.id]);
-                        notifs.push({ company: p.company, text: `Ваше предложение по «${title}» отклонено.` });
-                    }
-                }
-            });
-
-            await logOrderEvent(
-                orderRow.id,
-                'closed',
-                'Закупка закрыта — КП принято',
-                `${proposalRow.company} · ${Number(proposalRow.price).toLocaleString('ru-RU')} ₽`,
-                req.user.company
+            const result = await acceptWonProposal(
+                { pool, withTransaction, addNotification, getCompanyEmail, sendEmail, getUserIdsByCompany, sendPush, sendTelegramNotification, triggerIntegrations, logOrderEvent, plainTitle, htmlEscape, APP_URL },
+                { proposalId, actorCompany: req.user.company }
             );
+            if (!result.ok) return res.status(400).json({ error: 'Эта прямая закупка уже завершена' });
 
-            const wonProposal = { id: proposalId, company: proposalRow.company, price: proposalRow.price, days: proposalRow.days };
-            triggerIntegrations(req.user.company, wonProposal, orderRow).catch(() => {});
-
-            await Promise.all(notifs.map(n => addNotification(n.company, n.text)));
-            await Promise.all(notifs.map(async n => {
-                const email = await getCompanyEmail(n.company);
-                const won = n.text.includes('принято');
-                if (email) await sendEmail(email, won ? `Предложение принято — «${title}»` : `Предложение отклонено — «${title}»`,
-                    `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-                      <h3 style="color:${won ? '#41bd97' : '#e07070'}">${won ? 'Ваше предложение принято!' : 'Предложение отклонено'}</h3>
-                      <p>${won
-                        ? `Поздравляем! Заказчик выбрал ваше предложение по закупке <strong>«${htmlEscape(title)}»</strong>.`
-                        : `К сожалению, заказчик выбрал другого поставщика по закупке <strong>«${htmlEscape(title)}»</strong>.`
-                      }</p>
-                      <a href="${APP_URL}/producer.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
-                    </div>`
-                );
-            }));
-            getUserIdsByCompany(proposalRow.company).then(ids =>
-                ids.forEach(id => {
-                    sendPush(id, 'КП принято!', `Ваше предложение по заявке «${title}» принято`, `${APP_URL}/deals`);
-                    sendTelegramNotification(id, `✅ <b>КП принято!</b>\nЗакупка: «${title}»\nЗаказчик выбрал ваше предложение.`);
-                })
-            ).catch(() => {});
             res.json({ message: 'Победитель успешно определен, прямая закупка закрыта' });
         } catch (e) { next(e); }
     });
