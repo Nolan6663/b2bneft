@@ -578,6 +578,29 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (01.07.2026 — AI для поставщика, напоминание об аукционе)
+  --------------------------------------------------------------------------------
+  • lib/ai-client.js — generateProposalMessage(): AI-черновик сопроводительного
+    текста к КП (для поставщика, симметрично generateProcurementTz для заказчика)
+  • POST /api/ai/generate-proposal — генерация текста по брифу поставщика +
+    контексту заявки (title/description/category), доступно роли producer
+  • producer.html — панель «AI-помощник» в модалке отклика + поле
+    «Сопроводительное сообщение» (proposalMessage)
+  • db.js — proposals.message (TEXT), auctions.reminder_sent (BOOLEAN)
+  • routes/proposals.js — message в POST/PUT /api/proposals
+  • index.html — сообщение поставщика показывается в списке откликов заказчика
+  • server.js — notifyAuctionsEndingSoon(): cron каждую минуту, за 10 мин до
+    конца активного аукциона шлёт Telegram-пуш всем участвовавшим в ставках
+    поставщикам (sendTelegramNotification + getUserIdsByCompany, переиспользованы
+    из hot-match уведомлений); reminder_sent защищает от повторной отправки
+
+  Проверено локально: заявка → аукцион → ставка → сгенерирован текст КП через
+  GigaChat → через 70 сек cron поймал аукцион, reminder_sent выставлен в true.
+  Реальная отправка в Telegram не проверялась (TELEGRAM_BOT_TOKEN не задан
+  локально) — sendTelegramNotification no-op без токена, проверить на проде.
+
+  Проверка: npm run check
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (01.07.2026 — визуальная идентичность v3 «Чертёжный цех»)
   ----------------------------------------------------------------------------
   Дизайн-направление выбрано и задокументировано (без смены HTML-структуры,

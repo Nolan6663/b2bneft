@@ -149,6 +149,7 @@ function rowToProposal(r) {
         id: r.id, orderId: r.order_id, orderTitle: r.order_title,
         price: r.price, days: r.days, company: r.company, status: r.status,
         kpFile: r.kp_file ? JSON.parse(r.kp_file) : null,
+        message: r.message || '',
         createdAt: r.created_at
     };
 }
@@ -245,6 +246,7 @@ const aiLimiter = rateLimit({
 });
 app.post('/api/ai-search', aiLimiter);
 app.post('/api/ai/generate-tz', aiLimiter);
+app.post('/api/ai/generate-proposal', aiLimiter);
 
 // ===================== WEBSOCKET =====================
 let Server = null;
@@ -1428,6 +1430,56 @@ app.get('/api/ai/tz-status', requireAuth, (req, res) => {
     res.json({ configured: cfg.configured, model: cfg.configured ? cfg.model : null });
 });
 
+app.post('/api/ai/generate-proposal', requireAuth, async (req, res, next) => {
+    try {
+        if (req.user.role !== 'producer') {
+            return res.status(403).json({ error: 'Генерация сопроводительного текста доступна только поставщикам' });
+        }
+        if (!tzAi.isTzAiConfigured()) {
+            return res.status(503).json({ error: 'AI не настроен на сервере' });
+        }
+
+        const { orderId, brief } = req.body || {};
+        if (!brief || !String(brief).trim()) {
+            return res.status(400).json({ error: 'Опишите, что вы можете предложить (2–3 предложения)' });
+        }
+        if (String(brief).trim().length > 2000) {
+            return res.status(400).json({ error: 'Слишком длинный запрос (макс. 2000 символов)' });
+        }
+
+        let orderRow = null;
+        if (orderId) {
+            const { rows } = await pool.query('SELECT title, description, category FROM orders WHERE id = $1', [Number(orderId)]);
+            orderRow = rows[0] || null;
+        }
+
+        const result = await tzAi.generateProposalMessage({
+            orderTitle: orderRow?.title || '',
+            orderDescription: orderRow?.description || '',
+            orderCategory: orderRow?.category || '',
+            brief: String(brief).trim(),
+        });
+
+        const cfg = tzAi.getTzAiConfig();
+        res.json({ ...result, model: cfg.model });
+    } catch (e) {
+        console.error('[ai/generate-proposal]', e.message, e.status || '', e.code || '');
+        if (e.code === 'AI_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI не настроен' });
+        }
+        if (e.code === 'AI_AUTH' || e.status === 401 || e.status === 403) {
+            return res.status(400).json({ error: 'Неверный AI_TZ_API_KEY. Проверьте ключ и base URL.' });
+        }
+        if (e.code === 'AI_RATE_LIMIT' || e.status === 429) {
+            return res.status(429).json({ error: 'Превышен лимит запросов к AI. Подождите минуту.' });
+        }
+        if (e.code === 'AI_PARSE' || e.code === 'AI_EMPTY') {
+            return res.status(500).json({ error: e.message || 'Не удалось сгенерировать текст' });
+        }
+        return res.status(500).json({ error: e.message || 'Ошибка генерации' });
+    }
+});
+
 // ===================== SEO =====================
 const seoAuditor = require('./seo/auditor');
 const seoGsc     = require('./seo/gsc');
@@ -1780,6 +1832,33 @@ async function closeExpiredAuctions() {
             if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: a.winner_company });
         }
     } catch (e) { console.error('[cron:auctions]', e.message); }
+}
+
+async function notifyAuctionsEndingSoon() {
+    try {
+        const { rows } = await pool.query(`
+            SELECT a.id, a.start_price, a.current_best, o.title
+            FROM auctions a
+            JOIN orders o ON o.id = a.order_id
+            WHERE a.status = 'active'
+              AND a.reminder_sent = false
+              AND a.end_time > NOW()
+              AND a.end_time <= NOW() + INTERVAL '10 minutes'
+        `);
+        for (const a of rows) {
+            const { rows: bidders } = await pool.query(
+                'SELECT DISTINCT company FROM auction_bids WHERE auction_id = $1',
+                [a.id]
+            );
+            const price = Number(a.current_best || a.start_price).toLocaleString('ru-RU');
+            const text = `⏳ <b>Аукцион скоро завершится</b>\n«${plainTitle(a.title)}»\nТекущая лучшая цена: ${price} ₽\nУспейте сделать финальную ставку!`;
+            for (const b of bidders) {
+                const userIds = await getUserIdsByCompany(b.company);
+                for (const id of userIds) sendTelegramNotification(id, text);
+            }
+            await pool.query('UPDATE auctions SET reminder_sent = true WHERE id = $1', [a.id]);
+        }
+    } catch (e) { console.error('[cron:auction-reminder]', e.message); }
 }
 
 // ── Risk assessment (ЕГРЮЛ + платформа + отзывы) ────────────────────────────
@@ -3170,6 +3249,7 @@ function startOrderMaintenanceCron() {
 
 function startAuctionCron() {
     cron.schedule('* * * * *', closeExpiredAuctions); // every minute
+    cron.schedule('* * * * *', notifyAuctionsEndingSoon); // every minute
 }
 
 function startDigestCron() {

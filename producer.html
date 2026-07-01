@@ -330,6 +330,28 @@
                 <label>Срок поставки (дней)</label>
                 <input type="number" id="proposalTerms" placeholder="Например, 14">
             </div>
+            <div class="ai-tz-panel" id="aiProposalPanel">
+                <div class="ai-tz-head">
+                    <div class="ai-tz-head-left">
+                        <span class="ai-tz-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/><path d="M19 3l.9 2.6L22 6.5l-2.1.9L19 10l-.9-2.6L16 6.5l2.1-.9L19 3z"/></svg></span>
+                        <div>
+                            <div class="ai-tz-title">AI-помощник для сопроводительного текста</div>
+                            <div class="ai-tz-sub" id="aiProposalModelHint">Опишите, что вы можете предложить — соберём текст КП</div>
+                        </div>
+                    </div>
+                </div>
+                <label class="ai-tz-label" for="aiProposalBrief">Что вы можете предложить (2–3 предложения)</label>
+                <textarea id="aiProposalBrief" class="ai-tz-brief" rows="3" placeholder="Например: производим манжеты РТИ любых размеров по ГОСТ, склад в Уфе, отгрузка за 3 дня, даём сертификаты качества"></textarea>
+                <div class="ai-tz-actions">
+                    <button type="button" class="ai-tz-btn" id="aiProposalGenerateBtn" onclick="generateProposalWithAi()">
+                        <span class="ai-tz-btn-label">Сгенерировать текст</span>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Сопроводительное сообщение (необязательно)</label>
+                <textarea id="proposalMessage" placeholder="Коротко о том, почему стоит выбрать вас — что важно для заказчика в этой закупке"></textarea>
+            </div>
             <div class="form-group">
                 <label>Прикрепить КП / прайс-лист (PDF, Word, Excel)</label>
                 <input type="file" id="proposalFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="padding:10px 12px; border:2px dashed var(--input-border); background:transparent; cursor:pointer; height:auto;">
@@ -657,15 +679,74 @@
             document.getElementById('modalTitle').innerText = `Подача КП на: ${title}`;
             document.getElementById('proposalPrice').value = '';
             document.getElementById('proposalTerms').value = '';
+            document.getElementById('proposalMessage').value = '';
+            document.getElementById('aiProposalBrief').value = '';
             document.getElementById('proposalPriceHint').innerHTML = '';
             document.getElementById('proposalBenchmarkBox').style.display = 'none';
             document.getElementById('respondModal').style.display = 'flex';
             loadProposalBenchmark(currentOrderId);
+            loadAiProposalStatus();
         }
         function closeRespondModal() {
             document.getElementById('respondModal').style.display = 'none';
             document.getElementById('proposalFile').value = '';
             _proposalBenchmark = null;
+        }
+
+        async function loadAiProposalStatus() {
+            const panel = document.getElementById('aiProposalPanel');
+            const hint = document.getElementById('aiProposalModelHint');
+            const btn = document.getElementById('aiProposalGenerateBtn');
+            if (!panel) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/ai/tz-status`);
+                const data = r.ok ? await r.json() : { configured: false };
+                if (!data.configured) {
+                    panel.classList.add('ai-tz-panel--off');
+                    if (hint) hint.textContent = 'AI не настроен на сервере — заполните сообщение вручную';
+                    if (btn) btn.disabled = true;
+                    return;
+                }
+                panel.classList.remove('ai-tz-panel--off');
+                if (hint) hint.textContent = data.model ? `Модель: ${data.model}` : 'Опишите, что вы можете предложить — соберём текст КП';
+                if (btn) btn.disabled = false;
+            } catch {
+                panel.classList.add('ai-tz-panel--off');
+            }
+        }
+
+        async function generateProposalWithAi() {
+            const briefEl = document.getElementById('aiProposalBrief');
+            const btn = document.getElementById('aiProposalGenerateBtn');
+            const brief = briefEl?.value?.trim();
+            if (!brief) {
+                showToast('Опишите, что вы можете предложить', 'error');
+                briefEl?.focus();
+                return;
+            }
+            const label = btn?.querySelector('.ai-tz-btn-label');
+            const prevLabel = label?.textContent || 'Сгенерировать текст';
+            if (btn) { btn.disabled = true; btn.classList.add('ai-tz-btn--loading'); }
+            if (label) label.textContent = 'Генерация…';
+            try {
+                const r = await apiFetch(`${SERVER_URL}/ai/generate-proposal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: currentOrderId, brief }),
+                });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                    showToast(data.error || 'Ошибка генерации текста', 'error');
+                    return;
+                }
+                if (data.message) document.getElementById('proposalMessage').value = data.message;
+                showToast('Текст сгенерирован — проверьте и отредактируйте при необходимости', 'success');
+            } catch {
+                showToast('Не удалось связаться с сервером', 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.classList.remove('ai-tz-btn--loading'); }
+                if (label) label.textContent = prevLabel;
+            }
         }
 
         let _proposalBenchmark = null;
@@ -707,6 +788,7 @@
             formData.append('orderTitle', currentOrderTitle);
             formData.append('price', price);
             formData.append('days', days);
+            formData.append('message', document.getElementById('proposalMessage')?.value?.trim() || '');
             if (fileInput.files.length > 0) formData.append('kpFile', fileInput.files[0]);
 
             try {

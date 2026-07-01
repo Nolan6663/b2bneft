@@ -55,8 +55,9 @@ function createProposalsRouter(deps) {
 
     router.post('/', requireAuth, requireRole('producer'), requireVerifiedEmail, handleKPUpload, async (req, res, next) => {
         try {
-            const { orderId, orderTitle, price, days } = req.body;
+            const { orderId, orderTitle, price, days, message } = req.body;
             if (!orderId || !price || !days) return res.status(400).json({ error: 'Не указаны ID заявки, цена или сроки' });
+            const proposalMessage = String(message || '').trim().slice(0, 2000);
 
             const { rows: [orderRow] } = await pool.query('SELECT * FROM orders WHERE id = $1', [Number(orderId)]);
             if (!orderRow) return res.status(404).json({ error: 'Заявка с таким ID не найдена' });
@@ -71,8 +72,8 @@ function createProposalsRouter(deps) {
 
             const newRow = await withTransaction(async (client) => {
                 const { rows: [r] } = await client.query(
-                    'INSERT INTO proposals (order_id,order_title,price,days,company,kp_file) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-                    [Number(orderId), orderTitle || orderRow.title, Number(price), Number(days), req.user.company, kpFile]
+                    'INSERT INTO proposals (order_id,order_title,price,days,company,kp_file,message) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+                    [Number(orderId), orderTitle || orderRow.title, Number(price), Number(days), req.user.company, kpFile, proposalMessage]
                 );
                 await client.query('UPDATE orders SET responses = responses + 1 WHERE id = $1', [Number(orderId)]);
                 return r;
@@ -224,15 +225,20 @@ function createProposalsRouter(deps) {
     router.put('/:proposalId', requireAuth, requireRole('producer'), async (req, res, next) => {
         try {
             const proposalId = Number(req.params.proposalId);
-            const { price, days } = req.body;
+            const { price, days, message } = req.body;
             if (!price || !days) return res.status(400).json({ error: 'Не указаны цена или сроки' });
+            const proposalMessage = message != null ? String(message).trim().slice(0, 2000) : null;
 
             const { rows: [row] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
             if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
             if (row.company !== req.user.company) return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
             if (row.status !== 'Ожидает ответа') return res.status(400).json({ error: 'Можно редактировать только предложения в статусе "Ожидает ответа"' });
 
-            await pool.query('UPDATE proposals SET price = $1, days = $2 WHERE id = $3', [Number(price), Number(days), proposalId]);
+            if (proposalMessage !== null) {
+                await pool.query('UPDATE proposals SET price = $1, days = $2, message = $3 WHERE id = $4', [Number(price), Number(days), proposalMessage, proposalId]);
+            } else {
+                await pool.query('UPDATE proposals SET price = $1, days = $2 WHERE id = $3', [Number(price), Number(days), proposalId]);
+            }
             const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
             res.json(rowToProposal(updated));
         } catch (e) { next(e); }
