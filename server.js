@@ -1851,13 +1851,17 @@ async function handleClosedAuction(a) {
         await addNotification(order.company, `Аукцион «${title}» завершён без ставок.`);
         const email = await getCompanyEmail(order.company);
         if (email) {
-            await sendEmail(email, `Аукцион завершён без ставок — «${title}»`,
-                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-                  <h3 style="color:#e07070">Аукцион завершён без ставок</h3>
-                  <p>По закупке <strong>«${htmlEscape(title)}»</strong> никто не сделал ставку в течение отведённого времени.</p>
-                  <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
-                </div>`
-            );
+            try {
+                await sendEmail(email, `Аукцион завершён без ставок — «${title}»`,
+                    `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                      <h3 style="color:#e07070">Аукцион завершён без ставок</h3>
+                      <p>По закупке <strong>«${htmlEscape(title)}»</strong> никто не сделал ставку в течение отведённого времени.</p>
+                      <a href="${APP_URL}/index.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть кабинет</a>
+                    </div>`
+                );
+            } catch (e) {
+                console.error('[email]', e.message);
+            }
         }
         if (io) io.to(`auction:${a.id}`).emit('auction:closed', { auctionId: a.id, winnerCompany: null, orderId: a.order_id });
         return;
@@ -1889,14 +1893,18 @@ async function handleClosedAuction(a) {
     await addNotification(order.company, `Аукцион «${title}» завершён. Победитель: ${a.winner_company}, ${Number(a.current_best).toLocaleString('ru-RU')} ₽.`);
     const customerEmail = await getCompanyEmail(order.company);
     if (customerEmail) {
-        await sendEmail(customerEmail, `Аукцион завершён — «${title}»`,
-            `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
-              <h3 style="color:#41bd97">Аукцион завершён</h3>
-              <p>По закупке <strong>«${htmlEscape(title)}»</strong> определён победитель.</p>
-              <p>Поставщик: <strong>${htmlEscape(a.winner_company)}</strong> · Цена: <strong>${Number(a.current_best).toLocaleString('ru-RU')} ₽</strong></p>
-              <a href="${APP_URL}/deals.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть сделку</a>
-            </div>`
-        );
+        try {
+            await sendEmail(customerEmail, `Аукцион завершён — «${title}»`,
+                `<div style="font-family:sans-serif;color:#1a2332;max-width:520px">
+                  <h3 style="color:#41bd97">Аукцион завершён</h3>
+                  <p>По закупке <strong>«${htmlEscape(title)}»</strong> определён победитель.</p>
+                  <p>Поставщик: <strong>${htmlEscape(a.winner_company)}</strong> · Цена: <strong>${Number(a.current_best).toLocaleString('ru-RU')} ₽</strong></p>
+                  <a href="${APP_URL}/deals.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#41bd97;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Открыть сделку</a>
+                </div>`
+            );
+        } catch (e) {
+            console.error('[email]', e.message);
+        }
     }
     const customerIds = await getUserIdsByCompany(order.company);
     for (const id of customerIds) {
