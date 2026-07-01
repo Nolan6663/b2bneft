@@ -457,6 +457,17 @@
 
   .lp-nv { transition: color .15s ease; }
   .lp-nv:hover { color: #FF6A00 !important; }
+  a.lp-nv { position: relative; }
+  a.lp-nv::after {
+    content: ''; position: absolute; left: 0; right: 100%; bottom: -4px; height: 2px;
+    background: #FF6A00; transition: right .2s ease;
+  }
+  a.lp-nv:hover::after { right: 0; }
+
+  #lp-header::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+    background: linear-gradient(90deg, rgba(255,106,0,.4) 0%, rgba(11,143,206,.28) 45%, transparent 75%);
+  }
 
   /* ─── TZ VISUAL IDENTITY v3 — чертёжная рамка + штамп-полоса ──── */
   #lp-hero { position: relative; }
@@ -762,7 +773,7 @@
   <div class="lp-shell">
 
     <!-- ═══ HEADER ═══ -->
-    <header id="lp-header" style="display:flex; align-items:center; justify-content:space-between; padding:26px 64px 22px; border-bottom:1px solid rgba(7,27,42,0.08);">
+    <header id="lp-header" style="display:flex; align-items:center; justify-content:space-between; padding:26px 64px 22px; position:relative;">
       <div style="display:flex; align-items:center; gap:16px;">
         <div style="position:relative; width:56px; height:56px; border-radius:12px; background:linear-gradient(150deg,#0B2233,#071B2A); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(7,27,42,0.22);">
           <span style="font-weight:800; font-size:30px; color:#fff; letter-spacing:-1px; line-height:1;">Т</span>
@@ -788,7 +799,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#071B2A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
             Войти
           </a>
-          <a href="login.html#register" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#FF6A00; color:#fff; font-size:14px; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 6px 16px rgba(255,106,0,0.28); white-space:nowrap;">Регистрация
+          <a href="login.html#register" class="lp-cta lp-cta-primary" style="padding:10px 18px; font-size:14px;">Регистрация
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
         </div>
@@ -1305,7 +1316,6 @@
             </ul>
           </div>
         </div>
-        <a href="login.html#register" class="lp-cta lp-cta-primary" style="justify-content:center;margin-top:4px;">Зарегистрироваться бесплатно</a>
       </div>
     </div>
 
