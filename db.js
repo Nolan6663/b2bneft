@@ -261,6 +261,8 @@ async function initDb() {
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS message TEXT NOT NULL DEFAULT '';
         ALTER TABLE auctions ADD COLUMN IF NOT EXISTS reminder_sent BOOLEAN NOT NULL DEFAULT false;
+        ALTER TABLE auctions ADD COLUMN IF NOT EXISTS winner_proposal_id INTEGER REFERENCES proposals(id);
+        ALTER TABLE auction_bids ADD COLUMN IF NOT EXISTS days INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS responses INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;

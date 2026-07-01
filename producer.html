@@ -313,6 +313,9 @@
             <label style="font-size:13px;font-weight:600;">Ваша ставка (₽)
                 <input id="bidPriceInput" type="number" min="1" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;font-size:14px;background:var(--inner-bg);color:var(--text-primary);font-family:inherit;box-sizing:border-box;" placeholder="Введите сумму ниже текущей">
             </label>
+            <label style="font-size:13px;font-weight:600;margin-top:12px;display:block;">Срок поставки (дн.)
+                <input id="bidDaysInput" type="number" min="1" style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;font-size:14px;background:var(--inner-bg);color:var(--text-primary);font-family:inherit;box-sizing:border-box;" placeholder="Например, 14">
+            </label>
             <button onclick="submitBid()" style="width:100%;margin-top:18px;padding:12px;background:#FF6A00;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Сделать ставку</button>
         </div>
     </div>
@@ -428,6 +431,15 @@
 
         function onTzOrderNew() { loadOrdersForProducers(); }
 
+        function onAuctionClosed(data) {
+            if (data.winnerCompany) {
+                showToast(`Аукцион завершён. Победитель: ${data.winnerCompany}`, 'info');
+            } else {
+                showToast('Аукцион завершён без ставок', 'warn');
+            }
+            loadActiveAuctions();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
             loadOrdersForProducers();
@@ -436,6 +448,7 @@
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
+            if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
         });
 
         window.__pageInit = function() {
@@ -447,10 +460,11 @@
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
+            if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
 
             window.__pageCleanup = function() {
                 document.removeEventListener('tz:order:new', onTzOrderNew);
-                if (typeof socket !== 'undefined' && socket) socket.off('auction:bid');
+                if (typeof socket !== 'undefined' && socket) { socket.off('auction:bid'); socket.off('auction:closed'); }
             };
         };
 
@@ -897,6 +911,7 @@
             document.getElementById('bidModalCurrent').textContent = new Intl.NumberFormat('ru-RU').format(currentBest) + ' ₽';
             document.getElementById('bidPriceInput').value = '';
             document.getElementById('bidPriceInput').max = currentBest - 1;
+            document.getElementById('bidDaysInput').value = '';
         }
 
         function closeBidModal() {
@@ -907,12 +922,14 @@
         async function submitBid() {
             if (!_bidAuctionId) return;
             const price = Number(document.getElementById('bidPriceInput').value);
+            const days = Number(document.getElementById('bidDaysInput').value);
             if (!price || price <= 0) { showToast('Введите цену', 'error'); return; }
+            if (!days || days <= 0) { showToast('Введите срок поставки', 'error'); return; }
             try {
                 const r = await apiFetch(`${SERVER_URL}/auctions/${_bidAuctionId}/bid`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ price })
+                    body: JSON.stringify({ price, days })
                 });
                 if (!r.ok) { const e = await r.json(); showToast(e.error || 'Ошибка', 'error'); return; }
                 showToast('Ставка принята!', 'success');

@@ -1769,6 +1769,15 @@
                     bidsEl.innerHTML = row + bidsEl.innerHTML;
                     showToast(`Новая ставка: ${new Intl.NumberFormat('ru-RU').format(data.price)} ₽ от ${data.company}`, 'info');
                 });
+                socket.off('auction:closed').on('auction:closed', data => {
+                    if (data.auctionId !== auctionId) return;
+                    if (data.winnerCompany) {
+                        showToast(`Аукцион завершён! Победитель: ${data.winnerCompany}, ${new Intl.NumberFormat('ru-RU').format(data.price)} ₽`, 'success');
+                    } else {
+                        showToast('Аукцион завершён без ставок', 'warn');
+                    }
+                    if (_detailPanelOrderId) loadAuctionForOrder(_detailPanelOrderId);
+                });
             }
         }
 
