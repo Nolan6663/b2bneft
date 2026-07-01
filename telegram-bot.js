@@ -504,9 +504,15 @@ function startTelegramBot() {
         }
     });
 
-    // Запуск polling
-    bot.launch({ dropPendingUpdates: true });
-    console.log('[tg] Telegram бот запущен (polling)');
+    // Запуск polling. bot.launch() дёргает getMe() — если Telegram недоступен
+    // по сети (блокировка/таймаут), промис падает; без .catch() это необработанный
+    // rejection, который в Node 20 по умолчанию убивает весь процесс сервера.
+    bot.launch({ dropPendingUpdates: true })
+        .then(() => console.log('[tg] Telegram бот запущен (polling)'))
+        .catch((e) => {
+            console.error('[tg] Не удалось запустить бота (сеть недоступна?):', e.message);
+            global.__tgBot = null;
+        });
 
     process.once('SIGINT', () => bot.stop('SIGINT'));
     process.once('SIGTERM', () => bot.stop('SIGTERM'));
