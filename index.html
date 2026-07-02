@@ -30,7 +30,6 @@
             .proc-grid-cols > :nth-child(5), .proc-grid-cols > :nth-child(6) { display: none; } }
         @media (max-width: 600px) { .proc-grid-cols { grid-template-columns: 1fr 0.8fr; }
             .proc-grid-cols > :nth-child(n+3) { display: none; } }
-        .kpi-row .kpi-card::after { display: none !important; }
     </style>
 </head>
 <body>
@@ -103,26 +102,16 @@
                 </div>
             </div>        </div>
 
-        <div class="kpi-row" id="analyticsRow">
-            <div class="kpi-card">
-                <div class="kpi-label">Размещённых закупок</div>
-                <div class="kpi-value" id="anaMonth">—</div>
-                <div class="kpi-sub">за всё время</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Активных</div>
-                <div class="kpi-value" id="anaActive">—</div>
-                <div class="kpi-sub">ждут предложений</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Среднее время отклика</div>
-                <div class="kpi-value" id="anaDays">—</div>
-                <div class="kpi-sub">дней</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Экономия за период</div>
-                <div class="kpi-value" id="anaSavings">—</div>
-                <div class="kpi-sub">по сравнению с рынком</div>
+        <div class="tz-spec-strip" id="analyticsRow">
+            <div class="tz-spec-label">Сводка · Закупки компании</div>
+            <div class="tz-spec-row">
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaMonth">—</span><span class="tz-spec-unit">размещено за всё время</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaActive">—</span><span class="tz-spec-unit">активных · ждут КП</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaDays">—</span><span class="tz-spec-unit">дней средний отклик</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaSavings">—</span><span class="tz-spec-unit">экономия vs рынок</span></span>
             </div>
         </div>
 
