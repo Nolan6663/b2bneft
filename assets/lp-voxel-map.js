@@ -21,7 +21,7 @@ export async function initVoxelMap({ canvas, pinsEl, pins = [], reducedMotion = 
     // Изометрическая ортокамера
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
     const dist = Math.max(W, H);
-    camera.position.set(dist, dist * 0.82, dist);
+    camera.position.set(dist * 0.85, dist * 1.55, dist * 0.85); // выше — ближе к «карте с наклоном», как на референсе
     camera.lookAt(0, 0, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.75));
@@ -77,9 +77,9 @@ export async function initVoxelMap({ canvas, pinsEl, pins = [], reducedMotion = 
         if (!w || !h) return;
         renderer.setSize(w, h, false);
         const aspect = w / h;
-        const half = Math.max(W, H * aspect) * 0.62;
+        const half = Math.max(W, H * aspect) * 0.54;
         camera.left = -half; camera.right = half;
-        camera.top = half / aspect * 0.92; camera.bottom = -half / aspect * 0.92;
+        camera.top = half / aspect * 0.88; camera.bottom = -half / aspect * 0.88;
         camera.updateProjectionMatrix();
         placePins();
         renderer.render(scene, camera);
@@ -87,18 +87,20 @@ export async function initVoxelMap({ canvas, pinsEl, pins = [], reducedMotion = 
 
     function placePins() {
         if (!pinsEl) return;
+        camera.updateMatrixWorld(true); // до первого рендера матрица камеры не собрана — project() врёт
         pinsEl.innerHTML = '';
         const w = canvas.clientWidth, h = canvas.clientHeight;
-        for (const p of pins) {
+        pins.forEach((p, idx) => {
             const v = lonLatToWorld(p.lon, p.lat).project(camera);
             const el = document.createElement('div');
-            el.className = 'lp-vox-pin';
-            el.innerHTML = '<span class="lp-vox-pin-dot"></span><span class="lp-vox-pin-name"></span>';
-            el.querySelector('.lp-vox-pin-name').textContent = p.name;
+            el.className = 'lp-vox-pin' + (p.labelAbove ? ' lp-vox-pin--alt' : '');
+            el.innerHTML = '<span class="lp-vox-pin-dot"></span>' + (p.label === false ? '' : '<span class="lp-vox-pin-name"></span>');
+            const nameEl = el.querySelector('.lp-vox-pin-name');
+            if (nameEl) nameEl.textContent = p.name;
             el.style.left = ((v.x + 1) / 2 * w) + 'px';
             el.style.top = ((1 - (v.y + 1) / 2) * h) + 'px';
             pinsEl.appendChild(el);
-        }
+        });
     }
 
     let disposed = false;
