@@ -1215,6 +1215,27 @@ app.get('/api/public/stats', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// Плотность поставщиков по регионам (для воксельной карты лендинга). Кэш 1 час.
+let _geoDensityCache = { ts: 0, data: null };
+app.get('/api/public/geo-density', async (req, res, next) => {
+    try {
+        if (_geoDensityCache.data && Date.now() - _geoDensityCache.ts < 3600 * 1000) {
+            return res.json(_geoDensityCache.data);
+        }
+        const { rows } = await pool.query(`
+            SELECT ROUND(lng::numeric, 0)::float AS lon,
+                   ROUND(lat::numeric, 0)::float AS lat,
+                   COUNT(*)::int AS n
+            FROM companies
+            WHERE role = 'producer' AND lat IS NOT NULL AND lng IS NOT NULL
+            GROUP BY 1, 2
+        `);
+        const data = { points: rows };
+        _geoDensityCache = { ts: Date.now(), data };
+        res.json(data);
+    } catch (e) { next(e); }
+});
+
 app.get('/api/config/maps', (req, res) => {
     const yandexKey = process.env.YANDEX_MAPS_API_KEY || '';
     const provider = (process.env.MAP_PROVIDER || (yandexKey ? 'yandex' : 'leaflet')).toLowerCase();
