@@ -161,6 +161,23 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 }
 .zk-respond-btn:hover { opacity: .88; }
 
+.zk-registry-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: #64748B;
+  border-top: 1px solid rgba(7,27,42,.14);
+  border-bottom: 1px solid rgba(7,27,42,.14);
+  padding: 9px 2px;
+  margin: 0 0 14px;
+}
+.zk-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #64748B;
+}
+
 /* ── CTA banner ── */
 .zk-cta {
     background: linear-gradient(135deg, #0B2233, #071B2A);
@@ -257,6 +274,9 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 <!-- Main -->
 <main class="zk-main">
     <div id="categoryBenchmark" class="zk-benchmark"></div>
+    <div class="zk-registry-head" id="zkRegistryHead" hidden>
+        Реестр активных закупок · <span id="zkRegCount">—</span> позиций · обновлено <span id="zkRegDate">—</span>
+    </div>
     <div id="ordersList"></div>
 
     <!-- CTA banner -->
@@ -296,6 +316,12 @@ function formatDate(iso) {
 
 function renderOrders(orders) {
     const el = document.getElementById('ordersList');
+    const head = document.getElementById('zkRegistryHead');
+    if (head) {
+        head.hidden = !orders.length;
+        document.getElementById('zkRegCount').textContent = orders.length;
+        document.getElementById('zkRegDate').textContent = new Date().toLocaleDateString('ru-RU');
+    }
     if (!orders.length) {
         el.innerHTML = `<div class="zk-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -317,6 +343,7 @@ function renderOrders(orders) {
 
         return `<article class="zk-card" itemscope itemtype="https://schema.org/Offer">
             <div>
+                <div class="zk-num">ЗК-${String(o.id).padStart(5,'0')}</div>
                 <div class="zk-card-title" itemprop="name">${escHtml(o.title)}</div>
                 <div class="zk-card-meta">
                     <span class="zk-badge zk-badge-cat" itemprop="category">${escHtml(o.category)}</span>
