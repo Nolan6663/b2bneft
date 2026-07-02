@@ -1,108 +1,16 @@
-﻿/* =====================================================================
-   ТЕХЗАКАЗ — дизайн-система v2 (светлая тема, Inter)
-   Подключается на переработанных страницах вместо theme.css
-   ===================================================================== */
+﻿@import url('css/tokens.css?v=1');
+/* ============================================================
+   theme-v2.css — компоненты и layout. Токены: assets/css/tokens.css
+   Оглавление: base → sidebar/layout → components (kpi, proc, badges,
+   tz-*) → pages → mobile. ВНИМАНИЕ: есть дубли селекторов, каскад
+   зависит от порядка правил — не пересортировывать.
+   ============================================================ */
 
 /* Self-hosted fonts — no Google Fonts dependency */
 @font-face { font-family:'Manrope'; font-style:normal; font-weight:400 800; font-display:swap; src:url('fonts/manrope-cyrillic.woff2') format('woff2'); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
 @font-face { font-family:'Manrope'; font-style:normal; font-weight:400 800; font-display:swap; src:url('fonts/manrope-latin.woff2') format('woff2'); unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400 700; font-display:swap; src:url('fonts/jetbrains-cyrillic.woff2') format('woff2'); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
 @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400 700; font-display:swap; src:url('fonts/jetbrains-latin.woff2') format('woff2'); unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
-
-/* ── ПЕРЕМЕННЫЕ: СВЕТЛАЯ ТЕМА (по умолчанию) ─────────────────────── */
-:root {
-  --bg-primary:    #FFFFFF;
-  --bg-secondary:  #F8FAFC;
-  --bg-section:    #FFF4EC;
-  --bg-darkest:    var(--bg-primary);
-
-  --card-bg:       #FFFFFF;
-  --card-border:   #E2E8F0;
-  --inner-bg:      #F8FAFC;
-  --inner-border:  #E2E8F0;
-  --table-header-bg: #F1F5F9;
-  --border-subtle: #F1F5F9;
-  --border-mid:    #CBD5E1;
-
-  --text-primary:     #0F172A;
-  --text-primary-alt: #0F172A;
-  --text-secondary:   #64748B;
-  --text-secondary-alt:#64748B;
-  --text-tertiary:    #475569;
-  --text-muted:       #94A3B8;
-
-  --accent-bright:  #FF6A00;
-  --accent-cyan:    #FF6A00;
-  --accent-blue:    #F04B00;
-  --accent-orange:  #FF6A00;
-  --accent-green:   #059669;
-  --accent-gradient:linear-gradient(135deg, #FF6A00, #F04B00);
-  --accent-on-button:#FFFFFF;
-
-  --badge-producer-bg:    rgba(255,106,0,.1);
-  --badge-producer-text:  #C45000;
-  --badge-producer-border:rgba(255,106,0,.25);
-  --badge-customer-bg:    rgba(255,106,0,.07);
-  --badge-customer-text:  #A84000;
-  --badge-customer-border:rgba(255,106,0,.2);
-
-  --error: #DC2626;
-
-  --input-bg:            #FFFFFF;
-  --input-border:        #CBD5E1;
-  --secondary-btn-border:#CBD5E1;
-  --secondary-btn-text:  #475569;
-
-  --avatar-green: linear-gradient(135deg, #059669, #10B981);
-  --avatar-blue:  linear-gradient(135deg, #2563EB, #60A5FA);
-  --avatar-gold:  linear-gradient(135deg, #B45309, #D97706);
-
-  --radius-card:  12px;
-  --radius-inner: 12px;
-  --radius-btn:   9px;
-  --radius-input: 9px;
-  --radius-badge: 6px;
-
-  --input-height: 42px;
-  --btn-height:   44px;
-  --sidebar-width:260px;
-
-  --shadow-card:  0 1px 3px rgba(15,23,42,.08), 0 4px 16px rgba(15,23,42,.06);
-  --shadow-modal: 0 20px 60px rgba(15,23,42,.18);
-
-  --sidebar-bg:          #FFFFFF;
-  --sidebar-border:      #E2E8F0;
-  --sidebar-inner:       #FFF4EC;
-  --sidebar-text:        #64748B;
-  --sidebar-text-active: #0F172A;
-}
-
-/* =====================================================================
-   TZ VISUAL IDENTITY v3 — tokens
-   Направление «Чертёжный цех». См. docs/design/texzakaz-visual-identity.md
-   Только дополняет :root выше — ничего из существующих переменных не переопределено.
-   ===================================================================== */
-:root {
-  /* Именованная палитра (4 из 6 — роли поверх уже существующих значений) */
-  --tz-stamp-orange:    var(--accent-bright);   /* = #FF6A00, без изменений */
-  --tz-ink-navy:        #071B2A;                /* тёмные индустриальные блоки лендинга */
-  --tz-blueprint-blue:  #0B8FCE;                /* промотан из хардкода .lp-cta-demo / .ai-tz-panel */
-  --tz-paper:           var(--bg-secondary);    /* = #F8FAFC */
-  --tz-graphite:        var(--text-tertiary);   /* = #475569 */
-  --tz-verified-green:  var(--accent-green);    /* = #059669 */
-
-  /* Поверхности и рамки для signature-элемента (corner ticks / stamp badge) */
-  --tz-surface-elevated: var(--card-bg);
-  --tz-border-strong:    rgba(7,27,42,.18);
-  --tz-shadow-stamp:     0 1px 2px rgba(7,27,42,.12), 0 6px 18px rgba(7,27,42,.08);
-  --tz-focus-ring:       0 0 0 3px rgba(11,143,206,.25);
-
-  /* Геометрия чертёжной засечки / штампа — параметры, не сами элементы */
-  --tz-tick-size:     14px;
-  --tz-tick-color:    var(--tz-border-strong);
-  --tz-stamp-tilt:    -2deg;
-  --tz-mono-tracking: 1.6px;
-}
 
 /* ── TZ COMPONENT: status stamp («оттиск») ─────────────────────────── */
 .tz-stamp {
