@@ -579,6 +579,26 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — воксельная 3D-карта России в hero лендинга)
+  --------------------------------------------------------------------------------
+  • landing.html — панель #lp-voxel-panel в hero-right: изометрическая
+    воксельная карта России (three.js, InstancedMesh, ~1600 столбиков,
+    палитра бренда), пины городов (Москва/Казань/Пермь/Тюмень/Сургут/
+    Новый Уренгой/Омск, без выдуманных чисел), анимация «сборки» волной
+  • assets/vendor/three/ — three.js 0.166.1 self-hosted ES-модуль (НЕ в
+    package.json; package.json в папке — маркер type:module для node-проверок)
+  • assets/lp-voxel-map.js — модуль карты: initVoxelMap({canvas, pinsEl,
+    pins, reducedMotion}); reduced-motion → статичный кадр без анимации
+  • assets/data/russia-voxel-grid.json — сетка 96x40 из scripts/gen-voxel-grid.js
+    (исходник scripts/data/RUS.geo.json; Чукотка за антимеридианом учтена);
+    перегенерация: node scripts/gen-voxel-grid.js; ассерты: node scripts/test-voxel-grid.js
+  • Фолбэк: без WebGL/ошибке панель скрыта, работает прежняя .lp-industrial;
+    ≤900px hero-right скрыт как раньше — мобильная вёрстка не тронута
+  • Скриншот-проверка: node scripts/voxel-screenshot.js (Playwright;
+    NO_WEBGL=1 — проверка фолбэка)
+
+  Проверка: npm run check; node scripts/test-voxel-grid.js; node scripts/voxel-screenshot.js
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — мёртвые статусы, честный реестр, NODE_ENV)
   --------------------------------------------------------------------------------
   • routes/companies.js — won_deals в топ-5 поставщиков считал status='Принято',
