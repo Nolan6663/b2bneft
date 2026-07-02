@@ -30,7 +30,6 @@
             .proc-grid-cols > :nth-child(5), .proc-grid-cols > :nth-child(6) { display: none; } }
         @media (max-width: 600px) { .proc-grid-cols { grid-template-columns: 1fr 0.8fr; }
             .proc-grid-cols > :nth-child(n+3) { display: none; } }
-        .kpi-row .kpi-card::after { display: none !important; }
     </style>
 </head>
 <body>
@@ -103,26 +102,16 @@
                 </div>
             </div>        </div>
 
-        <div class="kpi-row" id="analyticsRow">
-            <div class="kpi-card">
-                <div class="kpi-label">Размещённых закупок</div>
-                <div class="kpi-value" id="anaMonth">—</div>
-                <div class="kpi-sub">за всё время</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Активных</div>
-                <div class="kpi-value" id="anaActive">—</div>
-                <div class="kpi-sub">ждут предложений</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Среднее время отклика</div>
-                <div class="kpi-value" id="anaDays">—</div>
-                <div class="kpi-sub">дней</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Экономия за период</div>
-                <div class="kpi-value" id="anaSavings">—</div>
-                <div class="kpi-sub">по сравнению с рынком</div>
+        <div class="tz-spec-strip" id="analyticsRow">
+            <div class="tz-spec-label">Сводка · Закупки компании</div>
+            <div class="tz-spec-row">
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaMonth">—</span><span class="tz-spec-unit">размещено за всё время</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaActive">—</span><span class="tz-spec-unit">активных · ждут КП</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaDays">—</span><span class="tz-spec-unit">дней средний отклик</span></span>
+                <span class="tz-spec-div" aria-hidden="true"></span>
+                <span class="tz-spec-field"><span class="tz-spec-num" id="anaSavings">—</span><span class="tz-spec-unit">экономия vs рынок</span></span>
             </div>
         </div>
 
@@ -176,7 +165,7 @@
                 <button onclick="closeProcPanel()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;padding:0 0 0 8px;flex:none;">✕</button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <span class="status-dot status-pill open" id="detPanelStatus"></span>
+                <span class="tz-stamp tz-stamp--open" id="detPanelStatus"></span>
                 <span style="font-size:11.5px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;" id="detPanelNum"></span>
             </div>
 
@@ -1059,11 +1048,10 @@
                     row.className = 'proc-row proc-grid-cols';
                     row.dataset.orderId = order.id;
                     const isLocked = order.status === 'Закрыта' || order.status === 'Отменена';
-                    const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
                     const dFmt = formatDeadline(order.deadline);
                     const dColor = order.deadline && (new Date(order.deadline) - Date.now()) < 3 * 86400000
                         ? 'var(--accent-orange)' : 'var(--text-primary)';
-                    const statusPill = `<span class="status-dot status-pill ${statusCls}">${escapeHtml(order.status)}</span>`;
+                    const statusPill = tzStampHtml(order.status);
                     const orderNum = `ЗК-${String(order.id).padStart(5,'0')}`;
 
                     const selectOrder = () => {
@@ -1158,8 +1146,7 @@
 
             document.getElementById('detPanelTitle').textContent = order.title;
             const statusEl = document.getElementById('detPanelStatus');
-            const statusCls = order.status === 'Закрыта' ? 'closed' : (order.status === 'Отменена' ? 'muted' : 'open');
-            statusEl.className = 'status-dot status-pill ' + statusCls;
+            statusEl.className = tzStampClass(order.status);
             statusEl.textContent = order.status;
             document.getElementById('detPanelNum').textContent = '№' + String(order.id).padStart(6, '0');
 
@@ -1419,10 +1406,6 @@
                     tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">На эту заявку пока никто не откликнулся</td></tr>`;
                 } else {
                     proposals.forEach(prop => {
-                        let icon = '✓', cls = 'win';
-                        if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
-                        else if (prop.status === 'Отозвана заказчиком') { icon = '⊘'; cls = 'muted'; }
-                        else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
                         const isLocked = currentOrder && (currentOrder.status === 'Закрыта' || currentOrder.status === 'Отменена');
                         const isPending = prop.status === 'Ожидает ответа';
 
@@ -1464,7 +1447,7 @@
                             <td>${matchScoreBadge(prop.matchScore, prop.matchReasons)}</td>
                             <td>${prop.price != null ? prop.price : '—'} ₽/шт</td>
                             <td>${prop.days != null ? prop.days : '—'} дней</td>
-                            <td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>
+                            <td>${tzStampHtml(prop.status)}</td>
                             <td>${actionCell}</td>
                         `;
                         tableBody.appendChild(row);

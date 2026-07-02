@@ -213,13 +213,6 @@
             initSidebarBadges();
         };
 
-        function statusIcon(status) {
-            if (status === 'Выигран') return { icon: '✓', cls: 'win' };
-            if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
-            if (status === 'Отозвана заказчиком') return { icon: '⊘', cls: 'muted' };
-            return { icon: '⏱', cls: 'waiting' };
-        }
-
         async function loadProposalsPage() {
             let myProposals = [];
             try {
@@ -272,7 +265,6 @@
 
             list.forEach(p => {
                 const tr = document.createElement('tr');
-                const { icon, cls } = statusIcon(p.status);
                 const isEditable = p.status === 'Ожидает ответа';
 
                 const actionsHtml = isEditable
@@ -288,7 +280,7 @@
                     <td><strong>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</strong>${fileLink}</td>
                     <td>${p.price.toLocaleString()} ₽/шт</td>
                     <td>${p.days} дней</td>
-                    <td><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></td>
+                    <td>${tzStampHtml(p.status)}</td>
                     <td class="actions-cell">${actionsHtml}</td>
                 `;
                 tbody.appendChild(tr);
@@ -313,7 +305,6 @@
             list.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'mobile-card';
-                const { icon, cls } = statusIcon(p.status);
                 const isEditable = p.status === 'Ожидает ответа';
 
                 const actionsHtml = isEditable
@@ -330,7 +321,7 @@
                 card.innerHTML = `
                     <h4>${escapeHtml(p.orderTitle || 'Закупка #' + p.orderId)}</h4>
                     ${mobileFileLink}
-                    <div class="meta-row"><span>Статус:</span><span class="status-icon ${cls}">${icon} ${escapeHtml(p.status)}</span></div>
+                    <div class="meta-row"><span>Статус:</span>${tzStampHtml(p.status)}</div>
                     <div class="meta-row"><span>Цена:</span><strong>${p.price.toLocaleString()} ₽/шт</strong></div>
                     <div class="meta-row"><span>Срок:</span><span>${p.days} дней</span></div>
                     ${actionsHtml}
