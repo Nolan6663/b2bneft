@@ -39,6 +39,8 @@ function drawTitleBlocks(doc, meta) {
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
+    const oldBottom = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
     const W = doc.page.width, H = doc.page.height;
     doc.save();
     doc.lineWidth(0.8).strokeColor(TZ_INK).rect(20, 20, W - 40, H - 40).stroke();
@@ -53,6 +55,7 @@ function drawTitleBlocks(doc, meta) {
       .text(new Date().toLocaleDateString('ru-RU'), x + 8, y + 29, { width: 116, lineBreak: false })
       .text(`ЛИСТ ${i - range.start + 1} / ${range.count}`, x + 138, y + 29, { width: bw - 146, lineBreak: false });
     doc.restore();
+    doc.page.margins.bottom = oldBottom;
   }
 }
 

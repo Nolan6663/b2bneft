@@ -20,8 +20,11 @@ buildOrdersPdf([{
 }], out);
 
 out.on('finish', () => {
-  const size = fs.statSync(outPath).size;
-  console.log('PDF written:', outPath, size, 'bytes');
-  // с embedded-шрифтом файл заметно больше 20КБ; со встроенным Helvetica — ~2-3КБ
-  process.exit(size > 20000 ? 0 : 1);
+  const buf = fs.readFileSync(outPath);
+  const size = buf.length;
+  const hasEmbeddedFont = buf.includes('FontFile2');
+  const pageCountMatch = buf.toString('latin1').match(/\/Type\s*\/Pages[^>]*?\/Count\s+(\d+)/);
+  const pages = pageCountMatch ? Number(pageCountMatch[1]) : -1;
+  console.log('PDF written:', outPath, size, 'bytes; embedded font:', hasEmbeddedFont, '; pages:', pages);
+  process.exit(hasEmbeddedFont && pages === 1 && size > 5000 ? 0 : 1);
 });
