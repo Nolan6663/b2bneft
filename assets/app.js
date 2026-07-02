@@ -320,6 +320,27 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/* TZ identity: статус как «штамп» (см. docs/design/texzakaz-visual-identity.md) */
+const TZ_STATUS_MOD = {
+  'Открыта': 'open',
+  'Закрыта': 'closed',
+  'Отменена': 'muted',
+  'Выигран': 'won',
+  'Победитель': 'won',
+  'Отклонен': 'rejected',
+  'Отклонено': 'rejected',
+  'Ждет ответа': 'waiting',
+  'Ожидает ответа': 'waiting',
+  'На рассмотрении': 'waiting',
+  'Отозвана заказчиком': 'muted'
+};
+function tzStampClass(status) {
+  return 'tz-stamp tz-stamp--' + (TZ_STATUS_MOD[status] || 'muted');
+}
+function tzStampHtml(status) {
+  return `<span class="${tzStampClass(status)}">${escapeHtml(status || '—')}</span>`;
+}
+
 /* Inline SVG icons (Feather-style, matches nav icons) */
 const _UI_ICON_PATHS = {
   chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',

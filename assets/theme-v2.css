@@ -104,6 +104,27 @@
   --tz-mono-tracking: 1.6px;
 }
 
+/* ── TZ COMPONENT: status stamp («оттиск») ─────────────────────────── */
+.tz-stamp {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: var(--tz-mono-tracking);
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 5px 8px 4px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  color: var(--tz-graphite);
+  background: transparent;
+  white-space: nowrap;
+}
+.tz-stamp--open     { color: var(--tz-verified-green); }
+.tz-stamp--won      { color: var(--tz-verified-green); }
+.tz-stamp--waiting  { color: var(--tz-blueprint-blue); }
+.tz-stamp--closed   { color: var(--tz-graphite); }
+.tz-stamp--rejected { color: var(--error); }
+.tz-stamp--muted    { color: var(--text-muted); }
 
 /* ── БАЗОВЫЕ СТИЛИ ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; }

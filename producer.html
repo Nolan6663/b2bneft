@@ -678,11 +678,7 @@
                 tableBody.innerHTML = '';
                 proposals.forEach(prop => {
                     const row = document.createElement('tr');
-                    let icon = '✓', cls = 'win';
-                    if (prop.status === 'Отклонен') { icon = '✗'; cls = 'loose'; }
-                    else if (prop.status === 'Отозвана заказчиком') { icon = '⊘'; cls = 'muted'; }
-                    else if (prop.status !== 'Выигран') { icon = '⏱'; cls = 'waiting'; }
-                    row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td><span class="status-icon ${cls}">${icon} ${escapeHtml(prop.status)}</span></td>`;
+                    row.innerHTML = `<td><strong>${escapeHtml(prop.orderTitle || 'Закупка #' + prop.orderId)}</strong></td><td>${prop.price} ₽/шт</td><td>${prop.days} дней</td><td>${tzStampHtml(prop.status)}</td>`;
                     tableBody.appendChild(row);
                 });
             } catch { /* тихо */ }
