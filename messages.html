@@ -565,7 +565,7 @@ function msgToast(msg) {
                 ? `<span class="badge ${order.status === 'Активный' ? 'win' : order.status === 'Закрыта' ? 'cancel' : 'proc'}">${order.status}</span>`
                 : '';
 
-            const proposalStatusMap = { 'Принято': 'win', 'Отклонено': 'cancel', 'Ожидает ответа': 'proc' };
+            const proposalStatusMap = { 'Выигран': 'win', 'Отклонен': 'cancel', 'Проигран': 'cancel', 'Отозвана заказчиком': 'cancel', 'Ожидает ответа': 'proc' };
             const proposalBadge = proposal
                 ? `<span class="badge ${proposalStatusMap[proposal.status] || 'proc'}">${proposal.status}</span>`
                 : '';
@@ -588,7 +588,7 @@ function msgToast(msg) {
 
             const confirmBtn = proposal && proposal.status === 'Ожидает ответа'
                 ? `<button class="btn-secondary" style="width:100%;" onclick="confirmDeal(${proposal.id})">Зафиксировать договорённость</button>`
-                : proposal && proposal.status === 'Принято'
+                : proposal && proposal.status === 'Выигран'
                     ? `<button class="btn-secondary" style="width:100%;opacity:.6;cursor:default;" disabled>✓ Договорённость зафиксирована</button>`
                     : `<button class="btn-secondary" style="width:100%;opacity:.6;cursor:default;" disabled>КП не получено</button>`;
 

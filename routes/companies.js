@@ -16,7 +16,7 @@ function createTopSuppliersRouter({ pool }) {
                     c.verified_by_platform,
                     c.verified_egrul,
                     COUNT(p.id)                                           AS total_proposals,
-                    COUNT(p.id) FILTER (WHERE p.status = 'Принято')      AS won_deals
+                    COUNT(p.id) FILTER (WHERE p.status = 'Выигран')      AS won_deals
                 FROM companies c
                 LEFT JOIN proposals p ON p.company = c.company
                 WHERE c.role = 'producer'
