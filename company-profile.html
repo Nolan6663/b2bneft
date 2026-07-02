@@ -418,6 +418,7 @@
 
         function statusMeta(status) {
             if (status === 'Верифицирован') return { icon: '✓', cls: 'win' };
+            if (status === 'Действующая') return { icon: '✓', cls: 'win' };
             if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
             return { icon: '⏱', cls: 'waiting' };
         }
