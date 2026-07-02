@@ -582,8 +582,8 @@ Nginx (обязательно на prod для WebSocket):
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — идентичность «Чертёжный цех»: кабинет, PDF, zakupki)
   --------------------------------------------------------------------------------
   Компонент .tz-stamp для статусов (как оттиск печати):
-  • assets/theme-v2.css, assets/app.js — .tz-stamp (mono uppercase, двойная
-    рамка, поворот −2°); хелперы tzStampClass(status), tzStampHtml(status) +
+  • assets/theme-v2.css, assets/app.js — .tz-stamp (mono uppercase, рамка
+    1.5px currentColor, без наклона); tzStampClass(status), tzStampHtml(status) +
     карта TZ_STATUS_MOD с реальными БД-статусами (Активный, Дедлайн истёк,
     Проигран); применено в index.html, producer.html, proposals.html (убраны
     status-pill/status-icon из JS-шаблонов, остаток emoji ⏱)
