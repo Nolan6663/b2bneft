@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/fonts.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -128,6 +129,23 @@ body {
 
 .auth-box {
   width: 100%; max-width: 480px;
+  position: relative;
+  padding: 18px;
+}
+/* Чертёжные crop-marks — одна группа на экран (hard rule дизайн-дока) */
+.auth-box::before, .auth-box::after {
+  content: ''; position: absolute;
+  width: 14px; height: 14px;
+  pointer-events: none;
+}
+.auth-box::before { top: 0; left: 0; border-top: 2px solid #C3D0DA; border-left: 2px solid #C3D0DA; }
+.auth-box::after  { bottom: 0; right: 0; border-bottom: 2px solid #C3D0DA; border-right: 2px solid #C3D0DA; }
+
+.auth-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: #5B7184; margin-bottom: 10px;
 }
 
 /* Tabs */
@@ -410,6 +428,7 @@ body {
 
     <!-- LOGIN FORM -->
     <div class="auth-form active" id="form-login">
+      <div class="auth-eyebrow">ТехЗаказ · Вход в кабинет</div>
       <div>
         <div class="form-title">С возвращением</div>
         <div class="form-subtitle">Введите данные вашего аккаунта</div>
@@ -465,6 +484,7 @@ body {
 
     <!-- REGISTER FORM -->
     <div class="auth-form" id="form-register">
+      <div class="auth-eyebrow">ТехЗаказ · Регистрация компании</div>
       <div>
         <div class="form-title">Создать аккаунт</div>
         <div class="form-subtitle">Начните размещать закупки уже сегодня</div>
