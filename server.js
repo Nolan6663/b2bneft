@@ -1231,7 +1231,8 @@ app.get('/api/public/geo-density', async (req, res, next) => {
             GROUP BY 1, 2
         `);
         const data = { points: rows };
-        _geoDensityCache = { ts: Date.now(), data };
+        // Пустой результат не кэшируем: геокодинг доезжает после старта — не залипать на час
+        if (rows.length) _geoDensityCache = { ts: Date.now(), data };
         res.json(data);
     } catch (e) { next(e); }
 });
