@@ -579,6 +579,45 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — идентичность «Чертёжный цех»: кабинет, PDF, zakupki)
+  --------------------------------------------------------------------------------
+  Компонент .tz-stamp для статусов (как оттиск печати):
+  • assets/theme-v2.css, assets/app.js — .tz-stamp (mono uppercase, двойная
+    рамка, поворот −2°); хелперы tzStampClass(status), tzStampHtml(status) +
+    карта TZ_STATUS_MOD с реальными БД-статусами (Активный, Дедлайн истёк,
+    Проигран); применено в index.html, producer.html, proposals.html (убраны
+    status-pill/status-icon из JS-шаблонов, остаток emoji ⏱)
+
+  Компонент .tz-spec-strip (KPI-строка вместо карточек):
+  • assets/theme-v2.css — .tz-spec-strip; index.html #analyticsRow,
+    producer.html #crmFunnel: KPI-карточки заменены одной строкой-
+    «спецификацией» (ID сохранены для JS); .proc-row-num, .omc-num —
+    JetBrains Mono + tracking (моноширинные номера процедур/OMC)
+
+  Оформление входа:
+  • login.html — подключён /assets/fonts.css; crop-marks на .auth-box
+    (::before/::after засечки), .auth-eyebrow в формах входа и регистрации
+
+  PDF-экспорт — ФИКС КИРИЛЛИЦЫ:
+  • export-pdf.js — встроенный Helvetica pdfkit не поддерживает кириллицу
+    (отчёты были битыми); решение: embedded JetBrains Mono TTF из
+    assets/fonts/pdf/ (OFL.txt); рамка листа + «основная надпись»
+    (drawTitleBlocks, margins.bottom=0 — иначе pdfkit добавит лишние);
+    карточки закупок и КП в PDF теперь с кириллицей и оформлением
+  • scripts/pdf-smoke.js — смоук-тест: проверка embedded font + число страниц
+
+  Публичный реестр закупок:
+  • zakupki.html — строка-«ведомость» #zkRegistryHead (число позиций + дата,
+    сброс при фильтре/ошибке); карточки с моно-номерами ЗК-XXXXX
+
+  CSS архитектура:
+  • assets/css/tokens.css — новый файл: токены :root вынесены из theme-v2.css,
+    подключение @import первой строкой; scripts/static-checks.js проверяет
+    наличие файла. Полный split components/layout отложен (дубли селекторов,
+    каскад на порядке правил)
+
+  Проверка: npm run check; node scripts/pdf-smoke.js
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — завершение аукциона)
   --------------------------------------------------------------------------------
   • db.js — auction_bids.days, auctions.winner_proposal_id
