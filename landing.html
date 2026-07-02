@@ -215,6 +215,31 @@
     box-shadow: 0 6px 18px rgba(11, 143, 206, 0.12);
   }
 
+  /* Воксельная карта России (hero). Фолбэк — .lp-industrial ниже. */
+  #lp-voxel-panel {
+    position: relative; display: none;
+    border-radius: 16px; overflow: hidden;
+    background: #071B2A;
+    padding: 18px 20px 14px;
+  }
+  #lp-voxel-panel.lp-vox-on { display: block; }
+  #lp-voxel-panel.lp-vox-on ~ .lp-industrial { display: none; }
+  #lp-voxel-canvas { display: block; width: 100%; height: 320px; }
+  #lp-voxel-pins { position: absolute; inset: 0; pointer-events: none; }
+  .lp-vox-pin { position: absolute; transform: translate(-50%, -5px); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .lp-vox-pin--alt { flex-direction: column-reverse; transform: translate(-50%, calc(-100% + 5px)); }
+  .lp-vox-pin-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #FF6A00; border: 2px solid rgba(255,255,255,0.85);
+    box-shadow: 0 0 0 3px rgba(255,106,0,0.25);
+  }
+  .lp-vox-pin-name {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); background: rgba(7,27,42,0.72);
+    padding: 2px 6px; border-radius: 3px; white-space: nowrap;
+  }
+
   .lp-industrial { position: relative; padding: 18px 20px 20px; border-radius: 16px; overflow: hidden;
     background: linear-gradient(155deg,#0B2233,#071B2A); animation: lp-glow 5s ease-in-out infinite; }
   .lp-industrial-grid { position: absolute; inset: 0; pointer-events: none;
@@ -854,6 +879,19 @@
 
       <!-- RIGHT -->
       <div id="lp-hero-right" style="display:flex; flex-direction:column; gap:18px;">
+
+        <div id="lp-voxel-panel" class="lp-rise" style="--d:2;">
+          <div style="position:relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:2px; color:rgba(255,255,255,0.55);">ГЕОГРАФИЯ ПОСТАВЩИКОВ · РОССИЯ</span>
+            <span style="display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; color:#0B8FCE;">
+              <span class="lp-dot-pulse" style="width:6px; height:6px; border-radius:50%; background:#0B8FCE;"></span>1200+ ЗАВОДОВ
+            </span>
+          </div>
+          <div style="position:relative;">
+            <canvas id="lp-voxel-canvas" aria-hidden="true"></canvas>
+            <div id="lp-voxel-pins"></div>
+          </div>
+        </div>
 
         <div class="lp-industrial lp-rise" style="--d:2;">
           <div class="lp-industrial-grid"></div>
@@ -1504,6 +1542,38 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (dy < 0 && step < 3) goTo(step + 1, 1);
     if (dy > 0 && step > 0) goTo(step - 1, -1);
   }, { passive: true });
+})();
+</script>
+<script type="module">
+(async () => {
+    const panel = document.getElementById('lp-voxel-panel');
+    const canvas = document.getElementById('lp-voxel-canvas');
+    if (!panel || !canvas || window.innerWidth <= 900) return;
+    try {
+        const probe = document.createElement('canvas');
+        if (!probe.getContext('webgl2') && !probe.getContext('webgl')) return; // фолбэк: остаётся .lp-industrial
+        const { initVoxelMap } = await import('/assets/lp-voxel-map.js');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        panel.classList.add('lp-vox-on'); // показать до init, чтобы canvas получил размеры
+        const ok = await initVoxelMap({
+            canvas,
+            pinsEl: document.getElementById('lp-voxel-pins'),
+            reducedMotion,
+            pins: [
+                { name: 'Москва', lon: 37.62, lat: 55.75, labelAbove: true },
+                { name: 'Казань', lon: 49.11, lat: 55.80, label: false },
+                { name: 'Пермь', lon: 56.25, lat: 58.01, label: false },
+                { name: 'Тюмень', lon: 65.53, lat: 57.15 },
+                { name: 'Сургут', lon: 73.42, lat: 61.25, label: false },
+                { name: 'Новый Уренгой', lon: 76.63, lat: 66.08, labelAbove: true },
+                { name: 'Омск', lon: 73.37, lat: 54.99 },
+            ],
+        });
+        if (!ok) panel.classList.remove('lp-vox-on');
+    } catch (e) {
+        console.warn('voxel map disabled:', e);
+        panel.classList.remove('lp-vox-on');
+    }
 })();
 </script>
 </body>
