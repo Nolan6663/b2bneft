@@ -415,6 +415,8 @@ async function loadCategoryBenchmark(category) {
 }
 
 async function loadOrders(category = '') {
+    const regHead = document.getElementById('zkRegistryHead');
+    if (regHead) regHead.hidden = true;
     renderSkeleton();
     loadCategoryBenchmark(category);
     try {
@@ -423,6 +425,7 @@ async function loadOrders(category = '') {
         const data = await res.json();
         renderOrders(data);
     } catch {
+        if (regHead) regHead.hidden = true;
         document.getElementById('ordersList').innerHTML = '<div class="zk-empty"><p>Не удалось загрузить закупки. Попробуйте позже.</p></div>';
     }
 }
