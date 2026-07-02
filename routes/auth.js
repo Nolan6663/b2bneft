@@ -59,8 +59,10 @@ module.exports = function createAuthRouter(deps) {
             const resolvedTeamRole = inviteData ? (inviteData.team_role || 'member') : 'admin';
 
             if (!inviteData) {
+                // claimed=false — стаб из реестра без пользователей; не блокирует регистрацию
+                // (внутри транзакции ниже такой стаб «усыновляется» по ИНН, а не блокируется)
                 const { rows: [existingCompany] } = await pool.query(
-                    'SELECT 1 FROM companies WHERE company = $1 AND role = $2 LIMIT 1',
+                    'SELECT 1 FROM companies WHERE company = $1 AND role = $2 AND claimed = true LIMIT 1',
                     [resolvedCompany, resolvedRole]
                 );
                 if (existingCompany) {
@@ -75,12 +77,30 @@ module.exports = function createAuthRouter(deps) {
                     'INSERT INTO users (email,password,role,company,inn,team_role) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
                     [email, hashPassword(password), resolvedRole, resolvedCompany, inn || '', resolvedTeamRole]
                 );
-                const { rows: [compExists] } = await client.query('SELECT 1 FROM companies WHERE company = $1 AND role = $2', [resolvedCompany, resolvedRole]);
+                const { rows: [compExists] } = await client.query('SELECT 1 FROM companies WHERE company = $1 AND role = $2 AND claimed = true', [resolvedCompany, resolvedRole]);
                 if (!compExists) {
-                    await client.query(
-                        "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,$2,$3,$4,$5)",
-                        [resolvedCompany, inn || '', resolvedRole, '', 'На проверке']
-                    );
+                    // Присоединение профиля из реестра: ИНН совпал со стабом → «усыновляем»
+                    // (у стаба нет пользователей/заявок, переименование безопасно)
+                    const normInn = String(inn || '').replace(/\D/g, '');
+                    let adopted = null;
+                    if (resolvedRole === 'producer' && (normInn.length === 10 || normInn.length === 12)) {
+                        const { rows: [stub] } = await client.query(
+                            "SELECT id FROM companies WHERE inn = $1 AND role = 'producer' AND claimed = false LIMIT 1", [normInn]
+                        );
+                        if (stub) {
+                            await client.query(
+                                "UPDATE companies SET company = $1, claimed = true, status = 'На проверке' WHERE id = $2",
+                                [resolvedCompany, stub.id]
+                            );
+                            adopted = stub.id;
+                        }
+                    }
+                    if (!adopted) {
+                        await client.query(
+                            "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,$2,$3,$4,$5)",
+                            [resolvedCompany, inn || '', resolvedRole, '', 'На проверке']
+                        );
+                    }
                 }
                 if (inviteData) {
                     await client.query('UPDATE invitations SET accepted=true WHERE id=$1', [inviteData.id]);
