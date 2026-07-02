@@ -332,7 +332,10 @@ const TZ_STATUS_MOD = {
   'Ждет ответа': 'waiting',
   'Ожидает ответа': 'waiting',
   'На рассмотрении': 'waiting',
-  'Отозвана заказчиком': 'muted'
+  'Отозвана заказчиком': 'muted',
+  'Активный': 'open',
+  'Дедлайн истёк': 'closed',
+  'Проигран': 'rejected'
 };
 function tzStampClass(status) {
   return 'tz-stamp tz-stamp--' + (TZ_STATUS_MOD[status] || 'muted');
