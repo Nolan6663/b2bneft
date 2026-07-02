@@ -231,10 +231,10 @@
                     const kpiRow = document.getElementById('propKpiRow');
                     if (kpiRow) {
                         kpiRow.style.display = '';
-                        const won = myProposals.filter(p => p.status === 'Победитель').length;
-                        const closed = myProposals.filter(p => p.status === 'Победитель' || p.status === 'Отклонено').length;
+                        const won = myProposals.filter(p => p.status === 'Выигран').length;
+                        const closed = myProposals.filter(p => ['Выигран', 'Отклонен', 'Проигран'].includes(p.status)).length;
                         document.getElementById('propKpiTotal').textContent = myProposals.length;
-                        document.getElementById('propKpiPending').textContent = myProposals.filter(p => p.status === 'На рассмотрении').length;
+                        document.getElementById('propKpiPending').textContent = myProposals.filter(p => p.status === 'Ожидает ответа').length;
                         document.getElementById('propKpiWon').textContent = won;
                         document.getElementById('propKpiRate').textContent = closed ? Math.round(won / closed * 100) + '%' : '—';
                     }

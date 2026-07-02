@@ -149,9 +149,11 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zk-badge-dead { background: #FEF3C7; color: #D97706; }
 .zk-badge-resp { background: #F1F5F9; color: #64748B; }
 .zk-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
-.zk-company-blur {
-    font-size: 13px; color: #94A3B8; font-weight: 500;
-    filter: blur(5px); user-select: none; pointer-events: none;
+.zk-company-hidden {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: #94A3B8;
 }
 .zk-respond-btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -300,8 +302,6 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 </footer>
 
 <script>
-const FAKE_COMPANIES = ['ООО «***»','ЗАО «***»','ПАО «***»','АО «***»'];
-
 function daysLeft(deadline) {
     if (!deadline) return null;
     const d = new Date(deadline);
@@ -339,7 +339,6 @@ function renderOrders(orders) {
             : '';
         const qty = o.quantity ? `<span class="zk-badge zk-badge-resp">${o.quantity} шт.</span>` : '';
         const resp = `<span class="zk-badge zk-badge-resp">${o.responses} ${plural(o.responses,'отклик','отклика','откликов')}</span>`;
-        const fakeCompany = FAKE_COMPANIES[o.id % FAKE_COMPANIES.length];
 
         return `<article class="zk-card" itemscope itemtype="https://schema.org/Offer">
             <div>
@@ -354,7 +353,7 @@ function renderOrders(orders) {
                 </div>
             </div>
             <div class="zk-card-right">
-                <div class="zk-company-blur" title="Заказчик виден после регистрации">${fakeCompany}</div>
+                <div class="zk-company-hidden">Заказчик виден после регистрации</div>
                 <a href="/login.html#register" class="zk-respond-btn">Откликнуться →</a>
             </div>
         </article>`;
