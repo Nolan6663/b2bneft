@@ -26,6 +26,13 @@ server.listen(0, '127.0.0.1', async () => {
     });
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     page.on('console', m => { if (m.type() === 'warning' || m.type() === 'error') console.log('[page]', m.text()); });
+    // MOCK_DENSITY=1 — подсунуть тестовую плотность (локально нет БД); без флага — честный 404 → псевдорельеф
+    if (process.env.MOCK_DENSITY) {
+        await page.route('**/api/public/geo-density', route => route.fulfill({ json: { points: [
+            { lon: 38, lat: 56, n: 40 }, { lon: 49, lat: 56, n: 18 }, { lon: 66, lat: 57, n: 25 },
+            { lon: 73, lat: 61, n: 15 }, { lon: 77, lat: 66, n: 10 }, { lon: 73, lat: 55, n: 12 },
+        ] } }));
+    }
     await page.goto(`http://127.0.0.1:${port}/landing.html`);
     await page.waitForTimeout(2500); // дождаться анимации сборки
     const panel = page.locator('#lp-voxel-panel');

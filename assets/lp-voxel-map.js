@@ -97,8 +97,9 @@ export async function initVoxelMap({ canvas, pinsEl, pins = [], reducedMotion = 
         // Акценты: с живыми данными вероятность растёт с плотностью, иначе — редкие вкрапления
         const roll = (i * 2654435761 >>> 0) % 100;
         const hot = density ? boost[i] : 0;
-        const isOrange = density ? (hot > 0.55 && roll < 35) : roll >= 97;
-        const isBlue = density ? (!isOrange && hot > 0.2 && roll < 30) : (roll >= 90 && roll < 97);
+        // Оранжевый — маркер реальной плотности; синий — базовая «жизнь» карты (декор)
+        const isOrange = density ? (hot > 0.45 && roll < 45) : roll >= 97;
+        const isBlue = !isOrange && (density ? (hot > 0.15 && roll < 28) || roll >= 94 : roll >= 90);
         color.set(isOrange ? ORANGE : isBlue ? BLUE : (roll % 2 ? PAPER : PAPER_LIGHT));
         mesh.setColorAt(i, color);
     });
