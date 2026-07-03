@@ -11,6 +11,8 @@ const checks = [
     ['токен детерминирован', inv.optoutToken('7701234567') === inv.optoutToken('7701234567')],
     ['токен верифицируется', inv.verifyOptoutToken('7701234567', inv.optoutToken('7701234567')) === true],
     ['чужой токен не проходит', inv.verifyOptoutToken('7701234567', inv.optoutToken('9999999999')) === false],
+    ['капс-предлоги не матчатся', inv.matchScoreStub({ title: 'КОЛЬЦА И МАНЖЕТЫ НА ЗАКАЗ', category: '', description: '' }, { specialization: 'ПРОИЗВОДСТВО ТРУБ НА ЭКСПОРТ И ПРОДАЖУ', products: '' }) === 0],
+    ['акроним РТИ матчится', inv.matchScoreStub({ title: 'РТИ кольца', category: '', description: '' }, { specialization: 'РТИ разные', products: '' }) >= 1],
 ];
 let ok = true;
 for (const [name, pass] of checks) { console.log((pass ? 'PASS' : 'FAIL') + ': ' + name); if (!pass) ok = false; }
