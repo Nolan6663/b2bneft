@@ -10,12 +10,12 @@
     <meta property="og:site_name" content="ТехЗаказ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Карта заводов РТИ и мехобработки — ТехЗаказ</title>
-    <meta name="description" content="Карта заводов РФ по РТИ и мехобработке на texzakaz.ru. Находите проверенных производителей в вашем регионе — 1200+ предприятий.">
+    <meta name="description" content="Карта заводов РФ по РТИ и мехобработке на texzakaz.ru. Находите проверенных производителей в вашем регионе — 4000+ предприятий.">
     <link rel="canonical" href="https://texzakaz.ru/map.html">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://texzakaz.ru/map.html">
     <meta property="og:title" content="Карта заводов РТИ и мехобработки — ТехЗаказ">
-    <meta property="og:description" content="Карта заводов РФ по РТИ и мехобработке на texzakaz.ru. Находите проверенных производителей в вашем регионе — 1200+ предприятий.">
+    <meta property="og:description" content="Карта заводов РФ по РТИ и мехобработке на texzakaz.ru. Находите проверенных производителей в вашем регионе — 4000+ предприятий.">
     <meta property="og:locale" content="ru_RU">
     <meta name="robots" content="index, follow">
     <link rel="stylesheet" href="assets/theme-v2.css?v=8">
@@ -453,39 +453,27 @@
             </div>
         </div>
 
-        <!-- KPI Row -->
+        <!-- KPI Row: значения кладёт JS (initMapKpis) — подписи соответствуют данным -->
         <div class="kpi-row">
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Активных поставщиков</div>
-                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-cyan)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient></defs><polyline points="0,24 13,20 26,22 40,15 53,17 66,10 80,8" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,24 13,20 26,22 40,15 53,17 66,10 80,8 80,30 0,30" fill="url(#mk1)"/></svg>
-                </div>
-                <div class="kpi-value" id="mapKpi1">1 243</div>
-                <div class="kpi-sub kpi-delta positive">↑ 12% к прошлому кварталу</div>
+                <div class="kpi-label">Производств на карте</div>
+                <div class="kpi-value" id="mapKpi1">—</div>
+                <div class="kpi-sub">в каталоге платформы</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Предложений на рассмотрении</div>
-                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-blue)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs><polyline points="0,22 13,18 26,20 40,12 53,14 66,8 80,10" stroke="var(--accent-blue)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,22 13,18 26,20 40,12 53,14 66,8 80,10 80,30 0,30" fill="url(#mk2)"/></svg>
-                </div>
-                <div class="kpi-value" id="mapKpi2">326</div>
-                <div class="kpi-sub">активных запросов</div>
+                <div class="kpi-label">Средняя загрузка</div>
+                <div class="kpi-value" id="mapKpi2">—</div>
+                <div class="kpi-sub">по данным профилей</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Верифицированных партнёров</div>
-                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-green)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--accent-green)" stop-opacity="0"/></linearGradient></defs><polyline points="0,25 13,22 26,20 40,18 53,14 66,12 80,9" stroke="var(--accent-green)" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,25 13,22 26,20 40,18 53,14 66,12 80,9 80,30 0,30" fill="url(#mk3)"/></svg>
-                </div>
-                <div class="kpi-value" id="mapKpi3" style="color:var(--accent-green);">72</div>
-                <div class="kpi-sub">прошли проверку</div>
+                <div class="kpi-label">Верифицированных</div>
+                <div class="kpi-value" id="mapKpi3" style="color:var(--accent-green);">—</div>
+                <div class="kpi-sub">ЕГРЮЛ или платформой</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-card-top">
-                    <div class="kpi-label">Статистика партнёров</div>
-                    <svg width="80" height="30" viewBox="0 0 80 30" fill="none" style="flex-shrink:0;"><defs><linearGradient id="mk4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".18"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient></defs><polyline points="0,20 13,22 26,17 40,18 53,13 66,15 80,11" stroke="#f59e0b" stroke-width="1.5" fill="none" stroke-linejoin="round"/><polygon points="0,20 13,22 26,17 40,18 53,13 66,15 80,11 80,30 0,30" fill="url(#mk4)"/></svg>
-                </div>
-                <div class="kpi-value" id="mapKpi4">54</div>
-                <div class="kpi-sub kpi-delta positive">↑ новых за месяц</div>
+                <div class="kpi-label">Регионов</div>
+                <div class="kpi-value" id="mapKpi4">—</div>
+                <div class="kpi-sub">география поставщиков</div>
             </div>
         </div>
 
@@ -894,23 +882,28 @@ function popupHtml(p) {
             const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
             const verBadge = p.verified ? `<span class="popup-verified"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>` : '';
             const caps = p.categories.map(c => `<span class="popup-cap">${escapeHtml(c)}</span>`).join('');
-            const loadText = p.productionLoadValue == null ? '—' : `${p.productionLoadValue}%`;
-            const equipmentText = p.equipment.length ? p.equipment.slice(0, 2).join(', ') : 'Оборудование не указано';
+            // Пустые поля не рисуем: у профилей из реестра заполнены только имя/регион —
+            // балун с прочерками выглядел раздутым
+            const metrics = [
+                p.productionLoadValue != null ? `<div class="popup-production-metric"><span>Загрузка</span><b>${p.productionLoadValue}%</b></div>` : '',
+                p.machinesCount ? `<div class="popup-production-metric"><span>Станки</span><b>${p.machinesCount}</b></div>` : '',
+                p.productionArea ? `<div class="popup-production-metric"><span>Площадь</span><b>${p.productionArea} м²</b></div>` : '',
+                p.yearsExperience ? `<div class="popup-production-metric"><span>Опыт</span><b>${p.yearsExperience} лет</b></div>` : '',
+            ].join('');
+            const metricsHtml = metrics ? `<div class="popup-production-grid">${metrics}</div>` : '';
+            const specHtml = p.specialization ? `<div class="popup-spec">${escapeHtml(p.specialization)}</div>` : '';
+            const capsHtml = caps ? `<div class="popup-caps">${caps}</div>` : '';
+            const equipmentHtml = p.equipment.length ? `<div class="popup-spec">${escapeHtml(p.equipment.slice(0, 2).join(', '))}</div>` : '';
             return `<div class="popup-body">
                 <div class="popup-header">
                     <div class="popup-avatar" style="background:${color}">${letter}</div>
                     <div><div class="popup-name">${escapeHtml(p.company)}</div><div class="popup-city">${escapeHtml(p.city || p.region)}</div></div>
                 </div>
                 ${verBadge}
-                <div class="popup-spec">${escapeHtml(p.specialization)}</div>
-                <div class="popup-caps">${caps}</div>
-                <div class="popup-production-grid">
-                    <div class="popup-production-metric"><span>Загрузка</span><b>${loadText}</b></div>
-                    <div class="popup-production-metric"><span>Станки</span><b>${p.machinesCount || '—'}</b></div>
-                    <div class="popup-production-metric"><span>Площадь</span><b>${p.productionArea ? p.productionArea + ' м²' : '—'}</b></div>
-                    <div class="popup-production-metric"><span>Опыт</span><b>${p.yearsExperience ? p.yearsExperience + ' лет' : '—'}</b></div>
-                </div>
-                <div class="popup-spec">${escapeHtml(equipmentText)}</div>
+                ${specHtml}
+                ${capsHtml}
+                ${metricsHtml}
+                ${equipmentHtml}
                 <a href="company-profile.html?id=${p.id}" class="popup-btn">Открыть профиль →</a>
             </div>`;
         }
