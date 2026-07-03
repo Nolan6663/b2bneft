@@ -177,6 +177,8 @@ function rowToCompany(r) {
         verifiedByPlatform: Boolean(r.verified_by_platform),
         verifiedEgrul: Boolean(r.verified_egrul),
         egrulVerifiedAt: r.egrul_verified_at,
+        claimed: r.claimed !== false,
+        fromRegistry: !r.claimed && !!r.source,
         freeCapacity: JSON.parse(r.free_capacity || '[]'),
         lat: r.lat ?? null,
         lng: r.lng ?? null,
@@ -855,18 +857,24 @@ function offsetProductionPoint(point, index) {
 async function geocodeExisting() {
     try {
         const { rows } = await pool.query(
-            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 50"
+            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 200"
         );
+        const cityCache = new Map();
         for (const r of rows) {
-            const coords = await geocodeCity(r.city);
+            const key = r.city.trim().toLowerCase();
+            let coords = cityCache.get(key);
+            if (coords === undefined) {
+                coords = await geocodeCity(r.city);
+                cityCache.set(key, coords);
+                await new Promise(resolve => setTimeout(resolve, 1200));
+            }
             if (coords) await pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, r.id]);
-            await new Promise(resolve => setTimeout(resolve, 1200));
         }
     } catch {}
 }
 
 async function matchedProducers(order, minScore = 0, withReasons = false) {
-    const { rows } = await pool.query("SELECT * FROM companies WHERE role = 'producer'");
+    const { rows } = await pool.query("SELECT * FROM companies WHERE role = 'producer' AND claimed = true");
     return rows.map(rowToCompany)
         .map(c => {
             const score = computeMatchScore(order, c);

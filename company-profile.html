@@ -97,6 +97,10 @@
             .equipment-input-row .btn-primary,
             .equipment-input-row .btn-secondary { min-height: 44px; }
         }
+
+        .catalog-registry { color: #64748B; border-color: rgba(100,116,139,.45); }
+        .catalog-claim-link { font-size: 11px; color: var(--tz-blueprint-blue); text-decoration: none; }
+        .catalog-claim-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -418,6 +422,7 @@
 
         function statusMeta(status) {
             if (status === 'Верифицирован') return { icon: '✓', cls: 'win' };
+            if (status === 'Действующая') return { icon: '✓', cls: 'win' };
             if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
             return { icon: '⏱', cls: 'waiting' };
         }
@@ -487,7 +492,18 @@
                 ? `<span class="platform-verified-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg><span class="nav-label">Верифицирован платформой</span></span>`
                 : (c.verifiedEgrul
                     ? `<span class="platform-verified-badge platform-verified-badge--egrul"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg><span class="nav-label">Проверено по ЕГРЮЛ</span></span>`
-                    : '');
+                    : (c.fromRegistry
+                        ? `<span class="platform-verified-badge catalog-registry"><span class="nav-label">Реестр Минпромторга</span></span>`
+                        : ''));
+
+            const claimLink = c.fromRegistry
+                ? `<a class="catalog-claim-link" href="/login.html#register?claim=${encodeURIComponent(c.inn || '')}&company=${encodeURIComponent(c.company || '')}">Это ваша компания?</a>`
+                : '';
+            const registryNoticeHtml = c.fromRegistry
+                ? `<div style="margin-top:10px; font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
+                       Профиль создан по данным госреестра ГИСП (ПП-719). Представитель компании может присоединить его при регистрации. ${claimLink}
+                   </div>`
+                : '';
 
             // Producer-only sections
             let producerSections = '';
@@ -597,6 +613,7 @@
                         <h3 style="margin:0;">Реквизиты</h3>
                         ${verifiedBadge}
                     </div>
+                    ${registryNoticeHtml}
                     <div class="trust-grid">${trustHtml}</div>
                     <div id="riskCardBlock" style="display:none;margin-top:24px;"></div>
                 </div>` : ''}

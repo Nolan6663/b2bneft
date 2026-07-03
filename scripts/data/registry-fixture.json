@@ -1,0 +1,7 @@
+[
+  { "company": "  ООО «Тестовый завод РТИ»  ", "inn": "7701234567", "city": "Пермь", "specialization": "РТИ и уплотнения", "ogrn": "1027700000000" },
+  { "company": "АО «Насосмаш»", "inn": "16-58-012345", "city": "Казань", "specialization": "Насосное оборудование", "ogrn": "" },
+  { "company": "Без ИНН", "inn": "", "city": "Москва", "specialization": "", "ogrn": "" },
+  { "company": "ООО «Дубль»", "inn": "7701234567", "city": "Тверь", "specialization": "", "ogrn": "" },
+  { "company": "ООО «Плохой ИНН»", "inn": "123", "city": "", "specialization": "", "ogrn": "" }
+]
