@@ -11,6 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/fonts.css">
+<script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/110221667" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -784,6 +786,7 @@ async function handleRegister() {
     if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
     setLoginOverlay(true, 'Создаём аккаунт…');
     applyAuthSession(data);
+    try { ym(110221667, 'reachGoal', 'register'); } catch {}
     window.location.href = role === 'producer' ? 'producer.html' : 'index.html';
   } catch {
     showError('Нет соединения с сервером. Проверьте интернет и попробуйте снова.');
@@ -807,6 +810,7 @@ document.addEventListener('keydown', e => {
     localStorage.setItem('userRole', p.get('role') || 'customer');
     localStorage.setItem('userCompany', p.get('company') || '');
     localStorage.setItem('emailVerified', p.get('ev') === '1' ? '1' : '0');
+    if (p.get('new') === '1') { try { ym(110221667, 'reachGoal', 'register'); } catch {} }
     window.location.replace((p.get('role') || 'customer') === 'producer' ? 'producer.html' : 'index.html');
     return;
   }

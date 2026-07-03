@@ -139,6 +139,14 @@
         <div class="adm-kpi"><div class="adm-kpi-label">Компаний</div><div class="adm-kpi-value" id="kpiCompanies">—</div></div>
     </div>
 
+    <!-- Регистрации по дням -->
+    <div class="adm-kpi" style="margin-bottom:24px;">
+        <div class="adm-kpi-label">Регистрации за 30 дней <span style="text-transform:none;letter-spacing:0;font-weight:500;">(учёт с 03.07.2026)</span></div>
+        <div id="regChart" style="display:flex;align-items:flex-end;gap:3px;height:72px;margin-top:10px;">
+            <span style="font-size:12px;color:var(--text-secondary);">Загрузка…</span>
+        </div>
+    </div>
+
     <!-- Tabs bar -->
     <div class="adm-tabs-bar">
         <div class="adm-tabs">
@@ -203,6 +211,7 @@
             if (me.ok) { const d = await me.json(); myUserId = d.id; }
         } catch {}
         loadStats();
+        loadRegistrations();
         loadVerif('pending');
     })();
 
@@ -229,6 +238,30 @@
             badge.textContent = d.pending;
             badge.style.display = d.pending > 0 ? 'inline-flex' : 'none';
         } catch {}
+    }
+
+    // ── Регистрации по дням ───────────────────────────────────────────
+    async function loadRegistrations() {
+        const box = document.getElementById('regChart');
+        try {
+            const r = await apiFetch(`${SERVER_URL}/admin/registrations`);
+            if (!r.ok) { box.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);">Нет данных</span>'; return; }
+            const rows = await r.json();
+            const byDay = new Map(rows.map(x => [String(x.day).slice(0, 10), x.n]));
+            const days = [];
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(Date.now() - i * 86400000);
+                const key = d.toISOString().slice(0, 10);
+                days.push({ key, label: `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')}`, n: byDay.get(key) || 0 });
+            }
+            const max = Math.max(1, ...days.map(d => d.n));
+            box.innerHTML = days.map(d => `
+                <div title="${d.label}: ${d.n}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;">
+                    <div style="height:${Math.max(d.n ? 6 : 2, Math.round(d.n / max * 60))}px;background:${d.n ? 'var(--accent-bright)' : 'var(--inner-border)'};"></div>
+                </div>`).join('');
+        } catch {
+            box.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);">Нет данных</span>';
+        }
     }
 
     // ── Verification ──────────────────────────────────────────────────

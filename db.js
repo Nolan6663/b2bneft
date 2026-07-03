@@ -263,6 +263,7 @@ async function initDb() {
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS invite_optout BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS last_invited_at TIMESTAMPTZ;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS products TEXT NOT NULL DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS user_agent TEXT NOT NULL DEFAULT '';
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS ip TEXT NOT NULL DEFAULT '';
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ DEFAULT NOW();

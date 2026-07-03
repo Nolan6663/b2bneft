@@ -302,6 +302,7 @@ module.exports = function createAuthRouter(deps) {
             let { rows: [user] } = await pool.query(
                 'SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email]
             );
+            const isNewUser = !user;
             if (!user) {
                 const company = info.real_name || info.display_name || info.login || email.split('@')[0];
                 await withTransaction(async (client) => {
@@ -327,7 +328,7 @@ module.exports = function createAuthRouter(deps) {
             setAuthCookies(res, accessToken, refreshToken);
 
             const ev = user.email_verified ? '1' : '0';
-            res.redirect(`/login.html?oauth_ok=1&role=${encodeURIComponent(user.role)}&company=${encodeURIComponent(user.company)}&ev=${ev}`);
+            res.redirect(`/login.html?oauth_ok=1&role=${encodeURIComponent(user.role)}&company=${encodeURIComponent(user.company)}&ev=${ev}${isNewUser ? '&new=1' : ''}`);
         } catch (e) {
             console.error('Yandex OAuth callback error:', e);
             res.redirect('/login.html?error=oauth_error');

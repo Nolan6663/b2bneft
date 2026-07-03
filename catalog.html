@@ -223,6 +223,27 @@
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        .catalog-products {
+            font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .catalog-products b {
+            color: var(--text-primary); font-weight: 600;
+        }
+        .catalog-contacts {
+            display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+        }
+        .catalog-contact-link {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            text-decoration: none; min-width: 0; max-width: 100%;
+        }
+        .catalog-contact-link span {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .catalog-contact-link:hover { color: var(--accent-cyan); }
+        .catalog-contact-link svg { flex-shrink: 0; }
         .catalog-page { gap: 18px; }
         .catalog-layout {
             display: grid;
@@ -820,6 +841,33 @@
                 ? `<div class="catalog-about">${escapeHtml(p.about)}</div>`
                 : '';
 
+            const productsBlock = (!p.about && p.products)
+                ? `<div class="catalog-products"><b>Продукция:</b> ${escapeHtml(String(p.products).slice(0, 180))}</div>`
+                : '';
+
+            const phoneDigits = String(p.phone || '').replace(/[^\d+]/g, '');
+            const phoneLink = p.phone
+                ? `<a class="catalog-contact-link" href="tel:${escapeHtml(phoneDigits)}" onclick="event.stopPropagation();">
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                       <span>${escapeHtml(p.phone)}</span>
+                   </a>`
+                : '';
+            let siteHost = '';
+            let siteHref = '';
+            if (p.website) {
+                siteHref = /^https?:\/\//i.test(p.website) ? p.website : 'https://' + p.website;
+                try { siteHost = new URL(siteHref).host.replace(/^www\./, ''); } catch { siteHref = ''; }
+            }
+            const siteLink = siteHref
+                ? `<a class="catalog-contact-link" href="${escapeHtml(siteHref)}" target="_blank" rel="noopener nofollow" onclick="event.stopPropagation();">
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                       <span>${escapeHtml(siteHost)}</span>
+                   </a>`
+                : '';
+            const contactsBlock = (phoneLink || siteLink)
+                ? `<div class="catalog-contacts">${phoneLink}${siteLink}</div>`
+                : '';
+
             const aiBlock = aiReason
                 ? `<div class="ai-reason-badge"><span class="ui-icon-label"><svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>AI:</span></span>${escapeHtml(aiReason)}</div>`
                 : '';
@@ -845,6 +893,8 @@
                 </div>
                 ${caps ? `<div class="catalog-caps">${caps}</div>` : ''}
                 ${aboutBlock}
+                ${productsBlock}
+                ${contactsBlock}
                 ${aiBlock}
                 ${loadBlock}
                 ${capacityBlock}

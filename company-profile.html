@@ -580,7 +580,7 @@
                                 ${c.city ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${escapeHtml(c.city)}</span>` : ''}
                                 ${c.yearsExperience ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg> <span class="nav-label">Опыт: ${c.yearsExperience} лет</span></span>` : ''}
                                 ${c.phone ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"></path></svg> ${escapeHtml(c.phone)}</span>` : ''}
-                                ${c.website ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> <a href="${escapeHtml(c.website)}" target="_blank" rel="noopener" style="color:var(--accent-bright);">Сайт компании</a></span>` : ''}
+                                ${c.website ? `<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> <a href="${escapeHtml(/^https?:\/\//i.test(c.website) ? c.website : 'https://' + c.website)}" target="_blank" rel="noopener nofollow" style="color:var(--accent-bright);">Сайт компании</a></span>` : ''}
                                 <span>ИНН: ${escapeHtml(c.inn)}</span>
                             </div>
                         </div>
@@ -599,6 +599,15 @@
                     <h3>О компании</h3>
                     <div class="about-text">${c.about ? escapeHtml(c.about) : '<span class="empty-hint">Описание не заполнено</span>'}</div>
                 </div>
+
+                ${c.products ? `
+                <div class="section">
+                    <h3>Продукция${c.fromRegistry ? ' <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">по данным реестра Минпромторга</span>' : ''}</h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${String(c.products).split(';').map(s => s.trim()).filter(Boolean).slice(0, 12)
+                            .map(s => `<span class="badge" style="font-weight:500;">${escapeHtml(s.length > 90 ? s.slice(0, 90) + '…' : s)}</span>`).join('')}
+                    </div>
+                </div>` : ''}
 
                 <div class="section">
                     <h3>Специализация и оборудование</h3>

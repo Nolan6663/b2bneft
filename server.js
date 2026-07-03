@@ -3243,6 +3243,20 @@ app.get('/api/admin/stats', requireAuth, requireRole('admin'), async (req, res, 
     } catch (e) { next(e); }
 });
 
+// Регистрации по дням за 30 дней (для графика в админке).
+// У старых пользователей created_at = дата миграции — история начинается с 03.07.2026.
+app.get('/api/admin/registrations', requireAuth, requireRole('admin'), async (req, res, next) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT date_trunc('day', created_at)::date AS day, COUNT(*) AS n
+            FROM users
+            WHERE created_at > NOW() - INTERVAL '30 days'
+            GROUP BY day ORDER BY day
+        `);
+        res.json(rows.map(r => ({ day: r.day, n: Number(r.n) })));
+    } catch (e) { next(e); }
+});
+
 app.get('/api/admin/users', requireAuth, requireRole('admin'), async (req, res, next) => {
     try {
         const { rows } = await pool.query(
