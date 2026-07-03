@@ -371,15 +371,12 @@
   }
   .lp-faq-aside { position: sticky; top: 40px; }
   .lp-faq-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 7px 14px; border-radius: 999px; margin-bottom: 22px;
-    background: rgba(255,106,0,0.1); border: 1px solid rgba(255,106,0,0.28);
+    display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px;
     font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
-    letter-spacing: 2px; color: #FF8A3D; text-transform: uppercase;
+    letter-spacing: 2px; color: rgba(255,255,255,0.55); text-transform: uppercase;
   }
   .lp-faq-eyebrow::before {
-    content: ''; width: 7px; height: 7px; border-radius: 50%; background: #FF6A00;
-    box-shadow: 0 0 12px rgba(255,106,0,0.7);
+    content: ''; width: 18px; height: 2px; background: #FF6A00;
   }
   .lp-faq-title {
     margin: 0 0 18px; font-size: clamp(32px, 3.6vw, 46px); font-weight: 800;
@@ -400,14 +397,19 @@
   .lp-faq-mail {
     display: inline-flex; align-items: center; gap: 10px;
     color: #fff; text-decoration: none; font-size: 14px; font-weight: 700;
-    padding: 13px 22px; border-radius: 12px;
-    background: linear-gradient(135deg, #FF6A00, #E85D00);
-    box-shadow: 0 10px 28px rgba(255,106,0,0.32);
-    transition: transform .18s ease, box-shadow .18s ease;
+    padding: 13px 22px;
+    background: #FF6A00;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    box-shadow: 4px 4px 0 rgba(255,106,0,0.28);
+    transition: transform .15s ease, box-shadow .15s ease;
   }
   .lp-faq-mail:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 36px rgba(255,106,0,0.4);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 rgba(255,106,0,0.28);
+  }
+  .lp-faq-mail:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 rgba(255,106,0,0.28);
   }
   .lp-faq-email {
     margin: 12px 0 0; font-size: 13px; font-weight: 600;
@@ -416,38 +418,52 @@
 
   .lp-faq-panel {
     position: relative; overflow: hidden;
-    padding: 10px; border-radius: 20px;
+    padding: 0; border-radius: 4px;
     background: #0A2236;
-    border: 1px solid rgba(255,255,255,0.09);
-    box-shadow: 0 24px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
   }
   .lp-faq-panel::before {
     content: ''; position: absolute; inset: 0; pointer-events: none;
     background-image:
-      linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
     background-size: 28px 28px;
   }
-  .lp-faq-list { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
+  /* Шапка «листа»: как основная надпись чертежа */
+  .lp-faq-sheethead {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.14);
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45);
+  }
+  .lp-faq-list { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; }
 
   .lp-faq-card {
-    border-radius: 14px;
-    border: 1px solid transparent;
-    background: rgba(255,255,255,0.02);
-    transition: background .22s ease, border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: transparent;
+    transition: background .18s ease, box-shadow .18s ease;
   }
-  .lp-faq-card:hover { background: rgba(255,255,255,0.045); }
+  .lp-faq-card:first-child { border-top: none; }
+  .lp-faq-card:hover { background: rgba(255,255,255,0.03); box-shadow: inset 3px 0 0 rgba(255,106,0,0.45); }
   .lp-faq-card.is-open {
-    background: linear-gradient(135deg, rgba(255,106,0,0.12), rgba(255,106,0,0.04));
-    border-color: rgba(255,106,0,0.32);
-    box-shadow: 0 12px 36px rgba(255,106,0,0.12);
+    background: rgba(255,106,0,0.05);
+    box-shadow: inset 3px 0 0 #FF6A00;
   }
 
   .lp-faq-q {
-    width: 100%; display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; padding: 20px 22px; cursor: pointer; text-align: left;
+    width: 100%; display: flex; align-items: center;
+    gap: 16px; padding: 19px 22px; cursor: pointer; text-align: left;
     background: none; border: none; font-family: inherit;
   }
+  .lp-faq-num {
+    flex-shrink: 0; width: 34px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; color: rgba(255,255,255,0.35);
+    transition: color .2s ease;
+  }
+  .lp-faq-card.is-open .lp-faq-num { color: #FF6A00; }
   .lp-faq-q-text {
     font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.92);
     line-height: 1.4; transition: color .2s ease;
@@ -455,14 +471,14 @@
   .lp-faq-card.is-open .lp-faq-q-text { color: #fff; }
 
   .lp-faq-toggle {
-    width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+    width: 28px; height: 28px; flex-shrink: 0; margin-left: auto; border-radius: 2px;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.65);
-    transition: background .22s ease, border-color .22s ease, color .22s ease, transform .25s ease;
+    background: transparent; border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.55);
+    transition: border-color .2s ease, color .2s ease, transform .25s ease;
   }
   .lp-faq-card.is-open .lp-faq-toggle {
-    background: #FF6A00; border-color: #FF6A00; color: #fff;
+    border-color: #FF6A00; color: #FF6A00;
     transform: rotate(180deg);
   }
 
@@ -473,7 +489,7 @@
   .lp-faq-card.is-open .lp-faq-a { grid-template-rows: 1fr; }
   .lp-faq-a-inner { overflow: hidden; }
   .lp-faq-a-inner p {
-    margin: 0; padding: 0 22px 20px;
+    margin: 0; padding: 0 22px 20px 72px;
     font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.62); font-weight: 500;
   }
   .lp-faq-card.is-open .lp-faq-a-inner p { color: rgba(255,255,255,0.78); }
@@ -1173,10 +1189,12 @@
         </aside>
 
         <div class="lp-faq-panel lp-rise" style="--d:1;">
+          <div class="lp-faq-sheethead"><span>Ведомость вопросов</span><span>Л.1 · 6 позиций</span></div>
           <div class="lp-faq-list" id="faq-list">
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-01</span>
                 <span class="lp-faq-q-text">Сколько стоит размещение заказа?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
@@ -1189,6 +1207,7 @@
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-02</span>
                 <span class="lp-faq-q-text">Как быстро я получу первые предложения?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
@@ -1201,6 +1220,7 @@
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-03</span>
                 <span class="lp-faq-q-text">Платформа только для крупных компаний?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
@@ -1213,6 +1233,7 @@
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-04</span>
                 <span class="lp-faq-q-text">Как проверяются поставщики на платформе?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
@@ -1225,6 +1246,7 @@
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-05</span>
                 <span class="lp-faq-q-text">Какое оборудование и запчасти можно заказать?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
@@ -1237,6 +1259,7 @@
 
             <div class="lp-faq-card">
               <button class="lp-faq-q" type="button" aria-expanded="false">
+                <span class="lp-faq-num">В-06</span>
                 <span class="lp-faq-q-text">Нужно ли заключать договор с ТЕХЗАКАЗ?</span>
                 <span class="lp-faq-toggle" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
