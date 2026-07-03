@@ -931,6 +931,21 @@ Nginx (обязательно на prod для WebSocket):
   при следующем обновлении access-токена (максимум через 1 час).
   TODO: «API-ключи» в settings.html — всё ещё заглушка (FAKE_API_KEY).
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — P1: вынос роутов из server.js)
+  ----------------------------------------------------------------
+  server.js 3528 → 2628 строк. Move-рефакторинг, поведение API не менялось:
+  • routes/export.js — xlsx/pdf экспорты + 1С CommerceML (ExcelJS/pdf-билдеры
+    теперь require'ятся там, не в server.js)
+  • routes/auctions.js — аукционы (io через deps.getIo(); cron остался в server.js)
+  • routes/reviews.js, routes/favorites.js, routes/ai.js (genAI передаётся
+    в deps — он же нужен seo-роутам в server.js), routes/admin.js (верификация+админка)
+  • Фронт: удалены локальные showToast в analytics/partners/settings (тени
+    общего assets/app.js). settings.html: было ДВА showAlert с разными
+    сигнатурами — поздний перекрывал ранний, вызовы без текста рисовали
+    «undefined»; объединены в один с опциональными type/text.
+  • Онбординг: README.md, docs/ARCHITECTURE.md переписан, .env.example в UTF-8,
+    из git убраны node_modules (были закоммичены!), data.db, скриншоты, черновики.
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — договор+спецификация PDF, реквизиты)
   ----------------------------------------------------------------
   Ветка feature/contract-pdf. Спека: docs/superpowers/specs/2026-07-03-contract-pdf-design.md

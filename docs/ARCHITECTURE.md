@@ -28,7 +28,7 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 
 | Файл/каталог | Что делает |
 |---|---|
-| `server.js` (~3.5k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы, inline-роуты. **Долг:** продолжать вынос роутов в `routes/` |
+| `server.js` (~2.6k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы, оставшиеся inline-роуты (push, telegram-link, team, templates, tasks, notifications, dashboard, public, map, catalog, capacity, seo, integrations, risk). **Долг:** продолжать вынос в `routes/` |
 | `db.js` | вся схема: 24 таблицы, создание при старте, «миграции» = `ALTER TABLE ... IF NOT EXISTS` внизу файла. Новая колонка → добавляй туда же |
 | `routes/auth.js` | регистрация (+claim профиля из реестра по ИНН), login, 2FA (speakeasy), OAuth Яндекс, refresh-токены/сессии, сброс пароля, email-верификация |
 | `routes/orders.js` | CRUD закупок, матчинг поставщиков (`computeMatchScore`), «горячий матч» ≥70% → email/push/TG, триггер registry-invites |
@@ -36,6 +36,11 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `routes/companies.js` | каталог/профили компаний, PUT профиля (вкл. реквизиты для договоров), фото |
 | `routes/deals.js` | сделки = принятые КП; этапы поставки (`DELIVERY_STAGES`), timeline событий |
 | `routes/messages.js` | чат по закупке (REST + socket.io), уведомления о сообщениях |
+| `routes/export.js` | экспорт: Excel/PDF заявок и КП, PDF сравнения КП, CommerceML XML для 1С |
+| `routes/auctions.js` | обратные аукционы: создание, ставки, списки (cron автозакрытия — в server.js) |
+| `routes/reviews.js`, `routes/favorites.js` | отзывы после сделки; избранные поставщики |
+| `routes/ai.js` | AI-поиск поставщиков (Gemini) + генерация ТЗ/КП (через lib/ai-client) |
+| `routes/admin.js` | верификация компаний (ЕГРЮЛ-авто + ручная платформой) и админка (stats/users) |
 | `lib/ai-client.js` | генерация ТЗ (заказчик) и сопроводительного письма КП (поставщик). Провайдер сменный через env; прод — GigaChat (нужен русский CA-сертификат из `certs/`, переменная в ecosystem.config.js) |
 | `lib/auth-tokens.js` | JWT: access из cookie или Bearer-заголовка, refresh в таблице `refresh_tokens` |
 | `lib/proposal-accept.js` | транзакция «принять КП»: статусы Выигран/Проигран, закрытие заявки, нотификации всем сторонам |
@@ -101,8 +106,7 @@ refresh-токен (БД; страница «Активные сессии» в 
 
 ## Известные долги
 
-- `server.js` — вынести оставшиеся inline-роуты (admin, export, auctions, ai, reviews…).
-- Фронт: `showToast`/`apiFetch`/sidebar скопированы в каждый HTML — вынести в общий `assets/js`.
+- `server.js` — вынести оставшиеся inline-роуты (push, telegram, team, templates, tasks, notifications, seo, integrations…).
 - «API-ключи» в settings.html — заглушка (`FAKE_API_KEY`), реального partner-API нет.
 - `routes/companies.js:19` — счётчик КП фильтрует статус `'Принято'`, который никогда не пишется (реальный `'Выигран'`) → всегда 0.
 - Тесты: smoke + Playwright e2e; юнитов на роуты нет, CI не гоняет проверки перед деплоем.
