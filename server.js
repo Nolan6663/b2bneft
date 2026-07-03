@@ -177,6 +177,8 @@ function rowToCompany(r) {
         verifiedByPlatform: Boolean(r.verified_by_platform),
         verifiedEgrul: Boolean(r.verified_egrul),
         egrulVerifiedAt: r.egrul_verified_at,
+        claimed: r.claimed !== false,
+        fromRegistry: !r.claimed && !!r.source,
         freeCapacity: JSON.parse(r.free_capacity || '[]'),
         lat: r.lat ?? null,
         lng: r.lng ?? null,

@@ -126,6 +126,10 @@
             border-color: rgba(11,143,206,.45);
             box-shadow: inset 0 0 0 2px rgba(11,143,206,.12);
         }
+        .catalog-registry { color: #64748B; border-color: rgba(100,116,139,.45); }
+
+        .catalog-claim-link { font-size: 11px; color: var(--tz-blueprint-blue); text-decoration: none; }
+        .catalog-claim-link:hover { text-decoration: underline; }
 
         /* ── Capability chips ── */
         .catalog-caps { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -739,7 +743,9 @@
                 ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>`
                 : (p.verifiedEgrul
                     ? `<span class="catalog-verified catalog-verified--egrul"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">ЕГРЮЛ ✓</span></span>`
-                    : '');
+                    : (p.fromRegistry
+                        ? `<span class="catalog-verified catalog-registry"><span class="nav-label">Реестр Минпромторга</span></span>`
+                        : ''));
 
             const caps = (p.capabilities || []).slice(0, 5)
                 .map(c => `<span class="catalog-cap-chip">${escapeHtml(c)}</span>`)
@@ -794,6 +800,10 @@
                 ? `<div class="catalog-risk-slot" data-inn="${escapeHtml(String(p.inn))}" style="margin-top:6px;"></div>`
                 : '';
 
+            const claimLink = p.fromRegistry
+                ? `<a class="catalog-claim-link" href="/login.html#register?claim=${encodeURIComponent(p.inn || '')}&company=${encodeURIComponent(p.company || '')}" onclick="event.stopPropagation();">Это ваша компания?</a>`
+                : '';
+
             return `
             <div class="catalog-card">
                 <div class="catalog-card-top">
@@ -821,6 +831,7 @@
                           : '+ Сравнить'}
                     </button>
                 </div>
+                ${claimLink}
             </div>`;
         }
 
