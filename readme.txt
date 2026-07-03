@@ -300,6 +300,10 @@ Auth:
   PUT  /api/proposals/:proposalId — редактировать КП (поставщик)
   DELETE /api/proposals/:proposalId — удалить КП (поставщик)
   GET  /api/proposals/:proposalId/file — скачать файл КП
+  GET  /api/proposals/:proposalId/contract.pdf?payment=prepay100|split5050|postpay
+       — PDF «Договор поставки + Спецификация» из данных сделки (только участники,
+         только статус «Выигран»; реквизиты сторон из companies, пустые → прочерки;
+         билдер buildContractPdf в export-pdf.js, кнопка на deals.html)
 
 Сообщения:
   GET  /api/messages/conversations
@@ -926,6 +930,23 @@ Nginx (обязательно на prod для WebSocket):
   Отзыв сессии = удаление refresh-токена: доступ у устройства умирает
   при следующем обновлении access-токена (максимум через 1 час).
   TODO: «API-ключи» в settings.html — всё ещё заглушка (FAKE_API_KEY).
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — договор+спецификация PDF, реквизиты)
+  ----------------------------------------------------------------
+  Ветка feature/contract-pdf. Спека: docs/superpowers/specs/2026-07-03-contract-pdf-design.md
+  • db.js — companies + kpp, legal_address, bank_name, bank_account, bank_bik, bank_corr
+  • settings.html — формы «Реквизиты компании»/«Адреса»/«Банковские реквизиты»
+    были ФЕЙКОМ (кнопка = showAlert без сохранения). Теперь loadRequisites()/
+    saveRequisites() ходят в PUT /api/companies/:id. Удалены поля без колонок
+    (ОКПО, ОКВЭД, дата рег., факт. адрес, регион, индекс). Название и ИНН — readonly.
+  • export-pdf.js — buildContractPdf() (~3 стр договора по ГК РФ + Приложение №1
+    «Спецификация») + rublesInWords() (сумма прописью). Экспортируются оба.
+  • routes/proposals.js — GET /api/proposals/:id/contract.pdf?payment=...
+  • deals.html — кнопка «Договор + спецификация (PDF)» в панели сделки +
+    модалка выбора оплаты (предоплата/50-50/постоплата) + предупреждение
+    о незаполненных реквизитах. Auth для window.open — через cookie (как 1С).
+  • scripts/pdf-smoke.js — расширен: договор с полными и пустыми реквизитами.
+  ВАЖНО: текст договора — типовая болванка, ДО мержа в main показать юристу.
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — проверка core-функционала)
   ----------------------------------------------------------------
