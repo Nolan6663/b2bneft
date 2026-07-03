@@ -91,16 +91,21 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .ps-hero::before {
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,106,0,.08) 0%, transparent 70%);
+    background-image:
+        linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 30px 30px;
     pointer-events: none;
 }
 .ps-hero-inner { max-width: 680px; position: relative; }
 .ps-hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,106,0,.12); border: 1px solid rgba(255,106,0,.25);
-    border-radius: 100px; padding: 6px 14px; margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px;
 }
-.ps-hero-badge span { font-size: 12px; font-weight: 700; color: #FF6A00; letter-spacing: .06em; text-transform: uppercase; }
+.ps-hero-badge::before { content: ''; width: 18px; height: 2px; background: #FF6A00; }
+.ps-hero-badge span {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 700;
+    color: rgba(255,255,255,.6); letter-spacing: 2px; text-transform: uppercase;
+}
 .ps-hero h1 {
     font-size: clamp(32px, 4.5vw, 52px); font-weight: 800; line-height: 1.15;
     color: #fff; margin-bottom: 20px; letter-spacing: -.02em;
@@ -112,12 +117,16 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 }
 .ps-hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .ps-btn-primary {
-    background: #FF6A00; color: #fff; border: none; border-radius: 10px;
+    background: #FF6A00; color: #fff; border: none;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    box-shadow: 4px 4px 0 rgba(255,106,0,.28);
     padding: 15px 28px; font-size: 16px; font-weight: 700; cursor: pointer;
-    text-decoration: none; font-family: inherit; transition: background .18s;
+    text-decoration: none; font-family: inherit;
+    transition: transform .15s ease, box-shadow .15s ease;
     display: inline-flex; align-items: center; gap: 8px;
 }
-.ps-btn-primary:hover { background: #e55e00; }
+.ps-btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgba(255,106,0,.28); }
+.ps-btn-primary:active { transform: translate(2px, 2px); box-shadow: 0 0 0 rgba(255,106,0,.28); }
 .ps-btn-secondary {
     color: rgba(255,255,255,.8); font-size: 15px; font-weight: 600;
     text-decoration: none; transition: color .18s;
@@ -127,9 +136,13 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     display: flex; gap: 40px; margin-top: 56px; padding-top: 40px;
     border-top: 1px solid rgba(255,255,255,.1);
 }
-.ps-stat-num { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+.ps-stat-num { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.3px; }
 .ps-stat-num span { color: #FF6A00; }
-.ps-stat-label { font-size: 13px; color: rgba(255,255,255,.5); font-weight: 500; margin-top: 5px; }
+.ps-stat-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: rgba(255,255,255,.45); font-weight: 600; margin-top: 7px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+}
 
 /* ── Benefits ── */
 .ps-section { padding: 72px 64px; }
@@ -254,11 +267,18 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 
 /* ── CTA ── */
 .ps-cta {
-    margin: 0 64px 72px; border-radius: 20px;
+    margin: 0 64px 72px; border-radius: 4px;
     background: linear-gradient(135deg, #071B2A 0%, #0B2233 100%);
+    border: 1px solid rgba(255,255,255,.12);
     padding: 60px 64px;
     display: flex; align-items: center; justify-content: space-between; gap: 40px;
+    position: relative;
 }
+.ps-cta::before, .ps-cta::after {
+    content: ''; position: absolute; width: 14px; height: 14px; pointer-events: none;
+}
+.ps-cta::before { top: 10px; left: 10px; border-top: 2px solid rgba(255,255,255,.3); border-left: 2px solid rgba(255,255,255,.3); }
+.ps-cta::after { bottom: 10px; right: 10px; border-bottom: 2px solid rgba(255,255,255,.3); border-right: 2px solid rgba(255,255,255,.3); }
 .ps-cta h2 { font-size: clamp(22px, 2.5vw, 30px); font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.25; }
 .ps-cta p { font-size: 15px; color: rgba(255,255,255,.65); font-weight: 500; max-width: 460px; }
 .ps-cta-actions { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; flex-shrink: 0; }
@@ -327,7 +347,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
       <div class="ps-hero-stats">
         <div>
           <div class="ps-stat-num">4000<span>+</span></div>
-          <div class="ps-stat-label">проверенных поставщиков</div>
+          <div class="ps-stat-label">заводов в каталоге</div>
         </div>
         <div>
           <div class="ps-stat-num">48<span>ч</span></div>
