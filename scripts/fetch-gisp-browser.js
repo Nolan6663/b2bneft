@@ -81,6 +81,21 @@ async function clickNextPage(page) {
     await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForTimeout(8000); // SPA догружает данные
 
+    if (process.argv.includes('--org-recon')) {
+        // Карточка предприятия: клик по действию «Предприятие» первой строки
+        const link = page.locator('a:has-text("Предприятие"), button:has-text("Предприятие")').first();
+        if (!(await link.count())) { console.log('Ссылка «Предприятие» не найдена'); await browser.close(); return; }
+        await link.click();
+        await page.waitForTimeout(6000);
+        fs.writeFileSync(path.join(RECON_DIR, 'gisp-org.html'), await page.content());
+        await page.screenshot({ path: path.join(RECON_DIR, 'gisp-org.png'), fullPage: true });
+        fs.writeFileSync(path.join(RECON_DIR, 'gisp-org-net.txt'), netLog.join('\n') || '(JSON не пойман)');
+        console.log('URL карточки:', page.url());
+        console.log('Сохранено в', RECON_DIR, ': gisp-org.html, gisp-org.png, gisp-org-net.txt');
+        await browser.close();
+        return;
+    }
+
     if (recon) {
         fs.writeFileSync(path.join(RECON_DIR, 'gisp-recon.html'), await page.content());
         await page.screenshot({ path: path.join(RECON_DIR, 'gisp-recon.png'), fullPage: false });
