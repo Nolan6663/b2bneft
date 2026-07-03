@@ -5,7 +5,7 @@ npm-debug.log*
 .vs/
 
 .env
-data.db
+data.db*
 uploads/
 
 test-results/
@@ -13,3 +13,20 @@ tests/e2e/admin-storage.json
 
 .worktrees/
 scripts/data/registry-gisp-raw.json
+
+# локальный рабочий мусор (скриншоты, черновики) — не коммитить в корень
+/*.png
+/System.__ComObject
+/prompt.txt
+/promt.txt
+/update.txt
+/server_err.txt
+/push.bat
+/read_me.txt
+/readme
+/env.example
+/CHANGELOG-*.md
+/CHANGELOG-*.txt
+/changes-*.txt
+/Новый макет/
+/landing-page-layout-request/
