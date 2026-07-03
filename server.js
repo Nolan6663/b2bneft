@@ -40,6 +40,14 @@ const createReviewsRouter = require('./routes/reviews');
 const createFavoritesRouter = require('./routes/favorites');
 const createAiRouter = require('./routes/ai');
 const createAdminRouter = require('./routes/admin');
+const createNotificationsRouter = require('./routes/notifications');
+const createTasksRouter = require('./routes/tasks');
+const createIntegrationsRouter = require('./routes/integrations');
+const createTeamRouter = require('./routes/team');
+const createTemplatesRouter = require('./routes/templates');
+const createSeoRouter = require('./routes/seo');
+const createTelegramRouter = require('./routes/telegram');
+const createPushRouter = require('./routes/push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
@@ -656,68 +664,6 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-// ===================== WEB PUSH =====================
-
-app.get('/api/push/vapid-key', (req, res) => {
-    if (!process.env.VAPID_PUBLIC_KEY) return res.status(503).json({ error: 'Push не настроен' });
-    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
-});
-
-app.post('/api/push/subscribe', requireAuth, async (req, res, next) => {
-    try {
-        const { subscription } = req.body;
-        if (!subscription?.endpoint) return res.status(400).json({ error: 'Неверный subscription объект' });
-        await pool.query(
-            `INSERT INTO push_subscriptions (user_id, subscription)
-             VALUES ($1, $2)
-             ON CONFLICT DO NOTHING`,
-            [req.user.id, JSON.stringify(subscription)]
-        );
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/push/subscribe', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query('DELETE FROM push_subscriptions WHERE user_id = $1', [req.user.id]);
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-// ===================== TELEGRAM =====================
-
-app.post('/api/telegram/link-token', requireAuth, async (req, res, next) => {
-    try {
-        const token = crypto.randomBytes(32).toString('hex');
-        const expires = new Date(Date.now() + 15 * 60 * 1000);
-        await pool.query(
-            'UPDATE users SET telegram_link_token=$1, telegram_link_expires=$2 WHERE id=$3',
-            [token, expires, req.user.id]
-        );
-        const botName = process.env.TELEGRAM_BOT_NAME || 'TexZakazBot';
-        res.json({ token, deepLink: `https://t.me/${botName}?start=${token}` });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/telegram/unlink', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query(
-            'UPDATE users SET telegram_id=NULL, telegram_link_token=NULL, telegram_link_expires=NULL WHERE id=$1',
-            [req.user.id]
-        );
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-app.get('/api/telegram/status', requireAuth, async (req, res, next) => {
-    try {
-        const { rows: [user] } = await pool.query(
-            'SELECT telegram_id FROM users WHERE id=$1', [req.user.id]
-        );
-        res.json({ linked: Boolean(user?.telegram_id), telegramId: user?.telegram_id || null });
-    } catch (e) { next(e); }
-});
-
 // ===================== УМНЫЙ МАТЧИНГ =====================
 const CATEGORY_KEYWORDS = {
     'РТИ': ['рти', 'резин', 'уплотн', 'манжет', 'вулканиз', 'прокладк', 'эластом', 'кольц', 'полиур'],
@@ -1199,6 +1145,7 @@ const routesDeps = {
     rowToProposal,
     rowToCompany,
     rowToMessage,
+    rowToNotification,
     enrichCompany,
     geocodeCity,
     computeMatchScore,
@@ -1237,6 +1184,14 @@ app.use('/api/reviews', createReviewsRouter(routesDeps));
 app.use('/api/favorites', createFavoritesRouter(routesDeps));
 app.use('/api', createAiRouter({ ...routesDeps, genAI }));
 app.use('/api', createAdminRouter(routesDeps));
+app.use('/api/notifications', createNotificationsRouter(routesDeps));
+app.use('/api', createTasksRouter(routesDeps));
+app.use('/api/integrations', createIntegrationsRouter({ ...routesDeps, sapB1Login }));
+app.use('/api', createTeamRouter(routesDeps));
+app.use('/api/templates', createTemplatesRouter(routesDeps));
+app.use('/api/seo', createSeoRouter({ ...routesDeps, genAI }));
+app.use('/api/telegram', createTelegramRouter(routesDeps));
+app.use('/api/push', createPushRouter(routesDeps));
 
 // ===================== DASHBOARD COUNTS =====================
 
@@ -1393,108 +1348,6 @@ app.get('/api/catalog', requireAuth, async (req, res, next) => {
             ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC
         `);
         res.json(rows.map(rowToCompany));
-    } catch (e) { next(e); }
-});
-
-// ===================== SEO =====================
-const seoAuditor = require('./seo/auditor');
-const seoGsc     = require('./seo/gsc');
-const seoYandex  = require('./seo/yandex');
-const seoIntents = require('./seo/intents');
-
-app.post('/api/seo/audit', requireAuth, requireRole('admin'), async (req, res, next) => {
-    try {
-        const results = await seoAuditor.auditAll();
-        for (const r of results) {
-            await pool.query(
-                'INSERT INTO seo_audits (page, score, issues) VALUES ($1, $2, $3)',
-                [r.page, r.score, JSON.stringify(r.issues)]
-            );
-        }
-        res.json(results);
-    } catch (e) { next(e); }
-});
-
-app.post('/api/seo/sync', requireAuth, requireRole('admin'), async (req, res, next) => {
-    try {
-        const end   = new Date().toISOString().slice(0, 10);
-        const start = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-        const [gscRows, yandexRows] = await Promise.all([
-            seoGsc.enabled    ? seoGsc.fetchSearchAnalytics(start, end) : [],
-            seoYandex.enabled ? seoYandex.fetchQueries(start, end)      : [],
-        ]);
-
-        const allRows = [...gscRows, ...yandexRows];
-        for (const r of allRows) {
-            await pool.query(
-                `INSERT INTO seo_snapshots (source, date, query, page, impressions, clicks, ctr, position)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                 ON CONFLICT (source, date, query, page)
-                 DO UPDATE SET impressions=$5, clicks=$6, ctr=$7, position=$8`,
-                [r.source, r.date, r.query, r.page, r.impressions, r.clicks, r.ctr, r.position]
-            );
-        }
-
-        const uniqueQueries = [...new Set(allRows.map(r => r.query))];
-        await seoIntents.classifyIntents(uniqueQueries, genAI, pool);
-
-        const { rows: [lg] } = await pool.query(`SELECT MAX(date) AS d FROM seo_snapshots WHERE source='google'`);
-        const { rows: [ly] } = await pool.query(`SELECT MAX(date) AS d FROM seo_snapshots WHERE source='yandex'`);
-
-        res.json({
-            synced: allRows.length,
-            newQueries: uniqueQueries.length,
-            lastSync: { google: lg?.d || null, yandex: ly?.d || null },
-        });
-    } catch (e) { next(e); }
-});
-
-app.get('/api/seo/data', requireAuth, requireRole('admin'), async (req, res, next) => {
-    try {
-        // latest audit result per page
-        const { rows: auditRows } = await pool.query(`
-            SELECT DISTINCT ON (page) page, score, issues, audited_at
-            FROM seo_audits
-            ORDER BY page, audited_at DESC
-        `);
-
-        // latest snapshot per (source, query) with intent join
-        const { rows: snapRows } = await pool.query(`
-            SELECT s.source, s.query, s.page, s.impressions, s.clicks, s.ctr, s.position, s.date,
-                   i.intent, i.intent_ru
-            FROM seo_snapshots s
-            LEFT JOIN seo_intents i ON i.query = s.query
-            WHERE s.date = (
-                SELECT MAX(s2.date) FROM seo_snapshots s2
-                WHERE s2.source = s.source AND s2.query = s.query
-            )
-            ORDER BY s.impressions DESC
-            LIMIT 1000
-        `);
-
-        // compute delta vs previous snapshot for each row
-        const snapshots = await Promise.all(snapRows.map(async s => {
-            const { rows: [prev] } = await pool.query(
-                `SELECT position FROM seo_snapshots
-                 WHERE source=$1 AND query=$2 AND date < $3
-                 ORDER BY date DESC LIMIT 1`,
-                [s.source, s.query, s.date]
-            );
-            const delta = prev ? parseFloat((s.position - prev.position).toFixed(2)) : null;
-            return { ...s, delta };
-        }));
-
-        const { rows: [lg] } = await pool.query(`SELECT MAX(date) AS d FROM seo_snapshots WHERE source='google'`);
-        const { rows: [ly] } = await pool.query(`SELECT MAX(date) AS d FROM seo_snapshots WHERE source='yandex'`);
-
-        res.json({
-            audit: auditRows,
-            gscEnabled: seoGsc.enabled,
-            yandexEnabled: seoYandex.enabled,
-            snapshots,
-            lastSync: { google: lg?.d || null, yandex: ly?.d || null },
-        });
     } catch (e) { next(e); }
 });
 
@@ -1868,38 +1721,6 @@ app.get('/api/public/companies/:id', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
-// ===================== ШАБЛОНЫ ЗАКУПОК =====================
-
-app.get('/api/templates', requireAuth, async (req, res, next) => {
-    try {
-        const { rows } = await pool.query(
-            'SELECT * FROM order_templates WHERE company=$1 ORDER BY created_at DESC',
-            [req.user.company]
-        );
-        res.json(rows);
-    } catch (e) { next(e); }
-});
-
-app.post('/api/templates', requireAuth, async (req, res, next) => {
-    try {
-        const { title, category, description, quantity, deadlineDays } = req.body;
-        if (!title) return res.status(400).json({ error: 'Укажите название шаблона' });
-        const { rows: [row] } = await pool.query(
-            `INSERT INTO order_templates (company,title,category,description,quantity,deadline_days)
-             VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-            [req.user.company, title, category || '', description || '', quantity || null, deadlineDays || null]
-        );
-        res.status(201).json(row);
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/templates/:id', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query('DELETE FROM order_templates WHERE id=$1 AND company=$2', [req.params.id, req.user.company]);
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
 // ===================== ЭКСПОРТ EXCEL =====================
 
 // ===================== НАСТРОЙКА ДАЙДЖЕСТА =====================
@@ -1910,86 +1731,6 @@ app.patch('/api/auth/digest', requireAuth, async (req, res, next) => {
         if (!['daily','weekly','never'].includes(frequency)) return res.status(400).json({ error: 'Недопустимое значение' });
         await pool.query('UPDATE users SET digest_frequency=$1 WHERE id=$2', [frequency, req.user.id]);
         res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-// ===================== КОМАНДА / ПРИГЛАШЕНИЯ =====================
-
-app.get('/api/team/members', requireAuth, async (req, res, next) => {
-    try {
-        const { rows: members } = await pool.query(
-            'SELECT id, email, team_role, created_at FROM users WHERE company=$1 ORDER BY created_at',
-            [req.user.company]
-        );
-        const { rows: pending } = await pool.query(
-            "SELECT id, email, team_role, created_at FROM invitations WHERE company=$1 AND accepted=false AND expires_at>NOW() ORDER BY created_at DESC",
-            [req.user.company]
-        );
-        res.json({ members, pending });
-    } catch (e) { next(e); }
-});
-
-app.post('/api/team/invite', requireAuth, async (req, res, next) => {
-    try {
-        const { email, teamRole = 'member' } = req.body;
-        if (!email) return res.status(400).json({ error: 'Укажите email' });
-        if (!['admin','member','viewer'].includes(teamRole)) return res.status(400).json({ error: 'Недопустимая роль' });
-
-        const { rows: [existing] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email)=LOWER($1)', [email]);
-        if (existing) return res.status(409).json({ error: 'Этот email уже зарегистрирован на платформе' });
-
-        const token = crypto.randomBytes(24).toString('hex');
-        await pool.query(
-            `INSERT INTO invitations (token,email,company,role,team_role,invited_by)
-             VALUES ($1,$2,$3,$4,$5,$6)
-             ON CONFLICT (token) DO NOTHING`,
-            [token, email.toLowerCase(), req.user.company, req.user.role, teamRole, req.user.email]
-        );
-
-        const appUrl = process.env.APP_URL || 'https://texzakaz.ru';
-        const inviteUrl = `${appUrl}/login.html?invite=${token}`;
-        const roleLabels = { admin:'Администратор', member:'Менеджер', viewer:'Наблюдатель' };
-        await sendEmail(email, `Приглашение в команду — ТехЗаказ`, `
-            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
-                <h2 style="color:#1E3A5F;margin:0 0 12px;">Вас пригласили в команду</h2>
-                <p style="color:#444;margin:0 0 8px;">Пользователь <strong>${req.user.email}</strong> приглашает вас присоединиться к компании</p>
-                <p style="font-size:18px;font-weight:700;color:#1E3A5F;margin:0 0 16px;">${req.user.company}</p>
-                <p style="color:#666;margin:0 0 20px;">Роль в команде: <strong>${roleLabels[teamRole] || teamRole}</strong></p>
-                <a href="${inviteUrl}" style="display:inline-block;background:#FF6A00;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Принять приглашение →</a>
-                <p style="color:#aaa;font-size:12px;margin-top:20px;">Ссылка действительна 7 дней. Если вы не ожидали этого письма — проигнорируйте его.</p>
-            </div>`);
-
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/team/members/:id', requireAuth, async (req, res, next) => {
-    try {
-        const targetId = Number(req.params.id);
-        if (targetId === req.user.id) return res.status(400).json({ error: 'Нельзя удалить самого себя' });
-        const { rows: [target] } = await pool.query('SELECT company FROM users WHERE id=$1', [targetId]);
-        if (!target || target.company !== req.user.company) return res.status(404).json({ error: 'Пользователь не найден' });
-        await pool.query('DELETE FROM users WHERE id=$1', [targetId]);
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/team/invites/:id', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query('DELETE FROM invitations WHERE id=$1 AND company=$2', [req.params.id, req.user.company]);
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
-// Public — called before login to prefill registration form
-app.get('/api/invitations/:token', async (req, res, next) => {
-    try {
-        const { rows: [inv] } = await pool.query(
-            "SELECT email, company, role, team_role FROM invitations WHERE token=$1 AND accepted=false AND expires_at>NOW()",
-            [req.params.token]
-        );
-        if (!inv) return res.status(404).json({ error: 'Приглашение недействительно или истекло' });
-        res.json(inv);
     } catch (e) { next(e); }
 });
 
@@ -2154,273 +1895,7 @@ async function triggerIntegrations(customerCompany, proposal, order) {
     }
 }
 
-// ── CRUD ──────────────────────────────────────────────────────────────────
-
-app.get('/api/integrations', requireAuth, async (req, res, next) => {
-    try {
-        const { rows } = await pool.query(
-            'SELECT provider, enabled, created_at, config FROM integrations WHERE company = $1',
-            [req.user.company]
-        );
-        res.json(rows.map(r => ({
-            provider: r.provider,
-            enabled:  r.enabled,
-            connectedAt: r.created_at,
-            preview: previewConfig(r.provider, r.config),
-        })));
-    } catch (e) { next(e); }
-});
-
-function previewConfig(provider, config) {
-    if (provider === 'bitrix24') {
-        const url = config.webhookUrl || '';
-        return url ? url.replace(/\/rest\/.*/, '/rest/…') : '';
-    }
-    if (provider === 'amocrm')  return config.subdomain  ? `${config.subdomain}.amocrm.ru` : '';
-    if (provider === 'sap-b1')  return config.serverUrl  ? `${config.serverUrl} / ${config.companyDB}` : '';
-    if (provider === 'sap-s4')  return config.host       ? config.host.replace(/^https?:\/\//, '') : '';
-    return '';
-}
-
-app.post('/api/integrations/:provider', requireAuth, async (req, res, next) => {
-    try {
-        const { provider } = req.params;
-        if (!['bitrix24', 'amocrm', 'sap-b1', 'sap-s4'].includes(provider))
-            return res.status(400).json({ error: 'Неизвестный провайдер' });
-
-        let config = {};
-        if (provider === 'bitrix24') {
-            const { webhookUrl } = req.body;
-            if (!webhookUrl?.trim()) return res.status(400).json({ error: 'Укажите webhook URL' });
-            try { new URL(webhookUrl.trim()); } catch { return res.status(400).json({ error: 'Неверный URL' }); }
-            if (!webhookUrl.includes('/rest/')) return res.status(400).json({ error: 'URL должен содержать /rest/' });
-            config = { webhookUrl: webhookUrl.trim() };
-        }
-        if (provider === 'amocrm') {
-            const { subdomain, accessToken } = req.body;
-            if (!subdomain?.trim() || !accessToken?.trim())
-                return res.status(400).json({ error: 'Укажите поддомен и токен доступа' });
-            config = { subdomain: subdomain.trim().replace(/\.amocrm\.ru$/, ''), accessToken: accessToken.trim() };
-        }
-        if (provider === 'sap-b1') {
-            const { serverUrl, companyDB, username, password, warehouseCode } = req.body;
-            if (!serverUrl?.trim() || !companyDB?.trim() || !username?.trim() || !password?.trim())
-                return res.status(400).json({ error: 'Укажите URL сервера, базу данных, логин и пароль' });
-            try { new URL(serverUrl.trim()); } catch { return res.status(400).json({ error: 'Неверный URL сервера' }); }
-            config = { serverUrl: serverUrl.trim().replace(/\/$/, ''), companyDB: companyDB.trim(), username: username.trim(), password: password.trim(), warehouseCode: warehouseCode?.trim() || '01' };
-        }
-        if (provider === 'sap-s4') {
-            const { host, username, password, companyCode, purchasingOrg, purchasingGroup, plant, defaultVendor } = req.body;
-            if (!host?.trim() || !username?.trim() || !password?.trim())
-                return res.status(400).json({ error: 'Укажите хост, логин и пароль' });
-            try { new URL(host.trim()); } catch { return res.status(400).json({ error: 'Неверный URL хоста' }); }
-            config = {
-                host:           host.trim().replace(/\/$/, ''),
-                username:       username.trim(),
-                password:       password.trim(),
-                companyCode:    companyCode?.trim()    || '1000',
-                purchasingOrg:  purchasingOrg?.trim()  || '1000',
-                purchasingGroup:purchasingGroup?.trim() || '001',
-                plant:          plant?.trim()           || '1000',
-                defaultVendor:  defaultVendor?.trim()   || '',
-            };
-        }
-
-        await pool.query(
-            `INSERT INTO integrations (company, provider, config)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (company, provider) DO UPDATE SET config = $3, enabled = true, created_at = NOW()`,
-            [req.user.company, provider, JSON.stringify(config)]
-        );
-        res.json({ ok: true, preview: previewConfig(provider, config) });
-    } catch (e) { next(e); }
-});
-
-app.post('/api/integrations/:provider/test', requireAuth, async (req, res, next) => {
-    try {
-        const { provider } = req.params;
-        const { rows: [row] } = await pool.query(
-            'SELECT config FROM integrations WHERE company = $1 AND provider = $2',
-            [req.user.company, provider]
-        );
-        if (!row) return res.status(404).json({ error: 'Интеграция не подключена' });
-
-        if (provider === 'bitrix24') {
-            const url = (row.config.webhookUrl || '').trim().replace(/\/?$/, '/');
-            const r = await fetch(`${url}profile.json`);
-            const data = await r.json();
-            if (!r.ok || data.error) return res.status(400).json({ error: data.error_description || 'Ошибка соединения с Bitrix24' });
-            return res.json({ ok: true, info: data.result?.NAME || 'Подключено' });
-        }
-        if (provider === 'amocrm') {
-            const { subdomain, accessToken } = row.config;
-            const r = await fetch(`https://${subdomain}.amocrm.ru/api/v4/account`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            });
-            const data = await r.json().catch(() => ({}));
-            if (!r.ok) return res.status(400).json({ error: data.detail || 'Ошибка соединения с AmoCRM' });
-            return res.json({ ok: true, info: data.name || subdomain });
-        }
-        if (provider === 'sap-b1') {
-            try {
-                const session = await sapB1Login(row.config);
-                const r = await fetch(`${row.config.serverUrl}/b1s/v1/CompanyService_GetAdminInfo`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Cookie': `B1SESSION=${session}` },
-                    body: '{}',
-                });
-                const data = await r.json().catch(() => ({}));
-                return res.json({ ok: true, info: data.CompanyName || row.config.companyDB });
-            } catch (e) {
-                return res.status(400).json({ error: e.message });
-            }
-        }
-        if (provider === 'sap-s4') {
-            const { host, username, password } = row.config;
-            const auth = Buffer.from(`${username}:${password}`).toString('base64');
-            const r = await fetch(`${host}/sap/opu/odata/sap/API_PURCHASEORDER_PROCESS_SRV/$metadata`, {
-                headers: { 'Authorization': `Basic ${auth}`, 'Accept': 'application/xml' },
-            });
-            if (!r.ok) return res.status(400).json({ error: `HTTP ${r.status} — проверьте хост и учётные данные` });
-            return res.json({ ok: true, info: host.replace(/^https?:\/\//, '') });
-        }
-        res.status(400).json({ error: 'Тест не поддерживается' });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/integrations/:provider', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query(
-            'DELETE FROM integrations WHERE company = $1 AND provider = $2',
-            [req.user.company, req.params.provider]
-        );
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
 // ── 1С CommerceML XML export ───────────────────────────────────────────────
-
-// ===================== ЗАДАЧИ =====================
-
-app.get('/api/tasks', requireAuth, async (req, res, next) => {
-    try {
-        const { orderId, company } = req.query;
-        if (!orderId || !company) return res.status(400).json({ error: 'orderId и company обязательны' });
-        if (!(await canAccessOrderThread(req.user, orderId, company))) {
-            return res.status(403).json({ error: 'Нет доступа к задачам этой переписки' });
-        }
-        const { rows } = await pool.query(
-            'SELECT * FROM tasks WHERE order_id = $1 AND company = $2 ORDER BY created_at ASC',
-            [Number(orderId), company]
-        );
-        res.json(rows.map(r => ({ id: r.id, title: r.title, dueDate: r.due_date, status: r.status, createdBy: r.created_by, createdAt: r.created_at })));
-    } catch (e) { next(e); }
-});
-
-app.post('/api/tasks', requireAuth, async (req, res, next) => {
-    try {
-        const { orderId, company, title, dueDate } = req.body;
-        if (!orderId || !company || !title?.trim()) return res.status(400).json({ error: 'Обязательные поля: orderId, company, title' });
-        if (!(await canAccessOrderThread(req.user, orderId, company))) {
-            return res.status(403).json({ error: 'Нет доступа к задачам этой переписки' });
-        }
-        const { rows: [row] } = await pool.query(
-            'INSERT INTO tasks (order_id, company, title, due_date, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-            [Number(orderId), company, title.trim(), dueDate || null, req.user.company]
-        );
-        res.json({ id: row.id, title: row.title, dueDate: row.due_date, status: row.status, createdBy: row.created_by, createdAt: row.created_at });
-    } catch (e) { next(e); }
-});
-
-app.patch('/api/tasks/:id', requireAuth, async (req, res, next) => {
-    try {
-        const { status } = req.body;
-        if (!['open', 'done'].includes(status)) return res.status(400).json({ error: 'status: open | done' });
-        const { rows: [existing] } = await pool.query('SELECT * FROM tasks WHERE id = $1', [Number(req.params.id)]);
-        if (!existing) return res.status(404).json({ error: 'Задача не найдена' });
-        if (!(await canAccessOrderThread(req.user, existing.order_id, existing.company))) {
-            return res.status(403).json({ error: 'Нет доступа к этой задаче' });
-        }
-        const { rows: [row] } = await pool.query(
-            'UPDATE tasks SET status = $1 WHERE id = $2 RETURNING *',
-            [status, Number(req.params.id)]
-        );
-        if (!row) return res.status(404).json({ error: 'Задача не найдена' });
-        res.json({ id: row.id, title: row.title, dueDate: row.due_date, status: row.status });
-    } catch (e) { next(e); }
-});
-
-// ── Контекст переписки (для правой панели) ──────────────────────────────────
-
-app.get('/api/conversation-context/:orderId/:company', requireAuth, async (req, res, next) => {
-    try {
-        const orderId = Number(req.params.orderId);
-        const company = decodeURIComponent(req.params.company);
-        if (!(await canAccessOrderThread(req.user, orderId, company))) {
-            return res.status(403).json({ error: 'Нет доступа к контексту этой переписки' });
-        }
-
-        const [orderRes, proposalRes, companyRes] = await Promise.all([
-            pool.query('SELECT * FROM orders WHERE id = $1', [orderId]),
-            pool.query('SELECT * FROM proposals WHERE order_id = $1 AND company = $2 ORDER BY created_at DESC LIMIT 1', [orderId, company]),
-            pool.query('SELECT * FROM companies WHERE company = $1 AND role = $2 LIMIT 1', [company, 'producer']),
-        ]);
-
-        const order    = orderRes.rows[0]    || null;
-        const proposal = proposalRes.rows[0] || null;
-        const comp     = companyRes.rows[0]  || null;
-
-        res.json({
-            order: order ? {
-                id:       order.id,
-                title:    order.title,
-                status:   order.status,
-                quantity: order.quantity,
-                deadline: order.deadline,
-                drawing:  order.drawing ? JSON.parse(order.drawing) : null,
-            } : null,
-            proposal: proposal ? {
-                id:     proposal.id,
-                price:  proposal.price,
-                days:   proposal.days,
-                status: proposal.status,
-                kpFile: proposal.kp_file ? JSON.parse(proposal.kp_file) : null,
-            } : null,
-            supplier: comp ? {
-                id:   comp.id,
-                inn:  comp.inn,
-                director: comp.director,
-                phone:    comp.phone,
-            } : null,
-        });
-    } catch (e) { next(e); }
-});
-
-// ===================== УВЕДОМЛЕНИЯ =====================
-
-app.get('/api/notifications/:company', requireAuth, async (req, res, next) => {
-    try {
-        if (req.params.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа к уведомлениям этой компании' });
-        const { rows } = await pool.query('SELECT * FROM notifications WHERE company = $1 ORDER BY created_at DESC', [req.user.company]);
-        res.json(rows.map(rowToNotification));
-    } catch (e) { next(e); }
-});
-
-app.post('/api/notifications/:company/read', requireAuth, async (req, res, next) => {
-    try {
-        if (req.params.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
-        await pool.query('UPDATE notifications SET read = true WHERE company = $1', [req.user.company]);
-        res.json({ message: 'ok' });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/notifications/:company', requireAuth, async (req, res, next) => {
-    try {
-        if (req.params.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
-        await pool.query('DELETE FROM notifications WHERE company = $1', [req.user.company]);
-        res.json({ message: 'ok' });
-    } catch (e) { next(e); }
-});
 
 // ===================== ОБРАБОТКА ОШИБОК =====================
 
