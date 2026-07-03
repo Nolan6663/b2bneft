@@ -2321,11 +2321,20 @@ app.get('/api/export/compare-kp.pdf', requireAuth, requireRole('customer'), asyn
         if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
         if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
 
-        const { rows } = await pool.query(
-            `SELECT p.company AS supplier, p.price, p.days, p.status, p.created_at
-             FROM proposals p WHERE p.order_id = $1 ORDER BY p.price ASC NULLS LAST`,
-            [orderId]
-        );
+        const ids = String(req.query.ids || '')
+            .split(',').map(Number).filter(n => Number.isInteger(n) && n > 0);
+        const { rows } = ids.length
+            ? await pool.query(
+                `SELECT p.company AS supplier, p.price, p.days, p.status, p.created_at
+                 FROM proposals p WHERE p.order_id = $1 AND p.id = ANY($2::int[])
+                 ORDER BY p.price ASC NULLS LAST`,
+                [orderId, ids]
+              )
+            : await pool.query(
+                `SELECT p.company AS supplier, p.price, p.days, p.status, p.created_at
+                 FROM proposals p WHERE p.order_id = $1 ORDER BY p.price ASC NULLS LAST`,
+                [orderId]
+              );
         if (rows.length < 2) return res.status(400).json({ error: 'Нужно минимум 2 КП для сравнения' });
 
         const orderObj = rowToOrder(order);
@@ -3306,7 +3315,7 @@ async function closeExpiredOrders() {
 
             await notifyCompanyEmail(
                 order.company,
-                `⏱ Дедлайн прямой закупки «${title}» истёк — закупка закрыта автоматически.`,
+                `Дедлайн прямой закупки «${title}» истёк — закупка закрыта автоматически.`,
                 `Дедлайн истёк — «${title}»`,
                 `<p style="color:#444;font-size:14px;">Истёк срок приёма предложений по закупке <strong>«${htmlEscape(title)}»</strong>.</p>
                  <p style="color:#666;font-size:13px;">Закупка закрыта автоматически. Если победитель ещё не выбран — откройте отклики и примите КП вручную или создайте новую закупку.</p>`

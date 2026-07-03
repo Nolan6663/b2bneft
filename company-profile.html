@@ -421,9 +421,9 @@
 
         function statusMeta(status) {
             if (status === 'Верифицирован') return { icon: '✓', cls: 'win' };
-            if (status === 'Действующая') return { icon: '✓', cls: 'win' };
-            if (status === 'Отклонен') return { icon: '✗', cls: 'loose' };
-            return { icon: '⏱', cls: 'waiting' };
+            if (status === 'Действующая') return { icon: uiIcon('check', 11), cls: 'win' };
+            if (status === 'Отклонен') return { icon: uiIcon('close', 11), cls: 'loose' };
+            return { icon: uiIcon('clock', 11), cls: 'waiting' };
         }
 
         function reliabilityPercent(rating) {
@@ -884,7 +884,7 @@
             if (vs === 'approved_egrul' || (c && c.verifiedEgrul)) {
                 return `<button class="btn-secondary" onclick="requestVerification(true)" style="border-color:var(--accent-bright); color:var(--accent-bright);">★ Верификация платформой</button>`;
             }
-            if (vs === 'pending') return `<span class="badge" style="background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.3); padding:7px 12px;">⏱ Заявка на рассмотрении</span>`;
+            if (vs === 'pending') return `<span class="badge" style="background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.3); padding:7px 12px; display:inline-flex; align-items:center; gap:5px;">${uiIcon('clock', 11)} Заявка на рассмотрении</span>`;
             if (vs === 'rejected') return `
                 <div style="text-align:right;">
                     <span class="badge" style="background:rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.3); padding:7px 12px; display:block; margin-bottom:6px;">✗ Отклонено${verificationStatus.comment ? ': ' + escapeHtml(verificationStatus.comment) : ''}</span>

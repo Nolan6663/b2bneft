@@ -387,7 +387,7 @@
                 div.className = 'ct-card';
                 const verBadge = c.status === 'Верифицирован'
                     ? `<div class="ct-card-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> <span class="nav-label">Верифицирован</span></div>`
-                    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:2px 8px;margin-bottom:8px;">⏱ На проверке</div>`;
+                    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:2px 8px;margin-bottom:8px;">${uiIcon('clock', 10)} На проверке</div>`;
                 const roleLabel = c.role === 'producer' ? 'Поставщик' : 'Заказчик';
                 div.innerHTML = `
                     <div class="ct-card-header">
@@ -428,7 +428,7 @@
 
             const verBadge = c.status === 'Верифицирован'
                 ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--accent-green);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:20px;padding:3px 10px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>`
-                : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:3px 10px;">⏱ На проверке</span>`;
+                : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#b45309;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:20px;padding:3px 10px;">${uiIcon('clock', 10)} На проверке</span>`;
             document.getElementById('detBadge').innerHTML = verBadge;
 
             document.getElementById('detMeta').innerHTML = `

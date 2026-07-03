@@ -1181,6 +1181,7 @@
             } catch {
             }
             currentProposalsList = proposals;
+            resetKpCompareSelection();
 
             proposals.sort((a, b) => (a.price || 0) - (b.price || 0));
 
@@ -1309,7 +1310,9 @@
                 showToast('Нужно минимум 2 КП', 'warn');
                 return;
             }
-            window.location.href = `${SERVER_URL}/export/compare-kp.pdf?orderId=${currentProposalsOrderId}`;
+            // PDF по тем же КП, что на экране (иначе сервер вернёт все КП закупки)
+            const ids = list.map(p => p.id).filter(Boolean).join(',');
+            window.location.href = `${SERVER_URL}/export/compare-kp.pdf?orderId=${currentProposalsOrderId}${ids ? `&ids=${ids}` : ''}`;
         }
 
         function compareFromProposalsModal() {

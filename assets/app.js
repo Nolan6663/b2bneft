@@ -1192,12 +1192,11 @@ function verificationBadgeHtml(p) {
 }
 
 function proposalStatusBadgeHtml(status) {
-  let icon = '⏱', cls = 'waiting', label = status || '—';
-  if (status === 'Выигран' || status === 'Победитель') { icon = '✓'; cls = 'win'; }
-  else if (status === 'Отклонен' || status === 'Отклонено') { icon = '✗'; cls = 'loose'; }
-  else if (status === 'Отозвана заказчиком') { icon = '⊘'; cls = 'muted'; }
-  else if (status === 'Ожидает ответа' || status === 'На рассмотрении') { icon = '⏱'; cls = 'waiting'; }
-  return `<span class="status-icon ${cls}" style="font-size:11.5px;white-space:nowrap;">${icon} ${escapeHtml(label)}</span>`;
+  let icon = uiIcon('clock', 11), cls = 'waiting', label = status || '—';
+  if (status === 'Выигран' || status === 'Победитель') { icon = uiIcon('check', 11); cls = 'win'; }
+  else if (status === 'Отклонен' || status === 'Отклонено') { icon = uiIcon('close', 11); cls = 'loose'; }
+  else if (status === 'Отозвана заказчиком') { icon = uiIcon('close', 11); cls = 'muted'; }
+  return `<span class="status-icon ${cls}" style="font-size:11.5px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">${icon} ${escapeHtml(label)}</span>`;
 }
 
 const _kpCompareSelected = new Set();
