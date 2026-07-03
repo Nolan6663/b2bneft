@@ -573,12 +573,22 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
             { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
         ];
-        const { rows: suppliers } = await pool.query(
-            "SELECT id FROM companies WHERE role = 'producer' AND verified_by_platform = true ORDER BY id ASC LIMIT 200"
-        );
+        // Все производители: верифицированные приоритетнее, заглушки реестра тоже
+        // индексируем (4286 страниц «завод + продукция + город» — органический канал)
+        const { rows: suppliers } = await pool.query(`
+            SELECT id, verified_by_platform, claimed FROM companies
+            WHERE role = 'producer' AND status <> 'Отклонено'
+            ORDER BY verified_by_platform DESC, claimed DESC, id ASC
+            LIMIT 45000
+        `);
         for (const s of suppliers) {
-            pages.push({ url: `/p/${s.id}`, priority: '0.6', changefreq: 'weekly' });
+            pages.push({
+                url: `/p/${s.id}`,
+                priority: s.verified_by_platform ? '0.6' : (s.claimed ? '0.5' : '0.4'),
+                changefreq: s.claimed ? 'weekly' : 'monthly',
+            });
         }
+        res.setHeader('Cache-Control', 'public, max-age=3600');
         const urls = pages.map(p =>
             `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
         ).join('\n');
@@ -591,7 +601,7 @@ app.get('/p/:id', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const { rows: [row] } = await pool.query(
-            "SELECT company, specialization, city, about, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
+            "SELECT company, specialization, city, about, products, claimed, source, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
             [id]
         );
         if (!row) {
@@ -600,8 +610,11 @@ app.get('/p/:id', async (req, res, next) => {
         }
         const filePath = path.join(__dirname, 'supplier-public.html');
         let html = fs.readFileSync(filePath, 'utf8');
-        const title = `${row.company} — поставщик | ТехЗаказ`;
-        const desc = [row.specialization, row.city, row.about].filter(Boolean).join(' · ').slice(0, 160)
+        const fromRegistry = !row.claimed && row.source === 'gisp-pp719';
+        const title = fromRegistry
+            ? `${row.company}${row.city ? ' (' + row.city + ')' : ''} — производитель из реестра Минпромторга | ТехЗаказ`
+            : `${row.company} — поставщик | ТехЗаказ`;
+        const desc = [row.specialization, row.products, row.city, row.about].filter(Boolean).join(' · ').slice(0, 160)
             || `Профиль поставщика ${row.company} на B2B-платформе ТехЗаказ`;
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
         html = html
@@ -2141,6 +2154,10 @@ app.get('/api/public/companies/:id', async (req, res, next) => {
             reviewAvg: avg,
             reviewCount: reviews.length,
             publicUrl: `/p/${c.id}`,
+            products: c.products || '',
+            phone: c.phone || '',
+            website: c.website || '',
+            fromRegistry: c.fromRegistry,
         });
     } catch (e) { next(e); }
 });
@@ -3239,7 +3256,26 @@ app.get('/api/admin/stats', requireAuth, requireRole('admin'), async (req, res, 
             pool.query('SELECT COUNT(*) AS n FROM orders'),
             pool.query('SELECT COUNT(*) AS n FROM companies'),
         ]);
-        res.json({ users, pending, orders, companies });
+        // Воронка приглашений заводам из госреестра
+        const { rows: [reg] } = await pool.query(`
+            SELECT
+                COUNT(*) FILTER (WHERE claimed = false)                          AS stubs,
+                COUNT(*) FILTER (WHERE claimed = false AND contact_email <> '') AS with_email,
+                COALESCE(SUM(invites_sent), 0)                                  AS invites_sent,
+                COUNT(*) FILTER (WHERE claimed = true)                          AS claimed,
+                COUNT(*) FILTER (WHERE invite_optout = true)                    AS optout
+            FROM companies WHERE source = 'gisp-pp719'
+        `);
+        res.json({
+            users, pending, orders, companies,
+            registry: {
+                stubs: Number(reg.stubs),
+                withEmail: Number(reg.with_email),
+                invitesSent: Number(reg.invites_sent),
+                claimed: Number(reg.claimed),
+                optout: Number(reg.optout),
+            },
+        });
     } catch (e) { next(e); }
 });
 

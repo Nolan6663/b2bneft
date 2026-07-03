@@ -92,6 +92,10 @@
                 const stars = c.reviewAvg ? '★'.repeat(Math.round(c.reviewAvg)) : '';
                 const equipment = Array.isArray(c.equipment) ? c.equipment : [];
                 const iso = Array.isArray(c.isoCertificates) ? c.isoCertificates : [];
+                const products = String(c.products || '').split(';').map(s => s.trim()).filter(Boolean);
+                const siteOk = c.website && !c.website.includes('@');
+                const siteHref = siteOk ? (/^https?:\/\//i.test(c.website) ? c.website : 'https://' + c.website) : '';
+                let siteHost = ''; try { siteHost = siteHref ? new URL(siteHref).host.replace(/^www\./, '') : ''; } catch {}
                 el.innerHTML = `
                     <section class="sp-hero">
                         <h1>${esc(c.company)}</h1>
@@ -99,16 +103,29 @@
                             ${c.city ? `<span class="sp-badge ui-icon-label"><svg class="ui-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(c.city)}</span></span>` : ''}
                             ${c.specialization ? `<span class="sp-badge">${esc(c.specialization)}</span>` : ''}
                             ${c.verified ? '<span class="sp-badge verified">✓ Проверен ТехЗаказ</span>' : ''}
+                            ${c.fromRegistry ? '<span class="sp-badge verified">Реестр Минпромторга ПП-719</span>' : ''}
+                            ${c.inn ? `<span class="sp-badge">ИНН ${esc(c.inn)}</span>` : ''}
                             ${c.rating ? `<span class="sp-badge">Рейтинг ${esc(c.rating)}</span>` : ''}
                             ${c.reviewAvg ? `<span class="sp-badge">${stars} ${c.reviewAvg} (${c.reviewCount})</span>` : ''}
                         </div>
-                        ${c.about ? `<p class="sp-about">${esc(c.about)}</p>` : '<p class="sp-about">Поставщик на платформе прямых закупок ТехЗаказ.</p>'}
+                        ${c.about ? `<p class="sp-about">${esc(c.about)}</p>` : (c.fromRegistry
+                            ? '<p class="sp-about">Российский производитель промышленной продукции из государственного реестра Минпромторга (постановление №719). Профиль создан по открытым данным — предприятие может присоединить его и отвечать на заказы напрямую.</p>'
+                            : '<p class="sp-about">Поставщик на платформе прямых закупок ТехЗаказ.</p>')}
+                        ${(c.phone || siteHost) ? `<div class="sp-meta" style="margin-top:4px;">
+                            ${c.phone ? `<a class="sp-badge" style="text-decoration:none;" href="tel:${esc(String(c.phone).replace(/[^\\d+]/g, ''))}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${esc(c.phone)}</a>` : ''}
+                            ${siteHost ? `<a class="sp-badge" style="text-decoration:none;" href="${esc(siteHref)}" target="_blank" rel="noopener nofollow"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> ${esc(siteHost)}</a>` : ''}
+                        </div>` : ''}
                         <div class="sp-cta">
-                            <a href="/zakupki" class="btn-primary" style="height:40px;padding:0 20px;">Смотреть закупки</a>
-                            <a href="/dlya-postavshchikov" class="btn-secondary" style="height:40px;padding:0 20px;">Стать поставщиком</a>
+                            ${c.fromRegistry ? `<a href="/login.html#register?claim=${encodeURIComponent(c.inn || '')}&company=${encodeURIComponent(c.company || '')}" class="btn-primary" style="height:40px;padding:0 20px;">Это ваша компания? Присоединить профиль</a>` : ''}
+                            <a href="/zakupki" class="${c.fromRegistry ? 'btn-secondary' : 'btn-primary'}" style="height:40px;padding:0 20px;">Смотреть закупки</a>
+                            ${!c.fromRegistry ? '<a href="/dlya-postavshchikov" class="btn-secondary" style="height:40px;padding:0 20px;">Стать поставщиком</a>' : ''}
                         </div>
                     </section>
-                    <div class="sp-grid">
+                    ${products.length ? `<div class="sp-card" style="margin-bottom:16px;">
+                        <h2>Продукция${c.fromRegistry ? ' (по данным реестра)' : ''}</h2>
+                        <ul class="sp-list">${products.slice(0, 10).map(p => `<li>${esc(p.length > 120 ? p.slice(0, 120) + '…' : p)}</li>`).join('')}</ul>
+                    </div>` : ''}
+                    ${c.fromRegistry ? '' : `<div class="sp-grid">
                         <div class="sp-card">
                             <h2>Показатели</h2>
                             <div class="sp-kpi-row">
@@ -122,7 +139,7 @@
                             ${equipment.length ? `<ul class="sp-list">${equipment.slice(0,8).map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : '<p style="font-size:13px;color:var(--text-secondary);margin:0;">Не указано</p>'}
                             ${iso.length ? `<ul class="sp-list" style="margin-top:10px;">${iso.slice(0,5).map(e => `<li>ISO: ${esc(e)}</li>`).join('')}</ul>` : ''}
                         </div>
-                    </div>
+                    </div>`}
                     ${c.photos?.length ? `<div class="sp-card" style="margin-top:16px;"><h2>Производство</h2><div class="sp-photos">${c.photos.slice(0,6).map(p => `<img src="${esc(p.url)}" alt="${esc(p.originalName || 'Фото')}">`).join('')}</div></div>` : ''}
                     ${c.reviews?.length ? `<div class="sp-card" style="margin-top:16px;"><h2>Отзывы заказчиков</h2>${c.reviews.map(rv => `<div class="sp-review"><div class="sp-review-stars">${'★'.repeat(rv.score)}${'☆'.repeat(5-rv.score)}</div><div class="sp-review-from">${esc(rv.from_company)}</div>${rv.text ? `<div class="sp-review-text">${esc(rv.text)}</div>` : ''}</div>`).join('')}</div>` : ''}
                 `;

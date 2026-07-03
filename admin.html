@@ -147,6 +147,14 @@
         </div>
     </div>
 
+    <!-- Воронка приглашений заводам из реестра -->
+    <div class="adm-kpi" style="margin-bottom:24px;">
+        <div class="adm-kpi-label">Приглашения заводам из реестра Минпромторга</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--text-secondary);" id="inviteFunnel">
+            Загрузка…
+        </div>
+    </div>
+
     <!-- Tabs bar -->
     <div class="adm-tabs-bar">
         <div class="adm-tabs">
@@ -237,6 +245,17 @@
             const badge = document.getElementById('pendingBadge');
             badge.textContent = d.pending;
             badge.style.display = d.pending > 0 ? 'inline-flex' : 'none';
+            if (d.registry) {
+                const rg = d.registry;
+                const item = (label, val, accent) =>
+                    `<span><b style="font-size:18px;font-weight:800;color:${accent ? 'var(--accent-bright)' : 'var(--text-primary-alt)'};">${val}</b> ${label}</span>`;
+                document.getElementById('inviteFunnel').innerHTML =
+                    item('заводов в каталоге', rg.stubs + rg.claimed) +
+                    item('с email', rg.withEmail) +
+                    item('писем отправлено', rg.invitesSent) +
+                    item('присоединилось', rg.claimed, true) +
+                    item('отписалось', rg.optout);
+            }
         } catch {}
     }
 
