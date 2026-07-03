@@ -487,6 +487,40 @@
     <script>
         if (!hasSession()) window.location.href = 'login.html';
 
+        /* Ключи мощностей (как хранятся в profiles) → русские названия для карточек */
+        const CAP_LABELS = {
+            lathe: 'Токарные работы', mill: 'Фрезерные работы', laser: 'Лазерная резка',
+            rti: 'РТИ', cast: 'Литьё', stamp: 'Штамповка', paint: 'Покраска', weld: 'Сварка',
+        };
+        /* Чип фильтра → ключи мощностей + корни слов для текстовых полей (реестр пишет «токарная обработка» и т.п.) */
+        const CHIP_MATCHERS = {
+            'РТИ':              { keys: ['rti'],   words: ['рти', 'резинотехн', 'манжет', 'уплотнен', 'сальник'] },
+            'Металлообработка': { keys: ['lathe', 'mill', 'stamp', 'weld', 'cast', 'laser'], words: ['металлообработ', 'обработка металл', 'мехобработ', 'механическ', 'токарн', 'фрезерн', 'штампов', 'сварк', 'литье', 'литьё'] },
+            'Токарка':          { keys: ['lathe'], words: ['токарн', 'токарк'] },
+            'Фрезеровка':       { keys: ['mill'],  words: ['фрезерн', 'фрезеровк'] },
+            'Лазерная резка':   { keys: ['laser'], words: ['лазерн'] },
+        };
+
+        function producerSearchText(p) {
+            return [
+                p.specialization || '', p.products || '', p.about || '',
+                (p.equipment || []).join(' '),
+            ].join(' ').toLowerCase();
+        }
+
+        function matchesChip(p, chip) {
+            const m = CHIP_MATCHERS[chip];
+            if (!m) { // неизвестный чип — старое поведение по подстроке
+                const f = chip.toLowerCase();
+                return (p.capabilities || []).some(c => c.toLowerCase().includes(f))
+                    || (p.specialization || '').toLowerCase().includes(f);
+            }
+            const caps = p.capabilities || [];
+            if (m.keys.some(k => caps.includes(k))) return true;
+            const text = producerSearchText(p);
+            return m.words.some(w => text.includes(w));
+        }
+
         let allProducers = [];
         let activeFilter = '';
         let searchQuery  = '';
@@ -579,18 +613,13 @@
                 list = list.filter(p =>
                     (p.company || '').toLowerCase().includes(q) ||
                     (p.city    || '').toLowerCase().includes(q) ||
+                    (p.products || '').toLowerCase().includes(q) ||
                     (p.specialization || '').toLowerCase().includes(q) ||
                     (p.about   || '').toLowerCase().includes(q)
                 );
             }
             if (activeFilter) {
-                const f = activeFilter.toLowerCase();
-                list = list.filter(p => {
-                    const inCaps = Array.isArray(p.capabilities) &&
-                        p.capabilities.some(c => c.toLowerCase().includes(f));
-                    const inSpec = (p.specialization || '').toLowerCase().includes(f);
-                    return inCaps || inSpec;
-                });
+                list = list.filter(p => matchesChip(p, activeFilter));
             }
             if (sidebarCategories && sidebarCategories.length) {
                 list = list.filter(p => {
@@ -748,7 +777,7 @@
                         : ''));
 
             const caps = (p.capabilities || []).slice(0, 5)
-                .map(c => `<span class="catalog-cap-chip">${escapeHtml(c)}</span>`)
+                .map(c => `<span class="catalog-cap-chip">${escapeHtml(CAP_LABELS[c] || c)}</span>`)
                 .join('');
 
             const locParts = [p.city, p.specialization].filter(Boolean);

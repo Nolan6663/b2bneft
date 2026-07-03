@@ -162,6 +162,7 @@ function rowToCompany(r) {
         specialization: r.specialization, status: r.status, city: r.city,
         yearsExperience: r.years_experience, about: r.about,
         equipment: JSON.parse(r.equipment || '[]'),
+        products: r.products || '',
         phone: r.phone, website: r.website,
         ogrn: r.ogrn || '', director: r.director || '',
         foundingYear: r.founding_year || null,
