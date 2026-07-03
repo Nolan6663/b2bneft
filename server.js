@@ -857,7 +857,7 @@ function offsetProductionPoint(point, index) {
 async function geocodeExisting() {
     try {
         const { rows } = await pool.query(
-            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 200"
+            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 1000"
         );
         const cityCache = new Map();
         for (const r of rows) {

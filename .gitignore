@@ -12,3 +12,4 @@ test-results/
 tests/e2e/admin-storage.json
 
 .worktrees/
+scripts/data/registry-gisp-raw.json
