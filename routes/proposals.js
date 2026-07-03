@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { acceptWonProposal } = require('../lib/proposal-accept');
+const { buildContractPdf } = require('../export-pdf');
 
 function createProposalsRouter(deps) {
     const {
@@ -51,6 +52,40 @@ function createProposalsRouter(deps) {
                 return res.status(404).json({ error: 'Файл был удалён с сервера' });
             }
             await storage.streamToResponse(kpFile.storedName, res, kpFile.originalName);
+        } catch (e) { next(e); }
+    });
+
+    router.get('/:proposalId/contract.pdf', requireAuth, async (req, res, next) => {
+        try {
+            const proposalId = Number(req.params.proposalId);
+            const { rows: [row] } = await pool.query(`
+                SELECT p.*, o.company AS order_company, o.title AS o_title, o.category AS o_category,
+                       o.quantity AS o_quantity, o.description AS o_description, o.drawing AS o_drawing
+                FROM proposals p
+                JOIN orders o ON o.id = p.order_id
+                WHERE p.id = $1
+            `, [proposalId]);
+            if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
+            if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этой сделке' });
+            if (row.status !== 'Выигран') return res.status(400).json({ error: 'Договор доступен только по принятому КП' });
+
+            const payment = ['prepay100', 'split5050', 'postpay'].includes(req.query.payment)
+                ? req.query.payment : 'split5050';
+
+            const { rows: companies } = await pool.query(
+                'SELECT * FROM companies WHERE company = ANY($1::text[])',
+                [[row.order_company, row.company]]
+            );
+            const byName = new Map(companies.map(c => [c.company, rowToCompany(c)]));
+
+            buildContractPdf({
+                proposalId,
+                payment,
+                order: { title: row.o_title, category: row.o_category, quantity: row.o_quantity, description: row.o_description, drawing: row.o_drawing },
+                proposal: { price: row.price, days: row.days },
+                customer: byName.get(row.order_company) || { company: row.order_company },
+                supplier: byName.get(row.company) || { company: row.company },
+            }, res);
         } catch (e) { next(e); }
     });
 
