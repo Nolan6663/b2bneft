@@ -36,6 +36,8 @@ const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
 const createDealsRouter = require('./routes/deals');
 const createAuctionsRouter = require('./routes/auctions');
+const createReviewsRouter = require('./routes/reviews');
+const createFavoritesRouter = require('./routes/favorites');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
@@ -1229,6 +1231,8 @@ app.use('/api/messages', createMessagesRouter(routesDeps));
 app.use('/api/deals', createDealsRouter(routesDeps));
 app.use('/api/export', createExportRouter(routesDeps));
 app.use('/api/auctions', createAuctionsRouter(routesDeps));
+app.use('/api/reviews', createReviewsRouter(routesDeps));
+app.use('/api/favorites', createFavoritesRouter(routesDeps));
 
 // ===================== DASHBOARD COUNTS =====================
 
@@ -1777,32 +1781,6 @@ app.get('/api/customer/analytics', requireAuth, async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
-// ===================== РЕЙТИНГИ И ОТЗЫВЫ =====================
-
-app.post('/api/reviews', requireAuth, async (req, res, next) => {
-    try {
-        const { orderId, toCompany, score, text = '' } = req.body;
-        if (!orderId || !toCompany || !score) return res.status(400).json({ error: 'Заполните все поля' });
-        const s = Number(score);
-        if (s < 1 || s > 5) return res.status(400).json({ error: 'Оценка от 1 до 5' });
-
-        const { rows: [deal] } = await pool.query(
-            `SELECT 1 FROM proposals p JOIN orders o ON o.id=p.order_id
-             WHERE p.order_id=$1 AND p.company=$2 AND p.status='Выигран' AND o.company=$3`,
-            [orderId, toCompany, req.user.company]
-        );
-        if (!deal) return res.status(403).json({ error: 'Отзыв доступен только после завершения сделки' });
-
-        await pool.query(
-            `INSERT INTO reviews (order_id,from_company,to_company,score,text)
-             VALUES ($1,$2,$3,$4,$5)
-             ON CONFLICT (order_id,from_company,to_company) DO UPDATE SET score=$4, text=$5`,
-            [orderId, req.user.company, toCompany, s, text.slice(0, 1000)]
-        );
-        res.json({ ok: true });
-    } catch (e) { next(e); }
-});
-
 // Auto-close expired auctions (called by cron)
 async function closeExpiredAuctions() {
     let rows;
@@ -2010,18 +1988,6 @@ app.get('/api/risk/:inn', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
-app.get('/api/reviews/company/:name', async (req, res, next) => {
-    try {
-        const { rows } = await pool.query(
-            `SELECT from_company, score, text, created_at FROM reviews
-             WHERE to_company=$1 ORDER BY created_at DESC LIMIT 30`,
-            [req.params.name]
-        );
-        const avg = rows.length ? Math.round(rows.reduce((s, r) => s + r.score, 0) / rows.length * 10) / 10 : null;
-        res.json({ reviews: rows, avg, count: rows.length });
-    } catch (e) { next(e); }
-});
-
 app.get('/api/public/companies/:id', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
@@ -2067,17 +2033,6 @@ app.get('/api/public/companies/:id', async (req, res, next) => {
             website: c.website || '',
             fromRegistry: c.fromRegistry,
         });
-    } catch (e) { next(e); }
-});
-
-// Check if current user already reviewed a specific deal
-app.get('/api/reviews/check/:orderId/:toCompany', requireAuth, async (req, res, next) => {
-    try {
-        const { rows: [row] } = await pool.query(
-            'SELECT score, text FROM reviews WHERE order_id=$1 AND from_company=$2 AND to_company=$3',
-            [req.params.orderId, req.user.company, req.params.toCompany]
-        );
-        res.json(row || null);
     } catch (e) { next(e); }
 });
 
@@ -2203,40 +2158,6 @@ app.get('/api/invitations/:token', async (req, res, next) => {
         );
         if (!inv) return res.status(404).json({ error: 'Приглашение недействительно или истекло' });
         res.json(inv);
-    } catch (e) { next(e); }
-});
-
-// ===================== ИЗБРАННЫЕ =====================
-
-app.get('/api/favorites', requireAuth, async (req, res, next) => {
-    try {
-        const { rows } = await pool.query(
-            'SELECT c.* FROM companies c JOIN favorites f ON c.id = f.company_id WHERE f.owner_company = $1',
-            [req.user.company]
-        );
-        const enriched = await Promise.all(rows.map(r => enrichCompany(rowToCompany(r), req.user.company)));
-        res.json(enriched);
-    } catch (e) { next(e); }
-});
-
-app.post('/api/favorites', requireAuth, async (req, res, next) => {
-    try {
-        const id = Number(req.body.companyId);
-        if (!id) return res.status(400).json({ error: 'Не указан ID компании' });
-        const { rows: [exists] } = await pool.query('SELECT 1 FROM companies WHERE id = $1', [id]);
-        if (!exists) return res.status(404).json({ error: 'Компания не найдена' });
-        await pool.query(
-            'INSERT INTO favorites (owner_company, company_id) VALUES ($1, $2) ON CONFLICT (owner_company, company_id) DO NOTHING',
-            [req.user.company, id]
-        );
-        res.status(201).json({ message: 'Добавлено в избранное' });
-    } catch (e) { next(e); }
-});
-
-app.delete('/api/favorites/:companyId', requireAuth, async (req, res, next) => {
-    try {
-        await pool.query('DELETE FROM favorites WHERE owner_company = $1 AND company_id = $2', [req.user.company, Number(req.params.companyId)]);
-        res.json({ message: 'Удалено из избранного' });
     } catch (e) { next(e); }
 });
 
