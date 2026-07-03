@@ -769,15 +769,6 @@
         /* ══ HELPERS ══ */
         function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-        function showToast(msg, type) {
-            const bg = type === 'error' ? '#EF4444' : type === 'warn' ? '#F59E0B' : 'var(--accent-bright)';
-            const t = document.createElement('div');
-            t.textContent = msg;
-            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:bg, color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s', maxWidth:'360px' });
-            document.body.appendChild(t);
-            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
-        }
-
         function fmt2(n) { return n.toFixed(2).replace('.', ','); }
 
         function fmtScore(score) {

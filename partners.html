@@ -495,14 +495,6 @@
             } catch { showToast(`${c.company} добавлена в избранное`); }
         }
 
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.textContent = msg;
-            Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'var(--accent-bright)', color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s' });
-            document.body.appendChild(t);
-            setTimeout(() => { t.style.opacity='0'; setTimeout(() => t.remove(), 300); }, 2500);
-        }
-
         function setRoleFilter(val, btn) {
             roleFilter = val;
             document.querySelectorAll('[data-role]').forEach(b => b.classList.remove('active'));
