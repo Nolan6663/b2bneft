@@ -259,6 +259,10 @@ async function initDb() {
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS lng FLOAT;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT '';
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS claimed BOOLEAN NOT NULL DEFAULT true;
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS contact_email TEXT NOT NULL DEFAULT '';
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS invite_optout BOOLEAN NOT NULL DEFAULT false;
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS last_invited_at TIMESTAMPTZ;
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS products TEXT NOT NULL DEFAULT '';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS delivery_stage TEXT NOT NULL DEFAULT 'КП принят';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS tracking_number TEXT NOT NULL DEFAULT '';
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS message TEXT NOT NULL DEFAULT '';
