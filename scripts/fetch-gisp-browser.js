@@ -6,12 +6,15 @@
 //   Выгрузка:  node scripts/fetch-gisp-browser.js --pages 80
 //     (80 страниц по 100 записей ≈ весь перечень ~7500; итог в scripts/data/registry-gisp.json)
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { chromium } = require('@playwright/test');
 
 const URL = 'https://gisp.gov.ru/pp719v2/pub/org/';
 const OUT = path.join(__dirname, 'data', 'registry-gisp.json');
 const ROOT = path.join(__dirname, '..');
+// Разведфайлы — во временную папку: в корне репо их подхватывает static-checks
+const RECON_DIR = os.tmpdir();
 
 function argNum(name, dflt) {
     const i = process.argv.indexOf(name);
@@ -79,12 +82,12 @@ async function clickNextPage(page) {
     await page.waitForTimeout(8000); // SPA догружает данные
 
     if (recon) {
-        fs.writeFileSync(path.join(ROOT, 'gisp-recon.html'), await page.content());
-        await page.screenshot({ path: path.join(ROOT, 'gisp-recon.png'), fullPage: false });
-        fs.writeFileSync(path.join(ROOT, 'gisp-recon-net.txt'), netLog.join('\n') || '(JSON-ответов не поймано)');
+        fs.writeFileSync(path.join(RECON_DIR, 'gisp-recon.html'), await page.content());
+        await page.screenshot({ path: path.join(RECON_DIR, 'gisp-recon.png'), fullPage: false });
+        fs.writeFileSync(path.join(RECON_DIR, 'gisp-recon-net.txt'), netLog.join('\n') || '(JSON-ответов не поймано)');
         const rows = await scrapeVisibleRows(page);
         console.log(`Разведка: снято строк с первой страницы: ${rows.length}`);
-        console.log('Сохранено: gisp-recon.html, gisp-recon.png, gisp-recon-net.txt');
+        console.log('Сохранено в', RECON_DIR, ': gisp-recon.html, gisp-recon.png, gisp-recon-net.txt');
         await browser.close();
         return;
     }
