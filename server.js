@@ -857,12 +857,18 @@ function offsetProductionPoint(point, index) {
 async function geocodeExisting() {
     try {
         const { rows } = await pool.query(
-            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 50"
+            "SELECT id, city FROM companies WHERE role='producer' AND city != '' AND lat IS NULL LIMIT 200"
         );
+        const cityCache = new Map();
         for (const r of rows) {
-            const coords = await geocodeCity(r.city);
+            const key = r.city.trim().toLowerCase();
+            let coords = cityCache.get(key);
+            if (coords === undefined) {
+                coords = await geocodeCity(r.city);
+                cityCache.set(key, coords);
+                await new Promise(resolve => setTimeout(resolve, 1200));
+            }
             if (coords) await pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, r.id]);
-            await new Promise(resolve => setTimeout(resolve, 1200));
         }
     } catch {}
 }
