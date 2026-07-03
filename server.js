@@ -1112,6 +1112,9 @@ async function canAccessOrderDrawing(user, orderId) {
 
 const { enrichCompany } = createCompanyEnricher({ pool, storage });
 
+const { createRegistryInviter } = require('./lib/registry-invites');
+const registryInviter = createRegistryInviter({ pool, sendEmail, appUrl: APP_URL, jwtSecret: JWT_SECRET });
+
 // ===================== AUTH ROUTES =====================
 
 app.use('/api/auth', createAuthRouter({
@@ -1171,6 +1174,7 @@ const routesDeps = {
     logOrderEvent,
     getIo: () => io,
     APP_URL,
+    registryInviter,
 };
 
 app.use('/api/orders', createOrdersRouter(routesDeps));

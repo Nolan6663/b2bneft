@@ -32,6 +32,7 @@ module.exports = function createOrdersRouter(deps) {
         getOrderAccessRow,
         APP_URL,
         logOrderEvent,
+        registryInviter,
     } = deps;
 
     const router = express.Router();
@@ -219,6 +220,11 @@ module.exports = function createOrdersRouter(deps) {
                 emitDashboardRefresh(company);
                 emitRealtime(company, 'order:new', orderSummary);
             }
+
+            // Приглашения заводам из госреестра (fire-and-forget)
+            registryInviter.inviteStubsForOrder(newOrder)
+                .then(n => { if (n) console.log(`registry-invites: отправлено ${n} по заявке ${newOrder.id}`); })
+                .catch(e => console.error('registry-invites:', e.message));
 
             res.status(201).json(newOrder);
         } catch (e) { next(e); }
