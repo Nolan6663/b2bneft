@@ -931,6 +931,16 @@ Nginx (обязательно на prod для WebSocket):
   при следующем обновлении access-токена (максимум через 1 час).
   TODO: «API-ключи» в settings.html — всё ещё заглушка (FAKE_API_KEY).
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — P1 волна 2: ещё 8 роутеров)
+  ----------------------------------------------------------------
+  server.js 2628 → 2103 строк. Вынесены: routes/push.js, telegram.js,
+  team.js (+/invitations/:token), templates.js, tasks.js (+conversation-context),
+  notifications.js, seo.js (модули seo/* require'ятся там), integrations.js
+  (CRUD; push-хелперы Bitrix24/AmoCRM/SAP и triggerIntegrations остались
+  в server.js, sapB1Login передаётся через deps). Инлайн остались только
+  public/misc: health, company-photos, registry-optout, dashboard, public/*,
+  map, catalog, capacity, crm-stats, analytics, risk, auth/digest.
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — P1: вынос роутов из server.js)
   ----------------------------------------------------------------
   server.js 3528 → 2628 строк. Move-рефакторинг, поведение API не менялось:

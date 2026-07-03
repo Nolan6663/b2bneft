@@ -28,7 +28,7 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 
 | Файл/каталог | Что делает |
 |---|---|
-| `server.js` (~2.6k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы, оставшиеся inline-роуты (push, telegram-link, team, templates, tasks, notifications, dashboard, public, map, catalog, capacity, seo, integrations, risk). **Долг:** продолжать вынос в `routes/` |
+| `server.js` (~2.1k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы и интеграционные push-хелперы (Bitrix24/AmoCRM/SAP), оставшиеся inline-роуты (health, company-photos, registry-optout, dashboard, public/*, map, catalog, capacity, crm-stats, analytics, risk, auth/digest) |
 | `db.js` | вся схема: 24 таблицы, создание при старте, «миграции» = `ALTER TABLE ... IF NOT EXISTS` внизу файла. Новая колонка → добавляй туда же |
 | `routes/auth.js` | регистрация (+claim профиля из реестра по ИНН), login, 2FA (speakeasy), OAuth Яндекс, refresh-токены/сессии, сброс пароля, email-верификация |
 | `routes/orders.js` | CRUD закупок, матчинг поставщиков (`computeMatchScore`), «горячий матч» ≥70% → email/push/TG, триггер registry-invites |
@@ -41,6 +41,11 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `routes/reviews.js`, `routes/favorites.js` | отзывы после сделки; избранные поставщики |
 | `routes/ai.js` | AI-поиск поставщиков (Gemini) + генерация ТЗ/КП (через lib/ai-client) |
 | `routes/admin.js` | верификация компаний (ЕГРЮЛ-авто + ручная платформой) и админка (stats/users) |
+| `routes/push.js`, `routes/telegram.js` | подписки Web Push; привязка/отвязка Telegram |
+| `routes/team.js` | команда: участники, приглашения по email, публичный `/invitations/:token` |
+| `routes/templates.js`, `routes/tasks.js`, `routes/notifications.js` | шаблоны закупок; задачи в чате сделки + контекст переписки; колокольчик |
+| `routes/seo.js` | админ-SEO: аудит страниц, синк GSC/Я.Вебмастер, данные для дашборда |
+| `routes/integrations.js` | CRUD подключений 1С/Bitrix24/AmoCRM/SAP (push-хелперы и `triggerIntegrations` — в server.js) |
 | `lib/ai-client.js` | генерация ТЗ (заказчик) и сопроводительного письма КП (поставщик). Провайдер сменный через env; прод — GigaChat (нужен русский CA-сертификат из `certs/`, переменная в ecosystem.config.js) |
 | `lib/auth-tokens.js` | JWT: access из cookie или Bearer-заголовка, refresh в таблице `refresh_tokens` |
 | `lib/proposal-accept.js` | транзакция «принять КП»: статусы Выигран/Проигран, закрытие заявки, нотификации всем сторонам |
@@ -106,7 +111,7 @@ refresh-токен (БД; страница «Активные сессии» в 
 
 ## Известные долги
 
-- `server.js` — вынести оставшиеся inline-роуты (push, telegram, team, templates, tasks, notifications, seo, integrations…).
+- `server.js` — остатки: public/misc-роуты (dashboard, map, catalog, capacity, risk, analytics) + интеграционные push-хелперы можно увести в lib/.
 - «API-ключи» в settings.html — заглушка (`FAKE_API_KEY`), реального partner-API нет.
 - `routes/companies.js:19` — счётчик КП фильтрует статус `'Принято'`, который никогда не пишется (реальный `'Выигран'`) → всегда 0.
 - Тесты: smoke + Playwright e2e; юнитов на роуты нет, CI не гоняет проверки перед деплоем.
