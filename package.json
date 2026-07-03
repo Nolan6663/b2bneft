@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "node scripts/static-checks.js",
+    "test": "node scripts/static-checks.js && node --test \"tests/unit/*.test.js\"",
+    "test:unit": "node --test \"tests/unit/*.test.js\"",
     "check": "node scripts/static-checks.js",
     "smoke:api": "node scripts/mvp-api-smoke.js",
     "test:e2e": "playwright test",

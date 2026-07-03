@@ -17,6 +17,8 @@ jobs:
         run: npm ci
       - name: Static checks (syntax, HTML, CSS)
         run: npm run check
+      - name: Unit tests (routes, no DB)
+        run: npm run test:unit
       - name: PDF smoke (fonts, pages, rubles-in-words)
         run: node scripts/pdf-smoke.js
 
