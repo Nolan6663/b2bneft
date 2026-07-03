@@ -131,6 +131,8 @@
                             <div class="sp-kpi-row">
                                 <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.completedOrders ?? '—'}</div><div class="sp-kpi-label">Выигранных сделок</div></div>
                                 <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.avgDeliveryDays != null ? c.stats.avgDeliveryDays + ' дн.' : '—'}</div><div class="sp-kpi-label">Средний срок</div></div>
+                                <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.avgFirstResponseHours != null ? '~' + c.stats.avgFirstResponseHours + ' ч' : '—'}</div><div class="sp-kpi-label">Время ответа на заявку</div></div>
+                                <div class="sp-kpi"><div class="sp-kpi-val">${c.stats?.winRate != null ? c.stats.winRate + '%' : '—'}</div><div class="sp-kpi-label">Выигрывает сделок</div></div>
                                 <div class="sp-kpi"><div class="sp-kpi-val">${c.productionLoad != null ? c.productionLoad + '%' : '—'}</div><div class="sp-kpi-label">Загрузка</div></div>
                             </div>
                         </div>

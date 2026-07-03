@@ -445,6 +445,8 @@
                 statsHtml = `
                     <div class="kpi-card"><div class="kpi-label">Выполнено заказов</div><div class="kpi-value">${c.stats ? c.stats.completedOrders : '—'}</div></div>
                     <div class="kpi-card"><div class="kpi-label">Средний срок поставки</div><div class="kpi-value">${c.stats && c.stats.avgDeliveryDays != null ? c.stats.avgDeliveryDays + ' дн.' : '—'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Время ответа на заявку</div><div class="kpi-value">${c.stats && c.stats.avgFirstResponseHours != null ? '~' + c.stats.avgFirstResponseHours + ' ч' : '—'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Выигрывает сделок</div><div class="kpi-value">${c.stats && c.stats.winRate != null ? c.stats.winRate + '%' : '—'}</div></div>
                     <div class="kpi-card profile-reliability-card">
                         <div class="kpi-label">Рейтинг надёжности</div>
                         <div class="kpi-value" style="color:var(--accent-bright);">${c.rating || '—'}</div>
