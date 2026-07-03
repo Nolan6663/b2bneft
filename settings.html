@@ -143,6 +143,14 @@
                             <label>КПП</label>
                             <input type="text" id="companyKpp" placeholder="000000000" maxlength="9">
                         </div>
+                        <div class="form-group span-2">
+                            <label>Система налогообложения (для НДС в договорах)</label>
+                            <select id="companyTaxSystem">
+                                <option value="">Не указана</option>
+                                <option value="osn">ОСН — цена включает НДС 20%</option>
+                                <option value="usn">УСН — НДС не облагается (гл. 26.2 НК РФ)</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-row-actions">
                         <div class="alert-inline success" id="companyAlert">Данные сохранены</div>
@@ -788,6 +796,7 @@
                 set('companyInn', mine.inn);
                 set('companyOgrn', mine.ogrn);
                 set('companyKpp', mine.kpp);
+                set('companyTaxSystem', mine.taxSystem);
                 set('addrLegal', mine.legalAddress);
                 set('bankName', mine.bankName);
                 set('bankBik', mine.bankBik);
@@ -807,6 +816,7 @@
             const body = {
                 ogrn: val('companyOgrn').trim(),
                 kpp: digits('companyKpp', 9, 'КПП'),
+                taxSystem: val('companyTaxSystem'),
                 legalAddress: val('addrLegal').trim(),
                 bankName: val('bankName').trim(),
                 bankBik: digits('bankBik', 9, 'БИК'),

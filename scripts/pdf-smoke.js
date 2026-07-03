@@ -57,7 +57,7 @@ r1.on('finish', () => {
     proposalId: 42, payment: 'split5050',
     order: { title: 'Манжеты 2-100х125 ГОСТ 8752-79', category: 'РТИ и уплотнения', quantity: 200, description: 'Резина НБР, твёрдость 75 ShA, поставка партиями', drawing: JSON.stringify({ originalName: 'manzheta.pdf' }) },
     proposal: { price: 1234567.5, days: 14 },
-    customer: company(), supplier: company({ company: 'АО «Завод РТИ»' }),
+    customer: company(), supplier: company({ company: 'АО «Завод РТИ»', taxSystem: 'usn' }),
   }, (ok2) => {
     runContract('tz-contract-empty.pdf', {
       proposalId: 43, payment: 'nonsense',

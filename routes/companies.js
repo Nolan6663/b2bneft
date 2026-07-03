@@ -83,7 +83,7 @@ function createCompaniesRouter(deps) {
                     ogrn, director, foundingYear, authorizedCapital, employees, revenue,
                     machinesCount, productionArea, videoUrl,
                     isoCertificates, qualityCertificates, capabilities, productionLoad,
-                    kpp, legalAddress, bankName, bankAccount, bankBik, bankCorr } = req.body;
+                    kpp, legalAddress, bankName, bankAccount, bankBik, bankCorr, taxSystem } = req.body;
 
             const str  = (v, max) => String(v).slice(0, max);
             const num  = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : null; };
@@ -114,6 +114,7 @@ function createCompaniesRouter(deps) {
             if (bankAccount !== undefined)        f('bank_account', str(bankAccount, 20));
             if (bankBik !== undefined)            f('bank_bik', str(bankBik, 9));
             if (bankCorr !== undefined)           f('bank_corr', str(bankCorr, 20));
+            if (taxSystem !== undefined)          f('tax_system', ['osn', 'usn'].includes(taxSystem) ? taxSystem : '');
             if (foundingYear !== undefined)       f('founding_year', num(foundingYear));
             if (authorizedCapital !== undefined)  f('authorized_capital', str(authorizedCapital, 50));
             if (employees !== undefined)          f('employees', num(employees));

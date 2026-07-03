@@ -183,6 +183,7 @@ function rowToCompany(r) {
         bankAccount: r.bank_account || '',
         bankBik: r.bank_bik || '',
         bankCorr: r.bank_corr || '',
+        taxSystem: r.tax_system || '',
         foundingYear: r.founding_year || null,
         authorizedCapital: r.authorized_capital || '',
         employees: r.employees || null, revenue: r.revenue || '',
