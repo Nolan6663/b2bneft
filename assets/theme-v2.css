@@ -1396,6 +1396,10 @@ body {
 table {
   min-width: 680px;
 }
+/* Компактные таблицы виджетов не должны наследовать min-width для скролла —
+   иначе таблица «Итоги недели» (680px) вылезает поверх соседней карточки */
+.bottom-widget table { min-width: 0; }
+.bottom-widget { overflow: hidden; }
 
 .modal {
   padding: 20px;
