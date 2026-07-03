@@ -589,26 +589,11 @@
                     <div><div class="settings-card-title">Активные сессии</div><div class="settings-card-subtitle">Устройства, с которых выполнен вход</div></div>
                 </div>
                 <div class="settings-card-body">
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                            <div style="flex:1;">
-                                <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">Windows — Chrome</div>
-                                <div style="font-size:12px;color:var(--text-secondary);">Текущая сессия · Тюмень, Россия</div>
-                            </div>
-                            <span style="font-size:11px;color:var(--accent-green);font-weight:600;">Активна</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                            <div style="flex:1;">
-                                <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">iPhone — Safari</div>
-                                <div style="font-size:12px;color:var(--text-secondary);">Последний вход: 2 дня назад</div>
-                            </div>
-                            <button style="background:none;border:none;cursor:pointer;color:var(--error);font-size:12px;font-weight:600;" onclick="terminateSession(this)">Завершить</button>
-                        </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;" id="sessionsList">
+                        <div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">Загрузка сессий…</div>
                     </div>
                     <div style="margin-top:14px;">
-                        <button class="btn-secondary" style="color:var(--error);border-color:rgba(239,68,68,.3);" onclick="terminateAllSessions()">Завершить все другие сессии</button>
+                        <button class="btn-secondary" id="revokeOthersBtn" style="color:var(--error);border-color:rgba(239,68,68,.3);display:none;" onclick="terminateAllSessions()">Завершить все другие сессии</button>
                     </div>
                 </div>
             </div>
@@ -888,18 +873,63 @@
             });
         }
 
-        function terminateSession(btn) {
-            const row = btn.closest('[style*="display:flex"]');
-            if (row) { row.style.opacity = '0'; row.style.transition = 'opacity .3s'; setTimeout(() => row.remove(), 300); }
-            showToast('Сессия завершена');
+        function sessionAgo(iso) {
+            if (!iso) return '';
+            const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+            if (mins < 2) return 'только что';
+            if (mins < 60) return `${mins} мин назад`;
+            const h = Math.floor(mins / 60);
+            if (h < 24) return `${h} ч назад`;
+            const d = Math.floor(h / 24);
+            return `${d} дн назад`;
         }
 
-        function terminateAllSessions() {
-            document.querySelectorAll('[onclick*="terminateSession"]').forEach(btn => {
-                const row = btn.closest('[style*="display:flex"]');
-                if (row) row.remove();
-            });
-            showToast('Все другие сессии завершены');
+        async function loadSessions() {
+            const list = document.getElementById('sessionsList');
+            if (!list) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/sessions`);
+                if (!r.ok) throw new Error();
+                const sessions = await r.json();
+                const desktopSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+                const mobileSvg  = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+                list.innerHTML = sessions.map(s => `
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--inner-bg);border-radius:10px;border:1px solid var(--inner-border);" data-session-id="${s.id}">
+                        ${s.mobile ? mobileSvg : desktopSvg}
+                        <div style="flex:1;">
+                            <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">${escapeHtml(s.label)}</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">${s.current ? 'Текущая сессия' : 'Активность: ' + sessionAgo(s.lastUsedAt)}${s.ip ? ' · ' + escapeHtml(s.ip) : ''}</div>
+                        </div>
+                        ${s.current
+                            ? '<span style="font-size:11px;color:var(--accent-green);font-weight:600;">Активна</span>'
+                            : `<button style="background:none;border:none;cursor:pointer;color:var(--error);font-size:12px;font-weight:600;" onclick="terminateSession(${s.id})">Завершить</button>`}
+                    </div>`).join('')
+                    || '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">Активных сессий нет</div>';
+                const btn = document.getElementById('revokeOthersBtn');
+                if (btn) btn.style.display = sessions.filter(s => !s.current).length ? '' : 'none';
+            } catch {
+                list.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;">Не удалось загрузить сессии</div>';
+            }
+        }
+
+        async function terminateSession(id) {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/sessions/${id}`, { method: 'DELETE' });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) { showToast(data.error || 'Не удалось завершить сессию', 'error'); return; }
+                showToast('Сессия завершена');
+                loadSessions();
+            } catch { showToast('Ошибка сети', 'error'); }
+        }
+
+        async function terminateAllSessions() {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/auth/sessions/revoke-others`, { method: 'POST' });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) { showToast(data.error || 'Не удалось завершить сессии', 'error'); return; }
+                showToast(`Завершено сессий: ${data.revoked ?? 0}`);
+                loadSessions();
+            } catch { showToast('Ошибка сети', 'error'); }
         }
 
         let apiKeyVisible = false;
@@ -1340,6 +1370,7 @@
             loadIntegrations();
             loadTeamMembers();
             loadDigestSettings();
+            loadSessions();
 
             let userEmail = '';
             try {

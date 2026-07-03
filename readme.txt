@@ -260,6 +260,9 @@ ADMIN_PASSWORD=
   GET  /api/health               — healthcheck (БД, storage: s3|local)
 
 Auth:
+  GET    /api/auth/sessions              — активные сессии (устройство, IP, current)
+  DELETE /api/auth/sessions/:id          — завершить сессию (кроме текущей)
+  POST   /api/auth/sessions/revoke-others — завершить все другие сессии
   POST /api/auth/register        — регистрация (поддерживает inviteToken)
   POST /api/auth/login           — вход (поддерживает TOTP)
   POST /api/auth/logout
@@ -856,6 +859,31 @@ Nginx (обязательно на prod для WebSocket):
   Проверка: npm run check. Вручную — десктоп и ≤520px лендинг, FAQ-аккордеон,
   verified-бейджи на company-profile/catalog, sticky-панель закупки при скролле,
   bottom-sheet на мобиле (≤640px).
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — реальные «Активные сессии»)
+  ----------------------------------------------------------------
+  Блок в settings.html был заглушкой (захардкоженные Windows/iPhone,
+  «Завершить» удаляла строку из DOM). Теперь по-настоящему:
+  • db.js — refresh_tokens + user_agent, ip, last_used_at
+  • routes/auth.js — storeRefreshToken() на login/register/OAuth;
+    describeUserAgent() («Windows — Chrome»); /auth/refresh обновляет last_used_at
+  • GET /auth/sessions, DELETE /auth/sessions/:id, POST /auth/sessions/revoke-others
+    (текущую сессию завершить нельзя — только logout)
+  • settings.html — loadSessions() рендерит реальный список; кнопки ходят в API
+  Отзыв сессии = удаление refresh-токена: доступ у устройства умирает
+  при следующем обновлении access-токена (максимум через 1 час).
+  TODO: «API-ключи» в settings.html — всё ещё заглушка (FAKE_API_KEY).
+
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — проверка core-функционала)
+  ----------------------------------------------------------------
+  Прод (texzakaz.ru) проверен: /api/health ok+db, регистрация ok,
+  socket.io отвечает (websocket upgrade доступен — чат real-time ок).
+  POST /orders для нового аккаунта → 403 email_not_verified (защита работает,
+  smoke-скрипт написан до ввода верификации — прогоняется только частично).
+  • lib/registry-invites.js — рубильник REGISTRY_INVITES_ENABLED=0:
+    тестовые закупки на проде не рассылают письма реальным заводам из реестра.
+  ВАЖНО: каждая созданная на проде закупка шлёт до 20 писем заводам из
+  госреестра. Перед ручными тестами на проде ставить REGISTRY_INVITES_ENABLED=0.
 
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — сравнение КП, фиксы)
   ----------------------------------------------------------------

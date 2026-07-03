@@ -33,6 +33,39 @@ module.exports = function createAuthRouter(deps) {
     const YANDEX_CLIENT_ID     = process.env.YANDEX_CLIENT_ID     || '';
     const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET || '';
 
+    function clientIp(req) {
+        return (req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
+    }
+
+    async function storeRefreshToken(req, userId, refreshToken) {
+        await pool.query(
+            `INSERT INTO refresh_tokens (user_id, token, expires_at, user_agent, ip, last_used_at)
+             VALUES ($1, $2, NOW() + INTERVAL '30 days', $3, $4, NOW())`,
+            [userId, refreshToken, String(req.headers['user-agent'] || '').slice(0, 500), clientIp(req)]
+        );
+    }
+
+    /* «Windows — Chrome» из user-agent; без внешних библиотек */
+    function describeUserAgent(ua) {
+        const s = String(ua || '');
+        let os = 'Устройство';
+        if (/Windows/i.test(s)) os = 'Windows';
+        else if (/iPhone/i.test(s)) os = 'iPhone';
+        else if (/iPad/i.test(s)) os = 'iPad';
+        else if (/Android/i.test(s)) os = 'Android';
+        else if (/Mac OS X|Macintosh/i.test(s)) os = 'macOS';
+        else if (/Linux/i.test(s)) os = 'Linux';
+        let browser = 'Браузер';
+        if (/Edg\//i.test(s)) browser = 'Edge';
+        else if (/OPR\/|Opera/i.test(s)) browser = 'Opera';
+        else if (/YaBrowser/i.test(s)) browser = 'Яндекс Браузер';
+        else if (/Firefox\//i.test(s)) browser = 'Firefox';
+        else if (/Chrome\//i.test(s)) browser = 'Chrome';
+        else if (/Safari\//i.test(s)) browser = 'Safari';
+        const mobile = /iPhone|iPad|Android|Mobile/i.test(s);
+        return { label: `${os} — ${browser}`, mobile };
+    }
+
     router.post('/register', async (req, res, next) => {
         try {
             const { email, password, company, inn, role } = req.body;
@@ -109,10 +142,7 @@ module.exports = function createAuthRouter(deps) {
             });
 
             const { accessToken, refreshToken } = generateTokens(newUser);
-            await pool.query(
-                "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
-                [newUser.id, refreshToken]
-            );
+            await storeRefreshToken(req, newUser.id, refreshToken);
             await sendVerificationEmail(newUser);
             if (inviteData) {
                 getUserIdsByCompany(inviteData.company).then(ids =>
@@ -159,10 +189,7 @@ module.exports = function createAuthRouter(deps) {
             }
 
             const { accessToken, refreshToken } = generateTokens(user);
-            await pool.query(
-                "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')",
-                [user.id, refreshToken]
-            );
+            await storeRefreshToken(req, user.id, refreshToken);
             setAuthCookies(res, accessToken, refreshToken);
             res.json({
                 token: accessToken,
@@ -296,10 +323,7 @@ module.exports = function createAuthRouter(deps) {
             }
 
             const { accessToken, refreshToken } = generateTokens(user);
-            await pool.query(
-                "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1,$2,NOW() + INTERVAL '30 days')",
-                [user.id, refreshToken]
-            );
+            await storeRefreshToken(req, user.id, refreshToken);
             setAuthCookies(res, accessToken, refreshToken);
 
             const ev = user.email_verified ? '1' : '0';
@@ -367,8 +391,62 @@ module.exports = function createAuthRouter(deps) {
             if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
             const payload = { userId: user.id, role: user.role, company: user.company };
             const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+            pool.query('UPDATE refresh_tokens SET last_used_at = NOW() WHERE id = $1', [tokenRow.id]).catch(() => {});
             setAuthCookies(res, accessToken, refreshToken);
             res.json({ token: accessToken, emailVerified: Boolean(user.email_verified) });
+        } catch (e) { next(e); }
+    });
+
+    /* ── Активные сессии (refresh-токены) ─────────────────────────────── */
+
+    router.get('/sessions', requireAuth, async (req, res, next) => {
+        try {
+            const current = getRefreshToken(req);
+            const { rows } = await pool.query(
+                `SELECT id, token, user_agent, ip, created_at, last_used_at
+                 FROM refresh_tokens
+                 WHERE user_id = $1 AND expires_at > NOW()
+                 ORDER BY last_used_at DESC NULLS LAST, created_at DESC`,
+                [req.user.id]
+            );
+            res.json(rows.map(r => {
+                const d = describeUserAgent(r.user_agent);
+                return {
+                    id: r.id,
+                    label: d.label,
+                    mobile: d.mobile,
+                    ip: r.ip,
+                    createdAt: r.created_at,
+                    lastUsedAt: r.last_used_at,
+                    current: Boolean(current && r.token === current),
+                };
+            }));
+        } catch (e) { next(e); }
+    });
+
+    router.delete('/sessions/:id', requireAuth, async (req, res, next) => {
+        try {
+            const current = getRefreshToken(req);
+            const { rows: [row] } = await pool.query(
+                'SELECT id, token FROM refresh_tokens WHERE id = $1 AND user_id = $2',
+                [Number(req.params.id), req.user.id]
+            );
+            if (!row) return res.status(404).json({ error: 'Сессия не найдена' });
+            if (current && row.token === current) {
+                return res.status(400).json({ error: 'Это текущая сессия — используйте «Выйти из аккаунта»' });
+            }
+            await pool.query('DELETE FROM refresh_tokens WHERE id = $1', [row.id]);
+            res.json({ message: 'Сессия завершена' });
+        } catch (e) { next(e); }
+    });
+
+    router.post('/sessions/revoke-others', requireAuth, async (req, res, next) => {
+        try {
+            const current = getRefreshToken(req);
+            const { rowCount } = current
+                ? await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1 AND token <> $2', [req.user.id, current])
+                : await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [req.user.id]);
+            res.json({ message: 'Готово', revoked: rowCount });
         } catch (e) { next(e); }
     });
 
