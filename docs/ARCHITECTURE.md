@@ -45,7 +45,10 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `routes/team.js` | команда: участники, приглашения по email, публичный `/invitations/:token` |
 | `routes/templates.js`, `routes/tasks.js`, `routes/notifications.js` | шаблоны закупок; задачи в чате сделки + контекст переписки; колокольчик |
 | `routes/seo.js` | админ-SEO: аудит страниц, синк GSC/Я.Вебмастер, данные для дашборда |
-| `routes/integrations.js` | CRUD подключений 1С/Bitrix24/AmoCRM/SAP (push-хелперы и `triggerIntegrations` — в server.js) |
+| `routes/integrations.js` | CRUD подключений 1С/Bitrix24/AmoCRM/SAP |
+| `routes/public.js` | публичная статистика, geo-density, карта заводов, биржа мощностей, каталог, риск-скоринг по ИНН, публичная карточка компании |
+| `routes/analytics.js` | dashboard counts, CRM-стата поставщика, аналитика заказчика |
+| `lib/integrations-push.js` | push принятого КП в Bitrix24/AmoCRM/SAP (`triggerIntegrations`, `sapB1Login`) — фабрика над pool |
 | `lib/ai-client.js` | генерация ТЗ (заказчик) и сопроводительного письма КП (поставщик). Провайдер сменный через env; прод — GigaChat (нужен русский CA-сертификат из `certs/`, переменная в ecosystem.config.js) |
 | `lib/auth-tokens.js` | JWT: access из cookie или Bearer-заголовка, refresh в таблице `refresh_tokens` |
 | `lib/proposal-accept.js` | транзакция «принять КП»: статусы Выигран/Проигран, закрытие заявки, нотификации всем сторонам |
