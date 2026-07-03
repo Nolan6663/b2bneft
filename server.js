@@ -1116,6 +1116,29 @@ const { enrichCompany } = createCompanyEnricher({ pool, storage });
 const { createRegistryInviter } = require('./lib/registry-invites');
 const registryInviter = createRegistryInviter({ pool, sendEmail, appUrl: APP_URL, jwtSecret: JWT_SECRET });
 
+// Отписка от приглашений из госреестра (ссылка в письме, без авторизации)
+app.get('/api/registry-invites/optout', async (req, res, next) => {
+    try {
+        const { inn, token } = req.query;
+        const page = (title, text) => `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — ТехЗаказ</title>
+            <style>body{font-family:system-ui,sans-serif;background:#F4F6F8;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center}
+            .card{background:#fff;max-width:440px;padding:32px;border:1px solid #E2E8F0}
+            h1{font-size:20px;color:#1E2A3A;margin:0 0 12px}p{color:#475569;line-height:1.5;margin:0}</style></head>
+            <body><div class="card"><h1>${title}</h1><p>${text}</p></div></body></html>`;
+        if (!inn || !registryInviter.verifyOptoutToken(inn, token)) {
+            return res.status(400).send(page('Ссылка недействительна',
+                'Проверьте, что ссылка из письма скопирована целиком.'));
+        }
+        await pool.query(
+            "UPDATE companies SET invite_optout = true WHERE inn = $1 AND claimed = false AND source = 'gisp-pp719'",
+            [String(inn)]
+        );
+        res.send(page('Вы отписаны',
+            'Приглашения на этот адрес больше приходить не будут. Если передумаете — зарегистрируйтесь на texzakaz.ru по ИНН вашего предприятия.'));
+    } catch (e) { next(e); }
+});
+
 // ===================== AUTH ROUTES =====================
 
 app.use('/api/auth', createAuthRouter({
