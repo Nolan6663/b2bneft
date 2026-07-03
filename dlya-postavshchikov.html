@@ -224,13 +224,13 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: transform .15s, box-shadow .15s;
+    transition: border-color .15s, box-shadow .15s;
 }
-.ps-price-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(7,27,42,.08); }
+.ps-price-card:hover { border-color: rgba(255,106,0,.45); box-shadow: 4px 4px 0 rgba(7,27,42,.08); }
 .ps-price-card.featured {
     background: #fff;
     border-color: rgba(255,106,0,.45);
-    box-shadow: 0 8px 28px rgba(255,106,0,.1);
+    box-shadow: 4px 4px 0 rgba(7,27,42,.1);
 }
 .ps-price-pin {
     position: absolute; top: -11px; left: 50%; transform: translateX(-50%);

@@ -374,7 +374,7 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   display: flex; flex-direction: column; gap: 6px;
   flex: 1; min-width: 160px;
 }
-.info-box:hover { border-color: var(--accent-cyan); transform: translateY(-1px); }
+.info-box:hover { border-color: var(--accent-cyan); }
 .info-box .info-label { font-size: 11px; color: var(--text-secondary-alt); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .info-box .info-value { font-size: 14px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
 .info-box .info-value.accent, .info-box .info-value.win { color: var(--accent-cyan); }
@@ -417,7 +417,7 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   font-size: 13px; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
-.btn-secondary:hover, .btn-modal-cancel:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-1px); }
+.btn-secondary:hover, .btn-modal-cancel:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 .btn-secondary:active, .btn-modal-cancel:active, .btn-chat-secondary:active { transform: scale(.96) !important; transition-duration: .06s !important; }
 
 .btn-disabled {
@@ -705,7 +705,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 10px;
   transition: box-shadow .2s, transform .2s, border-color .2s;
 }
-.catalog-card:hover { box-shadow: 0 8px 24px rgba(255,106,0,.12); transform: translateY(-2px); border-color: var(--accent-cyan); }
+.catalog-card:hover { border-color: var(--accent-cyan); box-shadow: 3px 3px 0 rgba(7,27,42,.08); }
 
 /* ── LEGACY MODAL (совместимость с app.js) ─────────────────────────── */
 .modal {
@@ -1949,15 +1949,12 @@ table {
 .sidebar a:not(.active):hover { transform: translateX(4px); }
 .sidebar a.active { transform: none; }
 
-/* ── KPI card lift on hover ──────────────────────────────────────────── */
+/* ── KPI card hover: только рамка, без подпрыгивания ─────────────────── */
 .kpi-card {
-  transition: transform .22s cubic-bezier(.2,.8,.3,1), box-shadow .22s ease, border-color .22s ease !important;
-  will-change: transform;
+  transition: border-color .18s ease !important;
 }
 .kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,.12);
-  border-color: rgba(255,106,0,.25);
+  border-color: rgba(255,106,0,.35);
 }
 
 /* ── Bell / icon buttons micro-press ────────────────────────────────── */
@@ -2002,13 +1999,12 @@ table {
   transition: box-shadow .18s ease, border-color .18s ease !important;
 }
 
-/* ── ct-card hover lift ──────────────────────────────────────────────── */
+/* ── ct-card hover: только рамка ─────────────────────────────────────── */
 .ct-card {
-  transition: transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, border-color .2s ease !important;
+  transition: border-color .18s ease !important;
 }
 .ct-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  border-color: var(--accent-cyan);
 }
 
 /* ── Section card subtle lift ───────────────────────────────────────── */
@@ -2179,12 +2175,15 @@ table {
   background: var(--tz-blueprint-blue);
   color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(11, 143, 206, .28);
-  transition: transform .14s, box-shadow .14s, opacity .14s;
+  box-shadow: 0 2px 0 rgba(7, 27, 42, .28);
+  transition: background .14s, opacity .14s;
 }
 .ai-tz-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(11, 143, 206, .35);
+  background: #0A7FB7;
+}
+.ai-tz-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(7, 27, 42, .28);
 }
 .ai-tz-btn:disabled { opacity: .55; cursor: not-allowed; }
 .ai-tz-btn--loading .ai-tz-btn-label { opacity: .85; }
@@ -2251,14 +2250,12 @@ table {
   padding: 11px 13px; border-radius: 13px;
   background: var(--inner-bg); border: 1px solid var(--inner-border);
   text-decoration: none; color: var(--text-primary);
-  transition: border-color .14s, background .14s, transform .14s, box-shadow .14s;
+  transition: border-color .14s, background .14s;
   cursor: pointer;
 }
 .ob-step:hover {
   border-color: rgba(255,106,0,.35);
   background: var(--bg-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(7,18,36,.08);
 }
 .ob-step-num {
   width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px;
@@ -2653,21 +2650,9 @@ table {
    DESIGN REVAMP (prompt.txt) — append-only overrides
    ══════════════════════════════════════════════════════════════════ */
 
-/* 1. Карточки — глубина и воздух */
+/* 1. Карточки — плоско, без hover-подпрыгиваний (чертёжный цех) */
 .card, .section {
-  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.06);
-  transition: box-shadow .2s ease, transform .2s ease;
-}
-.card:hover, .section:hover {
-  box-shadow: 0 2px 4px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.1);
-  transform: translateY(-1px);
-}
-.kpi-card {
-  transition: box-shadow .2s ease, transform .18s ease;
-}
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(15,23,42,.12);
+  box-shadow: 0 1px 2px rgba(15,23,42,.04);
 }
 
 /* 2. Таблицы — dense data */
@@ -2892,16 +2877,11 @@ input:focus, textarea:focus, select:focus {
   align-items: center;
   gap: 7px;
   padding: 7px 13px;
-  border-radius: 999px;
+  border-radius: 3px;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
   border: 1px solid transparent;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-#riskBadgeWrap:hover .risk-pill {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
 }
 .risk-pill svg { flex-shrink: 0; }
 .risk-pill--low {

@@ -234,15 +234,13 @@ body {
   font-family: 'Manrope', sans-serif;
   font-size: 15px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  box-shadow: 0 8px 20px rgba(255,106,0,0.28);
+  box-shadow: 0 3px 0 #B54B00;
   transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
 }
 .btn-primary:hover {
   background: #E55C00;
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(255,106,0,0.34);
 }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #B54B00; }
 .btn-primary:disabled { opacity: .7; cursor: wait; transform: none; }
 
 .auth-error {

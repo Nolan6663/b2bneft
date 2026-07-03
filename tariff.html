@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,7 @@
     <title>Техзаказ — Тариф и оплата</title>
     
     
-    <link rel="stylesheet" href="assets/theme-v2.css?v=8">
+    <link rel="stylesheet" href="assets/theme-v2.css?v=10">
     <style data-spa-page>
         .current-plan-banner {
             background: var(--card-bg);
@@ -57,15 +57,15 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            transition: border-color .15s, transform .15s;
+            transition: border-color .15s;
         }
-        .plan-card:hover { transform: translateY(-2px); }
+        .plan-card:hover { border-color: rgba(255,106,0,.45); }
         .plan-card.plan-current { border-color: rgba(255,106,0,.5); }
         .plan-card.plan-featured { border-color: rgba(37,99,235,.35); }
 
         .plan-pin {
             position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            padding: 3px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
+            padding: 3px 14px; border-radius: 3px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
         }
         .plan-pin.current { background: var(--accent-gradient); color: var(--accent-on-button); }
         .plan-pin.popular  { background: var(--tz-blueprint-blue, #0B8FCE); color: #fff; }
@@ -84,11 +84,11 @@
 
         .plan-cta {
             width: 100%; height: 40px; border-radius: 10px; font-size: 13px; font-weight: 600;
-            cursor: pointer; border: none; transition: opacity .15s, transform .15s;
+            cursor: pointer; border: none; transition: opacity .15s;
         }
-        .plan-cta:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+        .plan-cta:hover:not(:disabled) { opacity: .88; }
         .plan-cta.cta-current  { background: var(--inner-bg); border: 1px solid var(--inner-border); color: var(--text-secondary); cursor: default; }
-        .plan-cta.cta-current:hover { opacity: 1; transform: none; }
+        .plan-cta.cta-current:hover { opacity: 1; }
         .plan-cta.cta-upgrade  { background: var(--accent-gradient); color: var(--accent-on-button); }
         .plan-cta.cta-enterprise { background: transparent; border: 1px solid rgba(37,99,235,.35); color: var(--accent-blue); }
 

@@ -166,10 +166,6 @@
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: none; }
   }
-  @keyframes lp-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
   .lp-rise { animation: lp-rise .65s cubic-bezier(.22,1,.36,1) backwards; animation-delay: calc(var(--d, 0) * 0.09s); }
   .lp-dot-pulse { animation: tz-pulse 2.4s ease-in-out infinite; }
 
@@ -179,7 +175,6 @@
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
     white-space: nowrap;
   }
-  .lp-cta:hover { transform: translateY(-2px); }
   .lp-cta-primary {
     background: #FF6A00; color: #fff;
     border-radius: 4px;
@@ -312,10 +307,8 @@
   }
   .lp-kp-chip {
     font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .4px;
-    padding: 7px 12px; border-radius: 999px; font-weight: 600;
+    padding: 7px 12px; border-radius: 3px; font-weight: 600;
     background: rgba(255,106,0,0.08); color: #C2410C; border: 1px solid rgba(255,106,0,0.22);
-    animation: lp-float 4s ease-in-out infinite;
-    animation-delay: calc(var(--d, 0) * 0.35s);
   }
   .lp-scene-flow-line {
     position: absolute; left: 12%; right: 12%; bottom: 52px; height: 2px;
@@ -323,8 +316,8 @@
     pointer-events: none;
   }
 
-  #lp-steps > div:not(.lp-arrow) { transition: transform .22s ease, box-shadow .22s ease; }
-  #lp-steps > div:not(.lp-arrow):hover { transform: translateY(-4px); }
+  #lp-steps > div:not(.lp-arrow) { transition: border-color .18s ease; }
+  #lp-steps > div:not(.lp-arrow):hover { border-color: rgba(255,106,0,.4); }
 
   .lp-faq {
     width: 100%;
@@ -676,7 +669,7 @@
   .lp-demo-winner-inner { position: relative; z-index: 1; }
   .lp-demo-winner-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+    padding: 5px 12px; border-radius: 3px; margin-bottom: 12px;
     background: rgba(255,106,0,.15); border: 1px solid rgba(255,106,0,.35);
     font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #FF8A3D;
   }
@@ -696,15 +689,15 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700;
     font-family: inherit; cursor: pointer; border: 1px solid rgba(7,27,42,.14);
-    background: #fff; color: #071B2A; transition: border-color .15s, transform .15s;
+    background: #fff; color: #071B2A; transition: border-color .15s;
   }
-  .lp-demo-nav-btn:hover:not(:disabled) { border-color: rgba(7,27,42,.28); transform: translateY(-1px); }
+  .lp-demo-nav-btn:hover:not(:disabled) { border-color: rgba(7,27,42,.28); }
   .lp-demo-nav-btn:disabled { opacity: .4; cursor: not-allowed; }
   .lp-demo-nav-btn.primary {
     background: #FF6A00; border-color: #FF6A00; color: #fff;
-    box-shadow: 0 6px 16px rgba(255,106,0,.28);
+    box-shadow: 0 3px 0 #B54B00;
   }
-  .lp-demo-nav-btn.primary:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(255,106,0,.36); }
+  .lp-demo-nav-btn.primary:hover:not(:disabled) { background: #E55C00; border-color: #E55C00; }
   .lp-demo-step-hint { font-size: 12px; color: #4A5D6E; font-weight: 600; }
 
   @media (max-width: 640px) {
@@ -834,7 +827,7 @@
 
       <!-- LEFT -->
       <div style="display:flex; flex-direction:column; gap:0;">
-        <div class="lp-rise" style="--d:0; display:inline-flex; align-items:center; gap:10px; align-self:flex-start; padding:8px 14px; border:1px solid rgba(7,27,42,0.12); border-radius:999px; margin-bottom:26px;">
+        <div class="lp-rise" style="--d:0; display:inline-flex; align-items:center; gap:10px; align-self:flex-start; padding:8px 14px; border:1px solid rgba(7,27,42,0.12); border-radius:3px; margin-bottom:26px;">
           <span class="lp-dot-pulse" style="width:8px; height:8px; border-radius:50%; background:#FF6A00;"></span>
           <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; color:#2E4259;">ПРЯМЫЕ ЗАКУПКИ · БЕЗ ПОСРЕДНИКОВ</span>
         </div>
@@ -932,7 +925,7 @@
           </div>
         </div>
 
-        <div class="lp-rise" style="--d:3; display:inline-flex; align-self:flex-start; align-items:center; gap:9px; background:#071B2A; color:#fff; padding:8px 14px; border-radius:999px; font-size:12px; font-weight:700;">
+        <div class="lp-rise" style="--d:3; display:inline-flex; align-self:flex-start; align-items:center; gap:9px; background:#071B2A; color:#fff; padding:8px 14px; border-radius:3px; font-size:12px; font-weight:700;">
           <span class="lp-dot-pulse" style="width:7px; height:7px; border-radius:50%; background:#FF6A00;"></span>
           Напрямую от заказчика к производителю
         </div>
