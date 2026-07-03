@@ -854,7 +854,7 @@
                 : '';
             let siteHost = '';
             let siteHref = '';
-            if (p.website) {
+            if (p.website && !p.website.includes('@')) {
                 siteHref = /^https?:\/\//i.test(p.website) ? p.website : 'https://' + p.website;
                 try { siteHost = new URL(siteHref).host.replace(/^www\./, ''); } catch { siteHref = ''; }
             }
