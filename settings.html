@@ -582,45 +582,14 @@
             <div class="settings-card">
                 <div class="settings-card-header">
                     <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-                    <div><div class="settings-card-title">API-ключи</div><div class="settings-card-subtitle">Для интеграции вашей ERP/WMS с платформой</div></div>
+                    <div><div class="settings-card-title">API и Webhook</div><div class="settings-card-subtitle">Для интеграции вашей ERP/WMS с платформой</div></div>
                 </div>
                 <div class="settings-card-body">
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:10px;">
-                            <div style="flex:1;">
-                                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">Production API Key</div>
-                                <code style="font-size:13px;color:var(--text-primary);font-family:monospace;background:none;">b2b_pk_•••••••••••••••••••••••8f4a</code>
-                            </div>
-                            <button style="background:none;border:1px solid var(--card-border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text-secondary);" onclick="toggleApiKey(this)">Показать</button>
-                        </div>
-                        <button class="btn-secondary" onclick="generateNewApiKey()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span class="nav-label">Создать новый ключ</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <div class="settings-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
-                    <div><div class="settings-card-title">Webhook</div><div class="settings-card-subtitle">Получайте события платформы на ваш сервер</div></div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="settings-form-grid">
-                        <div class="form-group span-2">
-                            <label>URL для получения событий</label>
-                            <input type="url" placeholder="https://your-erp.company.ru/b2b-webhook" oninput="">
-                        </div>
-                    </div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox" checked>Новый отклик</label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox" checked>Смена статуса сделки</label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox" checked>Новое сообщение</label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox">Новый заказ</label>
-                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;background:var(--inner-bg);border:1px solid var(--inner-border);border-radius:6px;padding:5px 10px;"><input type="checkbox">Завершение сделки</label>
-                    </div>
-                    <div class="form-row-actions" style="margin-top:14px;">
-                        <button class="btn-settings-save" onclick="saveWebhook()">Сохранить webhook</button>
+                    <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
+                        Публичный API и webhook-события в разработке.
+                        Если вашей компании нужна интеграция уже сейчас — напишите нам,
+                        подключим в приоритетном порядке: <a href="mailto:info@texzakaz.ru" style="color:var(--accent-bright);">info@texzakaz.ru</a>.
+                        Экспорт в 1С (CommerceML) уже доступен на странице сделки.
                     </div>
                 </div>
             </div>
@@ -933,33 +902,6 @@
                 showToast(`Завершено сессий: ${data.revoked ?? 0}`);
                 loadSessions();
             } catch { showToast('Ошибка сети', 'error'); }
-        }
-
-        let apiKeyVisible = false;
-        const FAKE_API_KEY = 'b2b_pk_' + Array.from({length: 32}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('') + '8f4a';
-        function toggleApiKey(btn) {
-            const code = btn.closest('[style]').querySelector('code');
-            apiKeyVisible = !apiKeyVisible;
-            code.textContent = apiKeyVisible ? FAKE_API_KEY : 'b2b_pk_•••••••••••••••••••••••8f4a';
-            btn.textContent  = apiKeyVisible ? 'Скрыть' : 'Показать';
-            if (apiKeyVisible) { navigator.clipboard?.writeText(FAKE_API_KEY); showToast('Ключ скопирован в буфер'); }
-        }
-
-        function generateNewApiKey() {
-            const newKey = 'b2b_pk_' + Array.from({length: 32}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('') + (Math.random().toString(36).slice(-4));
-            const code = document.querySelector('[data-api-code]') || document.querySelector('code[style*="monospace"]');
-            if (code) code.textContent = 'b2b_pk_•••••••••••••••••••••••' + newKey.slice(-4);
-            apiKeyVisible = false;
-            const showBtn = document.querySelector('[onclick*="toggleApiKey"]');
-            if (showBtn) showBtn.textContent = 'Показать';
-            showToast('Новый ключ создан и скопирован на email');
-        }
-
-        function saveWebhook() {
-            const input = document.querySelector('input[type="url"]');
-            if (!input || !input.value.trim()) { showToast('Введите URL webhook', 'warn'); return; }
-            try { new URL(input.value.trim()); } catch { showToast('Неверный URL адрес', 'error'); return; }
-            showToast('Webhook успешно сохранён');
         }
 
         const userRole  = localStorage.getItem('userRole') || '';
