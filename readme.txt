@@ -579,6 +579,37 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — каталог из реестра промышленности, фаза A)
+  ------------------------------------------------------------------------------
+  • db.js — companies.source (TEXT) и companies.claimed (BOOLEAN, default true);
+    стаб из реестра = claimed=false, source='gisp-pp719', статус 'Действующая'
+    (намеренно вне очереди модерации «На проверке»)
+  • scripts/import-registry.js — импорт CSV(;)/JSON {company,inn,city,
+    specialization,ogrn}: нормализация ИНН (10/12 цифр), дедуп, upsert по ИНН,
+    claimed=true НИКОГДА не перезаписывается; --dry-run без БД; фикстура + тест
+    scripts/test-import-registry.js
+  • scripts/fetch-gisp.js — выгрузка перечня производителей ГИСП ПП-719;
+    ЗАПУСКАТЬ НА VPS (с локальной машины gisp.gov.ru недоступен); --probe для
+    разведки/подстройки CANDIDATES; rate-limit 1500мс
+  • routes/auth.js — регистрация producer с ИНН стаба «усыновляет» профиль
+    (FOR UPDATE от гонки); guard дублей имён смягчён до claimed=true; login.html:
+    поле ИНН в форме регистрации + prefill #register?claim=<inn>&company=<name>
+    (invite имеет приоритет)
+  • server.js rowToCompany — fromRegistry; catalog.html/company-profile.html —
+    бейдж «Реестр Минпромторга» + CTA «Это ваша компания?»; company-profile:
+    статус «Действующая» с галкой
+  • server.js geocodeExisting — LIMIT 200 + кэш городов за прогон
+
+  Наполнение каталога (на VPS):
+    cd /var/www/neft
+    node scripts/fetch-gisp.js --probe          # разведка (подстроить CANDIDATES при необходимости)
+    node scripts/fetch-gisp.js --pages 20       # выгрузка -> scripts/data/registry-gisp.json
+    node scripts/import-registry.js scripts/data/registry-gisp.json --dry-run
+    node scripts/import-registry.js scripts/data/registry-gisp.json
+    pm2 restart neft                            # геокодинг подхватит города фоном
+
+  Проверка: npm run check; node scripts/test-import-registry.js
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (02.07.2026 — воксельная карта: живые данные + интерактив)
   --------------------------------------------------------------------------------
   • server.js — GET /api/public/geo-density: агрегат поставщиков по координатам
