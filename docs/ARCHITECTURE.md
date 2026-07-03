@@ -28,7 +28,7 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 
 | Файл/каталог | Что делает |
 |---|---|
-| `server.js` (~2.1k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы и интеграционные push-хелперы (Bitrix24/AmoCRM/SAP), оставшиеся inline-роуты (health, company-photos, registry-optout, dashboard, public/*, map, catalog, capacity, crm-stats, analytics, risk, auth/digest) |
+| `server.js` (~2.1k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы и интеграционные push-хелперы (Bitrix24/AmoCRM/SAP), оставшиеся inline-роуты — только инфраструктура (health, company-photos, registry-optout, auth/digest, rate-limiterы) |
 | `db.js` | вся схема: 24 таблицы, создание при старте, «миграции» = `ALTER TABLE ... IF NOT EXISTS` внизу файла. Новая колонка → добавляй туда же |
 | `routes/auth.js` | регистрация (+claim профиля из реестра по ИНН), login, 2FA (speakeasy), OAuth Яндекс, refresh-токены/сессии, сброс пароля, email-верификация |
 | `routes/orders.js` | CRUD закупок, матчинг поставщиков (`computeMatchScore`), «горячий матч» ≥70% → email/push/TG, триггер registry-invites |
