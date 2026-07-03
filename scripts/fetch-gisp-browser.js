@@ -1,11 +1,10 @@
 'use strict';
 // Выгрузка перечня производителей ГИСП ПП-719 через настоящий браузер (Playwright):
-// сайт — SPA с CSRF/HMAC-токенами, простой fetch отдаёт только HTML-оболочку.
+// сайт — SPA (DevExtreme grid) с CSRF/HMAC, простой fetch отдаёт только HTML-оболочку.
 // ЗАПУСКАТЬ С ВЫКЛЮЧЕННЫМ VPN (госсайт режет зарубежные/DC IP).
 //   Разведка:  node scripts/fetch-gisp-browser.js --recon
-//     → сохраняет gisp-recon.html, gisp-recon.png, gisp-recon-net.txt в корень репо
-//   Выгрузка:  node scripts/fetch-gisp-browser.js --pages 20
-//     → scripts/data/registry-gisp.json (формат import-registry)
+//   Выгрузка:  node scripts/fetch-gisp-browser.js --pages 80
+//     (80 страниц по 100 записей ≈ весь перечень ~7500; итог в scripts/data/registry-gisp.json)
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('@playwright/test');
@@ -19,44 +18,56 @@ function argNum(name, dflt) {
     return i > -1 ? Number(process.argv[i + 1]) : dflt;
 }
 
+// Строки грида: Наименование | ИНН (10/12 цифр) | ОГРН (13/15 цифр) | Субъект РФ
 async function scrapeVisibleRows(page) {
-    // Универсальный съём: строки таблиц, в которых встречается ИНН (10/12 цифр)
     return page.evaluate(() => {
         const out = [];
-        const rows = document.querySelectorAll('table tr, [role="row"], .ag-row');
+        const rows = document.querySelectorAll('table tr, [role="row"]');
         for (const row of rows) {
-            const cells = [...row.querySelectorAll('td, [role="gridcell"], .ag-cell')]
+            const cells = [...row.querySelectorAll('td, [role="gridcell"]')]
                 .map(c => c.textContent.trim());
-            if (!cells.length) continue;
+            if (cells.length < 3) continue;
             const innIdx = cells.findIndex(c => /^\d{10}(\d{2})?$/.test(c.replace(/\s/g, '')));
             if (innIdx === -1) continue;
-            const name = cells.find((c, i) => i !== innIdx && c.length > 5 && !/^\d[\d\s]*$/.test(c)) || '';
+            const name = cells.find((c, i) => i !== innIdx && c.length > 5 && !/^\d[\d\s]*$/.test(c));
             if (!name) continue;
+            const after1 = (cells[innIdx + 1] || '').replace(/\s/g, '');
+            const ogrn = /^\d{13}(\d{2})?$/.test(after1) ? after1 : '';
+            const city = (ogrn ? cells[innIdx + 2] : cells[innIdx + 1]) || '';
             out.push({
                 company: name,
                 inn: cells[innIdx].replace(/\s/g, ''),
-                city: cells[innIdx + 1] || '',
+                city: city.trim(),
                 specialization: '',
-                ogrn: '',
+                ogrn,
             });
         }
         return out;
     });
 }
 
+async function clickNextPage(page) {
+    return page.evaluate(() => {
+        const pages = [...document.querySelectorAll('.dx-pages .dx-page')];
+        const cur = pages.findIndex(p => p.classList.contains('dx-selection'));
+        const next = cur > -1 ? pages[cur + 1] : null;
+        if (next) { next.click(); return true; }
+        return false;
+    });
+}
+
 (async () => {
     const recon = process.argv.includes('--recon');
-    const pages = argNum('--pages', 5);
+    const pages = argNum('--pages', 80);
 
     const browser = await chromium.launch();
     const ctx = await browser.newContext({ locale: 'ru-RU', viewport: { width: 1500, height: 950 } });
     const page = await ctx.newPage();
 
-    // Лог сетевых JSON-ответов — чтобы найти их внутренний API
     const netLog = [];
     page.on('response', async res => {
         const ct = res.headers()['content-type'] || '';
-        if (ct.includes('json') && !res.url().includes('cloudflare')) {
+        if (ct.includes('json') && !res.url().includes('static/')) {
             let preview = '';
             try { preview = (await res.text()).slice(0, 800); } catch {}
             netLog.push(`${res.status()} ${res.url()}\n${preview}\n${'-'.repeat(60)}`);
@@ -78,21 +89,24 @@ async function scrapeVisibleRows(page) {
         return;
     }
 
+    // Крупнее страница — меньше кликов по госсайту
+    const size100 = page.locator('.dx-page-size[aria-label="Display 100 items on page"]').first();
+    if (await size100.count()) {
+        await size100.click();
+        await page.waitForTimeout(4000);
+        console.log('Размер страницы: 100');
+    }
+
     let all = [];
+    const seen = new Set();
     for (let p = 0; p < pages; p++) {
         const batch = await scrapeVisibleRows(page);
         const before = all.length;
-        const seen = new Set(all.map(r => r.inn));
         for (const r of batch) if (!seen.has(r.inn)) { all.push(r); seen.add(r.inn); }
         console.log(`страница ${p + 1}: +${all.length - before} (всего ${all.length})`);
-        // Следующая страница: типовые кнопки пагинации
-        const next = page.locator('a[aria-label="Next"], button[aria-label="Next"], .pagination-next, li.next a, [class*="pagination"] [class*="next"]').first();
-        if (!(await next.count()) || !(await next.isEnabled().catch(() => false))) {
-            console.log('Кнопка «дальше» не найдена/неактивна — стоп.');
-            break;
-        }
-        await next.click();
-        await page.waitForTimeout(2000); // вежливо к госресурсу
+        if (p + 1 >= pages) break;
+        if (!(await clickNextPage(page))) { console.log('Следующей страницы нет — стоп.'); break; }
+        await page.waitForTimeout(1500); // вежливо к госресурсу
     }
 
     fs.writeFileSync(OUT, JSON.stringify(all, null, 1));
