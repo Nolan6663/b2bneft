@@ -82,7 +82,8 @@ function createCompaniesRouter(deps) {
             const { city, yearsExperience, about, equipment, specialization, phone, website,
                     ogrn, director, foundingYear, authorizedCapital, employees, revenue,
                     machinesCount, productionArea, videoUrl,
-                    isoCertificates, qualityCertificates, capabilities, productionLoad } = req.body;
+                    isoCertificates, qualityCertificates, capabilities, productionLoad,
+                    kpp, legalAddress, bankName, bankAccount, bankBik, bankCorr } = req.body;
 
             const str  = (v, max) => String(v).slice(0, max);
             const num  = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? n : null; };
@@ -107,6 +108,12 @@ function createCompaniesRouter(deps) {
             if (website !== undefined)            f('website', str(website, 200));
             if (ogrn !== undefined)               f('ogrn', str(ogrn, 20));
             if (director !== undefined)           f('director', str(director, 150));
+            if (kpp !== undefined)                f('kpp', str(kpp, 9));
+            if (legalAddress !== undefined)       f('legal_address', str(legalAddress, 300));
+            if (bankName !== undefined)           f('bank_name', str(bankName, 200));
+            if (bankAccount !== undefined)        f('bank_account', str(bankAccount, 20));
+            if (bankBik !== undefined)            f('bank_bik', str(bankBik, 9));
+            if (bankCorr !== undefined)           f('bank_corr', str(bankCorr, 20));
             if (foundingYear !== undefined)       f('founding_year', num(foundingYear));
             if (authorizedCapital !== undefined)  f('authorized_capital', str(authorizedCapital, 50));
             if (employees !== undefined)          f('employees', num(employees));
