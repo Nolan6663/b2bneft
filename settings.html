@@ -128,12 +128,12 @@
                 <div class="settings-card-body">
                     <div class="settings-form-grid">
                         <div class="form-group span-2">
-                            <label>Полное наименование</label>
-                            <input type="text" id="companyFullName" placeholder="ООО «Название организации»" value="">
+                            <label>Полное наименование (из профиля)</label>
+                            <input type="text" id="companyFullName" placeholder="ООО «Название организации»" value="" readonly style="opacity:.65;cursor:not-allowed;">
                         </div>
                         <div class="form-group">
-                            <label>ИНН</label>
-                            <input type="text" id="companyInn" placeholder="0000000000" maxlength="12">
+                            <label>ИНН (из профиля)</label>
+                            <input type="text" id="companyInn" placeholder="0000000000" maxlength="12" readonly style="opacity:.65;cursor:not-allowed;">
                         </div>
                         <div class="form-group">
                             <label>ОГРН</label>
@@ -143,22 +143,10 @@
                             <label>КПП</label>
                             <input type="text" id="companyKpp" placeholder="000000000" maxlength="9">
                         </div>
-                        <div class="form-group">
-                            <label>ОКПО</label>
-                            <input type="text" id="companyOkpo" placeholder="00000000" maxlength="10">
-                        </div>
-                        <div class="form-group">
-                            <label>Дата регистрации</label>
-                            <input type="date" id="companyRegDate">
-                        </div>
-                        <div class="form-group">
-                            <label>Основной вид деятельности (ОКВЭД)</label>
-                            <input type="text" id="companyOkved" placeholder="46.69.9">
-                        </div>
                     </div>
                     <div class="form-row-actions">
                         <div class="alert-inline success" id="companyAlert">Данные сохранены</div>
-                        <button class="btn-settings-save" onclick="saveCompanyDetails()">Сохранить</button>
+                        <button class="btn-settings-save" onclick="saveRequisites('companyAlert')">Сохранить</button>
                     </div>
                 </div>
             </div>
@@ -180,22 +168,10 @@
                             <label>Юридический адрес</label>
                             <input type="text" id="addrLegal" placeholder="625000, г. Тюмень, ул. Республики, д. 42, оф. 10">
                         </div>
-                        <div class="form-group span-2">
-                            <label>Фактический адрес</label>
-                            <input type="text" id="addrActual" placeholder="Совпадает с юридическим">
-                        </div>
-                        <div class="form-group">
-                            <label>Регион</label>
-                            <input type="text" id="addrRegion" placeholder="Тюменская область">
-                        </div>
-                        <div class="form-group">
-                            <label>Почтовый индекс</label>
-                            <input type="text" id="addrPostal" placeholder="625000" maxlength="6">
-                        </div>
                     </div>
                     <div class="form-row-actions">
-                        <div class="alert-inline success" id="addrAlert">Адреса сохранены</div>
-                        <button class="btn-settings-save" onclick="showAlert('addrAlert')">Сохранить</button>
+                        <div class="alert-inline success" id="addrAlert">Адрес сохранён</div>
+                        <button class="btn-settings-save" onclick="saveRequisites('addrAlert')">Сохранить</button>
                     </div>
                 </div>
             </div>
@@ -235,7 +211,7 @@
                     </div>
                     <div class="form-row-actions">
                         <div class="alert-inline success" id="bankAlert">Реквизиты сохранены</div>
-                        <button class="btn-settings-save" onclick="showAlert('bankAlert')">Сохранить</button>
+                        <button class="btn-settings-save" onclick="saveRequisites('bankAlert')">Сохранить</button>
                     </div>
                 </div>
             </div>
@@ -839,8 +815,52 @@
             setTimeout(() => { el.style.display = 'none'; }, 2500);
         }
 
-        function saveCompanyDetails() {
-            showAlert('companyAlert');
+        async function loadRequisites() {
+            try {
+                const r = await apiFetch(`${SERVER_URL}/companies`);
+                if (!r.ok) return;
+                const mine = (await r.json()).find(c => c.company === myCompany);
+                if (!mine) return;
+                _companyId = mine.id;
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+                set('companyFullName', mine.company);
+                set('companyInn', mine.inn);
+                set('companyOgrn', mine.ogrn);
+                set('companyKpp', mine.kpp);
+                set('addrLegal', mine.legalAddress);
+                set('bankName', mine.bankName);
+                set('bankBik', mine.bankBik);
+                set('bankKs', mine.bankCorr);
+                set('bankRs', mine.bankAccount);
+            } catch { /* тихо */ }
+        }
+
+        async function saveRequisites(alertId) {
+            if (!_companyId) { showToast('Профиль компании не загружен', 'error'); return; }
+            const val = id => (document.getElementById(id) || {}).value || '';
+            const digits = (id, len, name) => {
+                const v = val(id).trim();
+                if (v && !new RegExp(`^\\d{${len}}$`).test(v)) showToast(`${name}: обычно ${len} цифр — проверьте`, 'warn');
+                return v;
+            };
+            const body = {
+                ogrn: val('companyOgrn').trim(),
+                kpp: digits('companyKpp', 9, 'КПП'),
+                legalAddress: val('addrLegal').trim(),
+                bankName: val('bankName').trim(),
+                bankBik: digits('bankBik', 9, 'БИК'),
+                bankCorr: digits('bankKs', 20, 'Корр. счёт'),
+                bankAccount: digits('bankRs', 20, 'Расчётный счёт'),
+            };
+            try {
+                const r = await apiFetch(`${SERVER_URL}/companies/${_companyId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (r.ok) showAlert(alertId);
+                else showToast((await r.json()).error || 'Ошибка сохранения', 'error');
+            } catch { showToast('Ошибка сети', 'error'); }
         }
 
         function saveNotifPref(checkbox) {
@@ -1421,6 +1441,7 @@
                 if (capacityCard) capacityCard.style.display = '';
                 loadCapacity();
             }
+            loadRequisites();
         }
 
         if (document.readyState === 'loading') {
