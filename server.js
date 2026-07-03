@@ -649,6 +649,15 @@ app.get('/p/:id', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// Хеш коммита читается один раз при старте — чтобы по /api/health было видно,
+// какой код реально задеплоен (урок инцидента с молча-красным CI 04.07.2026)
+let GIT_COMMIT = '';
+try {
+    GIT_COMMIT = require('child_process')
+        .execSync('git rev-parse --short HEAD', { cwd: __dirname, timeout: 3000 })
+        .toString().trim();
+} catch { /* не git-окружение — оставляем пустым */ }
+
 app.get('/api/health', async (req, res) => {
     try {
         await pool.query('SELECT 1');
@@ -658,6 +667,7 @@ app.get('/api/health', async (req, res) => {
             storage: storage.isRemote() ? 's3' : 'local',
             uptime: process.uptime(),
             env: process.env.NODE_ENV || 'development',
+            commit: GIT_COMMIT,
         });
     } catch (e) {
         res.status(503).json({
