@@ -145,7 +145,7 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: linear-gradient(150deg, #0B2233, #071B2A);
+  background: #0B2233;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -725,7 +725,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 .modal-content::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--tz-stamp-orange) 0%, var(--tz-blueprint-blue) 100%);
+  background: var(--tz-stamp-orange);
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   opacity: .9;
 }
@@ -856,20 +856,22 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 }
 .sidebar-promo-img {
   height: 78px;
-  background: linear-gradient(155deg, #0C3547 0%, #0F5068 45%, #1A3A52 100%);
+  background: #0C3547;
   position: relative; overflow: hidden;
 }
 .sidebar-promo-img::before {
   content: '';
   position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse at 25% 70%, rgba(255,106,0,.3) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 25%, rgba(37,99,235,.18) 0%, transparent 50%);
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 .sidebar-promo-img::after {
   content: '';
-  position: absolute; bottom: 0; left: 0; right: 0; height: 36px;
-  background: linear-gradient(0deg, rgba(12,53,71,.7) 0%, transparent 100%);
+  position: absolute; right: 0; bottom: 0; width: 34%; height: 100%;
+  background: rgba(255,106,0,.12);
+  clip-path: polygon(45% 0,100% 0,100% 100%,0 100%);
 }
 .sidebar-promo-text {
   font-size: 11.5px; font-weight: 600; color: var(--text-primary);
@@ -1299,7 +1301,7 @@ html.sidebar-resizing .sidebar { transition: width .2s ease !important; }
 .widget-map-preview {
   position: relative; height: 130px; margin-top: 14px;
   border-radius: 10px; overflow: hidden;
-  background: linear-gradient(135deg, var(--bg-section), var(--bg-secondary));
+  background: var(--bg-section);
   border: 1px solid var(--card-border);
 }
 .widget-map-dot {
@@ -1722,11 +1724,11 @@ table {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 4px;
-    background: linear-gradient(180deg, var(--tz-stamp-orange), var(--tz-blueprint-blue));
+    background: var(--tz-stamp-orange);
 }
 .kp-rec-inner {
     padding: 16px 18px 16px 22px;
-    background: linear-gradient(135deg, rgba(255, 106, 0, 0.04), rgba(11, 143, 206, 0.03));
+    background: rgba(255, 106, 0, 0.04);
 }
 .kp-rec-head {
     display: flex;
@@ -2127,18 +2129,11 @@ table {
   padding: 16px 16px 14px;
   border-radius: 14px;
   border: 1px solid rgba(11, 143, 206, .22);
-  background: linear-gradient(135deg, rgba(11, 143, 206, .07) 0%, rgba(255, 106, 0, .04) 100%);
+  background: rgba(11, 143, 206, .06);
   border-left: 3px solid var(--tz-blueprint-blue);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-}
-.ai-tz-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255, 106, 0, .08), transparent 55%);
-  pointer-events: none;
 }
 .ai-tz-panel--off { opacity: .72; border-left-color: var(--text-muted); }
 .ai-tz-head { position: relative; margin-bottom: 12px; }
@@ -2177,7 +2172,7 @@ table {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 38px; padding: 0 16px;
   border: none; border-radius: 10px;
-  background: linear-gradient(135deg, var(--tz-blueprint-blue) 0%, #0870a8 100%);
+  background: var(--tz-blueprint-blue);
   color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(11, 143, 206, .28);
@@ -2262,10 +2257,10 @@ table {
   box-shadow: 0 6px 20px rgba(7,18,36,.08);
 }
 .ob-step-num {
-  width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%;
-  background: var(--accent-gradient); color: #fff;
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px;
+  background: #0B2233; color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 12px;
+  font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
 }
 .ob-step-body { flex: 1; min-width: 0; }
 .ob-step-body strong { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 2px; line-height: 1.3; }
@@ -2584,7 +2579,7 @@ table {
 
 /* Первая KPI-карточка — выделяется как featured */
 .kpi-row .kpi-card:first-child {
-  background: linear-gradient(145deg, #0B2233 0%, #102E47 100%) !important;
+  background: #0B2233 !important;
   border-color: transparent !important;
   box-shadow: 0 4px 20px rgba(11,34,51,.25) !important;
 }
@@ -2624,7 +2619,7 @@ table {
 
 /* 5. Sidebar — чуть теплее, не такой плоский */
 .sidebar {
-  background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 95%, #0B2233 5%) 100%) !important;
+  background: var(--sidebar-bg) !important;
 }
 .sidebar a.active {
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.06) !important;
@@ -2863,7 +2858,7 @@ input:focus, textarea:focus, select:focus {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent-bright) 0%, var(--tz-blueprint-blue) 100%);
+  background: var(--accent-bright);
   opacity: .9;
 }
 .cp-hero::after {

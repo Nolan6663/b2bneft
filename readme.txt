@@ -579,6 +579,28 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — чистка «AI-slop» дизайна по всем страницам)
+  ------------------------------------------------------------------------------
+  Убраны шаблонные AI-паттерны, стиль — плоский индустриальный (CSS-only,
+  HTML-структура/JS/SEO не тронуты):
+  • Декоративные градиенты → плоские брендовые цвета: landing.html (hero-панель,
+    сцена, FAQ-фон и glow, демо-модалка, шаги 1–4 + hatch-текстура, лого),
+    login.html (левая панель, круговой glow → плоский оранжевый клин, кнопки
+    модалок), dlya-postavshchikov/zakupki/zakupki-cat/tariff/admin (hero, CTA,
+    баннеры, лого), theme-v2.css (modal-strip, sidebar-promo, kp-rec, ai-tz-panel,
+    kpi-featured, sidebar, виджет карты), settings-page.css (аватар),
+    company-profile (заливка шкалы), index (бар графика)
+  • Небрендовый фиолетовый #7C3AED → blueprint-синий #0B8FCE (analytics,
+    deliveries, catalog GRADIENTS); catalog: градиентные аватары → плоские
+  • tokens.css: --avatar-* → плоские цвета; --accent-gradient → плоский #FF6A00
+    (имя переменной сохранено — используется в ~15 местах; заодно убрало
+    градиентный текст «404» и градиентные аватары/прогресс-бары)
+  • Анимация lp-glow (пульс тени) удалена; шаг-циферки (ps-step-num, ob-step-num)
+    → плоский navy + JetBrains Mono (последовательности реальные — оставлены)
+  • Оставлено намеренно: blueprint-сетки (подпись бренда), skeleton-shimmer,
+    blur только на модальных оверлеях, функциональная шкала red→green
+  Проверка: npm run check — passed (22 HTML, 46 inline scripts)
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — каталог из реестра промышленности, фаза A)
   ------------------------------------------------------------------------------
   • db.js — companies.source (TEXT) и companies.claimed (BOOLEAN, default true);

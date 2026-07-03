@@ -170,11 +170,6 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
   }
-  @keyframes lp-glow {
-    0%, 100% { box-shadow: 0 18px 40px rgba(7,27,42,0.22); }
-    50% { box-shadow: 0 22px 48px rgba(255,106,0,0.18); }
-  }
-
   .lp-rise { animation: lp-rise .65s cubic-bezier(.22,1,.36,1) backwards; animation-delay: calc(var(--d, 0) * 0.09s); }
   .lp-dot-pulse { animation: tz-pulse 2.4s ease-in-out infinite; }
 
@@ -244,18 +239,18 @@
   }
 
   .lp-industrial { position: relative; padding: 18px 20px 20px; border-radius: 16px; overflow: hidden;
-    background: linear-gradient(155deg,#0B2233,#071B2A); animation: lp-glow 5s ease-in-out infinite; }
+    background: #071B2A; box-shadow: 0 18px 40px rgba(7,27,42,0.22); }
   .lp-industrial-grid { position: absolute; inset: 0; pointer-events: none;
     background-image: linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px);
     background-size: 30px 30px; }
   .lp-industrial-accent { position: absolute; top: 0; right: 0; width: 30%; height: 100%;
-    background: linear-gradient(135deg,rgba(255,106,0,0),rgba(255,106,0,0.16));
+    background: rgba(255,106,0,0.10);
     clip-path: polygon(45% 0,100% 0,100% 100%,0 100%); pointer-events: none; }
 
   .lp-scene {
     position: relative; padding: 28px 24px 24px; border-radius: 18px;
-    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+    background: #fff;
     border: 1px solid rgba(7,27,42,0.08);
     box-shadow: 0 16px 40px rgba(7,27,42,0.08);
   }
@@ -283,24 +278,14 @@
   .lp-logo-mark {
     position: relative; width: 44px; height: 44px; margin: 0 auto;
     border-radius: 11px; flex-shrink: 0;
-    background: linear-gradient(150deg, #0B2233, #071B2A);
+    background: #0B2233;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 8px 18px rgba(0,0,0,0.28);
   }
   .lp-scene-hub .lp-logo-mark {
-    background: linear-gradient(145deg, #1e4560 0%, #123347 48%, #0a2233 100%);
+    background: #0B2233;
     border: 1.5px solid rgba(255,255,255,0.24);
-    box-shadow:
-      0 0 0 4px rgba(255,106,0,0.14),
-      0 10px 22px rgba(0,0,0,0.45),
-      inset 0 1px 0 rgba(255,255,255,0.2),
-      inset 0 -10px 18px rgba(0,0,0,0.22);
-  }
-  .lp-scene-hub .lp-logo-mark::before {
-    content: '';
-    position: absolute; inset: -7px; border-radius: 14px; z-index: -1;
-    background: radial-gradient(circle at 50% 35%, rgba(255,106,0,0.28), transparent 68%);
-    pointer-events: none;
+    box-shadow: 0 0 0 4px rgba(255,106,0,0.14), 0 10px 22px rgba(0,0,0,0.35);
   }
   .lp-logo-mark > span {
     font-weight: 800; font-size: 22px; color: #fff; letter-spacing: -1px; line-height: 1;
@@ -312,7 +297,6 @@
   }
   .lp-scene-hub .lp-logo-mark::after {
     width: 13px; height: 13px; right: 5px; bottom: 5px;
-    box-shadow: 0 0 8px rgba(255,106,0,0.55);
   }
   .lp-brand-word { font-weight: 800; font-size: 13px; letter-spacing: 0.5px; line-height: 1.2; }
   .lp-scene-ico {
@@ -335,7 +319,7 @@
   }
   .lp-scene-flow-line {
     position: absolute; left: 12%; right: 12%; bottom: 52px; height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255,106,0,0.35), transparent);
+    background: rgba(255,106,0,0.28);
     pointer-events: none;
   }
 
@@ -347,10 +331,7 @@
     padding: 96px 0 104px;
     position: relative;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255,106,0,0.11) 0%, transparent 55%),
-      radial-gradient(ellipse 55% 45% at 88% 75%, rgba(56,189,248,0.07) 0%, transparent 50%),
-      linear-gradient(165deg, #050f18 0%, #071B2A 42%, #0a1f32 100%);
+    background: #071B2A;
   }
   .lp-faq-grid {
     position: absolute; inset: 0; pointer-events: none; opacity: 0.7;
@@ -360,10 +341,7 @@
     background-size: 56px 56px;
     mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
   }
-  .lp-faq-glow {
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse 45% 55% at 72% 42%, rgba(255,106,0,0.14) 0%, transparent 68%);
-  }
+  .lp-faq-glow { display: none; }
   .lp-faq-inner {
     max-width: 1320px; margin: 0 auto; padding: 0 64px;
     display: grid; grid-template-columns: minmax(280px, 360px) 1fr;
@@ -509,8 +487,9 @@
   a.lp-nv:hover::after { right: 0; }
 
   #lp-header::after {
-    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-    background: linear-gradient(90deg, rgba(255,106,0,.4) 0%, rgba(11,143,206,.28) 45%, transparent 75%);
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    background: rgba(7,27,42,0.12);
+    box-shadow: inset 220px 0 0 rgba(255,106,0,.55);
   }
 
   /* ─── TZ VISUAL IDENTITY v3 — чертёжная рамка + штамп-полоса ──── */
@@ -556,10 +535,10 @@
 
   .lp-demo-sheet {
     position: relative; width: min(720px, 100%); max-height: min(88vh, 760px);
-    background: linear-gradient(165deg, rgba(255,255,255,.97) 0%, rgba(247,250,252,.94) 100%);
+    background: #fff;
     border: 1px solid rgba(7,27,42,.1);
     border-radius: 22px;
-    box-shadow: 0 32px 100px rgba(7,27,42,.28), inset 0 1px 0 rgba(255,255,255,.9);
+    box-shadow: 0 32px 100px rgba(7,27,42,.28);
     display: flex; flex-direction: column; overflow: hidden;
     transform: translateY(24px) scale(.97);
     transition: transform .34s cubic-bezier(.22,1,.36,1);
@@ -568,7 +547,7 @@
 
   .lp-demo-head {
     padding: 22px 24px 16px;
-    background: linear-gradient(155deg, #0B2233 0%, #071B2A 100%);
+    background: #071B2A;
     border-bottom: 1px solid rgba(255,106,0,.2);
     position: relative; overflow: hidden;
   }
@@ -607,7 +586,7 @@
   }
   .lp-demo-dot-fill {
     position: absolute; left: 0; top: 0; bottom: 0; width: 0;
-    background: linear-gradient(90deg, #FF6A00, #0B8FCE);
+    background: #FF6A00;
     border-radius: 99px; transition: width .45s cubic-bezier(.22,1,.36,1);
   }
   .lp-demo-dot.is-done .lp-demo-dot-fill { width: 100%; }
@@ -690,13 +669,9 @@
 
   .lp-demo-winner {
     text-align: center; padding: 20px 16px;
-    background: linear-gradient(155deg, #0B2233, #071B2A);
+    background: #071B2A;
     border-radius: 16px; color: #fff; position: relative; overflow: hidden;
-  }
-  .lp-demo-winner::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(255,106,0,.22), transparent 70%);
-    pointer-events: none;
+    border-top: 2px solid #FF6A00;
   }
   .lp-demo-winner-inner { position: relative; z-index: 1; }
   .lp-demo-winner-badge {
@@ -819,7 +794,7 @@
     <!-- ═══ HEADER ═══ -->
     <header id="lp-header" style="display:flex; align-items:center; justify-content:space-between; padding:26px 64px 22px; position:relative;">
       <div style="display:flex; align-items:center; gap:16px;">
-        <div style="position:relative; width:56px; height:56px; border-radius:12px; background:linear-gradient(150deg,#0B2233,#071B2A); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(7,27,42,0.22);">
+        <div style="position:relative; width:56px; height:56px; border-radius:12px; background:#0B2233; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(7,27,42,0.22);">
           <span style="font-weight:800; font-size:30px; color:#fff; letter-spacing:-1px; line-height:1;">Т</span>
           <div style="position:absolute; right:8px; bottom:8px; width:18px; height:18px; background:#FF6A00; clip-path:polygon(0 100%,100% 0,100% 100%);"></div>
         </div>
@@ -1018,8 +993,8 @@
       <div id="lp-steps" style="display:flex; align-items:stretch; gap:0;">
 
         <!-- Step 1 -->
-        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
-          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+        <div style="flex:1; position:relative; background:#0B2233; border-radius:16px; padding:28px 26px 30px; color:#fff; border:1px solid rgba(255,255,255,0.08); overflow:hidden;">
+          <div style="position:absolute; inset:0; pointer-events:none;"></div>
           <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
             <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">1</div>
             <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
@@ -1039,8 +1014,8 @@
         </div>
 
         <!-- Step 2 -->
-        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
-          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+        <div style="flex:1; position:relative; background:#0B2233; border-radius:16px; padding:28px 26px 30px; color:#fff; border:1px solid rgba(255,255,255,0.08); overflow:hidden;">
+          <div style="position:absolute; inset:0; pointer-events:none;"></div>
           <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
             <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">2</div>
             <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
@@ -1059,8 +1034,8 @@
         </div>
 
         <!-- Step 3 -->
-        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
-          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+        <div style="flex:1; position:relative; background:#0B2233; border-radius:16px; padding:28px 26px 30px; color:#fff; border:1px solid rgba(255,255,255,0.08); overflow:hidden;">
+          <div style="position:absolute; inset:0; pointer-events:none;"></div>
           <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
             <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">3</div>
             <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">
@@ -1080,8 +1055,8 @@
         </div>
 
         <!-- Step 4 -->
-        <div style="flex:1; position:relative; background:linear-gradient(160deg,#0B2233,#071B2A); border-radius:16px; padding:28px 26px 30px; color:#fff; box-shadow:0 14px 34px rgba(7,27,42,0.16); overflow:hidden;">
-          <div style="position:absolute; inset:0; background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.03) 0 1px,transparent 1px 14px); pointer-events:none;"></div>
+        <div style="flex:1; position:relative; background:#0B2233; border-radius:16px; padding:28px 26px 30px; color:#fff; border:1px solid rgba(255,255,255,0.08); overflow:hidden;">
+          <div style="position:absolute; inset:0; pointer-events:none;"></div>
           <div style="position:relative; display:flex; align-items:flex-start; justify-content:space-between;">
             <div style="color:#FF6A00; font-weight:800; font-size:46px; line-height:1; letter-spacing:-2px;">4</div>
             <div style="width:48px; height:48px; border-radius:11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;">

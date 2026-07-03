@@ -4,7 +4,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 /* Header */
 .zc-header { background: #0B2233; padding: 0 64px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
 .zc-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.zc-logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(150deg,#0B2233,#071B2A); border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
+.zc-logo-icon { width: 36px; height: 36px; border-radius: 9px; background: #0B2233; border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; }
 .zc-logo-icon span { font-weight: 800; font-size: 19px; color: #fff; }
 .zc-logo-icon::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 9px; height: 9px; background: #FF6A00; clip-path: polygon(0 100%,100% 0,100% 100%); }
 .zc-logo-text { font-size: 17px; font-weight: 800; color: #fff; }
@@ -14,7 +14,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zc-cta { background: #FF6A00; color: #fff; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 
 /* Hero */
-.zc-hero { background: linear-gradient(135deg,#071B2A 0%,#0B2233 100%); padding: 48px 64px 52px; }
+.zc-hero { background: #071B2A; padding: 48px 64px 52px; }
 .zc-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; }
 .zc-breadcrumb a { color: rgba(255,255,255,.5); text-decoration: none; transition: color .18s; }
 .zc-breadcrumb a:hover { color: rgba(255,255,255,.8); }
@@ -52,7 +52,7 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zc-respond { background: #FF6A00; color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 
 /* CTA Banner */
-.zc-cta-banner { margin: 0 64px 64px; border-radius: 18px; background: linear-gradient(135deg,#071B2A,#0B2233); padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+.zc-cta-banner { margin: 0 64px 64px; border-radius: 4px; background: #071B2A; padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
 .zc-cta-banner h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
 .zc-cta-banner p { font-size: 14px; color: rgba(255,255,255,.6); font-weight: 500; }
 .zc-cta-btn { background: #FF6A00; color: #fff; border-radius: 10px; padding: 14px 24px; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; }

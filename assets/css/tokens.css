@@ -25,7 +25,7 @@
   --accent-blue:    #F04B00;
   --accent-orange:  #FF6A00;
   --accent-green:   #059669;
-  --accent-gradient:linear-gradient(135deg, #FF6A00, #F04B00);
+  --accent-gradient:#FF6A00; /* плоский брендовый оранжевый (имя оставлено для совместимости) */
   --accent-on-button:#FFFFFF;
 
   --badge-producer-bg:    rgba(255,106,0,.1);
@@ -42,9 +42,9 @@
   --secondary-btn-border:#CBD5E1;
   --secondary-btn-text:  #475569;
 
-  --avatar-green: linear-gradient(135deg, #059669, #10B981);
-  --avatar-blue:  linear-gradient(135deg, #2563EB, #60A5FA);
-  --avatar-gold:  linear-gradient(135deg, #B45309, #D97706);
+  --avatar-green: #059669;
+  --avatar-blue:  #2563EB;
+  --avatar-gold:  #B45309;
 
   --radius-card:  12px;
   --radius-inner: 12px;
