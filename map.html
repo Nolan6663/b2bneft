@@ -204,17 +204,6 @@
         }
         .mcp-write-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 
-        /* ── Custom map markers ─────────────────────────────────────── */
-        .map-marker {
-            width: 34px; height: 34px; border-radius: 12px 12px 12px 4px;
-            border: 3px solid #fff; box-shadow: 0 8px 18px rgba(15,23,42,.24);
-            display: flex; align-items: center; justify-content: center;
-            transform: rotate(-45deg);
-            font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
-        }
-        .map-marker span { transform: rotate(45deg); display:block; }
-        .map-marker.verified { box-shadow: 0 8px 20px rgba(18,168,102,.28); }
-
         /* ── Popup ──────────────────────────────────────────────────── */
         .leaflet-popup-content-wrapper {
             background: var(--card-bg) !important; border: 1px solid var(--card-border) !important;
@@ -305,17 +294,6 @@
         .maplibregl-ctrl-group button:hover { background:var(--hover-bg) !important; }
         .maplibregl-ctrl-attrib { background:rgba(7,27,42,0.7) !important; color:var(--text-secondary) !important; font-size:10px !important; }
         .maplibregl-ctrl-attrib a { color:var(--text-secondary) !important; }
-
-        /* ── Factory pin marker ─────────────────────────────────────── */
-        .factory-pin { position:relative; width:36px; height:44px; cursor:pointer; filter:drop-shadow(0 4px 14px rgba(0,0,0,.55)); }
-        .pin-dot { width:36px; height:36px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2.5px solid rgba(255,255,255,.22); transition:transform .18s; }
-        .pin-dot span { transform:rotate(45deg); font-weight:800; font-size:14px; color:#fff; line-height:1; }
-        .factory-pin:hover .pin-dot { transform:rotate(-45deg) scale(1.18); }
-        .pin-ring { position:absolute; top:0; left:0; width:36px; height:36px; border-radius:50%; border:2px solid var(--pin-color, #FF6A00); opacity:0; animation:pinPulse 2.8s ease-out infinite; }
-        .factory-pin.verified .pin-ring { border-color:#41bd97; }
-        @keyframes pinPulse { 0% { transform:scale(1); opacity:.65; } 100% { transform:scale(2.7); opacity:0; } }
-        .factory-pin.pin-new .pin-dot { animation:pinAppear .55s cubic-bezier(.34,1.56,.64,1) forwards; }
-        @keyframes pinAppear { from { transform:rotate(-45deg) scale(0); opacity:0; } to { transform:rotate(-45deg) scale(1); opacity:1; } }
 
         /* ── New factory toast ──────────────────────────────────────── */
         .map-new-toast { position:absolute; bottom:22px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(65,189,151,.96); color:#fff; padding:10px 18px; border-radius:20px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; opacity:0; transition:all .3s ease; z-index:100; pointer-events:none; white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.3); }
@@ -630,16 +608,6 @@
         let currentFilteredProducers = [];
         let mlMap = null;
 
-        function createMarkerEl(p, animate) {
-            const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
-            const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
-            const el = document.createElement('div');
-            el.className = `factory-pin${p.verified ? ' verified' : ''}${animate ? ' pin-new' : ''}`;
-            el.style.setProperty('--pin-color', color);
-            el.innerHTML = `<div class="pin-ring"></div><div class="pin-dot" style="background:${color}"><span>${letter}</span></div>`;
-            return el;
-        }
-
         function showNewFactoryToast(company) {
             const area = document.querySelector('.map-area');
             if (!area) return;
@@ -656,6 +624,8 @@
                 container: 'map',
                 style: {
                     version: 8,
+                    // glyphs нужны symbol-слою с числом на кластере
+                    glyphs: 'https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
                     sources: {
                         carto: {
                             type: 'raster',
@@ -679,40 +649,89 @@
             mlMap.once('load', () => mlMap.resize());
             setTimeout(() => mlMap.resize(), 100);
 
-            const markerById = {};
+            // 4286 DOM-маркеров с вечной CSS-анимацией убивали рендер — точки теперь
+            // рисует GPU через GeoJSON-источник с кластеризацией.
             const popupRef = { current: null };
+            const EMPTY = { type: 'FeatureCollection', features: [] };
+            let styleReady = false;
+            let pendingData = null;
+
+            function toGeoJSON(list) {
+                return {
+                    type: 'FeatureCollection',
+                    features: list.map(p => ({
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+                        properties: { id: p.id, color: p.verified ? '#41bd97' : COLORS[p.id % COLORS.length] },
+                    })),
+                };
+            }
+
+            function openPopupById(id) {
+                const p = allProducers.find(x => x.id === id);
+                if (!p) return;
+                if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
+                popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '280px' })
+                    .setHTML(popupHtml(p))
+                    .setLngLat([p.lng, p.lat])
+                    .addTo(mlMap);
+            }
+
+            mlMap.once('load', () => {
+                mlMap.addSource('producers', {
+                    type: 'geojson', data: pendingData || EMPTY,
+                    cluster: true, clusterMaxZoom: 12, clusterRadius: 46,
+                });
+                mlMap.addLayer({
+                    id: 'clusters', type: 'circle', source: 'producers',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': ['step', ['get', 'point_count'], '#2a6fdb', 25, '#FF6A00', 150, '#e74c5e'],
+                        'circle-radius': ['step', ['get', 'point_count'], 14, 25, 19, 150, 26],
+                        'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,.85)',
+                    },
+                });
+                mlMap.addLayer({
+                    id: 'cluster-count', type: 'symbol', source: 'producers',
+                    filter: ['has', 'point_count'],
+                    layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['Open Sans Bold'], 'text-size': 12, 'text-allow-overlap': true },
+                    paint: { 'text-color': '#fff' },
+                });
+                mlMap.addLayer({
+                    id: 'producer-point', type: 'circle', source: 'producers',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': ['get', 'color'], 'circle-radius': 7,
+                        'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,.9)',
+                    },
+                });
+                mlMap.on('click', 'clusters', e => {
+                    const f = mlMap.queryRenderedFeatures(e.point, { layers: ['clusters'] })[0];
+                    if (!f) return;
+                    mlMap.getSource('producers').getClusterExpansionZoom(f.properties.cluster_id)
+                        .then(zoom => mlMap.easeTo({ center: f.geometry.coordinates, zoom: Math.min(zoom + 0.4, 14), duration: 600 }));
+                });
+                mlMap.on('click', 'producer-point', e => {
+                    const f = e.features && e.features[0];
+                    if (!f) return;
+                    selectProducer(f.properties.id, true);
+                    openPopupById(f.properties.id);
+                });
+                ['clusters', 'producer-point'].forEach(l => {
+                    mlMap.on('mouseenter', l, () => { mlMap.getCanvas().style.cursor = 'pointer'; });
+                    mlMap.on('mouseleave', l, () => { mlMap.getCanvas().style.cursor = ''; });
+                });
+                styleReady = true;
+            });
 
             return {
                 provider: 'maplibre',
-                markerById,
-                markers: [],
 
-                clear() {
-                    Object.values(markerById).forEach(m => m.remove());
-                    Object.keys(markerById).forEach(k => delete markerById[k]);
-                    this.markers = [];
+                setData(list) {
+                    const data = toGeoJSON(list);
+                    if (styleReady) mlMap.getSource('producers').setData(data);
+                    else pendingData = data;
                     if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
-                },
-
-                addProducer(p, animate = false) {
-                    if (markerById[p.id]) return;
-                    const el = createMarkerEl(p, animate);
-                    el.addEventListener('click', e => {
-                        e.stopPropagation();
-                        selectProducer(p.id, false);
-                        if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
-                        popupRef.current = new maplibregl.Popup({
-                            offset: [0, -38], closeButton: true, maxWidth: '280px',
-                        })
-                            .setHTML(popupHtml(p))
-                            .setLngLat([p.lng, p.lat])
-                            .addTo(mlMap);
-                    });
-                    const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-                        .setLngLat([p.lng, p.lat])
-                        .addTo(mlMap);
-                    markerById[p.id] = marker;
-                    this.markers.push(marker);
                 },
 
                 fit() {
@@ -729,18 +748,10 @@
                 },
 
                 flyTo(p) {
-                    mlMap.flyTo({ center: [p.lng, p.lat], zoom: 11, duration: 1400, essential: true });
+                    mlMap.flyTo({ center: [p.lng, p.lat], zoom: 11, duration: 1200, essential: true });
                 },
 
-                openPopup(id) {
-                    const p = allProducers.find(x => x.id === id);
-                    if (!p) return;
-                    if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
-                    popupRef.current = new maplibregl.Popup({ offset: [0, -38], closeButton: true, maxWidth: '280px' })
-                        .setHTML(popupHtml(p))
-                        .setLngLat([p.lng, p.lat])
-                        .addTo(mlMap);
-                },
+                openPopup: openPopupById,
 
                 invalidate() { setTimeout(() => mlMap.resize(), 0); },
             };
@@ -767,14 +778,13 @@
                         seenIds.add(item.id);
                         const p = normalizeProducer(item);
                         allProducers.push(p);
-                        if (mapAdapter) mapAdapter.addProducer(p, true);
                         showNewFactoryToast(p.company);
                         hasNew = true;
                     }
                     if (hasNew) {
+                        spreadDuplicates(allProducers);
                         renderDynamicFilters();
-                        updateMapKpis();
-                        renderMcpList(currentFilteredProducers);
+                        applyFilters();
                     }
                 } catch { /* silent */ }
             }, 15000);
@@ -782,12 +792,35 @@
 
         // ── State ─────────────────────────────────────────────────────
         let allProducers = [];
-        let markers = [];
-        const markerById = {};
         const COLORS = ['#4a90d9','#e5854a','#9b59b6','#e74c5e','#2ecc71','#f59e0b'];
         let activeMcpTab = 'list';
         let selectedProducerId = null;
         let filtersReady = false;
+        const MCP_PAGE = 60;
+        let mcpLimit = MCP_PAGE;
+
+        // Заводы одного города геокодированы в одну точку — раскладываем совпадающие
+        // координаты по спирали (детерминированно, от исходных lat0/lng0, идемпотентно)
+        function spreadDuplicates(list) {
+            const groups = new Map();
+            for (const p of list) {
+                p.lat = p.lat0; p.lng = p.lng0;
+                const k = p.lat.toFixed(3) + ',' + p.lng.toFixed(3);
+                if (!groups.has(k)) groups.set(k, []);
+                groups.get(k).push(p);
+            }
+            for (const arr of groups.values()) {
+                if (arr.length < 2) continue;
+                arr.sort((a, b) => a.id - b.id);
+                arr.forEach((p, i) => {
+                    if (!i) return;
+                    const ang = i * 2.399963; // золотой угол
+                    const r = 0.006 * Math.sqrt(i);
+                    p.lat += r * Math.cos(ang);
+                    p.lng += r * Math.sin(ang) * 1.8;
+                });
+            }
+        }
 
         function normalizeCategory(category) {
             const raw = String(category || '').trim();
@@ -819,6 +852,8 @@
                 ...p,
                 lat: Number(p.lat),
                 lng: Number(p.lng),
+                lat0: Number(p.lat),
+                lng0: Number(p.lng),
                 categories: uniqueCategories.length ? uniqueCategories : ['Прочее'],
                 equipment: Array.isArray(p.equipment) ? p.equipment : [],
                 freeCapacity: Array.isArray(p.freeCapacity) ? p.freeCapacity : [],
@@ -928,9 +963,7 @@ function popupHtml(p) {
         // ── Apply filters ─────────────────────────────────────────────
         function applyFilters() {
             if (!mapAdapter) return;
-            mapAdapter.clear();
-            markers = [];
-            Object.keys(markerById).forEach(k => delete markerById[k]);
+            mcpLimit = MCP_PAGE;
 
             const q = document.getElementById('mapSearch').value.toLowerCase();
             const verifiedOnly = document.getElementById('verifiedOnly').checked;
@@ -947,9 +980,7 @@ function popupHtml(p) {
             });
 
             currentFilteredProducers = filtered;
-            filtered.forEach(p => mapAdapter.addProducer(p));
-            markers = mapAdapter.markers;
-            Object.assign(markerById, mapAdapter.markerById);
+            mapAdapter.setData(filtered);
             mapAdapter.fit();
 
             document.getElementById('mapCounter').innerHTML =
@@ -1012,7 +1043,9 @@ function popupHtml(p) {
                 el.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px 0;">Нет компаний</div>';
                 return;
             }
-            el.innerHTML = sorted.map(p => {
+            // Рендерим порциями: 4286 карточек одним innerHTML вешали страницу
+            const hiddenCount = Math.max(0, sorted.length - mcpLimit);
+            el.innerHTML = sorted.slice(0, mcpLimit).map(p => {
                 const color = p.verified ? '#41bd97' : COLORS[p.id % COLORS.length];
                 const letter = p.company.replace(/[«»"ООО АОИПЗп]/g,'').trim().charAt(0).toUpperCase() || '?';
                 const verBadge = p.verified
@@ -1041,7 +1074,14 @@ function popupHtml(p) {
                     <div class="mcp-capacity"><div class="mcp-capacity-fill" style="width:${loadWidth}%"></div></div>
                     <button class="mcp-write-btn" onclick="event.stopPropagation();window.location.href='company-profile.html?id=${p.id}'">Открыть профиль</button>
                 </div>`;
-            }).join('');
+            }).join('') + (hiddenCount
+                ? `<button class="mcp-write-btn" style="flex-shrink:0;" onclick="mcpShowMore()">Показать ещё (${hiddenCount})</button>`
+                : '');
+        }
+
+        function mcpShowMore() {
+            mcpLimit += 120;
+            renderMcpList(currentFilteredProducers);
         }
 
         function selectProducer(id, scrollCard = true) {
@@ -1076,6 +1116,7 @@ function popupHtml(p) {
                     allProducers = data
                         .filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)))
                         .map(normalizeProducer);
+                    spreadDuplicates(allProducers);
                     renderDynamicFilters();
                     applyFilters();
                 }
@@ -1093,7 +1134,11 @@ function popupHtml(p) {
             }
         }
 
-        document.getElementById('mapSearch').addEventListener('input', () => applyFilters());
+        let mapSearchTimer = null;
+        document.getElementById('mapSearch').addEventListener('input', () => {
+            clearTimeout(mapSearchTimer);
+            mapSearchTimer = setTimeout(applyFilters, 250);
+        });
         document.getElementById('verifiedOnly').addEventListener('change', () => applyFilters());
         document.getElementById('regionSelect').addEventListener('change', () => applyFilters());
 
