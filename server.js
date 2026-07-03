@@ -874,7 +874,7 @@ async function geocodeExisting() {
 }
 
 async function matchedProducers(order, minScore = 0, withReasons = false) {
-    const { rows } = await pool.query("SELECT * FROM companies WHERE role = 'producer'");
+    const { rows } = await pool.query("SELECT * FROM companies WHERE role = 'producer' AND claimed = true");
     return rows.map(rowToCompany)
         .map(c => {
             const score = computeMatchScore(order, c);
