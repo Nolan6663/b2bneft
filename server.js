@@ -202,6 +202,9 @@ function rowToCompany(r) {
         egrulVerifiedAt: r.egrul_verified_at,
         claimed: r.claimed !== false,
         fromRegistry: !r.claimed && !!r.source,
+        // отдельно от fromRegistry: плашку «Реестр Минпромторга» имеют право
+        // носить только стабы из ГИСП ПП-719, не любой импортированный источник
+        fromGisp: !r.claimed && r.source === 'gisp-pp719',
         freeCapacity: JSON.parse(r.free_capacity || '[]'),
         lat: r.lat ?? null,
         lng: r.lng ?? null,
@@ -632,10 +635,13 @@ app.get('/p/:id', async (req, res, next) => {
         }
         const filePath = path.join(__dirname, 'supplier-public.html');
         let html = fs.readFileSync(filePath, 'utf8');
-        const fromRegistry = !row.claimed && row.source === 'gisp-pp719';
-        const title = fromRegistry
+        const isStub = !row.claimed && !!row.source;
+        const fromGisp = !row.claimed && row.source === 'gisp-pp719';
+        const title = fromGisp
             ? `${row.company}${row.city ? ' (' + row.city + ')' : ''} — производитель из реестра Минпромторга | ТехЗаказ`
-            : `${row.company} — поставщик | ТехЗаказ`;
+            : isStub
+                ? `${row.company}${row.city ? ' (' + row.city + ')' : ''} — производитель | ТехЗаказ`
+                : `${row.company} — поставщик | ТехЗаказ`;
         const desc = [row.specialization, row.products, row.city, row.about].filter(Boolean).join(' · ').slice(0, 160)
             || `Профиль поставщика ${row.company} на B2B-платформе ТехЗаказ`;
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
@@ -1114,7 +1120,7 @@ app.get('/api/registry-invites/optout', async (req, res, next) => {
                 'Проверьте, что ссылка из письма скопирована целиком.'));
         }
         await pool.query(
-            "UPDATE companies SET invite_optout = true WHERE inn = $1 AND claimed = false AND source = 'gisp-pp719'",
+            "UPDATE companies SET invite_optout = true WHERE inn = $1 AND claimed = false AND source <> ''",
             [String(inn)]
         );
         res.send(page('Вы отписаны',

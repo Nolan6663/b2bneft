@@ -792,9 +792,11 @@
                 ? `<span class="catalog-verified"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">Верифицирован</span></span>`
                 : (p.verifiedEgrul
                     ? `<span class="catalog-verified catalog-verified--egrul"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="nav-label">ЕГРЮЛ ✓</span></span>`
-                    : (p.fromRegistry
+                    : (p.fromGisp
                         ? `<span class="catalog-verified catalog-registry"><span class="nav-label">Реестр Минпромторга</span></span>`
-                        : ''));
+                        : (p.fromRegistry
+                            ? `<span class="catalog-verified catalog-registry"><span class="nav-label">Из открытых данных</span></span>`
+                            : '')));
 
             const caps = (p.capabilities || []).slice(0, 5)
                 .map(c => `<span class="catalog-cap-chip">${escapeHtml(CAP_LABELS[c] || c)}</span>`)

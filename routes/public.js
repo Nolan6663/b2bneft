@@ -276,6 +276,7 @@ function createPublicRouter(deps) {
                 phone: c.phone || '',
                 website: c.website || '',
                 fromRegistry: c.fromRegistry,
+                fromGisp: c.fromGisp,
             });
         } catch (e) { next(e); }
     });
