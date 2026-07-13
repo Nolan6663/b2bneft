@@ -13,6 +13,7 @@ tests/e2e/admin-storage.json
 
 .worktrees/
 scripts/data/registry-gisp-raw.json
+outreach-preview/
 
 # локальный рабочий мусор (скриншоты, черновики) — не коммитить в корень
 /*.png

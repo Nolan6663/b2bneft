@@ -251,6 +251,15 @@ async function initDb() {
             actor         TEXT        NOT NULL DEFAULT '',
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS outreach_log (
+            id            SERIAL      PRIMARY KEY,
+            company_id    INTEGER     NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+            email         TEXT        NOT NULL,
+            subject       TEXT        NOT NULL DEFAULT '',
+            status        TEXT        NOT NULL DEFAULT 'sent',
+            error         TEXT        NOT NULL DEFAULT '',
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
     `);
 
     await pool.query(`
