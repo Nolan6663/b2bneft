@@ -1,5 +1,5 @@
 'use strict';
-const { createOutreach, buildUserPrompt, fallbackLetter, shortCompanyName } = require('../lib/outreach.js');
+const { createOutreach, buildUserPrompt, fallbackLetter, shortCompanyName, stripGreeting } = require('../lib/outreach.js');
 
 const o = createOutreach({ pool: null, transport: null, appUrl: 'https://x', jwtSecret: 'test-secret', emailFrom: 'a@b', replyTo: '' });
 const stub = { id: 1, company: 'Завод "РТИ-Прогресс"', inn: '7701234567', city: 'Пермь', specialization: 'РТИ', products: 'кольца, манжеты', contact_email: 'z@z.ru' };
@@ -24,6 +24,11 @@ const checks = [
     ['имя: нормальное не трогаем', shortCompanyName('Завод РТИ-Прогресс') === 'Завод РТИ-Прогресс'],
     ['имя: пустое не падает', shortCompanyName('') === ''],
     ['фолбэк: длинное имя не режется посреди слова', fallbackLetter({ company: 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ ОЧЕНЬ ДЛИННОЕ НАЗВАНИЕ ПРЕДПРИЯТИЯ ИМЕНИ ПЯТИЛЕТКИ' }).subject === 'Прямые заказы для вашего предприятия на ТехЗаказ'],
+    ['срез: «Уважаемые коллеги из X!» уходит', stripGreeting('Уважаемые коллеги из АВА Гидросистемы! Ваша компания известна.') === 'Ваша компания известна.'],
+    ['срез: «Уважаемый производитель...!» уходит', stripGreeting('Уважаемый производитель автомобилей марки LADA! На платформе есть заказы.') === 'На платформе есть заказы.'],
+    ['срез: «Здравствуйте,» уходит', stripGreeting('Здравствуйте, завод! Дело есть.') === 'Дело есть.'],
+    ['срез: обычный абзац не трогаем', stripGreeting('Продукция завода востребована в отрасли.') === 'Продукция завода востребована в отрасли.'],
+    ['срез: чисто-приветственный абзац станет пустым', stripGreeting('Уважаемые коллеги!') === ''],
 ];
 let ok = true;
 for (const [name, pass] of checks) { console.log((pass ? 'PASS' : 'FAIL') + ': ' + name); if (!pass) ok = false; }
