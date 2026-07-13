@@ -4,6 +4,9 @@
 //   node scripts/outreach.js --dry-run --limit 3     показать письма, ничего не слать
 //   node scripts/outreach.js --test mail@example.com  одно письмо на свою почту
 //   node scripts/outreach.js --send --limit 20        реальная отправка с логом в outreach_log
+// На VPS обязателен префикс NODE_EXTRA_CA_CERTS=certs/russian_trusted_root_ca.pem —
+// иначе GigaChat падает с "fetch failed" (сертификат Сбера; PM2 берёт его из
+// ecosystem.config.js, но отдельный скрипт запускается вне PM2).
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
