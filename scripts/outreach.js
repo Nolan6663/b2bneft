@@ -12,7 +12,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const { pool } = require('../db');
 const { JWT_SECRET } = require('../lib/auth-tokens');
-const { createOutreach } = require('../lib/outreach');
+const { createOutreach, domainLooksDeliverable } = require('../lib/outreach');
 
 const args = process.argv.slice(2);
 function flag(name) { return args.includes(name); }
@@ -77,8 +77,15 @@ async function main() {
 
     if (DRY_RUN && !fs.existsSync(PREVIEW_DIR)) fs.mkdirSync(PREVIEW_DIR);
 
-    let sent = 0, failed = 0;
+    let sent = 0, failed = 0, skipped = 0;
     for (const stub of stubs) {
+        // мёртвый домен = гарантированный отскок, портит репутацию ящика — отсеиваем до генерации
+        if (SEND && !(await domainLooksDeliverable(stub.contact_email))) {
+            skipped++;
+            console.log(`\n--- ${stub.company}: домен ${stub.contact_email} не резолвится — пропуск навсегда`);
+            await outreach.markBadDomain(stub);
+            continue;
+        }
         const letter = await outreach.generateLetter(stub);
         const tag = letter.ai ? 'AI' : 'шаблон';
         console.log(`\n--- ${stub.company} (${stub.city || 'город не указан'}) [${tag}]`);
@@ -110,7 +117,7 @@ async function main() {
         if (stub !== stubs[stubs.length - 1]) await sleep(15000 + Math.random() * 15000);
     }
 
-    if (SEND) console.log(`\nИтог: отправлено ${sent}, ошибок ${failed}.`);
+    if (SEND) console.log(`\nИтог: отправлено ${sent}, ошибок ${failed}, мёртвых доменов ${skipped}.`);
     await pool.end();
 }
 

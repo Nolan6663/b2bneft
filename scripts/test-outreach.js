@@ -1,5 +1,5 @@
 'use strict';
-const { createOutreach, buildUserPrompt, fallbackLetter, shortCompanyName, stripGreeting } = require('../lib/outreach.js');
+const { createOutreach, buildUserPrompt, fallbackLetter, shortCompanyName, stripGreeting, domainLooksDeliverable } = require('../lib/outreach.js');
 
 const o = createOutreach({ pool: null, transport: null, appUrl: 'https://x', jwtSecret: 'test-secret', emailFrom: 'a@b', replyTo: '' });
 const stub = { id: 1, company: 'Завод "РТИ-Прогресс"', inn: '7701234567', city: 'Пермь', specialization: 'РТИ', products: 'кольца, манжеты', contact_email: 'z@z.ru' };
@@ -30,6 +30,12 @@ const checks = [
     ['срез: обычный абзац не трогаем', stripGreeting('Продукция завода востребована в отрасли.') === 'Продукция завода востребована в отрасли.'],
     ['срез: чисто-приветственный абзац станет пустым', stripGreeting('Уважаемые коллеги!') === ''],
 ];
-let ok = true;
-for (const [name, pass] of checks) { console.log((pass ? 'PASS' : 'FAIL') + ': ' + name); if (!pass) ok = false; }
-process.exit(ok ? 0 : 1);
+(async () => {
+    // живой DNS: тесты гоняются с машин с интернетом (локально и на VPS)
+    checks.push(['dns: живой домен проходит', await domainLooksDeliverable('x@yandex.ru')]);
+    checks.push(['dns: несуществующий домен режется', !(await domainLooksDeliverable('x@no-such-domain-qq17.ru'))]);
+    checks.push(['dns: адрес без домена режется', !(await domainLooksDeliverable('кривой-адрес'))]);
+    let ok = true;
+    for (const [name, pass] of checks) { console.log((pass ? 'PASS' : 'FAIL') + ': ' + name); if (!pass) ok = false; }
+    process.exit(ok ? 0 : 1);
+})();
