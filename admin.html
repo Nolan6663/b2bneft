@@ -11,7 +11,10 @@
     <title>Техзаказ — Администратор</title>
     <link rel="stylesheet" href="assets/theme-v2.css?v=10">
     <style>
-        body { display:flex; flex-direction:column; min-height:100vh; background:var(--bg-page); }
+        /* theme-v2.css ставит body{height:100vh;overflow:hidden} под layout кабинета,
+           где скроллит .main-content. В админке своего скролл-контейнера нет —
+           возвращаем обычный скролл страницы, иначе список пользователей обрезан. */
+        body { display:flex; flex-direction:column; min-height:100vh; height:auto; overflow:visible; background:var(--bg-page); }
 
         /* ── Topbar ──────────────────────────────────────────────── */
         .adm-topbar {
