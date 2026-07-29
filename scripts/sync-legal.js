@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { LEGAL, FOOTER_EXCLUDE } = require('./legal-data');
+const { LEGAL, DOC_YEAR, FOOTER_EXCLUDE } = require('./legal-data');
 
 const ROOT = path.join(__dirname, '..');
 const PARTIAL = path.join(ROOT, 'partials', 'footer.html');
@@ -18,6 +18,19 @@ function renderFooter(template, legal, year) {
         .replace(/\{\{ADDRESS\}\}/g, legal.address)
         .replace(/\{\{EMAIL\}\}/g, legal.email)
         .replace(/\{\{YEAR\}\}/g, String(year));
+}
+
+/** Рабочая копия может быть выкачана с CRLF (core.autocrlf=true, .gitattributes нет),
+ *  а блок ниже склеивается через '\n'. Сравнивать «изменилось ли» можно только
+ *  на нормализованных переводах строк, иначе байт-корректные страницы числятся устаревшими. */
+function normalizeEol(text) {
+    return text.replace(/\r\n/g, '\n');
+}
+
+/** Есть ли куда вставить футер: либо маркеры, либо закрывающий </body>.
+ *  Без этого applyFooter молча вернёт страницу как есть, и синк отчитается «всё синхронно». */
+function hasFooterAnchor(html) {
+    return (html.includes(START) && html.includes(END)) || html.lastIndexOf('</body>') !== -1;
 }
 
 /** Идемпотентно: первый прогон вставляет блок с маркерами перед </body>,
@@ -52,25 +65,38 @@ function footerPages(root) {
 
 function syncAll(root) {
     const template = fs.readFileSync(PARTIAL, 'utf8');
-    const footer = renderFooter(template, LEGAL, new Date().getFullYear());
+    const footer = renderFooter(template, LEGAL, DOC_YEAR);
     const pages = footerPages(root);
     const changed = [];
+    const anchorless = [];
     for (const page of pages) {
         const file = path.join(root, page);
         const before = fs.readFileSync(file, 'utf8');
+        if (!hasFooterAnchor(before)) {
+            anchorless.push(page);
+            continue;
+        }
         const after = applyFooter(before, footer);
-        if (after !== before) {
+        if (normalizeEol(after) !== normalizeEol(before)) {
             fs.writeFileSync(file, after, 'utf8');
             changed.push(page);
         }
     }
-    return { changed, total: pages.length };
+    return { changed, anchorless, total: pages.length };
 }
 
-module.exports = { renderFooter, applyFooter, footerPages, syncAll, START, END };
+module.exports = {
+    renderFooter, applyFooter, footerPages, syncAll,
+    normalizeEol, hasFooterAnchor, START, END,
+};
 
 if (require.main === module) {
-    const { changed, total } = syncAll(ROOT);
+    const { changed, anchorless, total } = syncAll(ROOT);
     console.log(`Footer synced: ${changed.length} changed of ${total} pages`);
     changed.forEach(p => console.log('  ' + p));
+    if (anchorless.length) {
+        console.error('Некуда вставить футер — нет ни маркеров, ни </body>:');
+        anchorless.forEach(p => console.error('  ' + p));
+        process.exitCode = 1;
+    }
 }

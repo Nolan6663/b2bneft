@@ -14,6 +14,12 @@ const LEGAL = {
  *  пишется в users.consent_version, чтобы было видно, кто на что соглашался. */
 const DOC_VERSION = '2026-07-29';
 
+/** Год в копирайте футера. Именно константа, а не new Date().getFullYear():
+ *  с автоматическим годом 1 января все закоммиченные страницы разом становятся
+ *  «устаревшими», npm run check падает, а deploy.yml (deploy: needs: check)
+ *  перестаёт пускать даже хотфиксы. Меняется вручную вместе с прогоном sync-legal. */
+const DOC_YEAR = 2026;
+
 /** Страницы без сайдбара, которым футер не нужен либо противопоказан.
  *  Файлы подтверждения прав вебмастеров сверяются побайтово — их правка ломает верификацию. */
 const FOOTER_EXCLUDE = new Set([
@@ -23,4 +29,4 @@ const FOOTER_EXCLUDE = new Set([
     'googleefff6b0475352b2b.html',
 ]);
 
-module.exports = { LEGAL, DOC_VERSION, FOOTER_EXCLUDE };
+module.exports = { LEGAL, DOC_VERSION, DOC_YEAR, FOOTER_EXCLUDE };

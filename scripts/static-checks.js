@@ -172,14 +172,23 @@ function checkMpaPageStyles() {
 }
 
 function checkLegalFooterSynced() {
-  const { renderFooter, applyFooter, footerPages } = require('./sync-legal');
-  const { LEGAL } = require('./legal-data');
+  const { renderFooter, applyFooter, footerPages, normalizeEol, hasFooterAnchor } = require('./sync-legal');
+  const { LEGAL, DOC_YEAR } = require('./legal-data');
   const template = fs.readFileSync(path.join(root, 'partials', 'footer.html'), 'utf8');
-  const footer = renderFooter(template, LEGAL, new Date().getFullYear());
-  const stale = footerPages(root).filter(page => {
+  const footer = renderFooter(template, LEGAL, DOC_YEAR);
+  const stale = [];
+  const anchorless = [];
+  for (const page of footerPages(root)) {
     const html = fs.readFileSync(path.join(root, page), 'utf8');
-    return applyFooter(html, footer) !== html;
-  });
+    // Без маркеров и без </body> applyFooter вернёт вход как есть — страница выглядела бы
+    // синхронной, хотя футера на ней нет вовсе.
+    if (!hasFooterAnchor(html)) { anchorless.push(page); continue; }
+    // Сравнение на нормализованных переводах строк: рабочая копия может быть в CRLF.
+    if (normalizeEol(applyFooter(html, footer)) !== normalizeEol(html)) stale.push(page);
+  }
+  if (anchorless.length) {
+    fail(`Страницам негде разместить футер — нет ни маркеров, ни </body>:\n${anchorless.join('\n')}`);
+  }
   if (stale.length) {
     fail(`Футер разошёлся с partials/footer.html — прогони "npm run sync:legal":\n${stale.join('\n')}`);
   }

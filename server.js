@@ -609,6 +609,8 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/zakupki/rti',         priority: '0.8', changefreq: 'daily'  },
             { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
             { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
+            { url: '/privacy',             priority: '0.3', changefreq: 'yearly' },
+            { url: '/terms',               priority: '0.3', changefreq: 'yearly' },
         ];
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
         // индексируем (4286 страниц «завод + продукция + город» — органический канал)
