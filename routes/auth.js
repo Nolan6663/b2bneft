@@ -11,6 +11,7 @@ const {
     hashPassword,
     verifyPassword,
 } = require('../lib/auth-tokens');
+const { DOC_VERSION } = require('../scripts/legal-data');
 
 module.exports = function createAuthRouter(deps) {
     const {
@@ -68,10 +69,13 @@ module.exports = function createAuthRouter(deps) {
 
     router.post('/register', async (req, res, next) => {
         try {
-            const { email, password, company, inn, role } = req.body;
+            const { email, password, company, inn, role, consent } = req.body;
             if (!email || !password || !company || !role) return res.status(400).json({ error: 'Заполните все поля регистрации' });
             const ALLOWED_ROLES = ['customer', 'producer'];
             if (!ALLOWED_ROLES.includes(role)) return res.status(400).json({ error: 'Недопустимая роль' });
+            if (consent !== true) {
+                return res.status(400).json({ error: 'Требуется согласие на обработку персональных данных' });
+            }
             if (password.length < 8) return res.status(400).json({ error: 'Пароль — минимум 8 символов' });
 
             const { rows: [taken] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)', [email]);
@@ -108,8 +112,8 @@ module.exports = function createAuthRouter(deps) {
             const newUser = await withTransaction(async (client) => {
                 const normInn = String(inn || '').replace(/\D/g, '');
                 const { rows: [u] } = await client.query(
-                    'INSERT INTO users (email,password,role,company,inn,team_role) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-                    [email, hashPassword(password), resolvedRole, resolvedCompany, normInn.length === 10 || normInn.length === 12 ? normInn : (inn || ''), resolvedTeamRole]
+                    'INSERT INTO users (email,password,role,company,inn,team_role,consent_at,consent_version) VALUES ($1,$2,$3,$4,$5,$6,NOW(),$7) RETURNING *',
+                    [email, hashPassword(password), resolvedRole, resolvedCompany, normInn.length === 10 || normInn.length === 12 ? normInn : (inn || ''), resolvedTeamRole, DOC_VERSION]
                 );
                 const { rows: [compExists] } = await client.query('SELECT 1 FROM companies WHERE company = $1 AND role = $2 AND claimed = true', [resolvedCompany, resolvedRole]);
                 if (!compExists) {
@@ -307,8 +311,8 @@ module.exports = function createAuthRouter(deps) {
                 const company = info.real_name || info.display_name || info.login || email.split('@')[0];
                 await withTransaction(async (client) => {
                     const { rows: [u] } = await client.query(
-                        "INSERT INTO users (email, password, role, company, inn) VALUES ($1,$2,'customer',$3,'') RETURNING *",
-                        [email, hashPassword(crypto.randomBytes(32).toString('hex')), company]
+                        "INSERT INTO users (email, password, role, company, inn, consent_at, consent_version) VALUES ($1,$2,'customer',$3,'',NOW(),$4) RETURNING *",
+                        [email, hashPassword(crypto.randomBytes(32).toString('hex')), company, DOC_VERSION]
                     );
                     const { rows: [exists] } = await client.query(
                         'SELECT 1 FROM companies WHERE company=$1 AND role=$2', [company, 'customer']
