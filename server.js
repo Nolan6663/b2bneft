@@ -552,10 +552,16 @@ app.get('/favicon.svg', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
     res.sendFile(path.join(__dirname, 'favicon.svg'));
 });
-// Подтверждение прав в Яндекс.Вебмастере: файл отдаётся как есть, содержимое менять нельзя.
-app.get('/yandex_3fbc490e3bd5d37d.html', (req, res) => {
-    res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.join(__dirname, 'yandex_3fbc490e3bd5d37d.html'));
+// Подтверждение прав в панелях вебмастеров (Яндекс, Google Search Console).
+// Файлы отдаются как есть — содержимое и имя менять нельзя, иначе права слетят.
+[
+    'yandex_3fbc490e3bd5d37d.html',
+    'googleefff6b0475352b2b.html',
+].forEach(file => {
+    app.get('/' + file, (req, res) => {
+        res.setHeader('Cache-Control', 'no-cache');
+        res.sendFile(path.join(__dirname, file));
+    });
 });
 app.get('/landing-hero.png', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
