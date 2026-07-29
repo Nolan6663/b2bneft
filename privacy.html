@@ -195,7 +195,9 @@
     .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
     .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
     .tz-footer-copy { align-self: flex-end; }
-    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
     /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
     .tz-cookie[hidden] { display: none !important; }
     .tz-cookie a { color: var(--accent-bright, #FF6A00); }
