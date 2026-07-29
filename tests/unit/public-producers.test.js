@@ -14,7 +14,13 @@ const ROWS = [
 function router(rows = ROWS) {
     const deps = baseDeps({
         pool: fakePool([{ match: /FROM companies/i, rows }]),
-        rowToCompany: (r) => r,
+        // Настоящий rowToCompany (server.js:173) переименовывает флаги в camelCase и
+        // не отдаёт snake_case-версии. Тождественная заглушка это скрывала: код, читающий
+        // producer.verified_by_platform, в тестах «работал», а в проде отдавал бы всем verified:false.
+        rowToCompany: (r) => {
+            const { verified_by_platform, verified_egrul, ...rest } = r;
+            return { ...rest, verifiedByPlatform: Boolean(verified_by_platform), verifiedEgrul: Boolean(verified_egrul) };
+        },
         // как в server.js:809 — по словам специализации
         getProducerCategories: (p) => {
             const text = `${p.specialization || ''} ${p.products || ''}`.toLowerCase();
