@@ -13,6 +13,7 @@ const jsFiles = [
   ...fs.readdirSync(path.join(root, 'lib')).filter(f => f.endsWith('.js')).map(f => 'lib/' + f),
   'scripts/static-checks.js', 'scripts/mvp-api-smoke.js', 'scripts/import-registry.js', 'scripts/fetch-gisp.js',
   'scripts/legal-data.js', 'scripts/sync-legal.js',
+  'scripts/sync-category-pages.js', 'seo/categories-data.js',
 ];
 const cssFiles = ['assets/theme-v2.css', 'assets/deals-page.css', 'assets/css/tokens.css'];
 
@@ -194,6 +195,24 @@ function checkLegalFooterSynced() {
   }
 }
 
+function checkCategoryPagesSynced() {
+  const { renderCategoryPage, stripLegalBlock } = require('./sync-category-pages');
+  const { CATEGORIES } = require('../seo/categories-data');
+  const stale = [];
+  for (const category of CATEGORIES) {
+    const rel = path.join('zakupki', `${category.slug}.html`);
+    const file = path.join(root, rel);
+    if (!fs.existsSync(file)) { stale.push(rel + ' (файла нет)'); continue; }
+    // Сравниваем без юридического блока: его вставляет sync-legal.js, у него свой гейт.
+    const actual = stripLegalBlock(fs.readFileSync(file, 'utf8')).replace(/\r\n/g, '\n');
+    const expected = stripLegalBlock(renderCategoryPage(category)).replace(/\r\n/g, '\n');
+    if (actual !== expected) stale.push(rel);
+  }
+  if (stale.length) {
+    fail(`Категорийные страницы разошлись с seo/categories-data.js — прогони "npm run sync:categories":\n${stale.join('\n')}`);
+  }
+}
+
 function main() {
   checkJavaScriptSyntax();
   const inlineScripts = checkInlineScripts();
@@ -205,6 +224,7 @@ function main() {
   checkAccessGuardrails();
   checkMpaPageStyles();
   checkLegalFooterSynced();
+  checkCategoryPagesSynced();
   console.log(`Static checks passed: ${htmlFiles.length} HTML files, ${inlineScripts} inline scripts`);
 }
 
