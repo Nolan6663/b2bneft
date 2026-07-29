@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Условия использования — ТехЗаказ</title>
-<meta name="description" content="Условия использования платформы ТехЗаказ и оферта на платные тарифы.">
+<meta name="description" content="Условия использования платформы ТехЗаказ: доступ к сервису, правила размещения материалов, ответственность сторон.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/theme-v2.css?v=10">
 <style>
@@ -27,7 +27,7 @@
   <h1>Условия использования</h1>
   <div class="doc-meta">Редакция от 29.07.2026</div>
 
-  <p>Документ определяет условия, на которых предоставляется доступ к платформе ТехЗаказ (сайт texzakaz.ru), и одновременно является офертой на платные тарифы. Регистрируясь на платформе, пользователь принимает эти условия целиком; частичное принятие не допускается.</p>
+  <p>Документ определяет условия, на которых предоставляется доступ к платформе ТехЗаказ (сайт texzakaz.ru). Регистрируясь на платформе, пользователь принимает эти условия целиком; частичное принятие не допускается.</p>
 
   <h2>1. Термины и стороны</h2>
   <ul>
@@ -60,17 +60,15 @@
 
   <h2>5. Платные тарифы</h2>
   <p>Для заказчиков размещение закупок и работа с предложениями бесплатны.</p>
-  <p>Для поставщиков действует тарифная сетка. Состав возможностей и стоимость каждого тарифа публикуются на странице <a href="/tariff">тарифов</a>; указанная там цена является действующей ценой оферты. На момент настоящей редакции действует период запуска: поставщикам предоставлен полный доступ, плата не взимается. О начале взимания платы оператор уведомляет через платформу и по электронной почте.</p>
-  <p>Подписка оформляется на месяц или на год — по выбору поставщика; при оплате за год применяется скидка, указанная на странице тарифов. Оплата производится в безналичном порядке на основании счёта, выставляемого оператором. Доступ к возможностям тарифа открывается после поступления оплаты и действует до конца оплаченного периода.</p>
-  <p>При досрочном отказе от подписки пользователь направляет заявление на <a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a>. Возврату подлежит часть оплаты, приходящаяся на полные месяцы оплаченного периода, которые остались неиспользованными на дату получения заявления; месяц, в котором подано заявление, не возвращается. Заявление рассматривается в течение 30 дней с даты получения, возврат перечисляется по реквизитам, с которых поступила оплата.</p>
+  <p>Платные тарифы для поставщиков анонсированы на странице <a href="/tariff">тарифов</a>. На момент настоящей редакции плата не взимается: поставщикам предоставлен полный доступ. О начале взимания платы оператор уведомляет через платформу и по электронной почте.</p>
+  <p>Опубликованный перечень тарифов и цен носит справочный характер. Условия оплаты и возврата согласовываются с пользователем индивидуально до первого платежа и фиксируются в отдельном документе.</p>
 
   <h2>6. Ограничение ответственности</h2>
   <p>Оператор не является стороной сделки между заказчиком и поставщиком. Он не гарантирует, что по размещённой закупке поступят предложения, что стороны заключат договор и что заключённый договор будет исполнен.</p>
   <p>Оператор не отвечает за исполнение сторонами обязательств по сделке: за качество, комплектность и сроки поставки, за расчёты между сторонами, за достоверность сведений и документов, которыми стороны обменялись через платформу.</p>
   <p>Платформа предоставляется на условиях «как есть». Оператор не гарантирует бесперебойную работу сервиса: возможны перерывы на обслуживание, а также сбои по вине сторонних сервисов и каналов связи. Оператор принимает разумные меры для восстановления работы и сохранности данных, но не отвечает за упущенную выгоду пользователя.</p>
-  <p>Ответственность оператора перед пользователем в любом случае ограничена суммой, фактически оплаченной этим пользователем за подписку за период, в котором возникло основание для требования.</p>
 
-  <h2>7. Реквизиты продавца</h2>
+  <h2>7. Реквизиты оператора</h2>
   <p>ИП Лапшина Диана Николаевна<br>
   ИНН 650112190630<br>
   ОГРНИП 326650000001066<br>
@@ -109,17 +107,21 @@
     }
   </script>
   <style>
-    .tz-footer { border-top: 1px solid var(--inner-border); background: var(--card-bg); padding: 28px 32px; margin-top: 48px; }
-    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
-    .tz-footer-org { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
     .tz-footer-line { line-height: 1.7; }
     .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
-    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--inner-border); }
-    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
     .tz-footer-copy { align-self: flex-end; }
-    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border); }
-    .tz-cookie a { color: var(--accent-bright); }
-    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright); background: var(--accent-bright); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
     .tz-cookie button:active { transform: translate(1px, 1px); }
     @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
   </style>

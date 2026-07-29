@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
 <title>ТЕХЗАКАЗ — Вход и регистрация</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Шрифты только свои: /assets/fonts.css самостоятельно раздаёт Manrope и JetBrains Mono.
+     Google Fonts убран — иначе IP каждого посетителя страницы согласия уходил бы в Google,
+     которого нет среди получателей в политике обработки персональных данных. -->
 <link rel="stylesheet" href="/assets/fonts.css">
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=111107983','ym');ym(111107983,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
@@ -796,7 +796,13 @@ async function handleRegister() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, company, inn, role, consent: true, inviteToken: _pendingInviteToken || undefined }),
+      // Реальное состояние галочки, а не хардкод true: если проверку выше когда-нибудь удалят,
+      // клиент не должен продолжать утверждать согласие за пользователя.
+      body: JSON.stringify({
+        email, password, company, inn, role,
+        consent: document.getElementById('registerConsent').checked,
+        inviteToken: _pendingInviteToken || undefined,
+      }),
     });
     const data = await parseAuthResponse(res);
     if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
@@ -1017,17 +1023,21 @@ async function handleReset() {
     }
   </script>
   <style>
-    .tz-footer { border-top: 1px solid var(--inner-border); background: var(--card-bg); padding: 28px 32px; margin-top: 48px; }
-    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
-    .tz-footer-org { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
     .tz-footer-line { line-height: 1.7; }
     .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
-    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--inner-border); }
-    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
     .tz-footer-copy { align-self: flex-end; }
-    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border); }
-    .tz-cookie a { color: var(--accent-bright); }
-    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright); background: var(--accent-bright); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
     .tz-cookie button:active { transform: translate(1px, 1px); }
     @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
   </style>

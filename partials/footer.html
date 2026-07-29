@@ -28,17 +28,21 @@
     }
   </script>
   <style>
-    .tz-footer { border-top: 1px solid var(--inner-border); background: var(--card-bg); padding: 28px 32px; margin-top: 48px; }
-    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
-    .tz-footer-org { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
     .tz-footer-line { line-height: 1.7; }
     .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
-    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--inner-border); }
-    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
     .tz-footer-copy { align-self: flex-end; }
-    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border); }
-    .tz-cookie a { color: var(--accent-bright); }
-    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright); background: var(--accent-bright); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
     .tz-cookie button:active { transform: translate(1px, 1px); }
     @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
   </style>
