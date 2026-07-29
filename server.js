@@ -519,6 +519,7 @@ const PUBLIC_PAGES = [
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
     'zakupki.html',
     'dlya-postavshchikov.html',
+    'privacy.html', 'terms.html',
 ];
 PUBLIC_PAGES.forEach(page => {
     const slug = '/' + page.replace('.html', '');
