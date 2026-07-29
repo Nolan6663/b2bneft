@@ -187,7 +187,7 @@
 
         <div class="sidebar-nav-group sidebar-nav-bottom">
             <a class="active" href="settings.html"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><span class="nav-label">Настройки</span></a>
-            <a href="mailto:info.texzakaz@gmail.com" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
+            <a href="mailto:info.texzakaz@yandex.com" class="sidebar-help-link"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-label">Поддержка</span></a>
         </div>
 
         <button class="sidebar-collapse-btn" onclick="toggleSidebar()" type="button">
@@ -278,9 +278,9 @@
             <div style="flex:1;">
                 <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">Поддержка по оплате</div>
                 <div style="font-size:12.5px;color:var(--text-secondary);">Вопросы по тарифам и оплате</div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">billing@texzakaz.ru</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">info.texzakaz@yandex.com</div>
             </div>
-            <button class="btn-secondary" onclick="window.location.href='mailto:billing@texzakaz.ru'">Написать</button>
+            <button class="btn-secondary" onclick="window.location.href='mailto:info.texzakaz@yandex.com'">Написать</button>
         </div>
     </div>
 
@@ -465,9 +465,9 @@
             };
             const bodies = {
                 launch: 'Вы уже на тарифе раннего доступа — все функции доступны бесплатно.',
-                start: 'Тариф «Старт» появится вместе с запуском оплаты. Напишите на <strong>billing@texzakaz.ru</strong>, если хотите узнать первым.',
-                business: 'Онлайн-оплата тарифа «Бизнес» появится позже. Для раннего доступа: <strong>billing@texzakaz.ru</strong>.',
-                enterprise: 'Корпоративные условия рассчитываем индивидуально: <strong>billing@texzakaz.ru</strong>.',
+                start: 'Тариф «Старт» появится вместе с запуском оплаты. Напишите на <strong>info.texzakaz@yandex.com</strong>, если хотите узнать первым.',
+                business: 'Онлайн-оплата тарифа «Бизнес» появится позже. Для раннего доступа: <strong>info.texzakaz@yandex.com</strong>.',
+                enterprise: 'Корпоративные условия рассчитываем индивидуально: <strong>info.texzakaz@yandex.com</strong>.',
             };
             document.getElementById('upgradeTitle').textContent = titles[plan] || 'Тариф';
             document.getElementById('upgradeBody').innerHTML = bodies[plan] || bodies.business;

@@ -1,0 +1,17 @@
+ok=15
+index.html
+producer.html
+catalog.html
+proposals.html
+deals.html
+deliveries.html
+partners.html
+analytics.html
+messages.html
+favorites.html
+map.html
+settings.html
+tariff.html
+admin.html
+company-profile.html
+delivery.html

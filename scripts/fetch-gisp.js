@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE = 'https://gisp.gov.ru';
-const UA = 'TechZakaz-catalog/1.0 (info.texzakaz@gmail.com)';
+const UA = 'TechZakaz-catalog/1.0 (info.texzakaz@yandex.com)';
 
 async function get(url) {
     const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept': 'application/json, text/html' }, signal: AbortSignal.timeout(30000) });

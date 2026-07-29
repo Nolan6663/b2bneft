@@ -15,9 +15,12 @@ const DAYS = daysArg !== -1 ? Math.max(1, Math.min(365, parseInt(args[daysArg + 
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+const { relevanceScore } = require('../lib/outreach');
+
 // Тот же отбор кандидатов, что в lib/outreach.js — чтобы «осталось» совпадало с реальностью.
+// Строки, а не COUNT: релевантность считается в JS тем же кодом, что и при отправке.
 const REMAINING_SQL = `
-    SELECT COUNT(*)::int AS n
+    SELECT c.specialization, c.products
     FROM companies c
     WHERE c.role = 'producer' AND c.claimed = false AND c.invite_optout = false
       AND c.contact_email <> ''
@@ -57,7 +60,8 @@ function table(rows, cols) {
             `SELECT left(error, 90) AS error, COUNT(*)::int AS n
              FROM outreach_log WHERE error <> '' GROUP BY 1 ORDER BY n DESC LIMIT 8`
         );
-        const { rows: [remaining] } = await pool.query(REMAINING_SQL);
+        const { rows: remainingRows } = await pool.query(REMAINING_SQL);
+        const remainingRelevant = remainingRows.filter(r => relevanceScore(r) > 0).length;
         const { rows: [optout] } = await pool.query(
             "SELECT COUNT(*)::int AS n FROM companies WHERE invite_optout = true"
         );
@@ -78,7 +82,8 @@ function table(rows, cols) {
         console.log('\nОшибки отправки:');
         console.log(table(errors, ['error', 'n']));
         console.log('\nИтоги:');
-        console.log(`  Осталось кандидатов при текущих правилах: ${remaining.n}`);
+        console.log(`  Пул по формальным правилам: ${remainingRows.length}`);
+        console.log(`  Из них релевантных (кому реально пишем): ${remainingRelevant} — это ${Math.ceil(remainingRelevant / 20)} дней при 20 письмах в день`);
         console.log(`  Отписались по ссылке opt-out: ${optout.n}`);
         console.log(`  Получили письмо и потом зарегистрировались (claimed): ${claimed.n}`);
     } catch (e) {
