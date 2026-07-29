@@ -67,8 +67,21 @@ function renderPositions(positions) {
       </table>`;
 }
 
+/** JSON.stringify экранирует только для синтаксиса JSON, не для HTML: буквальные
+ *  '<', '>' и '&' в данных (например, "</script>" внутри ответа FAQ) проходят
+ *  насквозь и способны преждевременно закрыть <script type="application/ld+json">
+ *  или открыть тег внутри него. </>/& — валидные JSON-escape'ы
+ *  внутри строкового литерала, поэтому блок остаётся тем же JSON после парсинга,
+ *  но больше не может разорвать тег скрипта на HTML-странице. */
+function jsonLdScript(data) {
+    return JSON.stringify(data)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026');
+}
+
 function renderFaqJsonLd(category) {
-    return JSON.stringify({
+    return jsonLdScript({
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
         mainEntity: category.faq.map(item => ({
@@ -80,7 +93,7 @@ function renderFaqJsonLd(category) {
 }
 
 function renderCollectionJsonLd(category) {
-    return JSON.stringify({
+    return jsonLdScript({
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: category.h1,
@@ -98,7 +111,6 @@ function renderCollectionJsonLd(category) {
 }
 
 function renderCategoryPage(category) {
-    const others = CATEGORIES.filter(c => c.slug !== category.slug);
     return `<!DOCTYPE html>
 <html lang="ru">
 <head>

@@ -84,3 +84,58 @@ test('подсчёт слов: скрипты, стили и комментар�
     const html = '<html><head><style>.a{color:red}</style><script>var x=1;</script></head><body><!-- коммент --><p>одно два три</p></body></html>';
     assert.equal(pageWordCount(html), 3);
 });
+
+test('JSON-LD: содержимое категории не может разорвать <script> тег', () => {
+    // Клонируем реальную категорию, чтобы форма данных не разошлась с продовой,
+    // и подсовываем во FAQ-ответ буквальный "</script>" — ровно то, чем контент
+    // из seo/categories-data.js однажды может сломать страницу.
+    const payload = '</script><img src=x>';
+    const evil = JSON.parse(JSON.stringify(RTI));
+    evil.faq = evil.faq.map((item, i) => (i === 0 ? { ...item, a: payload } : item));
+
+    const html = renderCategoryPage(evil);
+
+    // (a) буквальной последовательности "</script>" внутри JSON-LD блока быть не должно —
+    // иначе она закрыла бы тег раньше времени и оставшийся JSON вывалился бы в body как текст.
+    const scriptOpen = /<script type="application\/ld\+json">/g;
+    let m;
+    while ((m = scriptOpen.exec(html))) {
+        const closeIdx = html.indexOf('</script>', m.index);
+        const block = html.slice(m.index, closeIdx);
+        assert.ok(!block.includes('</script>'), 'JSON-LD блок содержит буквальный </script> и обрывается раньше времени');
+    }
+
+    // (b) все блоки JSON-LD на странице по-прежнему валидный JSON.
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m => m[1]);
+    assert.ok(blocks.length >= 2, 'ожидались оба блока JSON-LD (Collection и FAQ)');
+    const parsedBlocks = blocks.map(raw => JSON.parse(raw)); // упадёт, если экранирование сломало JSON
+
+    // (c) значение доходит до потребителя разметки в исходном виде — экранирование
+    // не должно было исказить сами данные, только помешать им разорвать тег.
+    const faqBlock = parsedBlocks.find(p => p['@type'] === 'FAQPage');
+    assert.ok(faqBlock, 'нет блока FAQPage среди распарсенных');
+    assert.equal(faqBlock.mainEntity[0].acceptedAnswer.text, payload, 'ответ FAQ не совпал после round-trip через JSON-LD');
+});
+
+test('юридический блок: инвариант перевода строки переживает перенос блока в новую версию (round-trip)', () => {
+    const category = CATEGORIES[0];
+    const freshRender = renderCategoryPage(category);
+
+    // Строим pageWithBlock так же, как это делает сам генератор: сначала где-то
+    // (в «предыдущей» версии страницы) появляется юридический блок через
+    // preserveLegalBlock, и именно этот результат затем оказывается на диске
+    // как oldHtml для следующего прогона.
+    const legal = `${LEGAL_START}\n<footer>реквизиты</footer>\n${LEGAL_END}`;
+    const previousVersion = `<html><body><p>предыдущая версия</p>\n${legal}\n</body></html>`;
+    const pageWithBlock = preserveLegalBlock(previousVersion, freshRender);
+
+    // Первый проход: тот самый round-trip, который гейт `checkCategoryPagesSynced`
+    // выполняет неявно при сравнении «файл на диске» со «свежим рендером».
+    const merged1 = preserveLegalBlock(pageWithBlock, freshRender);
+    assert.equal(stripLegalBlock(merged1), stripLegalBlock(freshRender), 'round-trip разошёлся с чистым рендером на первом проходе');
+
+    // Второй проход (идемпотентность): повторный цикл perserve+strip поверх
+    // уже содержащей блок страницы не должен накапливать лишние байты/строки.
+    const merged2 = preserveLegalBlock(merged1, freshRender);
+    assert.equal(stripLegalBlock(merged2), stripLegalBlock(freshRender), 'round-trip разошёлся с чистым рендером на втором проходе');
+});
