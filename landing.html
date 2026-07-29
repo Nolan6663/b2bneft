@@ -1578,5 +1578,52 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
 })();
 </script>
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    .tz-footer { border-top: 1px solid var(--inner-border); background: var(--card-bg); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--inner-border); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+    .tz-footer-copy { align-self: flex-end; }
+    .tz-cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 900; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 0 auto; padding: 14px 18px; font-size: 13px; background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--inner-border); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border); }
+    .tz-cookie a { color: var(--accent-bright); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright); background: var(--accent-bright); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
 </body>
 </html>

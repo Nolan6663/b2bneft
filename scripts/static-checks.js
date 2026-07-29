@@ -12,6 +12,7 @@ const jsFiles = [
   ...fs.readdirSync(path.join(root, 'routes')).filter(f => f.endsWith('.js')).map(f => 'routes/' + f),
   ...fs.readdirSync(path.join(root, 'lib')).filter(f => f.endsWith('.js')).map(f => 'lib/' + f),
   'scripts/static-checks.js', 'scripts/mvp-api-smoke.js', 'scripts/import-registry.js', 'scripts/fetch-gisp.js',
+  'scripts/legal-data.js', 'scripts/sync-legal.js',
 ];
 const cssFiles = ['assets/theme-v2.css', 'assets/deals-page.css', 'assets/css/tokens.css'];
 
@@ -170,6 +171,20 @@ function checkMpaPageStyles() {
   if (missing.length) fail(`App pages missing page style markers:\n${missing.join('\n')}`);
 }
 
+function checkLegalFooterSynced() {
+  const { renderFooter, applyFooter, footerPages } = require('./sync-legal');
+  const { LEGAL } = require('./legal-data');
+  const template = fs.readFileSync(path.join(root, 'partials', 'footer.html'), 'utf8');
+  const footer = renderFooter(template, LEGAL, new Date().getFullYear());
+  const stale = footerPages(root).filter(page => {
+    const html = fs.readFileSync(path.join(root, page), 'utf8');
+    return applyFooter(html, footer) !== html;
+  });
+  if (stale.length) {
+    fail(`Футер разошёлся с partials/footer.html — прогони "npm run sync:legal":\n${stale.join('\n')}`);
+  }
+}
+
 function main() {
   checkJavaScriptSyntax();
   const inlineScripts = checkInlineScripts();
@@ -180,6 +195,7 @@ function main() {
   checkProductionGuardrails();
   checkAccessGuardrails();
   checkMpaPageStyles();
+  checkLegalFooterSynced();
   console.log(`Static checks passed: ${htmlFiles.length} HTML files, ${inlineScripts} inline scripts`);
 }
 
