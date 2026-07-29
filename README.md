@@ -19,7 +19,8 @@ node server.js            # http://localhost:5000
 
 Нужен PostgreSQL (локальный или облачный). Схема создаётся сама при старте
 (`db.js` — `CREATE TABLE IF NOT EXISTS` + `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`,
-отдельных миграций нет). Прод-база на Render доступна **только с VPS** — локально
+отдельных миграций нет). Прод-база — PostgreSQL на самом VPS (`DATABASE_URL` смотрит в
+`localhost`), извне она недоступна: все импорты и `psql` гонять по SSH на VPS, локально
 поднимай свою.
 
 ## Структура

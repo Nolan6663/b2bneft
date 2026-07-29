@@ -20,7 +20,7 @@ Node.js / Express 5 (server.js, PM2 process "neft", VPS /var/www/neft)
    ├── lib/registry-invites.js — при новой закупке email top-20 заводам из реестра ГИСП
    └── telegram-bot.js (telegraf) — уведомления и привязка аккаунта
    ▼
-PostgreSQL (Render; с dev-машин НЕдоступен — только с VPS)
+PostgreSQL (на самом VPS, localhost; с dev-машин НЕдоступен — только по SSH)
 S3/Cloudflare R2 — файлы (чертежи, КП, фото) через storage.js; локально fallback uploads/
 ```
 
@@ -90,10 +90,14 @@ refresh-токен (БД; страница «Активные сессии» в 
 
 ## Инфраструктура
 
-- **VPS** (РФ): `/var/www/neft`, PM2 (`ecosystem.config.js`, process `neft`), Node 20+.
+- **VPS** (Selectel, Москва, AS50340 — проверено по IP 30.07.2026): `/var/www/neft`,
+  PM2 (`ecosystem.config.js`, process `neft`), Node 20+.
 - **Деплой:** push в `main` → GitHub Actions (`.github/workflows/deploy.yml`) → SSH →
   `git reset --hard` + `npm install --production` + `pm2 restart neft`.
-- **БД:** PostgreSQL на Render. Доступна только с VPS — все скрипты импорта гонять там.
+- **БД:** PostgreSQL на самом VPS (`DATABASE_URL` → `localhost`), то есть данные лежат
+  в РФ — требование локализации ПДн (ст. 18 ч. 5 ФЗ-152) выполняется. Извне недоступна —
+  все скрипты импорта и `psql` гонять по SSH на VPS. (Эпоха Render закончилась; прежние
+  редакции этого файла и README врали про облачную базу.)
 - **Файлы:** Cloudflare R2 (S3 API) через `storage.js`.
 - **Telegram:** api.telegram.org с VPS заблокирован (сетевой уровень) → split-tunnel
   AmneziaWG: только CIDR Телеграма идут через self-hosted сервер в Финляндии, остальной
