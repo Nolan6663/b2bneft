@@ -557,5 +557,58 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 })();
 </script>
 
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
 </body>
 </html>

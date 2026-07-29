@@ -299,6 +299,8 @@ async function initDb() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS verified_egrul BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS egrul_verified_at TIMESTAMPTZ;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS consent_version TEXT NOT NULL DEFAULT '';
     `);
     // Telegram columns in a separate query so they don't break the batch above
     try {

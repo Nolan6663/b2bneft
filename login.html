@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
 <title>ТЕХЗАКАЗ — Вход и регистрация</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Шрифты только свои: /assets/fonts.css самостоятельно раздаёт Manrope и JetBrains Mono.
+     Google Fonts убран — иначе IP каждого посетителя страницы согласия уходил бы в Google,
+     которого нет среди получателей в политике обработки персональных данных. -->
 <link rel="stylesheet" href="/assets/fonts.css">
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=111107983','ym');ym(111107983,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
@@ -336,6 +336,11 @@ body {
 }
 .terms a { color: #5B7184; text-decoration: underline; }
 
+.consent-row { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 12px; font-size: 12.5px; line-height: 1.6; color: var(--text-secondary); cursor: pointer; }
+.consent-row input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--accent-bright); flex-shrink: 0; }
+.consent-row a { color: var(--accent-bright); }
+#registerSubmit:disabled { opacity: .55; cursor: not-allowed; }
+
 /* ── Responsive ── */
 @media (max-width: 820px) {
   body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
@@ -477,6 +482,8 @@ body {
         Войти через Яндекс
       </button>
 
+      <div class="terms">Продолжая вход через Яндекс, вы соглашаетесь с <a href="/privacy" target="_blank" rel="noopener">политикой обработки персональных данных</a> и <a href="/terms" target="_blank" rel="noopener">условиями использования</a></div>
+
       <div class="form-footer">
         Нет аккаунта? <a href="#" onclick="switchTab('register'); return false;">Зарегистрироваться</a>
       </div>
@@ -543,14 +550,15 @@ body {
 
       <div id="auth-error-register" class="auth-error" role="alert" aria-live="polite" style="display:none;"></div>
 
-      <button class="btn-primary" onclick="handleRegister()">
+      <label class="consent-row">
+        <input type="checkbox" id="registerConsent" onchange="updateRegisterEnabled()">
+        <span>Я согласен на <a href="/privacy" target="_blank" rel="noopener">обработку персональных данных</a> и принимаю <a href="/terms" target="_blank" rel="noopener">условия использования</a></span>
+      </label>
+
+      <button class="btn-primary" id="registerSubmit" onclick="handleRegister()" disabled>
         Создать аккаунт
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
-
-      <div class="terms">
-        Регистрируясь, вы соглашаетесь с <a href="#">условиями использования</a> и <a href="#">политикой конфиденциальности</a>
-      </div>
 
       <div class="form-footer">
         Уже есть аккаунт? <a href="#" onclick="switchTab('login'); return false;">Войти</a>
@@ -763,6 +771,12 @@ function cancel2faStep() {
   clearError();
 }
 
+function updateRegisterEnabled() {
+  const box = document.getElementById('registerConsent');
+  const btn = document.getElementById('registerSubmit');
+  if (box && btn) btn.disabled = !box.checked;
+}
+
 async function handleRegister() {
   const company = document.querySelector('#form-register input[autocomplete="organization"]').value.trim();
   const inn = document.querySelector('#form-register input[name="inn"]').value.trim();
@@ -773,6 +787,7 @@ async function handleRegister() {
   clearError();
   if (!company || !email || !password) { showError('Заполните все обязательные поля'); return; }
   if (password.length < 8) { showError('Пароль — минимум 8 символов'); return; }
+  if (!document.getElementById('registerConsent')?.checked) { showError('Подтвердите согласие на обработку персональных данных'); return; }
 
   const btn = document.querySelector('#form-register .btn-primary');
   setLoading(btn, true);
@@ -781,7 +796,13 @@ async function handleRegister() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, company, inn, role, inviteToken: _pendingInviteToken || undefined }),
+      // Реальное состояние галочки, а не хардкод true: если проверку выше когда-нибудь удалят,
+      // клиент не должен продолжать утверждать согласие за пользователя.
+      body: JSON.stringify({
+        email, password, company, inn, role,
+        consent: document.getElementById('registerConsent').checked,
+        inviteToken: _pendingInviteToken || undefined,
+      }),
     });
     const data = await parseAuthResponse(res);
     if (!res.ok) { showError(data.error || 'Ошибка регистрации'); return; }
@@ -971,6 +992,59 @@ async function handleReset() {
   }
 })();
 </script>
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
 </body>
 </html>
 
