@@ -11,7 +11,20 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zc-nav { display: flex; align-items: center; gap: 28px; }
 .zc-nav a { color: rgba(255,255,255,.65); text-decoration: none; font-size: 14px; font-weight: 600; transition: color .18s; }
 .zc-nav a:hover { color: #fff; }
-.zc-cta { background: #FF6A00; color: #fff; border-radius: 8px; padding: 9px 20px; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+/* Кнопки-штампы: скошенный угол и жёсткая смещённая тень — тот же язык, что у
+   .lp-cta-primary на лендинге. Тень на светлом фоне тёмно-синяя, на тёмном —
+   тёмно-оранжевая, иначе её не видно. При нажатии кнопка вдавливается в тень. */
+.zc-cta {
+    display: inline-flex; align-items: center;
+    background: #FF6A00; color: #fff;
+    border-radius: 3px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%);
+    box-shadow: 3px 3px 0 #B54B00;
+    padding: 9px 20px; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.zc-cta:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #B54B00; }
+.zc-cta:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #B54B00; transition-duration: .06s; }
 
 /* Hero */
 .zc-hero { background: #071B2A; padding: 48px 64px 52px; }
@@ -49,13 +62,40 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zc-card-meta span { font-size: 12px; font-weight: 500; color: #4A5D6E; background: #F7FAFC; border-radius: 6px; padding: 3px 10px; }
 .zc-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(7,27,42,.06); }
 .zc-company { font-size: 13px; font-weight: 600; color: #071B2A; filter: blur(4px); user-select: none; }
-.zc-respond { background: #FF6A00; color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.zc-respond {
+    display: inline-flex; align-items: center;
+    background: #FF6A00; color: #fff;
+    border-radius: 3px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    box-shadow: 3px 3px 0 #071B2A;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.zc-respond:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #071B2A; }
+.zc-respond:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #071B2A; transition-duration: .06s; }
 
 /* CTA Banner */
 .zc-cta-banner { margin: 0 64px 64px; border-radius: 4px; background: #071B2A; padding: 48px 56px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
 .zc-cta-banner h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
 .zc-cta-banner p { font-size: 14px; color: rgba(255,255,255,.6); font-weight: 500; }
-.zc-cta-btn { background: #FF6A00; color: #fff; border-radius: 10px; padding: 14px 24px; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+.zc-cta-btn {
+    display: inline-flex; align-items: center;
+    background: #FF6A00; color: #fff;
+    border-radius: 3px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%);
+    box-shadow: 4px 4px 0 #B54B00;
+    padding: 14px 26px; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+.zc-cta-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #B54B00; }
+.zc-cta-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #B54B00; transition-duration: .06s; }
+
+/* Блок «открытых закупок нет — вот заводы категории». Кнопка прижималась
+   вплотную к сетке карточек: у неё не было ни отступа, ни своей тени под светлый фон. */
+.zc-fallback { margin-top: 4px; }
+.zc-fallback .zc-cta-btn { margin-top: 28px; box-shadow: 4px 4px 0 #071B2A; }
+.zc-fallback .zc-cta-btn:hover { box-shadow: 6px 6px 0 #071B2A; }
+.zc-fallback .zc-cta-btn:active { box-shadow: 0 0 0 #071B2A; }
 
 /* Footer */
 .zc-footer { background: #0B2233; padding: 36px 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
