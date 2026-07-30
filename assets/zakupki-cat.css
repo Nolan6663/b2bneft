@@ -47,12 +47,16 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 
 /* Grid */
 .zc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.zc-skeleton { height: 180px; background: linear-gradient(90deg,#e8edf1 25%,#f3f6f8 50%,#e8edf1 75%); background-size: 200% 100%; animation: zc-shimmer 1.4s infinite; border-radius: 14px; }
-@keyframes zc-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+/* Плейсхолдер загрузки: пустая карточка с пунктирной рамкой — «место под деталь,
+   размер ещё не проставлен». Бегущий градиентный блик убран: это универсальный
+   SaaS-приём, к графике проекта отношения не имеет. */
+.zc-skeleton { height: 180px; background: #F1F5F9; border: 1px dashed rgba(7,27,42,.16); border-radius: 3px; animation: zc-fade 1.6s ease-in-out infinite; }
+@keyframes zc-fade { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
 
 /* Card */
-.zc-card { background: #fff; border: 1px solid rgba(7,27,42,.07); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow .2s; }
-.zc-card:hover { box-shadow: 0 6px 24px rgba(7,27,42,.09); }
+.zc-card { background: #fff; border: 1px solid rgba(7,27,42,.12); border-radius: 3px; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+/* Наведение отмечается рамкой и жёсткой смещённой тенью, а не размытым облаком. */
+.zc-card:hover { border-color: #0B2233; box-shadow: 3px 3px 0 rgba(7,27,42,.12); }
 .zc-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .zc-badge { background: #F1F5F9; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: #4A5D6E; }
 .zc-status { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #16a34a; }
