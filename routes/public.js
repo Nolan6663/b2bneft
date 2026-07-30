@@ -285,6 +285,50 @@ function createPublicRouter(deps) {
 
     // Заводы категории для пустого состояния категорийных страниц: открытых закупок
     // может не быть, но страница должна оставаться полезной и линковать карточки /p/:id.
+    // Раскладка «категория → заводы» строится одним прогоном по каталогу и живёт час.
+    // Категорийные страницы в sitemap с changefreq: daily, то есть поисковики ходят
+    // сюда по расписанию, а классификация в JS индекс использовать не может.
+    // Состав категорий меняется куда медленнее часа.
+    let _producersCache = { ts: 0, byCategory: null };
+    const PRODUCERS_TTL_MS = 3600 * 1000;
+
+    async function producersByCategory() {
+        if (_producersCache.byCategory && Date.now() - _producersCache.ts < PRODUCERS_TTL_MS) {
+            return _producersCache.byCategory;
+        }
+        const { rows } = await pool.query(
+            `SELECT * FROM companies
+             WHERE role = 'producer' AND status <> 'Отклонено'
+             ORDER BY verified_by_platform DESC, verified_egrul DESC, claimed DESC, company ASC`
+        );
+
+        const byCategory = new Map();
+        for (const row of rows) {
+            const producer = rowToCompany(row);
+            const card = {
+                id: producer.id,
+                company: producer.company,
+                city: producer.city || '',
+                // verified_by_platform/verified_egrul — сырые колонки; rowToCompany
+                // переименовывает их в camelCase (verifiedByPlatform/verifiedEgrul),
+                // поэтому читаем флаг из необработанной строки, а не из producer.
+                verified: Boolean(row.verified_by_platform || row.verified_egrul),
+            };
+            // Витрина использует свой классификатор, не общий getProducerCategories:
+            // тот засчитывает любое совпадение в маркетинговом описании, из-за чего
+            // кабельный завод попадал сразу во все четыре категории. Общий трогать
+            // нельзя — на нём висят карта и биржа мощностей.
+            for (const category of categorizeProducer(producer)) {
+                if (!byCategory.has(category)) byCategory.set(category, []);
+                byCategory.get(category).push(card);
+            }
+        }
+
+        // Пустой каталог не кэшируем: импорт реестра мог ещё не доехать — не залипать на час.
+        if (rows.length) _producersCache = { ts: Date.now(), byCategory };
+        return byCategory;
+    }
+
     router.get('/public/producers', async (req, res, next) => {
         try {
             const category = String(req.query.category || '').trim();
@@ -292,32 +336,8 @@ function createPublicRouter(deps) {
             const parsed = parseInt(req.query.limit, 10);
             const limit = Math.max(1, Math.min(24, Number.isFinite(parsed) ? parsed : 8));
 
-            const { rows } = await pool.query(
-                `SELECT * FROM companies
-                 WHERE role = 'producer' AND status <> 'Отклонено'
-                 ORDER BY verified_by_platform DESC, verified_egrul DESC, claimed DESC, company ASC`
-            );
-
-            const list = [];
-            for (const row of rows) {
-                const producer = rowToCompany(row);
-                // Витрина использует свой классификатор, не общий getProducerCategories:
-                // тот засчитывает любое совпадение в маркетинговом описании, из-за чего
-                // кабельный завод попадал сразу во все четыре категории. Общий трогать
-                // нельзя — на нём висят карта и биржа мощностей.
-                if (!categorizeProducer(producer).includes(category)) continue;
-                list.push({
-                    id: producer.id,
-                    company: producer.company,
-                    city: producer.city || '',
-                    // verified_by_platform/verified_egrul — сырые колонки; rowToCompany
-                    // переименовывает их в camelCase (verifiedByPlatform/verifiedEgrul),
-                    // поэтому читаем флаг из необработанной строки, а не из producer.
-                    verified: Boolean(row.verified_by_platform || row.verified_egrul),
-                });
-                if (list.length >= limit) break;
-            }
-            res.json(list);
+            const byCategory = await producersByCategory();
+            res.json((byCategory.get(category) || []).slice(0, limit));
         } catch (e) { next(e); }
     });
 

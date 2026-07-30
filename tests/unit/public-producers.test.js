@@ -61,6 +61,51 @@ test('заводы категории: без параметра category — 40
     } finally { await srv.close(); }
 });
 
+test('заводы категории: повторный запрос не ходит в базу заново', async () => {
+    const pool = fakePool([{ match: /FROM companies/i, rows: ROWS }]);
+    const deps = baseDeps({
+        pool,
+        rowToCompany: (r) => {
+            const { verified_by_platform, verified_egrul, ...rest } = r;
+            return { ...rest, verifiedByPlatform: Boolean(verified_by_platform), verifiedEgrul: Boolean(verified_egrul) };
+        },
+        getProducerCategories: () => [],
+    });
+    const srv = await serve('/api', createPublicRouter(deps));
+    try {
+        const rti = encodeURIComponent('РТИ');
+        const metall = encodeURIComponent('Металл');
+
+        const first = await srv.request(`/api/public/producers?category=${rti}`);
+        assert.equal(first.status, 200);
+        const queriesAfterFirst = pool.calls.length;
+        assert.equal(queriesAfterFirst, 1, 'первый запрос должен сходить в базу один раз');
+
+        // Вторая категория обслуживается тем же прогоном: страницы четырёх категорий
+        // индексируются поисковиками, каждый обход не должен читать 4300 строк заново.
+        const second = await srv.request(`/api/public/producers?category=${metall}`);
+        assert.equal(second.status, 200);
+        assert.ok(second.json.some(p => p.id === 2), 'вторая категория должна отвечать по существу');
+
+        const repeat = await srv.request(`/api/public/producers?category=${rti}`);
+        assert.deepEqual(repeat.json, first.json, 'повтор должен отдавать то же самое');
+
+        assert.equal(pool.calls.length, queriesAfterFirst, 'после первого прогона обращений к базе быть не должно');
+    } finally { await srv.close(); }
+});
+
+test('заводы категории: пустой каталог не залипает в кэше', async () => {
+    const pool = fakePool([{ match: /FROM companies/i, rows: [] }]);
+    const deps = baseDeps({ pool, rowToCompany: (r) => r, getProducerCategories: () => [] });
+    const srv = await serve('/api', createPublicRouter(deps));
+    try {
+        const url = '/api/public/producers?category=' + encodeURIComponent('РТИ');
+        await srv.request(url);
+        await srv.request(url);
+        assert.equal(pool.calls.length, 2, 'пустую выдачу кэшировать нельзя — каталог мог ещё не импортироваться');
+    } finally { await srv.close(); }
+});
+
 test('заводы категории: ничего не совпало — пустой массив, не ошибка', async () => {
     const srv = await serve('/api', router());
     try {
