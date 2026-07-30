@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { shortTitle, metaDescription, ssrProfileHtml } = require('../../lib/producer-seo');
+const { shortTitle, metaDescription, ssrProfileHtml, robotsDirective } = require('../../lib/producer-seo');
 
 // Реальная строка из каталога: длинное название с правовой формой в капсе — из-за
 // таких title на карточках доходил до 180 знаков и обрезался в выдаче.
@@ -80,6 +80,26 @@ test('серверная разметка: у присоединённой ко�
     assert.match(stub, /присоедин/i, 'стаб должен звать владельца присоединить профиль');
     assert.doesNotMatch(claimed, /присоедин/i, 'у присоединённой компании такого призыва быть не должно');
     assert.match(claimed, /Проверен/i, 'верифицированной компании нужна плашка проверки');
+});
+
+test('описание: кавычки не раздувают тег при экранировании', () => {
+    // Экранирование превращает " в &quot;, поэтому 160 знаков исходника давали 181
+    // в готовой странице. Считаем длину так же, как её увидит робот.
+    const d = metaDescription({
+        company: 'АКЦИОНЕРНОЕ ОБЩЕСТВО "ЗАВОД «КОМЕТА» & ПАРТНЁРЫ"',
+        city: 'Новгородская область',
+        specialization: 'Изделия "специального" назначения & прочее',
+        products: 'корпуса; кронштейны',
+    });
+    const escaped = d.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    assert.equal(escaped.length, d.length, 'в описании остались символы, которые раздуются при экранировании');
+    assert.ok(d.length <= 160, `${d.length} знаков`);
+});
+
+test('robots: карточка без единого факта закрывается от индексации', () => {
+    assert.equal(robotsDirective({ company: 'ООО Пустое', products: '', specialization: '', about: '' }), 'noindex, follow');
+    assert.equal(robotsDirective({ company: 'ООО Дело', products: 'манжеты', specialization: '', about: '' }), 'index, follow');
+    assert.equal(robotsDirective({ company: 'ООО Дело', products: '', specialization: 'Металлообработка', about: '' }), 'index, follow');
 });
 
 test('серверная разметка: враждебные данные экранируются', () => {

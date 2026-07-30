@@ -52,7 +52,7 @@ const createPublicRouter = require('./routes/public');
 const createAnalyticsRouter = require('./routes/analytics');
 const createIntegrationsPush = require('./lib/integrations-push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
-const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr } = require('./lib/producer-seo');
+const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots } = require('./lib/producer-seo');
 const { categorizeProducer } = require('./lib/producer-categories');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
@@ -615,10 +615,13 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/terms',               priority: '0.3', changefreq: 'yearly' },
         ];
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
-        // индексируем (4286 страниц «завод + продукция + город» — органический канал)
+        // индексируем (4286 страниц «завод + продукция + город» — органический канал).
+        // Карточки без единого факта, кроме названия, исключаем: сама страница отдаёт
+        // им noindex (lib/producer-seo), звать на них робота картой сайта — противоречие.
         const { rows: suppliers } = await pool.query(`
             SELECT id, verified_by_platform, claimed FROM companies
             WHERE role = 'producer' AND status <> 'Отклонено'
+              AND (COALESCE(products, '') <> '' OR COALESCE(specialization, '') <> '' OR COALESCE(about, '') <> '')
             ORDER BY verified_by_platform DESC, claimed DESC, id ASC
             LIMIT 45000
         `);
@@ -662,6 +665,7 @@ app.get('/p/:id', async (req, res, next) => {
             .replace(/<!--META_TITLE-->/g, htmlEscape(title))
             .replace(/<!--META_DESC-->/g, htmlEscape(desc))
             .replace(/<!--CANONICAL_URL-->/g, `${base}/p/${id}`)
+            .replace(/<!--META_ROBOTS-->/g, buildProducerRobots(row))
             .replace(/<!--SSR_PROFILE-->/g, ssr)
             .replace(/<!--COMPANY_ID-->/g, String(id));
         res.setHeader('Cache-Control', 'public, max-age=300');
