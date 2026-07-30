@@ -2,6 +2,8 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
 const { CATEGORIES } = require('../../seo/categories-data');
 
 const SLUGS = ['rti', 'metall', 'armatura', 'elektro'];
@@ -124,4 +126,25 @@ test('данные: площадка не обещает цен и сроков 
     for (const b of ['средняя цена по рынку', 'мы доставим', 'гарантируем срок']) {
         assert.ok(!blob.includes(b), `в тексте найдено обещание «${b}»`);
     }
+});
+
+// server.js хардкодит четыре slug'а дважды — в CAT_PAGES (регистрация роутов /zakupki/:slug)
+// и в билдере sitemap.xml. seo/categories-data.js — третье, независимое место. Если сюда
+// добавить пятую категорию, sync-category-pages.js молча сгенерирует страницу, гейт
+// checkCategoryPagesSynced её пропустит, а в проде она отдаст 404 (роут не зарегистрирован)
+// и никогда не попадёт в sitemap. Этот тест не чинит server.js (правка вне периметра задачи),
+// он ловит рассинхронизацию в момент, когда её проще всего исправить — при добавлении категории.
+test('server.js: слаги в CAT_PAGES и в sitemap не расходятся с CATEGORIES', () => {
+    const server = fs.readFileSync(path.join(__dirname, '..', '..', 'server.js'), 'utf8');
+    const dataSlugs = CATEGORIES.map(c => c.slug).sort();
+
+    const catPagesMatch = server.match(/const CAT_PAGES = \[([\s\S]*?)\n\];/);
+    assert.ok(catPagesMatch, 'не нашли определение CAT_PAGES в server.js — обнови регэксп теста');
+    const catPagesSlugs = [...catPagesMatch[1].matchAll(/slug:\s*'([a-z]+)'/g)].map(m => m[1]).sort();
+
+    const sitemapSlugs = [...server.matchAll(/url:\s*'\/zakupki\/([a-z]+)'/g)].map(m => m[1]).sort();
+    assert.ok(sitemapSlugs.length > 0, 'не нашли записи /zakupki/<slug> в билдере sitemap — обнови регэксп теста');
+
+    assert.deepEqual(catPagesSlugs, dataSlugs, `CAT_PAGES (${catPagesSlugs.join(',')}) разошёлся с CATEGORIES (${dataSlugs.join(',')})`);
+    assert.deepEqual(sitemapSlugs, dataSlugs, `sitemap (${sitemapSlugs.join(',')}) разошёлся с CATEGORIES (${dataSlugs.join(',')})`);
 });
