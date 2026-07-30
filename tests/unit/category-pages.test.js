@@ -126,6 +126,21 @@ test('JSON-LD: содержимое категории не может разо�
     assert.equal(faqBlock.mainEntity[0].acceptedAnswer.text, payload, 'ответ FAQ не совпал после round-trip через JSON-LD');
 });
 
+test('inline-скрипт: имя категории не может разорвать <script> тег', () => {
+    // dbCategory подставляется в `var CATEGORY = ...` внутри обычного <script>.
+    // JSON.stringify там экранирует только для JS, но не мешает буквальному
+    // "</script>" закрыть тег — данные приходят из seo/categories-data.js.
+    const evil = JSON.parse(JSON.stringify(RTI));
+    evil.dbCategory = '</script><img src=x onerror=alert(1)>';
+
+    const html = renderCategoryPage(evil);
+    const start = html.indexOf('var CATEGORY');
+    assert.ok(start !== -1, 'в разметке нет объявления CATEGORY');
+    const block = html.slice(start, html.indexOf('</script>', start));
+    assert.ok(!block.includes('</script>'), 'объявление категории обрывает тег скрипта');
+    assert.ok(!block.includes('<img'), 'разметка из данных попала в скрипт как есть');
+});
+
 test('XSS: клиентский скрипт содержит хелпер экранирования escapeHtml', () => {
     const script = clientScript(renderCategoryPage(RTI));
     assert.ok(script, 'не нашли клиентский скрипт со fetch-логикой');

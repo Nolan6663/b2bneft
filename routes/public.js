@@ -70,8 +70,17 @@ function createPublicRouter(deps) {
     
     // ===================== КАРТА ЗАВОДОВ =====================
     
+    // Самый тяжёлый публичный запрос: 4300 строк, геокодирование и разведение точек
+    // одного города по спирали — и всё это на каждый заход на карту. Состав каталога
+    // меняется раз в недели, так что час кэша ничего не искажает.
+    let _mapCache = { ts: 0, data: null };
+    const MAP_TTL_MS = 3600 * 1000;
+
     router.get('/map', async (req, res, next) => {
         try {
+            if (_mapCache.data && Date.now() - _mapCache.ts < MAP_TTL_MS) {
+                return res.json(_mapCache.data);
+            }
             const { rows } = await pool.query(`
                 SELECT *
                 FROM companies
@@ -115,10 +124,13 @@ function createPublicRouter(deps) {
                     yearsExperience: producer.yearsExperience,
                 };
             }).filter(Boolean);
+            // Пустую выдачу не кэшируем: геокодирование доезжает после старта,
+            // иначе карта залипнет пустой на час — та же логика, что у geo-density.
+            if (result.length) _mapCache = { ts: Date.now(), data: result };
             res.json(result);
         } catch (e) { next(e); }
     });
-    
+
     // ===================== БИРЖА МОЩНОСТЕЙ =====================
     
     router.get('/capacity', optionalAuth, async (req, res, next) => {

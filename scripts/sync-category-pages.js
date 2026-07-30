@@ -73,7 +73,7 @@ function renderPositions(positions) {
  *  или открыть тег внутри него. </>/& — валидные JSON-escape'ы
  *  внутри строкового литерала, поэтому блок остаётся тем же JSON после парсинга,
  *  но больше не может разорвать тег скрипта на HTML-странице. */
-function jsonLdScript(data) {
+function jsonForHtml(data) {
     return JSON.stringify(data)
         .replace(/</g, '\\u003c')
         .replace(/>/g, '\\u003e')
@@ -81,7 +81,7 @@ function jsonLdScript(data) {
 }
 
 function renderFaqJsonLd(category) {
-    return jsonLdScript({
+    return jsonForHtml({
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
         mainEntity: category.faq.map(item => ({
@@ -93,7 +93,7 @@ function renderFaqJsonLd(category) {
 }
 
 function renderCollectionJsonLd(category) {
-    return jsonLdScript({
+    return jsonForHtml({
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: category.h1,
@@ -226,7 +226,7 @@ ${renderFaqJsonLd(category)}
 </main>
 
 <script>
-var CATEGORY = ${JSON.stringify(category.dbCategory)};
+var CATEGORY = ${jsonForHtml(category.dbCategory)};
 // Страница не тянет общий JS-бандл, поэтому экранирование живёт прямо тут.
 // Тем же способом это делают server.js (htmlEscape) и assets/app.js (escapeHtml) —
 // данные с /api/public/producers и /api/orders/public не проверены на разметку
