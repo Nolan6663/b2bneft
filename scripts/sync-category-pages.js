@@ -199,7 +199,7 @@ ${renderFaqJsonLd(category)}
       <div class="zc-skeleton"></div><div class="zc-skeleton"></div><div class="zc-skeleton"></div>
     </div>
     <div id="producers-fallback" class="zc-fallback" style="display:none;">
-      <p class="zc-fallback-lead">Открытых закупок в категории сейчас нет. Вот предприятия из каталога, которые работают по этому профилю:</p>
+      <p class="zc-fallback-lead" id="producers-fallback-lead">Открытых закупок в категории сейчас нет. Вот предприятия из каталога, которые работают по этому профилю:</p>
       <div id="producers-grid" class="zc-grid"></div>
       <a class="zc-cta-btn" href="/login#register">Разместить закупку</a>
     </div>
@@ -227,16 +227,25 @@ ${renderFaqJsonLd(category)}
 
 <script>
 var CATEGORY = ${JSON.stringify(category.dbCategory)};
+// Страница не тянет общий JS-бандл, поэтому экранирование живёт прямо тут.
+// Тем же способом это делают server.js (htmlEscape) и assets/app.js (escapeHtml) —
+// данные с /api/public/producers и /api/orders/public не проверены на разметку
+// (имя компании задаётся при саморегистрации, заголовок закупки — заказчиком).
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function renderOrders(orders) {
   var grid = document.getElementById('orders-grid');
   grid.innerHTML = orders.map(function (o) {
     return '<article class="zc-card">'
-      + '<div class="zc-card-top"><span class="zc-badge">' + o.category + '</span><span class="zc-status">Активный</span></div>'
-      + '<h3 class="zc-card-title">' + o.title + '</h3>'
+      + '<div class="zc-card-top"><span class="zc-badge">' + escapeHtml(o.category) + '</span><span class="zc-status">Активный</span></div>'
+      + '<h3 class="zc-card-title">' + escapeHtml(o.title) + '</h3>'
       + '<div class="zc-card-meta">'
-      + (o.deadline ? '<span>Срок: до ' + new Date(o.deadline).toLocaleDateString('ru-RU') + '</span>' : '')
-      + (o.quantity ? '<span>Кол-во: ' + o.quantity + '</span>' : '')
-      + '<span>' + (o.responses || 0) + ' предложений</span></div>'
+      + (o.deadline ? '<span>Срок: до ' + escapeHtml(new Date(o.deadline).toLocaleDateString('ru-RU')) + '</span>' : '')
+      + (o.quantity ? '<span>Кол-во: ' + escapeHtml(o.quantity) + '</span>' : '')
+      + '<span>' + escapeHtml(o.responses || 0) + ' предложений</span></div>'
       + '<div class="zc-card-footer"><span class="zc-company">••••••••</span>'
       + '<a href="/login#register" class="zc-respond">Подать КП</a></div>'
       + '</article>';
@@ -245,20 +254,21 @@ function renderOrders(orders) {
 function showProducers() {
   var grid = document.getElementById('orders-grid');
   var fallback = document.getElementById('producers-fallback');
+  var lead = document.getElementById('producers-fallback-lead');
   grid.style.display = 'none';
+  fallback.style.display = 'block';
   fetch('/api/public/producers?category=' + encodeURIComponent(CATEGORY) + '&limit=8')
     .then(function (r) { return r.json(); })
     .then(function (list) {
-      if (!list.length) { fallback.style.display = 'block'; return; }
+      if (!list.length) { if (lead) lead.style.display = 'none'; return; }
       document.getElementById('producers-grid').innerHTML = list.map(function (p) {
-        return '<a class="zc-card zc-card-link" href="/p/' + p.id + '">'
-          + '<h3 class="zc-card-title">' + p.company + '</h3>'
-          + '<div class="zc-card-meta"><span>' + (p.city || 'город не указан') + '</span>'
+        return '<a class="zc-card zc-card-link" href="/p/' + encodeURIComponent(p.id) + '">'
+          + '<h3 class="zc-card-title">' + escapeHtml(p.company) + '</h3>'
+          + '<div class="zc-card-meta"><span>' + escapeHtml(p.city || 'город не указан') + '</span>'
           + (p.verified ? '<span class="zc-badge">Проверено</span>' : '') + '</div></a>';
       }).join('');
-      fallback.style.display = 'block';
     })
-    .catch(function () { fallback.style.display = 'block'; });
+    .catch(function () { if (lead) lead.style.display = 'none'; });
 }
 fetch('/api/orders/public?category=' + encodeURIComponent(CATEGORY))
   .then(function (r) { return r.json(); })
