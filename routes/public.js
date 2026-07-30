@@ -293,7 +293,7 @@ function createPublicRouter(deps) {
 
             const { rows } = await pool.query(
                 `SELECT * FROM companies
-                 WHERE role = 'producer'
+                 WHERE role = 'producer' AND status <> 'Отклонено'
                  ORDER BY verified_by_platform DESC, verified_egrul DESC, claimed DESC, company ASC`
             );
 
