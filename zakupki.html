@@ -221,6 +221,15 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 .zk-cta-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #B54B00; transition-duration: .06s; }
 
 /* ── Skeleton ── */
+/* ── Пояснительный блок ── */
+.zk-about { margin-top: 40px; padding-top: 32px; border-top: 1px solid #E2E8F0; }
+.zk-about h2 { font-size: 20px; font-weight: 800; color: #071B2A; letter-spacing: -.4px; margin: 24px 0 10px; }
+.zk-about h2:first-child { margin-top: 0; }
+.zk-about p { font-size: 14.5px; line-height: 1.75; color: #334155; max-width: 820px; margin-bottom: 10px; }
+.zk-about-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.zk-about-links a { font-size: 13.5px; font-weight: 600; color: #334155; text-decoration: none; border: 1px solid #E2E8F0; border-radius: 3px; padding: 8px 14px; background: #fff; transition: border-color .15s ease, color .15s ease; }
+.zk-about-links a:hover { border-color: #0B2233; color: #071B2A; }
+
 .zk-skeleton { background: #F1F5F9; border: 1px dashed rgba(7,27,42,.16); border-radius: 3px; animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
@@ -291,10 +300,10 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 <!-- Category pages nav -->
 <div style="background:#F7FAFC; border-bottom:1px solid #E2E8F0; padding:10px 64px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
     <span style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:.5px; margin-right:4px;">Разделы:</span>
-    <a href="/zakupki/metall"   style="background:#fff; border:1px solid #E2E8F0; border-radius:100px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Металлообработка</a>
-    <a href="/zakupki/armatura" style="background:#fff; border:1px solid #E2E8F0; border-radius:100px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Трубопроводная арматура</a>
-    <a href="/zakupki/elektro"  style="background:#fff; border:1px solid #E2E8F0; border-radius:100px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Электрооборудование</a>
-    <a href="/zakupki/rti"      style="background:#fff; border:1px solid #E2E8F0; border-radius:100px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">РТИ</a>
+    <a href="/zakupki/metall"   style="background:#fff; border:1px solid #E2E8F0; border-radius:3px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Металлообработка</a>
+    <a href="/zakupki/armatura" style="background:#fff; border:1px solid #E2E8F0; border-radius:3px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Трубопроводная арматура</a>
+    <a href="/zakupki/elektro"  style="background:#fff; border:1px solid #E2E8F0; border-radius:3px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">Электрооборудование</a>
+    <a href="/zakupki/rti"      style="background:#fff; border:1px solid #E2E8F0; border-radius:3px; padding:5px 14px; font-size:13px; font-weight:600; color:#071B2A; text-decoration:none; transition:border-color .18s;" onmouseover="this.style.borderColor='#FF6A00';this.style.color='#FF6A00'" onmouseout="this.style.borderColor='#E2E8F0';this.style.color='#071B2A'">РТИ</a>
 </div>
 
 <!-- Main -->
@@ -304,6 +313,27 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
         Реестр активных закупок · <span id="zkRegCount">—</span> позиций · обновлено <span id="zkRegDate">—</span>
     </div>
     <div id="ordersList"></div>
+
+    <!-- Пояснительный блок: страница-список сама по себе почти без текста, а объяснить
+         устройство закупки нужно и человеку, и поисковику. -->
+    <section class="zk-about">
+        <h2>Как устроены прямые закупки</h2>
+        <p>Заказчик размещает закупку с чертежом, эскизом или техническим заданием и указывает материал, количество и срок. Площадка сопоставляет заявку с профилями предприятий и уведомляет тех, кто работает по нужному направлению, а не рассылает всем подряд. Производители отвечают предложениями с ценой и сроком, заказчик сравнивает их в одной таблице и выбирает исполнителя.</p>
+        <p>Тендерных процедур и электронной подписи здесь нет: договор со спецификацией формируется из принятого предложения, а переписка, задачи и этапы поставки остаются в сделке. Площадка стороной сделки не является — обязательства по срокам и качеству несёт завод-изготовитель.</p>
+
+        <h2>Что видно без регистрации</h2>
+        <p>В списке выше открыты предмет закупки, категория, количество, срок подачи предложений и число уже поступивших откликов. Название компании-заказчика скрыто до регистрации: это защищает заказчика от обзвона всеми подряд. Чтобы откликнуться на закупку, производителю нужен профиль — регистрация бесплатна, а предприятие из государственного реестра может присоединить уже готовую карточку по ИНН.</p>
+
+        <h2>Закупки по направлениям</h2>
+        <p>Отдельные страницы по категориям: что изготавливают по чертежу заказчика, какие данные приложить к заявке и что влияет на цену и срок.</p>
+        <div class="zk-about-links">
+            <a href="/zakupki/rti">РТИ и уплотнения</a>
+            <a href="/zakupki/metall">Металлообработка</a>
+            <a href="/zakupki/armatura">Трубопроводная арматура</a>
+            <a href="/zakupki/elektro">Электрооборудование</a>
+            <a href="/map">Карта производителей</a>
+        </div>
+    </section>
 
     <!-- CTA banner -->
     <div class="zk-cta">

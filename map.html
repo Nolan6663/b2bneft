@@ -121,6 +121,16 @@
             font-weight: 700;
         }
         .map-summary-pill b { color: var(--accent-bright); }
+
+        /* Пояснительный блок под картой */
+        .map-about { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--inner-border); }
+        .map-about h2 { font-size: 19px; font-weight: 800; color: var(--text-primary); letter-spacing: -.3px; margin: 20px 0 8px; }
+        .map-about h2:first-child { margin-top: 0; }
+        .map-about p { font-size: 14.5px; line-height: 1.75; color: var(--text-secondary); max-width: 820px; margin-bottom: 10px; }
+        .map-about-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+        .map-about-links a { font-size: 13.5px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--inner-border); border-radius: 3px; padding: 8px 14px; background: var(--card-bg); transition: border-color .15s ease, color .15s ease; }
+        .map-about-links a:hover { border-color: var(--accent-bright); color: var(--text-primary); }
+
         .map-empty-state {
             position: absolute;
             inset: 0;
@@ -507,6 +517,24 @@
                 </div>
                 <div id="map"></div>
             </div>
+
+            <!-- Пояснение к карте: страница почти целиком состоит из интерактива,
+                 и без текста непонятно, откуда данные и что с ними делать. -->
+            <section class="map-about">
+                <h2>Что показано на карте</h2>
+                <p>На карте собраны российские производственные предприятия: заводы из государственного реестра Минпромторга по постановлению № 719 и производства, найденные в открытых источниках. Для каждого предприятия известны регион, направление работы и, как правило, перечень продукции. Точки одного города разведены, чтобы крупные промышленные центры не сливались в одну метку.</p>
+                <p>Карточка предприятия открывается по клику: там видно, что оно изготавливает, где находится и подтверждены ли данные. Профили, созданные по открытым данным, помечены отдельно — их владельцы могут присоединить карточку по ИНН и отвечать на закупки напрямую.</p>
+
+                <h2>Как найти исполнителя</h2>
+                <p>Карта отвечает на вопрос «кто и где это делает». Если нужно не найти завод, а разместить заказ, быстрее работает обратный путь: опубликовать закупку с чертежом, и площадка сама уведомит предприятия подходящего профиля. Предложения с ценой и сроком придут напрямую от производителей.</p>
+                <div class="map-about-links">
+                    <a href="/zakupki/rti">Закупки: РТИ</a>
+                    <a href="/zakupki/metall">Закупки: металлообработка</a>
+                    <a href="/zakupki/armatura">Закупки: арматура</a>
+                    <a href="/zakupki/elektro">Закупки: электрооборудование</a>
+                    <a href="/zakupki">Все открытые закупки</a>
+                </div>
+            </section>
 
             <!-- Right: company list -->
             <div class="map-company-panel">
