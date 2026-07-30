@@ -21,14 +21,11 @@ function router(rows = ROWS) {
             const { verified_by_platform, verified_egrul, ...rest } = r;
             return { ...rest, verifiedByPlatform: Boolean(verified_by_platform), verifiedEgrul: Boolean(verified_egrul) };
         },
-        // как в server.js:809 — по словам специализации
-        getProducerCategories: (p) => {
-            const text = `${p.specialization || ''} ${p.products || ''}`.toLowerCase();
-            const out = [];
-            if (/резин|уплотн|манжет/.test(text)) out.push('РТИ');
-            if (/металл|токар|фрезер/.test(text)) out.push('Металл');
-            return out;
-        },
+        // Витрина классифицирует через lib/producer-categories, а не через общий
+        // getProducerCategories из server.js. Заглушка нарочно возвращает пустой
+        // список: если эндпоинт снова начнёт спрашивать её, выдача опустеет и
+        // тесты ниже упадут.
+        getProducerCategories: () => [],
     });
     return createPublicRouter(deps);
 }

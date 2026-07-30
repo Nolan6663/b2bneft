@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { categorizeProducer } = require('../lib/producer-categories');
 
 function createPublicRouter(deps) {
     const {
@@ -300,7 +301,11 @@ function createPublicRouter(deps) {
             const list = [];
             for (const row of rows) {
                 const producer = rowToCompany(row);
-                if (!getProducerCategories(producer).includes(category)) continue;
+                // Витрина использует свой классификатор, не общий getProducerCategories:
+                // тот засчитывает любое совпадение в маркетинговом описании, из-за чего
+                // кабельный завод попадал сразу во все четыре категории. Общий трогать
+                // нельзя — на нём висят карта и биржа мощностей.
+                if (!categorizeProducer(producer).includes(category)) continue;
                 list.push({
                     id: producer.id,
                     company: producer.company,
