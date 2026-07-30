@@ -12,6 +12,10 @@ const { Pool } = require('pg');
 const args = process.argv.slice(2);
 const daysArg = args.indexOf('--days');
 const DAYS = daysArg !== -1 ? Math.max(1, Math.min(365, parseInt(args[daysArg + 1], 10) || 20)) : 20;
+// --excluded N — показать N профилей, которые фильтр релевантности отбросил.
+// Нужно, чтобы решать «фильтр слишком строгий?» по фактическим профилям, а не на глаз.
+const exclArg = args.indexOf('--excluded');
+const SHOW_EXCLUDED = exclArg !== -1 ? Math.max(1, Math.min(100, parseInt(args[exclArg + 1], 10) || 15)) : 0;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -20,7 +24,7 @@ const { relevanceScore } = require('../lib/outreach');
 // Тот же отбор кандидатов, что в lib/outreach.js — чтобы «осталось» совпадало с реальностью.
 // Строки, а не COUNT: релевантность считается в JS тем же кодом, что и при отправке.
 const REMAINING_SQL = `
-    SELECT c.specialization, c.products
+    SELECT c.company, c.specialization, c.products
     FROM companies c
     WHERE c.role = 'producer' AND c.claimed = false AND c.invite_optout = false
       AND c.contact_email <> ''
@@ -84,6 +88,16 @@ function table(rows, cols) {
         console.log('\nИтоги:');
         console.log(`  Пул по формальным правилам: ${remainingRows.length}`);
         console.log(`  Из них релевантных (кому реально пишем): ${remainingRelevant} — это ${Math.ceil(remainingRelevant / 20)} дней при 20 письмах в день`);
+
+        if (SHOW_EXCLUDED) {
+            const excluded = remainingRows.filter(r => relevanceScore(r) === 0);
+            console.log(`\nОтсеяно фильтром релевантности: ${excluded.length}. Примеры профилей:`);
+            for (const row of excluded.slice(0, SHOW_EXCLUDED)) {
+                const profile = [row.specialization, row.products].filter(Boolean).join(' | ').replace(/\s+/g, ' ');
+                console.log(`  ${String(row.company).slice(0, 42).padEnd(43)} ${profile.slice(0, 110) || '(профиль пуст)'}`);
+            }
+            console.log('\nЕсли среди примеров попадаются подходящие заводы — список слов в lib/outreach.js (RELEVANCE_GROUPS) надо расширить.');
+        }
         console.log(`  Отписались по ссылке opt-out: ${optout.n}`);
         console.log(`  Получили письмо и потом зарегистрировались (claimed): ${claimed.n}`);
     } catch (e) {
