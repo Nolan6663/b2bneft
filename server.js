@@ -52,6 +52,8 @@ const createPublicRouter = require('./routes/public');
 const createAnalyticsRouter = require('./routes/analytics');
 const createIntegrationsPush = require('./lib/integrations-push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
+const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr } = require('./lib/producer-seo');
+const { categorizeProducer } = require('./lib/producer-categories');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -640,7 +642,8 @@ app.get('/p/:id', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const { rows: [row] } = await pool.query(
-            "SELECT company, specialization, city, about, products, claimed, source, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
+            // inn нужен серверной разметке: по нему строится ссылка «присоединить профиль»
+            "SELECT company, inn, specialization, city, about, products, claimed, source, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
             [id]
         );
         if (!row) {
@@ -649,20 +652,17 @@ app.get('/p/:id', async (req, res, next) => {
         }
         const filePath = path.join(__dirname, 'supplier-public.html');
         let html = fs.readFileSync(filePath, 'utf8');
-        const isStub = !row.claimed && !!row.source;
-        const fromGisp = !row.claimed && row.source === 'gisp-pp719';
-        const title = fromGisp
-            ? `${row.company}${row.city ? ' (' + row.city + ')' : ''} — производитель из реестра Минпромторга | ТехЗаказ`
-            : isStub
-                ? `${row.company}${row.city ? ' (' + row.city + ')' : ''} — производитель | ТехЗаказ`
-                : `${row.company} — поставщик | ТехЗаказ`;
-        const desc = [row.specialization, row.products, row.city, row.about].filter(Boolean).join(' · ').slice(0, 160)
-            || `Профиль поставщика ${row.company} на B2B-платформе ТехЗаказ`;
+        // Заголовок и описание собираются в lib/producer-seo: прежние доходили до 180
+        // знаков и обрезались в выдаче, а профиль робот видел как «Загрузка профиля…».
+        const title = buildProducerTitle(row);
+        const desc = buildProducerDescription(row);
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        const ssr = buildProducerSsr(row, { categories: categorizeProducer(row) });
         html = html
             .replace(/<!--META_TITLE-->/g, htmlEscape(title))
             .replace(/<!--META_DESC-->/g, htmlEscape(desc))
             .replace(/<!--CANONICAL_URL-->/g, `${base}/p/${id}`)
+            .replace(/<!--SSR_PROFILE-->/g, ssr)
             .replace(/<!--COMPANY_ID-->/g, String(id));
         res.setHeader('Cache-Control', 'public, max-age=300');
         res.type('html').send(html);

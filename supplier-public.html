@@ -68,8 +68,11 @@
     </header>
 
     <main class="sp-wrap">
-        <div id="spLoading" style="text-align:center;padding:60px 0;color:var(--text-secondary);">Загрузка профиля…</div>
-        <div id="spContent" style="display:none;"></div>
+        <!-- Профиль приходит с сервера уже отрисованным: робот не должен видеть
+             «Загрузка профиля…» вместо содержимого. Скрипт ниже заменит этот блок
+             тем же профилем, дополненным фото, отзывами и показателями. -->
+        <div id="spLoading" style="display:none;text-align:center;padding:60px 0;color:var(--text-secondary);">Загрузка профиля…</div>
+        <div id="spContent"><!--SSR_PROFILE--></div>
     </main>
 
     <script>
@@ -148,7 +151,11 @@
                     ${c.reviews?.length ? `<div class="sp-card" style="margin-top:16px;"><h2>Отзывы заказчиков</h2>${c.reviews.map(rv => `<div class="sp-review"><div class="sp-review-stars">${'★'.repeat(rv.score)}${'☆'.repeat(5-rv.score)}</div><div class="sp-review-from">${esc(rv.from_company)}</div>${rv.text ? `<div class="sp-review-text">${esc(rv.text)}</div>` : ''}</div>`).join('')}</div>` : ''}
                 `;
             } catch {
-                document.getElementById('spLoading').textContent = 'Поставщик не найден';
+                // Серверная версия профиля уже на странице — не затираем её ошибкой,
+                // а лишь сообщаем, что подгрузить дополнения (фото, отзывы) не вышло.
+                const note = document.getElementById('spLoading');
+                note.style.display = '';
+                note.textContent = 'Не удалось загрузить дополнительные данные профиля. Основные сведения показаны выше.';
             }
         }
         boot();
