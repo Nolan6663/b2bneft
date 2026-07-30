@@ -9,6 +9,7 @@
     "check": "node scripts/static-checks.js",
     "smoke:api": "node scripts/mvp-api-smoke.js",
     "sync:legal": "node scripts/sync-legal.js",
+    "sync:categories": "node scripts/sync-category-pages.js",
     "test:e2e": "playwright test",
     "start": "node server.js"
   },

@@ -280,7 +280,41 @@ function createPublicRouter(deps) {
             });
         } catch (e) { next(e); }
     });
-    
+
+
+    // Заводы категории для пустого состояния категорийных страниц: открытых закупок
+    // может не быть, но страница должна оставаться полезной и линковать карточки /p/:id.
+    router.get('/public/producers', async (req, res, next) => {
+        try {
+            const category = String(req.query.category || '').trim();
+            if (!category) return res.status(400).json({ error: 'Укажите категорию' });
+            const parsed = parseInt(req.query.limit, 10);
+            const limit = Math.max(1, Math.min(24, Number.isFinite(parsed) ? parsed : 8));
+
+            const { rows } = await pool.query(
+                `SELECT * FROM companies
+                 WHERE role = 'producer' AND status <> 'Отклонено'
+                 ORDER BY verified_by_platform DESC, verified_egrul DESC, claimed DESC, company ASC`
+            );
+
+            const list = [];
+            for (const row of rows) {
+                const producer = rowToCompany(row);
+                if (!getProducerCategories(producer).includes(category)) continue;
+                list.push({
+                    id: producer.id,
+                    company: producer.company,
+                    city: producer.city || '',
+                    // verified_by_platform/verified_egrul — сырые колонки; rowToCompany
+                    // переименовывает их в camelCase (verifiedByPlatform/verifiedEgrul),
+                    // поэтому читаем флаг из необработанной строки, а не из producer.
+                    verified: Boolean(row.verified_by_platform || row.verified_egrul),
+                });
+                if (list.length >= limit) break;
+            }
+            res.json(list);
+        } catch (e) { next(e); }
+    });
 
     return router;
 }

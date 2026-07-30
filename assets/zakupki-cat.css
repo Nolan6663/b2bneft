@@ -77,3 +77,25 @@ body { font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A; 
 @media (max-width: 560px) {
   .zc-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Контентные блоки категорийной страницы ────────────────────────── */
+.zc-h2 { font-size: 22px; font-weight: 800; color: #071B2A; margin: 36px 0 14px; letter-spacing: -.4px; }
+.zc-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 8px; }
+.zc-table th, .zc-table td { border: 1px solid #E2E8F0; padding: 9px 12px; text-align: left; color: #334155; }
+.zc-table th { background: #F8FAFC; font-weight: 700; color: #071B2A; }
+.zc-steps, .zc-checklist { margin: 0 0 8px 20px; font-size: 14.5px; line-height: 1.75; color: #334155; }
+.zc-steps li, .zc-checklist li { margin-bottom: 8px; }
+.zc-factors { font-size: 14.5px; line-height: 1.7; color: #334155; }
+.zc-factors dt { font-weight: 700; color: #071B2A; margin-top: 12px; }
+.zc-factors dd { margin: 4px 0 0; }
+.zc-faq-item { border: 1px solid #E2E8F0; border-radius: 3px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
+.zc-faq-item summary { font-weight: 700; font-size: 14.5px; color: #071B2A; cursor: pointer; }
+.zc-faq-item p { margin: 10px 0 0; font-size: 14px; line-height: 1.7; color: #334155; }
+.zc-related { display: flex; flex-wrap: wrap; gap: 10px; }
+.zc-related a { font-size: 13.5px; font-weight: 600; color: #334155; text-decoration: none; border: 1px solid #E2E8F0; border-radius: 3px; padding: 8px 14px; background: #fff; }
+.zc-related a:hover { border-color: #0B2233; color: #071B2A; }
+.zc-fallback-lead { font-size: 14.5px; line-height: 1.7; color: #334155; margin-bottom: 14px; }
+.zc-card-link { text-decoration: none; display: block; }
+@media (max-width: 720px) {
+  .zc-table { display: block; overflow-x: auto; }
+}
