@@ -204,8 +204,13 @@ function checkCategoryPagesSynced() {
     const file = path.join(root, rel);
     if (!fs.existsSync(file)) { stale.push(rel + ' (файла нет)'); continue; }
     // Сравниваем без юридического блока: его вставляет sync-legal.js, у него свой гейт.
-    const actual = stripLegalBlock(fs.readFileSync(file, 'utf8')).replace(/\r\n/g, '\n');
-    const expected = stripLegalBlock(renderCategoryPage(category)).replace(/\r\n/g, '\n');
+    // Нормализуем переводы строк ДО вырезания блока: stripLegalBlock съедает ровно один '\n'
+    // сразу после маркера конца, а на CRLF-чекауте (core.autocrlf=true, .gitattributes нет)
+    // там стоит '\r\n' — после '\r\n'.replace(/\r\n/g,'\n') остаётся '\n', как и ожидает strip.
+    // Обратный порядок (сначала strip, потом replace) на CRLF ничего не съедает и оставляет
+    // лишнюю пустую строку — гейт тогда считает байт-корректные страницы устаревшими.
+    const actual = stripLegalBlock(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n'));
+    const expected = stripLegalBlock(renderCategoryPage(category).replace(/\r\n/g, '\n'));
     if (actual !== expected) stale.push(rel);
   }
   if (stale.length) {
