@@ -26,7 +26,7 @@ const SEND = flag('--send');
 const TEST_TO = opt('--test', '');
 const LIMIT = Math.max(1, Math.min(100, parseInt(opt('--limit', TEST_TO ? '1' : '20'), 10) || 20));
 const APP_URL = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@texzakaz.ru';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'info.texzakaz@yandex.com';
 const REPLY_TO = process.env.OUTREACH_REPLY_TO || '';
 const PREVIEW_DIR = path.join(__dirname, '..', 'outreach-preview');
 

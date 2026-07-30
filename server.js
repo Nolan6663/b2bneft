@@ -76,7 +76,7 @@ function htmlEscape(str) {
 }
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'info.texzakaz@mail.ru';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'info.texzakaz@yandex.com';
 const smtpTransport = (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
     ? nodemailer.createTransport({
         host: process.env.SMTP_HOST,
