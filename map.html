@@ -361,12 +361,14 @@
             .map-company-panel { display: flex; min-height: 320px; max-height: 50vh; height: auto; }
             .map-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             /* Четыре KPI-карточки в столбик занимали весь первый экран, и до карты —
-               ради которой страницу и открывают — приходилось листать. Ставим 2×2
-               и ужимаем: правило скоупится страницей, кабинет не затрагивается. */
-            .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-            .kpi-card { padding: 12px 14px; }
-            .kpi-card .kpi-value { font-size: 22px; }
-            .kpi-card .kpi-label, .kpi-card .kpi-sub { font-size: 11px; }
+               ради которой страницу и открывают — приходилось листать. Ставим 2×2.
+               Селектор с #spa-content намеренно: этот <style> подключён ДО theme-v2.css,
+               а там для экранов до 480px стоит .kpi-row { 1fr }. При равной
+               специфичности победило бы правило темы, поэтому повышаем свою. */
+            #spa-content .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+            #spa-content .kpi-card { padding: 12px 14px; }
+            #spa-content .kpi-card .kpi-value { font-size: 22px; }
+            #spa-content .kpi-card .kpi-label, #spa-content .kpi-card .kpi-sub { font-size: 11px; }
             .map-production-summary { position: static; margin: 0 0 10px; pointer-events: auto; }
             .map-empty-state { position: static; inset: auto; min-height: 160px; padding: 12px; }
             .map-center { display: flex; flex-direction: column; padding: 10px; gap: 10px; height: auto; min-height: min(52vh, 420px); }
