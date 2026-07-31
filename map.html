@@ -360,6 +360,13 @@
             .map-filter-close { display: block !important; }
             .map-company-panel { display: flex; min-height: 320px; max-height: 50vh; height: auto; }
             .map-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            /* Четыре KPI-карточки в столбик занимали весь первый экран, и до карты —
+               ради которой страницу и открывают — приходилось листать. Ставим 2×2
+               и ужимаем: правило скоупится страницей, кабинет не затрагивается. */
+            .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+            .kpi-card { padding: 12px 14px; }
+            .kpi-card .kpi-value { font-size: 22px; }
+            .kpi-card .kpi-label, .kpi-card .kpi-sub { font-size: 11px; }
             .map-production-summary { position: static; margin: 0 0 10px; pointer-events: auto; }
             .map-empty-state { position: static; inset: auto; min-height: 160px; padding: 12px; }
             .map-center { display: flex; flex-direction: column; padding: 10px; gap: 10px; height: auto; min-height: min(52vh, 420px); }
@@ -374,7 +381,10 @@
         }
         @media (max-width: 520px) {
             .map-stats-grid { grid-template-columns: 1fr; }
-            .map-company-panel { max-height: none; min-height: 280px; }
+            /* Было max-height: none — панель разворачивалась на все 4500 компаний,
+               то есть на 13 000 пикселей прокрутки под картой. Ограничиваем высотой
+               экрана, внутри у панели своя прокрутка. */
+            .map-company-panel { max-height: 60vh; min-height: 280px; }
         }
     </style>
 <script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});</script>
