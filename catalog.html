@@ -345,6 +345,10 @@
             .catalog-filters { display:flex; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
             .catalog-filters::-webkit-scrollbar { display:none; }
             .filter-chip { flex:0 0 auto; }
+            /* Три категории в ряд на телефоне дают по 100px на карточку: названия
+               вылезали за рамку и наезжали на соседнюю. Ставим в столбик. */
+            .catalog-mini-list { flex-direction:column; align-items:stretch; }
+            .catalog-mini-item { width:100%; }
         }
     </style>
 </head>

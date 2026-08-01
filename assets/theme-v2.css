@@ -830,8 +830,19 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   .modal-actions button { flex: 1; }
   .header { gap: 8px; }
   .header-right { gap: 8px; }
-  .user-info-block { display: none; }
-  .user-menu-caret { display: none; }
+  /* Название компании и роль в шапке: глобальное правило ниже по файлу
+     (.user-info-block { display: flex }) перебивало это по порядку каскада, и на
+     390px имя компании съедало ширину заголовка — «Каталог производителей»
+     ломался по буквам. Селектор с родителем выигрывает по специфичности. */
+  .header-right .user-info-block { display: none; }
+  .header-right .user-menu-caret { display: none; }
+  /* 26px из блока «заголовки с большим контрастом» на 390px не оставляют
+     «производителей» шанса встать в строку — слово рвётся посередине. Тот блок
+     идёт ниже по файлу и тоже с !important, поэтому берём специфичностью. */
+  .main-content .header h2 { font-size: 19px !important; flex: 1 1 auto; min-width: 0; }
+  /* Меню пользователя тянулось на всю свободную ширину (flex: 1 1 auto ниже по
+     файлу) и оставляло заголовку 91px. Без имени компании тянуться незачем. */
+  .header-right .user-menu { flex: 0 0 auto; }
   .table-wrap, .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .orders-controls { flex-wrap: wrap; gap: 8px; }

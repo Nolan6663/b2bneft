@@ -46,12 +46,22 @@ const WIDTHS = [390, 1440];
     const problems = [];
 
     const fromDisk = base === 'file';
+    // --auth: подсаживаем признак сессии, которым страницы кабинета решают,
+    // пускать или гнать на вход (assets/app.js: hasSession). Данные всё равно
+    // не подтянутся без сервера — смотрим каркас вёрстки, а не содержимое.
+    const withAuth = process.argv.includes('--auth');
 
     for (const width of WIDTHS) {
         for (const [name, route, file] of PAGES) {
             // Свой контекст на страницу: в общем контексте живые опросы и сокеты
             // прошлых страниц копятся и снимок начинает виснуть на шестой-седьмой.
             const ctx = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
+            if (withAuth) {
+                await ctx.addInitScript(() => {
+                    localStorage.setItem('isLoggedIn', '1');
+                    localStorage.setItem('userRole', 'buyer');
+                });
+            }
             const page = await ctx.newPage();
             const url = fromDisk
                 ? 'file:///' + path.join(__dirname, '..', file).replace(/\\/g, '/')
