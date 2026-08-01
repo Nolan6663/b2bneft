@@ -47,6 +47,23 @@ const ALLOWED = {
     'landing.html': [
         'rgba(7,27,42,.28)',                      // .lp-demo-sheet — модальная шторка демо
     ],
+    'catalog.html': [
+        'box-shadow:0 8px 32px rgba(0,0,0,.3)',   // модальный диалог сравнения
+    ],
+    'login.html': [
+        'rgba(7,27,42,.12)',                      // .login-toast — всплывающее уведомление
+        'box-shadow:0 8px 32px rgba(0,0,0,0.18)', // модалки «забыли пароль» и «новый пароль»
+    ],
+    'map.html': [
+        'border-radius: 999px; background: var(--inner-border)', // .mcp-capacity — шкала загрузки
+        'rgba(0,0,0,.4)',                         // .leaflet-popup — всплывающая карточка над картой
+        'rgba(15,23,42,.22)',                     // .ymap-popup-card — то же для Яндекс-карты
+        'rgba(0,0,0,.35)',                        // .maplibregl-popup — то же для MapLibre
+        'rgba(0,0,0,.3)',                         // .map-new-toast — всплывающее уведомление
+    ],
+    'delivery.html': [
+        'var(--accent-bright) 40%',               // шкала этапа доставки: залитая часть и остаток
+    ],
 };
 
 function lintFile(rel) {
