@@ -226,7 +226,6 @@
   .lp-cta-demo:hover {
     background: rgba(11, 143, 206, 0.14);
     border-color: rgba(11, 143, 206, 0.55);
-    box-shadow: 0 6px 18px rgba(11, 143, 206, 0.12);
   }
 
   /* Воксельная карта России (hero). Фолбэк — .lp-industrial ниже. */
@@ -258,7 +257,7 @@
   }
 
   .lp-industrial { position: relative; padding: 18px 20px 20px; border-radius: 16px; overflow: hidden;
-    background: #071B2A; box-shadow: 0 18px 40px rgba(7,27,42,0.22); }
+    background: #071B2A; }
   .lp-industrial-grid { position: absolute; inset: 0; pointer-events: none;
     background-image: linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px);
@@ -271,7 +270,6 @@
     position: relative; padding: 28px 24px 24px; border-radius: 18px;
     background: #fff;
     border: 1px solid rgba(7,27,42,0.08);
-    box-shadow: 0 16px 40px rgba(7,27,42,0.08);
   }
   .lp-scene-track {
     display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch;
@@ -299,12 +297,10 @@
     border-radius: 11px; flex-shrink: 0;
     background: #0B2233;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.28);
   }
   .lp-scene-hub .lp-logo-mark {
     background: #0B2233;
     border: 1.5px solid rgba(255,255,255,0.24);
-    box-shadow: 0 0 0 4px rgba(255,106,0,0.14), 0 10px 22px rgba(0,0,0,0.35);
   }
   .lp-logo-mark > span {
     font-weight: 800; font-size: 22px; color: #fff; letter-spacing: -1px; line-height: 1;
@@ -643,7 +639,6 @@
   .lp-demo-form {
     background: #fff; border: 1px solid rgba(7,27,42,.1); border-radius: 14px;
     padding: 16px; display: flex; flex-direction: column; gap: 12px;
-    box-shadow: 0 8px 24px rgba(7,27,42,.06);
   }
   .lp-demo-field label {
     display: block; font-size: 11px; font-weight: 700; color: #4A5D6E;
@@ -668,7 +663,6 @@
     display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
     padding: 14px 16px; border-radius: 12px;
     background: #fff; border: 1px solid rgba(7,27,42,.1);
-    box-shadow: 0 4px 14px rgba(7,27,42,.05);
     opacity: 0; transform: translateX(20px);
     transition: opacity .4s ease, transform .4s cubic-bezier(.22,1,.36,1);
   }
@@ -681,7 +675,6 @@
   .lp-demo-table-wrap {
     border-radius: 12px; overflow: hidden;
     border: 1px solid rgba(7,27,42,.1); background: #fff;
-    box-shadow: 0 6px 20px rgba(7,27,42,.06);
   }
   .lp-demo-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .lp-demo-table th {
@@ -738,7 +731,7 @@
   @media (max-width: 640px) {
     .lp-demo-overlay { align-items: flex-end; padding: 0; }
     .lp-demo-sheet {
-      width: 100%; max-height: 92dvh; border-radius: 20px 20px 0 0;
+      width: 100%; max-height: 92dvh; border-radius: 6px 6px 0 0;
       transform: translateY(100%);
     }
     .lp-demo-overlay.is-open .lp-demo-sheet { transform: none; }
@@ -823,7 +816,7 @@
     <!-- ═══ HEADER ═══ -->
     <header id="lp-header" style="display:flex; align-items:center; justify-content:space-between; padding:26px 64px 22px; position:relative;">
       <div style="display:flex; align-items:center; gap:16px;">
-        <div style="position:relative; width:56px; height:56px; border-radius:12px; background:#0B2233; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(7,27,42,0.22);">
+        <div style="position:relative; width:56px; height:56px; border-radius:12px; background:#0B2233; display:flex; align-items:center; justify-content:center;">
           <span style="font-weight:800; font-size:30px; color:#fff; letter-spacing:-1px; line-height:1;">Т</span>
           <div style="position:absolute; right:8px; bottom:8px; width:18px; height:18px; background:#FF6A00; clip-path:polygon(0 100%,100% 0,100% 100%);"></div>
         </div>
@@ -1104,7 +1097,7 @@
 
     <!-- ═══ ADVANTAGES ═══ -->
     <section id="lp-adv" style="padding:0 64px 72px;">
-      <div id="lp-adv-grid" style="background:#fff; border:1px solid rgba(7,27,42,0.08); border-radius:18px; display:grid; grid-template-columns:repeat(4,1fr); box-shadow:0 10px 30px rgba(7,27,42,0.05);">
+      <div id="lp-adv-grid" style="background:#fff; border:1px solid rgba(7,27,42,0.08); border-radius:18px; display:grid; grid-template-columns:repeat(4,1fr);">
 
         <!-- Perk 1 -->
         <div style="padding:34px 30px; border-left:1px solid rgba(7,27,42,0.07);">

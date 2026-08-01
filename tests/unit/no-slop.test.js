@@ -44,6 +44,9 @@ const ALLOWED = {
         'background: linear-gradient(90deg,',     // шиммер скелетона, многострочный
         'background: linear-gradient(',           // шиммер скелетона, многострочный
     ],
+    'landing.html': [
+        'rgba(7,27,42,.28)',                      // .lp-demo-sheet — модальная шторка демо
+    ],
 };
 
 function lintFile(rel) {
