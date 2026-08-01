@@ -86,6 +86,14 @@
             background: var(--accent-bright); color: #fff; border: none;
             font-size: 13px; font-weight: 600; cursor: pointer;
             transition: opacity .15s;
+            /* Панель — колоночный флекс фиксированной высоты, и кнопка как
+               флекс-элемент ужималась с 34px до 18px: надпись срезало пополам.
+               flex-shrink держит высоту, sticky не даёт кнопке уехать за нижний
+               край при прокрутке списка фильтров. */
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            box-shadow: 0 0 0 10px var(--card-bg);
         }
         .mf-apply-btn:hover { opacity: .85; }
 
