@@ -87,6 +87,19 @@ const WIDTHS = [390, 1440];
             }
             if (settled !== asked) console.log(`${name} ${width}: редирект на ${settled}`);
 
+            // Блоки с появлением по скроллу до срабатывания наблюдателя стоят
+            // прозрачными, но место занимают: без прокрутки снимок показывает
+            // пустые полосы там, где у живого посетителя контент.
+            await page.evaluate(async () => {
+                const step = Math.round(window.innerHeight * 0.8);
+                for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+                    window.scrollTo(0, y);
+                    await new Promise(r => setTimeout(r, 120));
+                }
+                window.scrollTo(0, 0);
+                await new Promise(r => setTimeout(r, 300));
+            });
+
             const shot = path.join(outDir, `${name}-${width}.png`);
             let shotOk = true;
             try {
