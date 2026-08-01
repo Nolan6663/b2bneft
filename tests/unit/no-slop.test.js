@@ -85,9 +85,18 @@ function lintFile(rel) {
     return hits;
 }
 
+// Стили кабинета: страницы в гостевой проход не входят, но CSS сторожим тем же
+// правилом — иначе pill-радиусы возвращаются через них.
+const CABINET_CSS = ['assets/settings-page.css', 'assets/deals-page.css', 'assets/zakupki-cat.css', 'assets/css/tokens.css'];
+
 test('тема: мягких свечений, pill-радиусов и градиентов не осталось', () => {
     const hits = lintFile('assets/theme-v2.css');
     assert.deepEqual(hits, [], 'слоп в теме:\n' + hits.join('\n'));
+});
+
+test('стили страниц кабинета: маркеров слопа нет', () => {
+    const hits = CABINET_CSS.flatMap(lintFile);
+    assert.deepEqual(hits, [], 'слоп в стилях кабинета:\n' + hits.join('\n'));
 });
 
 test('публичные страницы: маркеров слопа нет', () => {
