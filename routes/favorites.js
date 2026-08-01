@@ -32,6 +32,71 @@ function createFavoritesRouter(deps) {
         } catch (e) { next(e); }
     });
 
+    // ── Сохранённые поиски ───────────────────────────────────────────────────
+    // Живут рядом с избранным: то же «отложить на потом», только не компания, а
+    // набор фильтров каталога. Объявлены до /:companyId — иначе одиночный
+    // сегмент перехватит удаление поиска.
+    const MAX_SEARCHES = 20;
+
+    function parseParams(raw) {
+        try {
+            const v = JSON.parse(raw || '{}');
+            return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+        } catch { return {}; }
+    }
+
+    router.get('/searches', requireAuth, async (req, res, next) => {
+        try {
+            const { rows } = await pool.query(
+                'SELECT id, name, params, created_at FROM saved_searches WHERE owner_company = $1 ORDER BY created_at DESC',
+                [req.user.company]
+            );
+            res.json(rows.map(r => ({
+                id: r.id,
+                name: r.name,
+                params: parseParams(r.params),
+                createdAt: r.created_at,
+            })));
+        } catch (e) { next(e); }
+    });
+
+    router.post('/searches', requireAuth, async (req, res, next) => {
+        try {
+            const name = String(req.body.name || '').trim().slice(0, 80);
+            const params = req.body.params;
+            if (!name) return res.status(400).json({ error: 'Не указано название поиска' });
+            if (!params || typeof params !== 'object' || Array.isArray(params)) {
+                return res.status(400).json({ error: 'Параметры поиска должны быть объектом' });
+            }
+            const json = JSON.stringify(params);
+            if (json.length > 2000) return res.status(400).json({ error: 'Слишком много параметров поиска' });
+
+            const { rows: [{ count }] } = await pool.query(
+                'SELECT COUNT(*)::int AS count FROM saved_searches WHERE owner_company = $1',
+                [req.user.company]
+            );
+            if (Number(count) >= MAX_SEARCHES) {
+                return res.status(409).json({ error: `Сохранено уже ${MAX_SEARCHES} поисков — удалите лишние` });
+            }
+
+            const { rows: [row] } = await pool.query(
+                'INSERT INTO saved_searches (owner_company, name, params) VALUES ($1, $2, $3) RETURNING id',
+                [req.user.company, name, json]
+            );
+            res.status(201).json({ id: row.id, message: 'Поиск сохранён' });
+        } catch (e) { next(e); }
+    });
+
+    router.delete('/searches/:id', requireAuth, async (req, res, next) => {
+        try {
+            await pool.query(
+                'DELETE FROM saved_searches WHERE owner_company = $1 AND id = $2',
+                [req.user.company, Number(req.params.id)]
+            );
+            res.json({ message: 'Поиск удалён' });
+        } catch (e) { next(e); }
+    });
+
     router.delete('/:companyId', requireAuth, async (req, res, next) => {
         try {
             await pool.query('DELETE FROM favorites WHERE owner_company = $1 AND company_id = $2', [req.user.company, Number(req.params.companyId)]);

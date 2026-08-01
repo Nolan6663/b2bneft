@@ -591,6 +591,7 @@
             if (c) c.textContent = new Set(allProducers.flatMap(p => (p.capabilities || []))).size || '—';
             buildFacets();
             render();
+            applySavedSearchFromUrl();
         }
 
         function setFilter(btn) {
@@ -682,9 +683,88 @@
             render();
         }
 
-        function saveSearch() {
-            const q = searchQuery || activeFilter || '(все)';
-            showToast(`Поиск «${q}» сохранён в избранное`);
+        /* Снимок фильтров каталога: то же, что читает filtered(). Пишется в
+           сохранённый поиск и оттуда же восстанавливается. */
+        function currentSearchParams() {
+            return {
+                search: searchQuery,
+                chip: activeFilter,
+                categories: sidebarCategories,
+                specs: sidebarSpecs,
+                certs: sidebarCerts,
+                region: sidebarRegion,
+                verifiedOnly,
+                sort: sortKey,
+            };
+        }
+
+        function describeSearch(p) {
+            const parts = [];
+            if (p.search) parts.push(`«${p.search}»`);
+            if (p.chip) parts.push(p.chip);
+            parts.push(...(p.categories || []), ...(p.specs || []), ...(p.certs || []));
+            if (p.region) parts.push(p.region);
+            if (p.verifiedOnly) parts.push('только проверенные');
+            return parts.length ? parts.join(', ') : 'Весь каталог';
+        }
+
+        async function saveSearch() {
+            const params = currentSearchParams();
+            const suggested = describeSearch(params);
+            const name = (window.prompt('Название поиска', suggested) || '').trim();
+            if (!name) return;
+            try {
+                const res = await apiFetch(`${SERVER_URL}/favorites/searches`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, params }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) { showToast(data.error || 'Не удалось сохранить поиск', 'warn'); return; }
+                showToast(`Поиск «${name}» сохранён — он в разделе «Избранное»`);
+            } catch {
+                showToast('Не удалось сохранить поиск', 'warn');
+            }
+        }
+
+        /* Применение сохранённого поиска: /catalog?search=<id> открывает каталог
+           уже отфильтрованным (ссылка со страницы «Избранное»). */
+        async function applySavedSearchFromUrl() {
+            const id = new URLSearchParams(location.search).get('search');
+            if (!id) return;
+            try {
+                const res = await apiFetch(`${SERVER_URL}/favorites/searches`);
+                if (!res.ok) return;
+                const list = await res.json();
+                const found = list.find(s => String(s.id) === String(id));
+                if (!found) { showToast('Сохранённый поиск не найден', 'warn'); return; }
+                const p = found.params || {};
+                searchQuery = p.search || '';
+                activeFilter = p.chip || '';
+                sidebarCategories = p.categories || [];
+                sidebarSpecs = p.specs || [];
+                sidebarCerts = p.certs || [];
+                sidebarRegion = p.region || '';
+                verifiedOnly = !!p.verifiedOnly;
+                sortKey = p.sort || sortKey;
+
+                const search = document.getElementById('catalogSearch');
+                if (search) search.value = searchQuery;
+                const verifiedCb = document.getElementById('verifiedOnlyFilter');
+                if (verifiedCb) verifiedCb.checked = verifiedOnly;
+                const region = document.getElementById('facetRegion');
+                if (region) region.value = sidebarRegion;
+                document.querySelectorAll('.filter-chip').forEach(btn => {
+                    btn.classList.toggle('active', (btn.dataset.cap || '') === activeFilter);
+                });
+                restoreFacetSelection();
+                const applyBtn = document.getElementById('applyFiltersBtn');
+                const n = sidebarCategories.length + sidebarSpecs.length + sidebarCerts.length + (sidebarRegion ? 1 : 0);
+                if (applyBtn) applyBtn.textContent = `Применить фильтры (${n})`;
+                showCount = 6;
+                render();
+                showToast(`Открыт сохранённый поиск «${found.name}»`);
+            } catch { /* каталог уже показан без фильтров — молча */ }
         }
 
         async function aiSearch() {

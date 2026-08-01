@@ -99,6 +99,14 @@ async function initDb() {
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             UNIQUE(owner_company, company_id)
         );
+        CREATE TABLE IF NOT EXISTS saved_searches (
+            id            SERIAL      PRIMARY KEY,
+            owner_company TEXT        NOT NULL,
+            name          TEXT        NOT NULL,
+            params        TEXT        NOT NULL DEFAULT '{}',
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS saved_searches_owner_idx ON saved_searches (owner_company);
         CREATE TABLE IF NOT EXISTS company_photos (
             id            SERIAL      PRIMARY KEY,
             company_id    INTEGER     NOT NULL,

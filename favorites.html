@@ -167,7 +167,7 @@
         <div class="fav-tabs">
             <button class="fav-tab active" onclick="setFavTab('suppliers',this)">Избранные поставщики</button>
             <button class="fav-tab" onclick="setFavTab('orders',this)">Избранные закупки</button>
-            <button class="fav-tab" onclick="setFavTab('lists',this)">Сохранённые списки</button>
+            <button class="fav-tab" onclick="setFavTab('lists',this)">Сохранённые поиски</button>
         </div>
 
         <!-- Tab: Suppliers -->
@@ -230,24 +230,13 @@
             </div>
         </div>
 
-        <!-- Tab: Lists -->
+        <!-- Tab: сохранённые поиски каталога -->
         <div id="tabLists" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                <span style="font-size:12.5px;color:var(--text-secondary);">3 сохранённых списка</span>
-                <button class="btn-primary" style="height:32px;font-size:12.5px;" onclick="createList()">＋ Создать список</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+                <span id="savedSearchCount" style="font-size:12.5px;color:var(--text-secondary);">Загрузка…</span>
+                <button class="btn-secondary" style="height:32px;font-size:12.5px;" onclick="window.location.href='catalog.html'">Искать в каталоге →</button>
             </div>
-            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">Поставщики РТИ</div>
-                <div class="fav-list-meta">3 компании · Обновлён 15.06.2026</div>
-            </div>
-            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">Металлопрокат Урал</div>
-                <div class="fav-list-meta">5 компаний · Обновлён 10.06.2026</div>
-            </div>
-            <div class="fav-list-card" onclick="openList(this)" style="cursor:pointer;">
-                <div class="fav-list-name">Насосное оборудование</div>
-                <div class="fav-list-meta">2 компании · Обновлён 01.06.2026</div>
-            </div>
+            <div id="savedSearchList"></div>
         </div>
     </div>
 
@@ -286,6 +275,7 @@
             initSidebarBadges();
             loadFavorites();
             loadFavRecommendations();
+            loadSavedSearches();
         });
 
         window.__pageInit = function() {
@@ -293,6 +283,7 @@
             initSidebarBadges();
             loadFavorites();
             loadFavRecommendations();
+            loadSavedSearches();
         };
 
         const MOCK_FAVS = [
@@ -310,37 +301,67 @@
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
         }
 
-        function createList() {
-            const modal = document.getElementById('createListModal');
-            modal.style.display = 'flex';
-            setTimeout(() => document.getElementById('newListName').focus(), 50);
+        /* Сохранённые поиски каталога. Заводятся кнопкой «Сохранить поиск» на
+           странице каталога, открываются здесь ссылкой catalog.html?search=<id>. */
+        function describeSavedSearch(p) {
+            const parts = [];
+            if (p.search) parts.push(`«${p.search}»`);
+            if (p.chip) parts.push(p.chip);
+            parts.push(...(p.categories || []), ...(p.specs || []), ...(p.certs || []));
+            if (p.region) parts.push(p.region);
+            if (p.verifiedOnly) parts.push('только проверенные');
+            return parts.length ? parts.join(' · ') : 'Весь каталог';
         }
 
-        function closeCreateListModal() {
-            document.getElementById('createListModal').style.display = 'none';
-            document.getElementById('newListName').value = '';
+        async function loadSavedSearches() {
+            const list = document.getElementById('savedSearchList');
+            const counter = document.getElementById('savedSearchCount');
+            if (!list) return;
+            let items = [];
+            try {
+                const r = await apiFetch(`${SERVER_URL}/favorites/searches`);
+                if (!r.ok) throw new Error();
+                items = await r.json();
+            } catch {
+                list.innerHTML = '<div class="fav-empty">Не удалось загрузить сохранённые поиски</div>';
+                if (counter) counter.textContent = '';
+                return;
+            }
+            if (counter) {
+                counter.textContent = items.length
+                    ? `${items.length} ${items.length === 1 ? 'сохранённый поиск' : 'сохранённых поиска'}`
+                    : 'Пока ничего не сохранено';
+            }
+            list.innerHTML = items.length ? items.map(s => {
+                const when = s.createdAt
+                    ? new Date(s.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '';
+                return `<div class="fav-list-card" style="display:flex;align-items:center;gap:12px;">
+                    <div style="flex:1;min-width:0;cursor:pointer;" onclick="openSavedSearch(${Number(s.id)})">
+                        <div class="fav-list-name">${escapeHtml(s.name)}</div>
+                        <div class="fav-list-meta">${escapeHtml(describeSavedSearch(s.params || {}))}${when ? ' · сохранён ' + when : ''}</div>
+                    </div>
+                    <button class="btn-secondary" style="height:30px;font-size:12px;" onclick="openSavedSearch(${Number(s.id)})">Открыть</button>
+                    <button class="btn-secondary" style="height:30px;font-size:12px;color:var(--error);" onclick="deleteSavedSearch(${Number(s.id)}, this)">Удалить</button>
+                </div>`;
+            }).join('') : '<div class="fav-empty">Сохранённых поисков нет. Задайте фильтры в каталоге и нажмите «Сохранить поиск».</div>';
         }
 
-        function confirmCreateList() {
-            const name = document.getElementById('newListName').value.trim();
-            if (!name) { document.getElementById('newListName').focus(); return; }
-            closeCreateListModal();
-            const container = document.querySelector('#tabLists');
-            if (!container) return;
-            const today = new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
-            const card = document.createElement('div');
-            card.className = 'fav-list-card';
-            card.style.cursor = 'pointer';
-            card.onclick = () => openList(card);
-            card.innerHTML = `<div class="fav-list-name">${escapeHtml(name)}</div><div class="fav-list-meta">0 компаний · Создан ${today}</div>`;
-            container.insertBefore(card, container.firstChild);
-            showFavToast(`Список «${name}» создан`);
+        function openSavedSearch(id) {
+            window.location.href = `catalog.html?search=${encodeURIComponent(id)}`;
         }
 
-        function openList(card) {
-            const name = card.querySelector('.fav-list-name')?.textContent || 'Список';
-            const meta = card.querySelector('.fav-list-meta')?.textContent || '';
-            showFavToast(`Список «${name}» · ${meta}`);
+        async function deleteSavedSearch(id, btn) {
+            if (btn) btn.disabled = true;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/favorites/searches/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                if (!r.ok) throw new Error();
+                showFavToast('Поиск удалён');
+                loadSavedSearches();
+            } catch {
+                if (btn) btn.disabled = false;
+                showFavToast('Не удалось удалить поиск');
+            }
         }
 
         function setFavTab(tab, btn) {
@@ -438,19 +459,6 @@
         }
     </script>
 
-    <div id="createListModal" onclick="if(event.target===this)closeCreateListModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);">
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Новый список</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">Введите название для нового списка избранных</div>
-            <input id="newListName" type="text" placeholder="Например: Поставщики РТИ" maxlength="60"
-                style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-primary);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;"
-                onkeydown="if(event.key==='Enter')confirmCreateList();if(event.key==='Escape')closeCreateListModal();">
-            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-                <button onclick="closeCreateListModal()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--card-border);background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;">Отмена</button>
-                <button onclick="confirmCreateList()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--accent-bright);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Создать</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
 
