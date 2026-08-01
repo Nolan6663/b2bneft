@@ -10,6 +10,7 @@ uploads/
 
 test-results/
 tests/e2e/admin-storage.json
+.shots/
 
 .worktrees/
 scripts/data/registry-gisp-raw.json

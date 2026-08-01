@@ -24,7 +24,10 @@
   .doc-wrap p, .doc-wrap li { font-size: 14.5px; line-height: 1.75; color: var(--text-secondary); }
   .doc-wrap ul { margin: 8px 0 8px 20px; }
   .doc-wrap a { color: var(--accent-bright); border-bottom: 1px solid var(--inner-border); }
-  .doc-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+  /* На 390px три колонки не влезают и страницу уносит вбок на 194px: таблица
+     скроллится внутри своей обёртки, а не тянет за собой весь документ. */
+  .doc-table-wrap { width: 100%; overflow-x: auto; margin: 12px 0; }
+  .doc-table { width: 100%; min-width: 560px; border-collapse: collapse; margin: 0; font-size: 13.5px; }
   .doc-table th, .doc-table td { border: 1px solid var(--inner-border); padding: 8px 10px; text-align: left; color: var(--text-secondary); }
   .doc-table th { color: var(--text-primary); font-weight: 700; }
 </style>
@@ -72,6 +75,7 @@
 
   <h2>5. Передача третьим лицам</h2>
   <p>Для работы платформы привлекаются сторонние сервисы. Каждому из них передаётся только тот объём данных, который необходим для его функции. Продажа персональных данных, передача их рекламным сетям и брокерам данных не производится.</p>
+  <div class="doc-table-wrap">
   <table class="doc-table">
     <thead>
       <tr><th>Получатель</th><th>Что передаётся</th><th>Для чего</th></tr>
@@ -129,6 +133,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
   <p>Кроме того, данные могут быть переданы государственным органам, если такая обязанность прямо предусмотрена законом.</p>
 
   <h2>6. Трансграничная передача</h2>
