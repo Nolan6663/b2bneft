@@ -1023,9 +1023,11 @@
                 const es = createEmptyState(isEmpty ? {
                     icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>`,
                     title: 'Ещё нет закупок',
-                    desc: 'Разместите первую закупку — поставщики откликнутся в течение часа',
-                    ctaText: '+ Создать закупку',
-                    ctaAction: 'openModal()'
+                    // Мастер собирает ТЗ по описанию или чертежу и сразу показывает
+                    // подходящие заводы — новичку он полезнее пустой формы.
+                    desc: 'Опишите задачу словами или приложите чертёж — соберём техническое задание и покажем, кто его выполнит',
+                    ctaText: 'Собрать ТЗ и разместить закупку',
+                    ctaHref: '/zayavka'
                 } : {
                     icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
                     title: 'Ничего не найдено',

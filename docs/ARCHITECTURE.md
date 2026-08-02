@@ -46,7 +46,8 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `routes/templates.js`, `routes/tasks.js`, `routes/notifications.js` | шаблоны закупок; задачи в чате сделки + контекст переписки; колокольчик |
 | `routes/seo.js` | админ-SEO: аудит страниц, синк GSC/Я.Вебмастер, данные для дашборда |
 | `routes/integrations.js` | CRUD подключений 1С/Bitrix24/AmoCRM/SAP |
-| `routes/public.js` | публичная статистика, geo-density, карта заводов, биржа мощностей, каталог, риск-скоринг по ИНН, публичная карточка компании |
+| `routes/public.js` | публичная статистика, geo-density, карта заводов, биржа мощностей, каталог, риск-скоринг по ИНН, публичная карточка компании + гостевые эндпоинты онбординга (`tz-draft`, `analyze-drawing`, `match-preview`, `company-by-inn`) — контакты предприятий в них не отдаются, потолки по IP стоят в `server.js` |
+| `zayavka.html`, `zavod.html`, `assets/onboarding.js` | мастера онбординга: заказчик собирает ТЗ и видит подбор до регистрации, завод входит по ИНН и получает предзаполненный профиль из реестра. Черновик — `sessionStorage`, чертёж — только в памяти вкладки |
 | `routes/analytics.js` | dashboard counts, CRM-стата поставщика, аналитика заказчика |
 | `lib/integrations-push.js` | push принятого КП в Bitrix24/AmoCRM/SAP (`triggerIntegrations`, `sapB1Login`) — фабрика над pool |
 | `lib/ai-client.js` | генерация ТЗ (заказчик) и сопроводительного письма КП (поставщик). Провайдер сменный через env; прод — GigaChat (нужен русский CA-сертификат из `certs/`, переменная в ecosystem.config.js) |

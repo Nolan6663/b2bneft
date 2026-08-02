@@ -40,7 +40,7 @@
     <a href="/dlya-postavshchikov">Поставщикам</a>
     <a href="/map">Карта предприятий</a>
   </nav>
-  <a href="/login#register" class="zc-cta">Разместить закупку</a>
+  <a href="/zayavka" class="zc-cta">Разместить закупку</a>
 </header>
 
 <main>
@@ -174,7 +174,7 @@
     <div id="producers-fallback" class="zc-fallback" style="display:none;">
       <p class="zc-fallback-lead" id="producers-fallback-lead">Открытых закупок в категории сейчас нет. Вот предприятия из каталога, которые работают по этому профилю:</p>
       <div id="producers-grid" class="zc-grid"></div>
-      <a class="zc-cta-btn" href="/login#register">Разместить закупку</a>
+      <a class="zc-cta-btn" href="/zayavka">Разместить закупку</a>
     </div>
 
     <h2 class="zc-h2">Частые вопросы</h2>
@@ -202,7 +202,7 @@
       <h2>Нужно изготовить по чертежу?</h2>
       <p>Разместите закупку — заявка уйдёт профильным заводам, предложения придут напрямую.</p>
     </div>
-    <a href="/login#register" class="zc-cta-btn">Разместить закупку</a>
+    <a href="/zayavka" class="zc-cta-btn">Разместить закупку</a>
   </div>
 </main>
 
@@ -228,7 +228,7 @@ function renderOrders(orders) {
       + (o.quantity ? '<span>Кол-во: ' + escapeHtml(o.quantity) + '</span>' : '')
       + '<span>' + escapeHtml(o.responses || 0) + ' предложений</span></div>'
       + '<div class="zc-card-footer"><span class="zc-company">••••••••</span>'
-      + '<a href="/login#register" class="zc-respond">Подать КП</a></div>'
+      + '<a href="/zavod" class="zc-respond">Подать КП</a></div>'
       + '</article>';
   }).join('');
 }

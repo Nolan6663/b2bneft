@@ -586,6 +586,53 @@ Nginx (обязательно на prod для WebSocket):
   • landing.html — FAQ: glass-панель, карточки-аккордеон; контакт info.texzakaz@gmail.com
   • Поддержка в сайдбаре (все страницы) → mailto:info.texzakaz@gmail.com
 
+  ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.08.2026 — онбординг: ценность до пароля)
+  ------------------------------------------------------------------------------
+  Спека: docs/superpowers/specs/2026-08-03-onboarding-design.md
+  План:  docs/superpowers/plans/2026-08-03-onboarding.md
+
+  Было: регистрация вела прямо в кабинет — заказчик упирался в пустую таблицу,
+  завод в форму на 1567 строк. Стало: два публичных мастера, регистрация
+  последним шагом.
+
+  • zayavka.html (/zayavka) — мастер заказчика: задача словами или чертёж →
+    сборка ТЗ → условия → «кто это сделает» с реальным подбором → регистрация →
+    публикация закупки одним потоком.
+  • zavod.html (/zavod) — мастер завода: ИНН → карточка предприятия из реестра →
+    контакты → операции чипами → город и загрузка → регистрация с профилем.
+  • assets/onboarding.js — общий каркас шагов: черновик в sessionStorage, файл
+    чертежа только в памяти вкладки (гостю на диск ничего не пишем).
+  • assets/onboarding.css — оформление «чертёжный цех», сторожится no-slop-тестом.
+
+  Гостевые эндпоинты (routes/public.js), потолки по IP в server.js:
+  • POST /api/public/tz-draft        — сборка ТЗ,  3/час
+  • POST /api/public/analyze-drawing — разбор чертежа, 3/час
+  • POST /api/public/match-preview   — подбор заводов, 30/час
+  • GET  /api/public/company-by-inn  — стаб по ИНН, 30/час
+  Контакты предприятий (телефон, email, сайт) гостю не отдаются ни в одном ответе.
+
+  Правила публикации:
+  • Первая закупка компании публикуется без подтверждённого email
+    (allowFirstOrderWithoutVerification в routes/orders.js). Вторая — 403.
+  • Пока email не подтверждён, письма о матче и инвайты заводам НЕ уходят;
+    заказ помечается orders.outbound_pending = true (колонка добавлена в db.js).
+  • POST /api/auth/verify-email отпускает придержанные рассылки ровно один раз:
+    flushPendingOutbound снимает флаг тем же UPDATE ... RETURNING.
+  • POST /api/auth/register принимает необязательный profile
+    {phone,website,city,products,capabilities[],productionLoad} — операции
+    фильтруются по seo/operations-data.js, пустые поля не затирают данные реестра.
+
+  Точки входа: лендинг, zakupki.html, генератор категорий, пустое состояние
+  кабинета заказчика → /zayavka; dlya-postavshchikov.html, инвайт-письма
+  (lib/registry-invites.js → /zavod?inn=…), карточка полноты профиля при
+  percent < 40 → /zavod.
+
+  Метрика: события onboarding_step_1..5, onboarding_order_published,
+  onboarding_factory_claimed. САМИ ЦЕЛИ В ИНТЕРФЕЙСЕ МЕТРИКИ ЗАВОДИТ ВЛАДЕЛЕЦ.
+
+  Проверка: npm run check && npm run test:unit (244 теста)
+
+
   ПОСЛЕДНИЕ ОБНОВЛЕНИЯ (03.07.2026 — чистка «AI-slop» дизайна по всем страницам)
   ------------------------------------------------------------------------------
   Убраны шаблонные AI-паттерны, стиль — плоский индустриальный (CSS-only,

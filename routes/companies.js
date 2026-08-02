@@ -74,7 +74,9 @@ function createCompaniesRouter(deps) {
                 [req.user.company]
             );
             if (!row) return res.json({ percent: 0, done: [], missing: [], complete: false, noProfile: true });
-            res.json(profileCompleteness(rowToCompany(row)));
+            // ИНН нужен кабинету, чтобы увести почти пустой профиль в мастер /zavod
+            // с уже подставленным предприятием.
+            res.json({ ...profileCompleteness(rowToCompany(row)), inn: row.inn || '' });
         } catch (e) { next(e); }
     });
 

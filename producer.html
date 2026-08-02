@@ -235,7 +235,7 @@
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button class="btn-secondary" onclick="openDrawingAnalysis()">Разобрать чертёж</button>
-                    <a class="btn-secondary" href="company-profile.html">Заполнить профиль</a>
+                    <a class="btn-secondary" id="pcFillLink" href="company-profile.html">Заполнить профиль</a>
                 </div>
             </div>
             <div class="pc-bar"><div class="pc-bar-fill" id="pcBar"></div></div>
@@ -567,6 +567,14 @@
             document.getElementById('pcList').innerHTML = (data.missing || []).slice(0, 4)
                 .map(m => `<li>— <b>${escapeHtml(m.label)}</b>: ${escapeHtml(m.unlocks)}</li>`)
                 .join('');
+            // Почти пустой профиль быстрее добить мастером: он предзаполняет поля из
+            // реестра и спрашивает операции галочками. Полупустой — уже проще формой.
+            const fillLink = document.getElementById('pcFillLink');
+            if (fillLink && data.percent < 40) {
+                const inn = (data.inn || '').replace(/\D/g, '');
+                fillLink.href = inn ? `/zavod?inn=${encodeURIComponent(inn)}` : '/zavod';
+                fillLink.textContent = 'Заполнить за 3 шага';
+            }
             card.style.display = '';
         }
 

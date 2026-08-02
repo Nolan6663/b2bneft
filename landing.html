@@ -869,7 +869,7 @@
         <p class="lp-rise" style="--d:2; margin:26px 0 0; font-size:19px; line-height:1.5; color:#2E4259; max-width:480px; font-weight:500;">Размещайте чертёж или ТЗ и получайте предложения напрямую от проверенных производителей.</p>
 
         <div id="lp-ctas" class="lp-rise" style="--d:4; display:flex; flex-wrap:wrap; gap:10px; margin-top:32px;">
-          <a href="login.html#register" class="lp-cta lp-cta-primary">
+          <a href="/zayavka" class="lp-cta lp-cta-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
             Разместить чертёж
           </a>
@@ -1614,7 +1614,7 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   prevBtn?.addEventListener('click', () => goTo(step - 1, -1));
   nextBtn?.addEventListener('click', () => {
     if (step < 3) goTo(step + 1, 1);
-    else window.location.href = 'login.html#register';
+    else window.location.href = '/zayavka';
   });
 
   document.addEventListener('keydown', e => {
