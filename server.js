@@ -587,6 +587,7 @@ const PUBLIC_PAGES = [
     'zakupki.html',
     'dlya-postavshchikov.html',
     'zayavka.html',
+    'zavod.html',
     'privacy.html', 'terms.html',
 ];
 PUBLIC_PAGES.forEach(page => {

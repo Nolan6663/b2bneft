@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Разместить предприятие — ТехЗаказ</title>
+<meta name="description" content="Введите ИНН — покажем, что о вашем предприятии уже есть в каталоге, дополните профиль за три шага и увидите подходящие закупки.">
+<link rel="canonical" href="https://texzakaz.ru/zavod">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/css/tokens.css?v=2026080301">
+<link rel="stylesheet" href="/assets/onboarding.css?v=2026080301">
+<script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,accurateTrackBounce:true,trackLinks:true});window.__tzYmId=110221667;</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/110221667" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+</style>
+</head>
+<body class="ob-page">
+
+<header class="ob-header">
+    <a class="ob-logo" href="/"><span class="ob-logo-mark">Т</span>ТЕХЗАКАЗ</a>
+    <a class="ob-header-link" href="/login">Уже есть аккаунт</a>
+</header>
+
+<div class="ob-shell">
+
+    <div class="ob-progress" role="list">
+        <div class="ob-progress-item" data-progress-dot="1" role="listitem">01 · ИНН</div>
+        <div class="ob-progress-item" data-progress-dot="2" role="listitem">02 · Контакты</div>
+        <div class="ob-progress-item" data-progress-dot="3" role="listitem">03 · Операции</div>
+        <div class="ob-progress-item" data-progress-dot="4" role="listitem">04 · Производство</div>
+        <div class="ob-progress-item" data-progress-dot="5" role="listitem">05 · Аккаунт</div>
+    </div>
+
+    <!-- ШАГ 1: ИНН -->
+    <section class="ob-card" data-step="1" hidden>
+        <div class="ob-step-num">Шаг 01</div>
+        <h1 class="ob-title">Найдём ваше предприятие</h1>
+        <p class="ob-lead">В каталоге уже больше четырёх тысяч заводов из государственного реестра. Если ваш среди них — анкету заполнять не придётся, только проверить.</p>
+
+        <div class="ob-field">
+            <label class="ob-label" for="inn">ИНН предприятия</label>
+            <input class="ob-input" id="inn" type="text" inputmode="numeric" placeholder="10 или 12 цифр">
+        </div>
+
+        <div id="foundBox" hidden></div>
+
+        <div class="ob-actions">
+            <button class="ob-btn" type="button" id="findCompany">Найти предприятие</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn ob-btn-ghost" type="button" id="skipFind" hidden>Продолжить</button>
+        </div>
+        <div class="ob-error" id="err1" hidden></div>
+    </section>
+
+    <!-- ШАГ 2: контакты -->
+    <section class="ob-card" data-step="2" hidden>
+        <div class="ob-step-num">Шаг 02</div>
+        <h2 class="ob-title">Контакты для заказчиков</h2>
+        <p class="ob-lead">Проверьте то, что мы нашли в открытых источниках, и поправьте, если устарело.</p>
+
+        <div class="ob-field">
+            <label class="ob-label" for="company">Название предприятия</label>
+            <input class="ob-input" id="company" type="text" placeholder="ООО «Ваш завод»">
+        </div>
+
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="phone">Телефон</label>
+                <input class="ob-input" id="phone" type="tel" placeholder="+7 900 000-00-00">
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="website">Сайт</label>
+                <input class="ob-input" id="website" type="text" placeholder="zavod.ru">
+            </div>
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="1">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" data-next="3">Дальше</button>
+        </div>
+        <div class="ob-error" id="err2" hidden></div>
+    </section>
+
+    <!-- ШАГ 3: операции -->
+    <section class="ob-card" data-step="3" hidden>
+        <div class="ob-step-num">Шаг 03</div>
+        <h2 class="ob-title">Что вы умеете</h2>
+        <p class="ob-lead">По этим отметкам вас находят заказчики и подбор закупок. Отмечайте только то, что делаете сами.</p>
+
+        <div class="ob-field">
+            <label class="ob-label">Технологические операции</label>
+            <div class="ob-chips">
+                <button class="ob-chip" type="button" data-op="svarka" aria-pressed="false">Сварка</button>
+                <button class="ob-chip" type="button" data-op="gibka" aria-pressed="false">Гибка и листовой раскрой</button>
+                <button class="ob-chip" type="button" data-op="litye" aria-pressed="false">Литьё</button>
+                <button class="ob-chip" type="button" data-op="chpu" aria-pressed="false">Обработка на ЧПУ</button>
+                <button class="ob-chip" type="button" data-op="frezerovka" aria-pressed="false">Фрезерные работы</button>
+                <button class="ob-chip" type="button" data-op="tokarka" aria-pressed="false">Токарные работы</button>
+                <button class="ob-chip" type="button" data-op="pokrytiya" aria-pressed="false">Покрытия и гальваника</button>
+                <button class="ob-chip" type="button" data-op="shtampovka" aria-pressed="false">Штамповка</button>
+                <button class="ob-chip" type="button" data-op="lazernaya-rezka" aria-pressed="false">Лазерная резка</button>
+                <button class="ob-chip" type="button" data-op="plazmennaya-rezka" aria-pressed="false">Плазменная резка</button>
+                <button class="ob-chip" type="button" data-op="termoobrabotka" aria-pressed="false">Термообработка</button>
+                <button class="ob-chip" type="button" data-op="mehobrabotka" aria-pressed="false">Механическая обработка</button>
+            </div>
+        </div>
+
+        <div class="ob-field">
+            <label class="ob-label" for="products">Продукция и виды работ</label>
+            <textarea class="ob-textarea" id="products" placeholder="Например: манжеты и кольца из полиуретана, РТИ по чертежу заказчика, формовые изделия"></textarea>
+            <div class="ob-hint">По этому тексту вас находят в поиске и в каталоге операций.</div>
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="2">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" data-next="4">Дальше</button>
+        </div>
+        <div class="ob-error" id="err3" hidden></div>
+    </section>
+
+    <!-- ШАГ 4: производство -->
+    <section class="ob-card" data-step="4" hidden>
+        <div class="ob-step-num">Шаг 04</div>
+        <h2 class="ob-title">Производство</h2>
+        <p class="ob-lead">Город определяет попадание на карту и на страницу региона. Загрузку заказчики используют как фильтр по свободным мощностям.</p>
+
+        <div class="ob-field">
+            <label class="ob-label" for="city">Город</label>
+            <input class="ob-input" id="city" type="text" placeholder="Ижевск">
+        </div>
+
+        <div class="ob-field">
+            <label class="ob-label" for="load">Текущая загрузка производства: <span id="loadValue">50</span>%</label>
+            <input id="load" type="range" min="0" max="100" step="5" value="50" style="width:100%;">
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="3">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" id="toMatches">Показать подходящие закупки</button>
+        </div>
+        <div class="ob-error" id="err4" hidden></div>
+    </section>
+
+    <!-- ШАГ 5: аккаунт -->
+    <section class="ob-card" data-step="5" hidden>
+        <div class="ob-step-num">Шаг 05</div>
+        <h2 class="ob-title">Аккаунт предприятия</h2>
+        <p class="ob-lead" id="matchLead">Закупки под ваш профиль уже есть. Аккаунт нужен, чтобы откликаться и вести переписку.</p>
+
+        <div class="ob-match-list" id="matchList"></div>
+
+        <div class="ob-row" style="margin-top:20px;">
+            <div class="ob-field">
+                <label class="ob-label" for="regEmail">Рабочий email</label>
+                <input class="ob-input" id="regEmail" type="email" placeholder="you@zavod.ru" autocomplete="email">
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="regPassword">Пароль</label>
+                <input class="ob-input" id="regPassword" type="password" placeholder="Минимум 8 символов" autocomplete="new-password">
+            </div>
+        </div>
+
+        <label class="ob-consent">
+            <input type="checkbox" id="regConsent">
+            <span>Согласен на <a href="/privacy" target="_blank" rel="noopener">обработку персональных данных</a> и принимаю <a href="/terms" target="_blank" rel="noopener">условия использования</a></span>
+        </label>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="4">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" id="finish">Создать аккаунт</button>
+        </div>
+        <div class="ob-error" id="err5" hidden></div>
+    </section>
+
+</div>
+
+<script src="/assets/onboarding.js?v=2026080301"></script>
+<script>
+(function () {
+    const W = window.TZWizard;
+    const $ = (id) => document.getElementById(id);
+    let claimed = false; // предприятие уже присвоено другим аккаунтом
+
+    function currentProfile() {
+        return {
+            phone: $('phone').value.trim(),
+            website: $('website').value.trim(),
+            city: $('city').value.trim(),
+            products: $('products').value.trim(),
+            capabilities: Array.from(document.querySelectorAll('.ob-chip[aria-pressed="true"]')).map(b => b.dataset.op),
+            productionLoad: Number($('load').value),
+        };
+    }
+
+    function fillFound(c) {
+        const box = $('foundBox');
+        const source = c.source === 'gisp-pp719' ? 'Реестр Минпромторга' : 'Из открытых данных';
+        box.innerHTML = `
+            <div class="ob-found">
+                <div class="ob-found-name">${W.escapeHtml(c.company)}</div>
+                <div class="ob-found-row">${W.escapeHtml([c.city, c.specialization].filter(Boolean).join(' · '))}</div>
+                ${c.products ? `<div class="ob-found-row">${W.escapeHtml(c.products)}</div>` : ''}
+                <div class="ob-stamp">${W.escapeHtml(source)}</div>
+            </div>`;
+        box.hidden = false;
+        $('company').value = c.company || '';
+        $('city').value = c.city || '';
+        $('products').value = c.products || '';
+        $('skipFind').textContent = 'Это наше предприятие';
+        $('skipFind').hidden = false;
+    }
+
+    function fillNotFound() {
+        const box = $('foundBox');
+        box.innerHTML = '<div class="ob-found"><div class="ob-found-name">В каталоге пока нет</div>'
+            + '<div class="ob-found-row">Заведём профиль с нуля — это три коротких шага.</div></div>';
+        box.hidden = false;
+        $('skipFind').textContent = 'Завести профиль';
+        $('skipFind').hidden = false;
+    }
+
+    function fillClaimed(c) {
+        const box = $('foundBox');
+        box.innerHTML = `
+            <div class="ob-found">
+                <div class="ob-found-name">${W.escapeHtml(c.company)}</div>
+                <div class="ob-found-row">Предприятие уже зарегистрировано на площадке. Войдите под своей учётной записью или попросите коллегу пригласить вас в команду.</div>
+            </div>`;
+        box.hidden = false;
+        $('skipFind').hidden = true;
+    }
+
+    $('findCompany').onclick = async () => {
+        const inn = $('inn').value.replace(/\D/g, '');
+        if (inn.length !== 10 && inn.length !== 12) return W.showError($('err1'), 'ИНН — 10 или 12 цифр');
+        W.showError($('err1'), '');
+        const btn = $('findCompany');
+        W.setBusy(btn, true, 'Ищу…');
+        try {
+            const out = await W.get('/api/public/company-by-inn?inn=' + encodeURIComponent(inn));
+            W.setDraft({ inn });
+            claimed = Boolean(out.found && out.company.claimed);
+            if (!out.found) fillNotFound();
+            else if (claimed) fillClaimed(out.company);
+            else fillFound(out.company);
+        } catch (err) {
+            W.showError($('err1'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    $('skipFind').onclick = () => {
+        if (claimed) return;
+        W.setDraft({ company: $('company').value.trim() });
+        W.goStep(2);
+    };
+
+    $('load').oninput = () => { $('loadValue').textContent = $('load').value; };
+
+    document.querySelectorAll('.ob-chip').forEach(chip => {
+        chip.onclick = () => {
+            const on = chip.getAttribute('aria-pressed') === 'true';
+            chip.setAttribute('aria-pressed', on ? 'false' : 'true');
+            W.setDraft({ capabilities: currentProfile().capabilities });
+        };
+    });
+
+    $('toMatches').onclick = async () => {
+        const profile = currentProfile();
+        if (!$('company').value.trim()) return W.showError($('err4'), 'Укажите название предприятия — оно на шаге «Контакты»');
+        W.showError($('err4'), '');
+        W.setDraft({ company: $('company').value.trim(), ...profile });
+        const btn = $('toMatches');
+        W.setBusy(btn, true, 'Подбираю закупки…');
+        try {
+            const out = await W.post('/api/public/match-preview', {
+                title: profile.products.slice(0, 200),
+                description: [profile.products, profile.capabilities.join(', ')].filter(Boolean).join('. '),
+                category: '',
+            });
+            $('matchLead').textContent = out.total
+                ? 'Под ваш профиль сейчас подходит закупок: ' + out.total + '. Аккаунт нужен, чтобы откликаться и вести переписку.'
+                : 'Активных закупок под ваш профиль сейчас нет — придут уведомлением, как только появятся.';
+            $('matchList').innerHTML = '';
+        } catch (err) {
+            // Подбор — украшение шага, без него регистрация всё равно должна работать
+            $('matchLead').textContent = 'Аккаунт нужен, чтобы откликаться на закупки и вести переписку.';
+        } finally {
+            W.setBusy(btn, false);
+            W.goStep(5);
+        }
+    };
+
+    $('finish').onclick = async () => {
+        const email = $('regEmail').value.trim();
+        const password = $('regPassword').value;
+        const company = $('company').value.trim();
+        if (!company) return W.showError($('err5'), 'Укажите название предприятия на шаге «Контакты»');
+        if (!email) return W.showError($('err5'), 'Укажите рабочий email');
+        if (password.length < 8) return W.showError($('err5'), 'Пароль — минимум 8 символов');
+        if (!$('regConsent').checked) return W.showError($('err5'), 'Нужно согласие на обработку данных');
+        W.showError($('err5'), '');
+        const btn = $('finish');
+        W.setBusy(btn, true, 'Создаю аккаунт…');
+        try {
+            await W.post('/api/auth/register', {
+                email, password, company,
+                inn: (W.getDraft().inn || $('inn').value).replace(/\D/g, ''),
+                role: 'producer',
+                consent: true,
+                profile: currentProfile(),
+            });
+            W.goal('onboarding_factory_claimed');
+            W.clearDraft();
+            window.location.href = '/producer';
+        } catch (err) {
+            W.showError($('err5'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    document.querySelectorAll('[data-back]').forEach(btn => {
+        btn.onclick = () => W.goStep(Number(btn.dataset.back));
+    });
+    document.querySelectorAll('[data-next]').forEach(btn => {
+        btn.onclick = () => {
+            W.setDraft({ company: $('company').value.trim(), ...currentProfile() });
+            W.goStep(Number(btn.dataset.next));
+        };
+    });
+
+    // Инвайт-письмо приводит сюда с готовым ИНН — ищем сразу, без лишнего клика
+    const fromInvite = new URLSearchParams(location.search).get('inn');
+    if (fromInvite) {
+        $('inn').value = fromInvite;
+        W.mount(5);
+        $('findCompany').click();
+    } else {
+        W.mount(5);
+    }
+})();
+</script>
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    /* color-scheme + явные цвета — страховка от принудительного тёмного режима
+       браузера и тёмных расширений: они перекрашивают текст по своим правилам и
+       на белом футере дают белым по белому. Реквизиты и ссылку на политику
+       обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
+    /* position + z-index обязательны: без собственного контекста наложения
+       WebKit (Safari на iPhone, Яндекс.Браузер) футер не отрисовывал — блок
+       занимал место и ловил клики, поэтому по невидимой ссылке можно было
+       уйти в политику, но на экране была пустая полоса. Chromium на десктопе
+       рисовал нормально, из-за чего ошибка ловилась только на устройствах. */
+    .tz-footer { position: relative; z-index: 1; grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-copy,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-links a,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-req a,
+    :root:not([data-theme="dark"]) .tz-cookie { color: #64748B; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-org { color: #0F172A; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
+</body>
+</html>
