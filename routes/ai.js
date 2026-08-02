@@ -4,7 +4,7 @@ const express = require('express');
 const tzAi = require('../lib/ai-client');
 
 function createAiRouter(deps) {
-    const { pool, requireAuth, rowToCompany, genAI } = deps;
+    const { pool, requireAuth, rowToCompany, genAI, handleDrawingImageUpload } = deps;
 
     const router = express.Router();
 
@@ -127,7 +127,30 @@ ${catalog}
 
     router.get('/ai/tz-status', requireAuth, (req, res) => {
         const cfg = tzAi.getTzAiConfig();
-        res.json({ configured: cfg.configured, model: cfg.configured ? cfg.model : null });
+        res.json({
+            configured: cfg.configured,
+            model: cfg.configured ? cfg.model : null,
+            drawing: cfg.configured && cfg.provider === 'gigachat',
+        });
+    });
+
+    // Разбор чертежа: картинка → предварительная техкарта. Файл приходит одним
+    // запросом и в базе не оседает — модели он нужен только на время ответа.
+    router.post('/ai/analyze-drawing', requireAuth, handleDrawingImageUpload, async (req, res, next) => {
+        try {
+            if (!req.file) return res.status(400).json({ error: 'Приложите изображение чертежа' });
+            const { card, model } = await tzAi.analyzeDrawing({
+                buffer: req.file.buffer,
+                filename: req.file.originalname,
+                mime: req.file.mimetype,
+            });
+            res.json({ card, model });
+        } catch (e) {
+            if (e.code === 'AI_FORMAT') return res.status(415).json({ error: e.message });
+            if (e.code === 'AI_NOT_CONFIGURED') return res.status(503).json({ error: 'Разбор чертежей не настроен на сервере' });
+            if (e.code === 'AI_EMPTY') return res.status(502).json({ error: 'Модель не смогла прочитать чертёж. Попробуйте более чёткое изображение' });
+            next(e);
+        }
     });
 
     router.post('/ai/generate-proposal', requireAuth, async (req, res, next) => {

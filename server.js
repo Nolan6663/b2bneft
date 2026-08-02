@@ -409,6 +409,29 @@ function handleKPUpload(req, res, next) {
     });
 }
 
+// Картинка чертежа для разбора моделью: живёт только в памяти запроса, в хранилище
+// не попадает. Модель принимает растр, поэтому DWG и PDF сюда не пускаем.
+const DRAWING_IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.webp'];
+const uploadDrawingImage = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 12 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!DRAWING_IMAGE_EXT.includes(ext)) {
+            return cb(new Error('Нужна картинка чертежа: PNG, JPG, TIFF или BMP. Для PDF и DWG сделайте снимок листа.'));
+        }
+        if (BLOCKED_MIME.has(file.mimetype)) return cb(new Error('Недопустимый MIME-тип файла'));
+        cb(null, true);
+    },
+}).single('drawing');
+
+function handleDrawingImageUpload(req, res, next) {
+    uploadDrawingImage(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить файл' });
+        next();
+    });
+}
+
 const uploadPhoto = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
@@ -1411,6 +1434,7 @@ const routesDeps = {
     optionalAuth,
     requireVerifiedEmail,
     handleDrawingUpload,
+    handleDrawingImageUpload,
     handleKPUpload,
     handlePhotoUpload,
     persistUpload,
