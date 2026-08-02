@@ -1024,7 +1024,19 @@ async function handleReset() {
   <style>
     /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
        а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
-    .tz-footer { grid-column: 1 / -1; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    /* color-scheme + явные цвета — страховка от принудительного тёмного режима
+       браузера и тёмных расширений: они перекрашивают текст по своим правилам и
+       на белом футере дают белым по белому. Реквизиты и ссылку на политику
+       обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
+    .tz-footer { grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-copy,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-links a,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-req a,
+    :root:not([data-theme="dark"]) .tz-cookie { color: #64748B; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-org { color: #0F172A; }
     .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
     .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
     .tz-footer-line { line-height: 1.7; }
