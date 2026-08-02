@@ -300,6 +300,27 @@ app.post('/api/ai-search', aiLimiter);
 app.post('/api/ai/generate-tz', aiLimiter);
 app.post('/api/ai/generate-proposal', aiLimiter);
 
+// Гостевой онбординг: мастера /zayavka и /zavod работают без авторизации,
+// поэтому потолок ставим по IP — иначе бесплатный доступ к модели и к подбору.
+const guestAiLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Пока хватит — за час можно собрать три задания. Зарегистрируйтесь, чтобы продолжить без ограничений.' }
+});
+const guestLookupLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много запросов. Подождите немного или зарегистрируйтесь.' }
+});
+app.post('/api/public/tz-draft', guestAiLimiter);
+app.post('/api/public/analyze-drawing', guestAiLimiter);
+app.post('/api/public/match-preview', guestLookupLimiter);
+app.get('/api/public/company-by-inn', guestLookupLimiter);
+
 // ===================== WEBSOCKET =====================
 let Server = null;
 try { Server = require('socket.io').Server; }

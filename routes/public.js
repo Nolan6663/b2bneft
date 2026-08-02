@@ -14,6 +14,7 @@ function createPublicRouter(deps) {
         getProducerCategories,
         getCityProductionPoint,
         offsetProductionPoint,
+        matchedProducers,
     } = deps;
 
     const router = express.Router();
@@ -350,6 +351,62 @@ function createPublicRouter(deps) {
 
             const byCategory = await producersByCategory();
             res.json((byCategory.get(category) || []).slice(0, limit));
+        } catch (e) { next(e); }
+    });
+
+    // ===================== ГОСТЕВОЙ ОНБОРДИНГ =====================
+    // Мастер /zayavka показывает незарегистрированному заказчику, кто возьмётся за
+    // его задачу. Контакты предприятий не отдаём: за ними на площадку и приходят.
+    router.post('/public/match-preview', async (req, res, next) => {
+        try {
+            const { title, category, description, quantity } = req.body || {};
+            if (!String(title || '').trim() && !String(description || '').trim()) {
+                return res.status(400).json({ error: 'Опишите, что нужно изготовить' });
+            }
+            const draft = {
+                title: String(title || '').slice(0, 200),
+                category: String(category || '').slice(0, 100),
+                description: String(description || '').slice(0, 4000),
+                quantity: quantity ? Number(quantity) : null,
+            };
+            const matched = await matchedProducers(draft, 0, false);
+            res.json({
+                total: matched.length,
+                items: matched.slice(0, 6).map(m => ({
+                    company: m.company,
+                    city: m.city || '',
+                    products: String(m.products || '').slice(0, 160),
+                    score: Number(m.score) || 0,
+                })),
+            });
+        } catch (e) { next(e); }
+    });
+
+    // Завод вводит ИНН — показываем, что мы про него уже знаем из реестра, вместо
+    // анкеты на пятнадцать полей.
+    router.get('/public/company-by-inn', async (req, res, next) => {
+        try {
+            const inn = String(req.query.inn || '').replace(/\D/g, '');
+            if (inn.length !== 10 && inn.length !== 12) {
+                return res.status(400).json({ error: 'ИНН — 10 или 12 цифр' });
+            }
+            const { rows: [row] } = await pool.query(
+                "SELECT id, company, city, products, specialization, source, claimed FROM companies WHERE inn = $1 AND role = 'producer' LIMIT 1",
+                [inn]
+            );
+            if (!row) return res.json({ found: false });
+            res.json({
+                found: true,
+                company: {
+                    id: row.id,
+                    company: row.company,
+                    city: row.city || '',
+                    products: String(row.products || '').slice(0, 400),
+                    specialization: row.specialization || '',
+                    source: row.source || '',
+                    claimed: Boolean(row.claimed),
+                },
+            });
         } catch (e) { next(e); }
     });
 
