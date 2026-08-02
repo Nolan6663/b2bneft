@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseJsonFromLlm } = require('../../lib/ai-client');
+const { parseJsonFromLlm, repairLlmJson } = require('../../lib/ai-client');
 
 // Чек-лист приходит от модели то строками, то объектами. Логика приведения живёт
 // в generateProcurementTz; здесь проверяем разбор ответа и саму нормализацию тем
@@ -36,6 +36,58 @@ test('разбор ответа: JSON в markdown-обёртке', () => {
 test('разбор ответа: пояснение вокруг объекта', () => {
     const p = parseJsonFromLlm('Вот ТЗ:\n{"title":"Втулки","description":"д"}\nГотово.');
     assert.equal(p.title, 'Втулки');
+});
+
+// Обе поломки ниже сняты с живых ответов GigaChat на генерации ТЗ 02.08.2026 —
+// из-за них прод отдавал 500 «Не удалось разобрать ответ модели».
+test('разбор ответа: лишний пустой литерал вместо запятой между полями', () => {
+    const p = parseJsonFromLlm([
+        '{',
+        '  "title": "Манжеты уплотнительные РТИ",',
+        '  "description": "1. Назначение\\n  Уплотнение соединений."',
+        '  "",',
+        '  "checklist": ["Проверить размеры"]',
+        '}',
+    ].join('\n'));
+    assert.equal(p.title, 'Манжеты уплотнительные РТИ');
+    assert.ok(p.description.includes('Уплотнение соединений'));
+    assert.deepEqual(p.checklist, ['Проверить размеры']);
+});
+
+test('разбор ответа: живые переводы строки внутри значения', () => {
+    const p = parseJsonFromLlm('{"title":"Шкаф НКУ","description":"1. Назначение: распределение.\n\n2. Ток: 400 А.\tIP54","checklist":["Проверить ГОСТ"]}');
+    assert.equal(p.title, 'Шкаф НКУ');
+    assert.ok(p.description.includes('\n\n2. Ток'));
+    assert.ok(p.description.includes('\tIP54'));
+});
+
+test('разбор ответа: обе поломки разом и текст вокруг объекта', () => {
+    const p = parseJsonFromLlm([
+        'Вот ТЗ:',
+        '{',
+        '  "title": "Фланцы 09Г2С",',
+        '  "description": "1. Назначение: соединение трубопроводов.',
+        '2. Материал: сталь 09Г2С."',
+        '  "",',
+        '  "checklist": ["Сертификаты качества"]',
+        '}',
+        'Готово.',
+    ].join('\n'));
+    assert.equal(p.title, 'Фланцы 09Г2С');
+    assert.ok(p.description.includes('2. Материал'));
+});
+
+test('починка не трогает валидный JSON и настоящие пустые значения', () => {
+    const src = '{"title":"","description":"a\\nb","checklist":["",""]}';
+    assert.equal(repairLlmJson(src), src);
+    const p = parseJsonFromLlm(src);
+    assert.equal(p.title, '');
+    assert.equal(p.description, 'a\nb');
+    assert.deepEqual(p.checklist, ['', '']);
+});
+
+test('неразбираемый ответ по-прежнему кидает ошибку, а не выдумывает объект', () => {
+    assert.throws(() => parseJsonFromLlm('Извините, не могу помочь с этим запросом.'));
 });
 
 test('чек-лист объектами не превращается в [object Object]', () => {
