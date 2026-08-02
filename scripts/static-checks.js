@@ -234,7 +234,9 @@ function checkInlineHandlerQuoting() {
       // Экранирование бывает и вручную: `JSON.stringify(x).replace(/"/g, '&quot;')`.
       // Смотрим хвост подстановки — если кавычки уже заменены, вопросов нет.
       const tail = text.slice(m.index, m.index + 260);
-      if (/escapeHtml\(\s*JSON\.stringify/.test(tail)) continue;
+      // escapeHtml здесь не годится: он не трогает кавычки (innerText → innerHTML).
+      // Кавычки закрывает только escapeAttr или ручная замена на &quot;.
+      if (/escapeAttr\(\s*JSON\.stringify/.test(tail)) continue;
       if (/replace\(\s*\/"\s*\/g\s*,\s*['"]&quot;['"]\s*\)/.test(tail)) continue;
       const line = text.slice(0, m.index).split('\n').length;
       suspects.push(`${rel}:${line}`);

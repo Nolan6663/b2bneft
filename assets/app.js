@@ -1058,6 +1058,23 @@ function isDrawingPreviewable(fileName) {
   return DRAWING_PREVIEW_EXT.has(drawingFileExt(fileName));
 }
 
+/**
+ * Экранирование для значения HTML-атрибута.
+ *
+ * escapeHtml выше делает innerText → innerHTML: он закрывает `&`, `<` и `>`,
+ * но кавычки оставляет как есть. Внутри текста это безопасно, а внутри
+ * onclick="..." — обрывает атрибут: кнопка «Просмотр» и «Принять» получали
+ * `onclick="openDrawingPreview(9, "` и молча не работали.
+ */
+function escapeAttr(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function drawingDownloadUrl(orderId) {
   return `${SERVER_URL}/orders/${orderId}/drawing`;
 }
@@ -1078,7 +1095,7 @@ function buildDrawingLinksHtml(orderId, drawing) {
   // ни на одном чертеже. escapeHtml превращает кавычки в &quot;, парсер вернёт
   // их обратно уже внутри значения атрибута.
   const previewBtn = previewable
-    ? `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="openDrawingPreview(${orderId}, ${escapeHtml(JSON.stringify(name))})">Просмотр</button>`
+    ? `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="openDrawingPreview(${orderId}, ${escapeAttr(JSON.stringify(name))})">Просмотр</button>`
     : '';
   const hint = previewable ? '' : '<span style="font-size:11px;color:var(--text-secondary);">Просмотр в браузере: PDF или изображение</span>';
   return `<div class="drawing-links" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;">
@@ -1364,7 +1381,7 @@ function renderKpRecommendationCard(proposals, options = {}) {
       </div>
       ${reasonsHtml ? `<ul class="kp-rec-reasons">${reasons.map(r => `<li class="kp-rec-reasons-item">${uiIcon('check', 13)}<span>${escapeHtml(r)}</span></li>`).join('')}</ul>` : ''}
       <div class="kp-rec-actions">
-        <button type="button" class="btn-primary kp-rec-btn-primary" onclick="${acceptFn}(${p.id || 0}, ${escapeHtml(JSON.stringify(p._name))})">Выбрать этого поставщика</button>
+        <button type="button" class="btn-primary kp-rec-btn-primary" onclick="${acceptFn}(${p.id || 0}, ${escapeAttr(JSON.stringify(p._name))})">Выбрать этого поставщика</button>
         ${compareFn ? `<button type="button" class="kp-rec-btn-ghost" onclick="${compareFn}()">${uiIcon('grid', 14)} Сравнить все КП</button>` : ''}
       </div>
     </div>
@@ -1424,7 +1441,7 @@ function renderKpCompareTable(proposals, options = {}) {
     const priceBg = isBP ? 'background:rgba(18,168,102,.1);' : isWP ? 'background:rgba(224,112,112,.07);' : '';
     const daysBg = isBD ? 'background:rgba(59,130,246,.1);' : isWD ? 'background:rgba(224,112,112,.07);' : '';
     const acceptCell = showAccept
-      ? `<button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="${acceptFn}(${p.id || 0}, ${escapeHtml(JSON.stringify(p._name))})">Выбрать</button>`
+      ? `<button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="${acceptFn}(${p.id || 0}, ${escapeAttr(JSON.stringify(p._name))})">Выбрать</button>`
       : '';
     const isRec = recWinner && (p.id === recWinner.id || p._name === recWinner._name);
     return `<tr style="${isRec ? 'background:rgba(255,106,0,.04);' : ''}border-bottom:1px solid var(--inner-border);">

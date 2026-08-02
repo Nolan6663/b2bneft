@@ -1423,7 +1423,7 @@
                         } else if (isPending) {
                             actionCell = `
                                 <div class="proposal-actions">
-                                    <button class="btn-primary" onclick="acceptProposal(${prop.id}, ${escapeHtml(JSON.stringify(prop.company))})">Принять</button>
+                                    <button class="btn-primary" onclick="acceptProposal(${prop.id}, ${escapeAttr(JSON.stringify(prop.company))})">Принять</button>
                                     <button class="btn-secondary btn-reject" onclick="rejectProposal(${prop.id})">Отклонить</button>
                                 </div>`;
                         } else {
