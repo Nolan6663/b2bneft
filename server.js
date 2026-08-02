@@ -611,7 +611,7 @@ app.get('/zakupki/region/:slug', async (req, res, next) => {
         const lead = `В каталоге ${stats.total} ${regionPlural(stats.total, 'предприятие', 'предприятия', 'предприятий')} ${region.where}: производства из реестра Минпромторга и компании, которые сами завели профиль на площадке. Закупка размещается по чертежу или техническому заданию — заводы отвечают напрямую, без посредников и тендерных процедур.`;
 
         const statsHtml = [
-            `<div class="zr-stat"><b>${stats.total}</b><span>предприятий в каталоге</span></div>`,
+            `<div class="zr-stat"><b>${stats.total}</b><span>${regionPlural(stats.total, 'предприятие', 'предприятия', 'предприятий')} в каталоге</span></div>`,
             stats.claimed ? `<div class="zr-stat"><b>${stats.claimed}</b><span>с заполненным профилем</span></div>` : '',
             stats.verified ? `<div class="zr-stat"><b>${stats.verified}</b><span>проверено платформой</span></div>` : '',
         ].filter(Boolean).join('\n      ');
