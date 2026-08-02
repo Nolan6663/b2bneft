@@ -218,8 +218,39 @@ function checkCategoryPagesSynced() {
   }
 }
 
+/** Кавычки внутри onclick="..." обрывают атрибут. Так молча умерла кнопка
+ *  «Просмотр» у чертежа: JSON.stringify(name) вставлял двойные кавычки прямо в
+ *  атрибут, и браузер получал `onclick="openDrawingPreview(9, "`. Ловим шаблон,
+ *  где в двойных кавычках атрибута-обработчика стоит невыэкранированная
+ *  подстановка со строкой. */
+function checkInlineHandlerQuoting() {
+  const suspects = [];
+  const files = [...jsFiles, ...htmlFiles];
+  for (const rel of files) {
+    const text = fs.readFileSync(path.join(root, rel), 'utf8');
+    const re = /on[a-z]+\s*=\s*"[^"]*\$\{\s*JSON\.stringify\(/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      // Экранирование бывает и вручную: `JSON.stringify(x).replace(/"/g, '&quot;')`.
+      // Смотрим хвост подстановки — если кавычки уже заменены, вопросов нет.
+      const tail = text.slice(m.index, m.index + 260);
+      if (/escapeHtml\(\s*JSON\.stringify/.test(tail)) continue;
+      if (/replace\(\s*\/"\s*\/g\s*,\s*['"]&quot;['"]\s*\)/.test(tail)) continue;
+      const line = text.slice(0, m.index).split('\n').length;
+      suspects.push(`${rel}:${line}`);
+    }
+  }
+  if (suspects.length) {
+    fail(
+      'Подстановка JSON.stringify прямо в onclick="..." рвёт атрибут кавычками — '
+      + 'оберни в escapeHtml(...):\n' + suspects.join('\n')
+    );
+  }
+}
+
 function main() {
   checkJavaScriptSyntax();
+  checkInlineHandlerQuoting();
   const inlineScripts = checkInlineScripts();
   checkLocalReferences();
   checkCssBalance();
