@@ -638,7 +638,7 @@
             loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
+            if (!isGuest) { loadMyProposals().then(loadOrdersForProducers); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
             if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
@@ -650,7 +650,7 @@
             loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
+            if (!isGuest) { loadMyProposals().then(loadOrdersForProducers); loadCrmStats(); loadActiveAuctions(); }
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
@@ -793,10 +793,12 @@
                 // Drawing
                 let drawingHTML = '';
                 if (!isGuest && order.drawing) {
-                    // Кнопка разбора идёт рядом со «Скачать»: чертёж уже в хранилище,
-                    // поставщику незачем выгружать его и загружать обратно вручную.
-                    drawingHTML = buildDrawingLinksHtml(order.id, order.drawing)
-                        .replace('</div>', `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button></div>`);
+                    // Кнопка разбора идёт рядом со «Скачать», но только там, где чертёж
+                    // нам вообще открыт: доступ к файлу заказчик даёт после отклика.
+                    const extra = respondedOrderIds.has(Number(order.id))
+                        ? `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button>`
+                        : '<span style="font-size:11px;color:var(--text-secondary);">Чертёж и разбор — после отклика</span>';
+                    drawingHTML = buildDrawingLinksHtml(order.id, order.drawing).replace('</div>', `${extra}</div>`);
                 }
 
                 // Buttons
@@ -864,11 +866,17 @@
             } catch { /* keep mock */ }
         }
 
+        /* Закупки, на которые мы уже откликнулись: по ним открыт доступ к чертежу,
+           а значит и разбор. До отклика чертёж заказчика нам не показывают. */
+        const respondedOrderIds = new Set();
+
         async function loadMyProposals() {
             try {
                 const response = await apiFetch(`${SERVER_URL}/proposals`);
                 const data = response.ok ? await response.json() : null;
                 const proposals = Array.isArray(data) ? data : [];
+                respondedOrderIds.clear();
+                proposals.forEach(p => respondedOrderIds.add(Number(p.orderId)));
                 document.getElementById('tabProposalsCount').innerText = proposals.length;
 
                 const tableBody = document.getElementById('myResponsesTable');
