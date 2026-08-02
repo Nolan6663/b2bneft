@@ -884,6 +884,16 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   .orders-controls > * { min-width: 0; }
   .ct-grid-controls > *, .ct-grid-controls > * > * { min-width: 0; }
 
+  /* Без min-width: 0 флекс- и грид-элемент не ужимается ниже содержимого: ряд
+     вкладок вырастал до 506px в контейнере 360px, и скролл на нём не помогал —
+     прокручивать было нечего, наружу торчал сам элемент. */
+  .proc-list-tabs,
+  .orders-filter-tabs,
+  .fav-tabs,
+  .ct-tabs { min-width: 0; max-width: 100%; }
+  .main-content table { min-width: 0; }
+  .orders-table-scroll, .table-wrap, .orders-table-wrap { min-width: 0; max-width: 100%; }
+
   /* Избранное: правая колонка с рекомендациями уезжала за экран целиком */
   .fav-layout { grid-template-columns: minmax(0, 1fr) !important; }
   .fav-right { position: static !important; }

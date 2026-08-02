@@ -355,6 +355,11 @@
         }
         @media (max-width: 720px) {
             .map-layout { grid-template-columns: 1fr; height: auto; min-height: 0; }
+            /* Три колонки статистики не ужимались до ширины экрана: карточки
+               оставались по 600px, и таблицу регионов резало по правому краю. */
+            .map-stats-grid { grid-template-columns: minmax(0, 1fr); }
+            .map-stat-card { min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .stat-table { min-width: 0; }
             .map-filter-panel {
                 display: flex;
                 flex-direction: column;
