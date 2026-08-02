@@ -6,6 +6,13 @@
     gap: 16px;
     align-items: start;
 }
+/* Таблица заказов просит около 780px. Боковая колонка на 340px оставляла ей
+   669px на ноутбуке 1366 — половина колонок уезжала под горизонтальный скролл.
+   Ниже 1500px колонка уходит вниз, таблица занимает всю ширину. */
+@media (max-width: 1500px) {
+    .orders-wrap { grid-template-columns: minmax(0, 1fr); }
+}
+.orders-wrap > * { min-width: 0; }
 .orders-table-section {
     background: var(--card-bg);
     border: 1px solid var(--card-border);

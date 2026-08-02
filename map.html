@@ -287,12 +287,15 @@
         /* ── Bottom stats section ───────────────────────────────────── */
         .map-stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            /* Жёсткие три колонки требовали 1436px и на ноутбуке 1366 уносили
+               страницу вбок: график «Активность по месяцам» срезало по краю. */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 16px;
             clear: both;
             position: relative;
             z-index: 1;
         }
+        .map-stats-grid > * { min-width: 0; }
         .map-stat-card {
             background: var(--card-bg); border: 1px solid var(--card-border);
             border-radius: var(--radius-card); padding: 18px 20px;
