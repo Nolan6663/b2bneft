@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { profileCompleteness } = require('../lib/profile-completeness');
 
 function createTopSuppliersRouter({ pool }) {
     const router = express.Router();
@@ -61,6 +62,19 @@ function createCompaniesRouter(deps) {
             const { rows } = await pool.query('SELECT * FROM companies');
             const enriched = await Promise.all(rows.map(r => enrichCompany(rowToCompany(r), ownerCompany)));
             res.json(enriched);
+        } catch (e) { next(e); }
+    });
+
+    // Полнота своего профиля: что не заполнено и что это открывает. Объявлено до
+    // /:id — иначе «completeness» уедет в обработчик числового идентификатора.
+    router.get('/my/completeness', requireAuth, async (req, res, next) => {
+        try {
+            const { rows: [row] } = await pool.query(
+                'SELECT * FROM companies WHERE company = $1 ORDER BY id ASC LIMIT 1',
+                [req.user.company]
+            );
+            if (!row) return res.json({ percent: 0, done: [], missing: [], complete: false, noProfile: true });
+            res.json(profileCompleteness(rowToCompany(row)));
         } catch (e) { next(e); }
     });
 

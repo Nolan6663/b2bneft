@@ -59,6 +59,19 @@
             font-size: 14px; font-weight: 700; color: var(--text-primary-alt);
             flex: 1; min-width: 0; line-height: 1.35;
         }
+        .pc-card {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: var(--radius-card); padding: 16px 18px; margin-bottom: 16px;
+        }
+        .pc-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+        .pc-title { font-size: 14.5px; font-weight: 700; color: var(--text-primary); }
+        .pc-title b { color: var(--accent-bright); }
+        .pc-sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+        .pc-bar { height: 6px; background: var(--inner-bg); border: 1px solid var(--inner-border); margin: 12px 0 10px; }
+        .pc-bar-fill { height: 100%; background: var(--accent-bright); transition: width .3s; }
+        .pc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+        .pc-list li { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+        .pc-list b { color: var(--text-primary); font-weight: 700; }
         .oc-star {
             background: none; border: none; cursor: pointer; padding: 2px 4px;
             font-size: 17px; line-height: 1; color: var(--text-tertiary);
@@ -211,6 +224,19 @@
                 <span class="tz-spec-div" aria-hidden="true"></span>
                 <span class="tz-spec-field"><span class="tz-spec-num" id="crmConversion">—</span><span class="tz-spec-unit">конверсия · выиграно <span id="crmWon">—</span></span></span>
             </div>
+        </div>
+
+        <!-- Полнота профиля: что не заполнено и что это открывает -->
+        <div class="pc-card" id="profileCompleteness" style="display:none;">
+            <div class="pc-head">
+                <div>
+                    <div class="pc-title">Профиль заполнен на <b id="pcPercent">—</b></div>
+                    <div class="pc-sub">Чем полнее профиль, тем чаще вас находят заказчики и подбор закупок</div>
+                </div>
+                <a class="btn-secondary" href="company-profile.html">Заполнить</a>
+            </div>
+            <div class="pc-bar"><div class="pc-bar-fill" id="pcBar"></div></div>
+            <ul class="pc-list" id="pcList"></ul>
         </div>
 
         <!-- Company banner -->
@@ -402,6 +428,28 @@
            сервер на каждую перерисовку списка. Список — на странице «Избранное». */
         const favoriteOrderIds = new Set();
 
+        /* Полнота профиля. Показываем только незаполненное и только то, что оно
+           открывает: каталог операций и подбор работают по этим же полям. */
+        async function loadProfileCompleteness() {
+            if (isGuest) return;
+            const card = document.getElementById('profileCompleteness');
+            if (!card) return;
+            let data;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/companies/my/completeness`);
+                if (!r.ok) return;
+                data = await r.json();
+            } catch { return; }
+            if (!data || data.complete) return;
+
+            document.getElementById('pcPercent').textContent = `${data.percent}%`;
+            document.getElementById('pcBar').style.width = `${Math.max(4, data.percent)}%`;
+            document.getElementById('pcList').innerHTML = (data.missing || []).slice(0, 4)
+                .map(m => `<li>— <b>${escapeHtml(m.label)}</b>: ${escapeHtml(m.unlocks)}</li>`)
+                .join('');
+            card.style.display = '';
+        }
+
         async function loadFavoriteOrderIds() {
             if (isGuest) return;
             try {
@@ -466,6 +514,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
+            loadProfileCompleteness();
             loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
@@ -477,6 +526,7 @@
 
         window.__pageInit = function() {
             loadCompanyInfo();
+            loadProfileCompleteness();
             loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
