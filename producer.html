@@ -445,10 +445,10 @@
                 <div class="modal-content" style="width:640px;max-width:96vw;">
                     <h3>Разбор чертежа</h3>
                     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">
-                        Приложите изображение листа — PNG, JPG, TIFF или BMP. Модель прочитает штамп и размеры
+                        Приложите PDF чертежа или снимок листа — PNG, JPG, TIFF, BMP. Из PDF читается текстовый слой, из картинки — сам лист. Модель разберёт штамп и размеры
                         и соберёт предварительную технологическую карту. Нормо-часы и цену она не считает.
                     </p>
-                    <input type="file" id="drawingFile" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp">
+                    <input type="file" id="drawingFile" accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp">
                     <div id="drawingResult" style="margin-top:14px;"></div>
                     <div class="modal-actions">
                         <button class="btn-modal-cancel" onclick="document.getElementById('drawingModal').remove()">Закрыть</button>

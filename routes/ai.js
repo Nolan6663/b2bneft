@@ -139,14 +139,14 @@ ${catalog}
     router.post('/ai/analyze-drawing', requireAuth, handleDrawingImageUpload, async (req, res, next) => {
         try {
             if (!req.file) return res.status(400).json({ error: 'Приложите изображение чертежа' });
-            const { card, model } = await tzAi.analyzeDrawing({
+            const { card, model, source } = await tzAi.analyzeDrawing({
                 buffer: req.file.buffer,
                 filename: req.file.originalname,
                 mime: req.file.mimetype,
             });
-            res.json({ card, model });
+            res.json({ card, model, source: source || 'image' });
         } catch (e) {
-            if (e.code === 'AI_FORMAT') return res.status(415).json({ error: e.message });
+            if (e.code === 'AI_FORMAT' || e.code === 'AI_PDF_SCAN') return res.status(415).json({ error: e.message });
             if (e.code === 'AI_NOT_CONFIGURED') return res.status(503).json({ error: 'Разбор чертежей не настроен на сервере' });
             if (e.code === 'AI_EMPTY') return res.status(502).json({ error: 'Модель не смогла прочитать чертёж. Попробуйте более чёткое изображение' });
             next(e);

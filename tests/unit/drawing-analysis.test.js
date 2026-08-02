@@ -61,16 +61,46 @@ test('разбор: без ключа отвечаем понятным кодо
     }
 });
 
-test('разбор: неподходящий формат отсекается до обращения к модели', async () => {
+test('разбор: чужой формат отсекается до обращения к модели', async () => {
     const saved = process.env.AI_TZ_API_KEY;
     process.env.AI_TZ_PROVIDER = 'gigachat';
     process.env.AI_TZ_API_KEY = 'тестовый-ключ';
     try {
-        await analyzeDrawing({ buffer: Buffer.from('%PDF-'), filename: 'd.pdf', mime: 'application/pdf' });
+        await analyzeDrawing({ buffer: Buffer.from('AC1027'), filename: 'd.dwg', mime: 'application/acad' });
         assert.fail('должно было выбросить ошибку');
     } catch (e) {
         assert.equal(e.code, 'AI_FORMAT');
-        assert.match(e.message, /PNG|JPG/);
+        assert.match(e.message, /PDF|PNG|JPG/);
+    } finally {
+        if (saved === undefined) delete process.env.AI_TZ_API_KEY; else process.env.AI_TZ_API_KEY = saved;
+    }
+});
+
+test('разбор: PDF-скан без текста не уходит модели, а объясняет причину', async () => {
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+    const PDFDocument = require('pdfkit');
+
+    const buf = await new Promise(resolve => {
+        const file = path.join(os.tmpdir(), `tz-scan-card-${Date.now()}.pdf`);
+        const doc = new PDFDocument({ size: 'A4', margin: 30 });
+        const stream = fs.createWriteStream(file);
+        doc.pipe(stream);
+        doc.rect(60, 60, 300, 200).stroke();
+        doc.end();
+        stream.on('finish', () => resolve(fs.readFileSync(file)));
+    });
+
+    const saved = process.env.AI_TZ_API_KEY;
+    process.env.AI_TZ_PROVIDER = 'gigachat';
+    process.env.AI_TZ_API_KEY = 'тестовый-ключ';
+    try {
+        await analyzeDrawing({ buffer: buf, filename: 'scan.pdf', mime: 'application/pdf' });
+        assert.fail('должно было выбросить ошибку');
+    } catch (e) {
+        assert.equal(e.code, 'AI_PDF_SCAN');
+        assert.match(e.message, /скан|изображение/i);
     } finally {
         if (saved === undefined) delete process.env.AI_TZ_API_KEY; else process.env.AI_TZ_API_KEY = saved;
     }
