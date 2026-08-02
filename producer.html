@@ -477,7 +477,7 @@
                     out.innerHTML = `<div style="font-size:13px;color:var(--error);">${escapeHtml(data.error || 'Не удалось разобрать чертёж')}</div>`;
                     return;
                 }
-                out.innerHTML = renderDrawingCard(data.card, data.model);
+                out.innerHTML = renderDrawingCard(data.card, data.model, data.source);
             } catch {
                 out.innerHTML = '<div style="font-size:13px;color:var(--error);">Сервер недоступен</div>';
             } finally {
@@ -486,7 +486,7 @@
             }
         }
 
-        function renderDrawingCard(card, model) {
+        function renderDrawingCard(card, model, source) {
             const row = (label, value) => value
                 ? `<tr><td style="padding:5px 8px;color:var(--text-secondary);white-space:nowrap;">${label}</td><td style="padding:5px 8px;">${escapeHtml(value)}</td></tr>`
                 : '';
@@ -507,7 +507,7 @@
                     ${list('Уточнить у заказчика', card.questions)}
                 </table>
                 <p style="font-size:11.5px;color:var(--text-muted);margin-top:10px;">
-                    Предварительно, по изображению чертежа${model ? ' · ' + escapeHtml(model) : ''}. Проверьте перед отправкой КП.
+                    Предварительно, ${source === 'pdf-text' ? 'по текстовому слою PDF' : 'по изображению чертежа'}${model ? ' · ' + escapeHtml(model) : ''}. Проверьте перед отправкой КП.
                 </p>`;
         }
 
