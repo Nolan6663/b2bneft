@@ -287,6 +287,9 @@ async function initDb() {
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS invite_optout BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS last_invited_at TIMESTAMPTZ;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS products TEXT NOT NULL DEFAULT '';
+        -- Закупка размещена до подтверждения email: письма и инвайты ждут, пока
+        -- заказчик подтвердит адрес (flushPendingOutbound в routes/auth.js).
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS outbound_pending BOOLEAN NOT NULL DEFAULT false;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS invites_sent INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS kpp TEXT NOT NULL DEFAULT '';
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS legal_address TEXT NOT NULL DEFAULT '';

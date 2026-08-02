@@ -37,6 +37,19 @@ module.exports = function createOrdersRouter(deps) {
 
     const router = express.Router();
 
+    // Первая закупка компании публикуется без подтверждённого email: людей приводит
+    // публичный мастер, почта на домене пока не поднята, и терять их на письме
+    // дороже, чем риск одной мусорной заявки. Рассылки наружу при этом
+    // придерживаются до подтверждения — см. allowOutbound в обработчике ниже.
+    async function allowFirstOrderWithoutVerification(req, res, next) {
+        try {
+            if (req.user.role === 'admin' || req.user.email_verified) return next();
+            const { rows: [row] } = await pool.query('SELECT COUNT(*)::int AS n FROM orders WHERE company = $1', [req.user.company]);
+            if (Number(row?.n || 0) === 0) return next();
+            return res.status(403).json({ error: 'Подтвердите email — ссылка в письме. После этого закупки размещаются без ограничений.' });
+        } catch (e) { next(e); }
+    }
+
     router.get('/public/category-benchmark', async (req, res, next) => {
         try {
             const category = String(req.query.category || '').trim();
@@ -164,16 +177,20 @@ module.exports = function createOrdersRouter(deps) {
         } catch (e) { next(e); }
     });
 
-    router.post('/', requireAuth, requireRole('customer'), requireVerifiedEmail, handleDrawingUpload, async (req, res, next) => {
+    router.post('/', requireAuth, requireRole('customer'), allowFirstOrderWithoutVerification, handleDrawingUpload, async (req, res, next) => {
         try {
             const { title, category, deadline, quantity, description } = req.body;
             if (!title || !category || !deadline) return res.status(400).json({ error: 'Заполните все поля заявки' });
 
+            // Пока email не подтверждён, наружу ничего не шлём: письма и инвайты
+            // ждут подтверждения (их отпускает flushPendingOutbound в routes/auth.js).
+            const allowOutbound = req.user.role === 'admin' || Boolean(req.user.email_verified);
+
             const drawing = await persistUpload(req.file, 'drawings');
             const { rows: [newRow] } = await pool.query(
-                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing,outbound_pending) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
                 [title, category, deadline, quantity ? Number(quantity) : null,
-                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing]
+                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing, !allowOutbound]
             );
             const newOrder = rowToOrder(newRow);
             await logOrderEvent(newOrder.id, 'created', 'Закупка опубликована', newOrder.category || '', req.user.company);
@@ -193,7 +210,7 @@ module.exports = function createOrdersRouter(deps) {
                 const notifText = `${label} (${m.score}%): «${orderTitle}»${m.reasons?.length ? ' — ' + m.reasons[0] : ''}`;
 
                 await addNotification(m.company, notifText);
-                await notifyCompanyEmail(
+                if (allowOutbound) await notifyCompanyEmail(
                     m.company,
                     notifText,
                     `${label} (${m.score}%) — ТехЗаказ`,
@@ -204,7 +221,7 @@ module.exports = function createOrdersRouter(deps) {
                      <p style="margin-top:16px;"><a href="${orderUrl}" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
                 );
 
-                if (isHot) {
+                if (isHot && allowOutbound) {
                     const userIds = await getUserIdsByCompany(m.company);
                     const pushBody = `${m.score}% · ${orderTitle}${m.reasons?.[0] ? ' · ' + m.reasons[0] : ''}`;
                     await Promise.all(userIds.map(id => {
@@ -221,10 +238,13 @@ module.exports = function createOrdersRouter(deps) {
                 emitRealtime(company, 'order:new', orderSummary);
             }
 
-            // Приглашения заводам из госреестра (fire-and-forget)
-            registryInviter.inviteStubsForOrder(newOrder)
-                .then(n => { if (n) console.log(`registry-invites: отправлено ${n} по заявке ${newOrder.id}`); })
-                .catch(e => console.error('registry-invites:', e.message));
+            // Приглашения заводам из госреестра (fire-and-forget). До подтверждения
+            // email не шлём: письмо уходит двадцати живым заводам, откатить нельзя.
+            if (allowOutbound) {
+                registryInviter.inviteStubsForOrder(newOrder)
+                    .then(n => { if (n) console.log(`registry-invites: отправлено ${n} по заявке ${newOrder.id}`); })
+                    .catch(e => console.error('registry-invites:', e.message));
+            }
 
             res.status(201).json(newOrder);
         } catch (e) { next(e); }
