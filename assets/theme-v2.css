@@ -851,13 +851,15 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
      видно как «половина колонки и всё». Ниже каждому такому месту дан свой
      скролл или перенос. */
 
-  /* Таблицы кабинета: сделки, доставки, статистика карты, аналитика */
+  /* Таблицы кабинета: сделки, доставки, статистика карты, аналитика.
+     Скроллит сама таблица — обернуть её в контейнер из CSS нельзя, а разметка
+     у каждой страницы своя. */
   .main-content table {
     display: block;
-    width: max-content;
-    max-width: none;
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
   }
   .orders-table-section,
   .orders-wrap > .section,
@@ -865,6 +867,7 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 
   /* Ряды вкладок: «Все · Активные · В производстве · Завершённые» и вкладки избранного */
   .proc-list-tabs,
+  .orders-filter-tabs,
   .fav-tabs,
   .ct-tabs {
     overflow-x: auto;
@@ -873,9 +876,13 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
     scrollbar-width: none;
   }
   .proc-list-tabs::-webkit-scrollbar,
+  .orders-filter-tabs::-webkit-scrollbar,
   .fav-tabs::-webkit-scrollbar,
   .ct-tabs::-webkit-scrollbar { display: none; }
-  .proc-list-tab, .fav-tab, .ct-tab { flex: 0 0 auto; white-space: nowrap; }
+  .proc-list-tab, .orders-filter-tab, .fav-tab, .ct-tab { flex: 0 0 auto; white-space: nowrap; }
+  .orders-controls { flex-wrap: wrap; }
+  .orders-controls > * { min-width: 0; }
+  .ct-grid-controls > *, .ct-grid-controls > * > * { min-width: 0; }
 
   /* Избранное: правая колонка с рекомендациями уезжала за экран целиком */
   .fav-layout { grid-template-columns: minmax(0, 1fr) !important; }
