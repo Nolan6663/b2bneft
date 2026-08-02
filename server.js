@@ -55,6 +55,15 @@ const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify
 const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots } = require('./lib/producer-seo');
 const { categorizeProducer } = require('./lib/producer-categories');
 const { REGIONS, regionBySlug, regionLabel } = require('./seo/regions-data');
+const { OPERATIONS, operationBySlug, producerHasOperation } = require('./seo/operations-data');
+const {
+    buildOperationTitle,
+    buildOperationDescription,
+    buildOperationRobots,
+    buildOperationSsr,
+    buildOperationJsonLd,
+    MIN_INDEXABLE: OP_MIN_INDEXABLE,
+} = require('./lib/equipment-seo');
 const {
     buildRegionTitle,
     buildRegionDescription,
@@ -639,6 +648,120 @@ app.get('/zakupki/region/:slug', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+// ── Каталог оборудования и операций ─────────────────────────────────────────
+// Карточек станков в базе нет (0 заполненных equipment на 4535 профилей), поэтому
+// каталог строится по тому, что предприятие само написало о производстве. Тексты
+// страниц это проговаривают — «заявляют операцию», а не «столько станков».
+let _equipCache = { ts: 0, producers: null };
+const EQUIP_TTL_MS = 3600 * 1000;
+
+async function loadEquipmentProducers() {
+    if (_equipCache.producers && Date.now() - _equipCache.ts < EQUIP_TTL_MS) return _equipCache.producers;
+    const { rows } = await pool.query(
+        `SELECT id, company, city, specialization, products, about, equipment, capabilities,
+                verified_by_platform, claimed
+           FROM companies
+          WHERE role = 'producer' AND status <> 'Отклонено'
+          ORDER BY verified_by_platform DESC, claimed DESC, company ASC`
+    );
+    const producers = rows.map(rowToCompany);
+    _equipCache = { ts: Date.now(), producers };
+    return producers;
+}
+
+function operationNav(activeSlug) {
+    return OPERATIONS.map(o =>
+        `<a href="/oborudovanie/${o.slug}" class="zc-cat-link${o.slug === activeSlug ? ' active' : ''}">${regionEsc(o.name)}</a>`
+    ).join('\n      ');
+}
+
+function regionLinksHtml(limit = 16) {
+    return REGIONS.slice(0, limit)
+        .map(r => `<li><a href="/zakupki/region/${r.slug}">${regionEsc(regionLabel(r))}</a></li>`)
+        .join('\n      ');
+}
+
+app.get('/oborudovanie', async (req, res, next) => {
+    try {
+        const producers = await loadEquipmentProducers();
+        const counts = OPERATIONS.map(op => [op, producers.filter(p => producerHasOperation(p, op)).length]);
+        const withOps = producers.filter(p => OPERATIONS.some(op => producerHasOperation(p, op))).length;
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+
+        const opsHtml = counts.map(([op, n]) =>
+            `      <li class="zr-op${n ? '' : ' zr-op--empty'}">
+        <a href="/oborudovanie/${op.slug}">${regionEsc(op.name)}</a>
+        <div class="zr-op-count">${n} ${regionPlural(n, 'предприятие', 'предприятия', 'предприятий')}</div>
+        <p class="zr-op-lead">${regionEsc(op.lead)}</p>
+      </li>`).join('\n');
+
+        const statsHtml = [
+            `<div class="zr-stat"><b>${producers.length}</b><span>${regionPlural(producers.length, 'предприятие', 'предприятия', 'предприятий')} в каталоге</span></div>`,
+            `<div class="zr-stat"><b>${withOps}</b><span>указали технологические операции</span></div>`,
+            `<div class="zr-stat"><b>${OPERATIONS.length}</b><span>операций в разборе</span></div>`,
+        ].join('\n      ');
+
+        const title = 'Оборудование и операции: кто что выполняет — ТехЗаказ';
+        const desc = `Токарные и фрезерные работы, ЧПУ, сварка, гибка, литьё, термообработка и покрытия: ${withOps} предприятий каталога с указанными операциями.`;
+
+        let html = fs.readFileSync(path.join(__dirname, 'zakupki', 'oborudovanie-index.html'), 'utf8');
+        html = html
+            .replace(/<!--META_TITLE-->/g, htmlEscape(title))
+            .replace(/<!--META_DESC-->/g, htmlEscape(desc.slice(0, 160)))
+            .replace(/<!--META_ROBOTS-->/g, 'index, follow')
+            .replace(/<!--CANONICAL_URL-->/g, `${base}/oborudovanie`)
+            .replace(/<!--JSON_LD-->/g, JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'CollectionPage',
+                name: 'Оборудование и технологические операции',
+                url: `${base}/oborudovanie`,
+                mainEntity: { '@type': 'ItemList', numberOfItems: OPERATIONS.length },
+            }))
+            .replace(/<!--EQUIP_STATS-->/g, statsHtml)
+            .replace(/<!--EQUIP_OPS-->/g, opsHtml)
+            .replace(/<!--EQUIP_REGIONS-->/g, regionLinksHtml());
+
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.type('html').send(html);
+    } catch (e) { next(e); }
+});
+
+app.get('/oborudovanie/:slug', async (req, res, next) => {
+    try {
+        const op = operationBySlug(req.params.slug);
+        if (!op) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+        const producers = (await loadEquipmentProducers()).filter(p => producerHasOperation(p, op));
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        const regionsOfOp = [...producers.reduce((m, p) => m.set(p.city || '—', (m.get(p.city || '—') || 0) + 1), new Map())]
+            .sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+        const statsHtml = [
+            `<div class="zr-stat"><b>${producers.length}</b><span>${regionPlural(producers.length, 'предприятие', 'предприятия', 'предприятий')} заявили операцию</span></div>`,
+            regionsOfOp.length ? `<div class="zr-stat"><b>${regionsOfOp.length}</b><span>регионов в выдаче</span></div>` : '',
+        ].filter(Boolean).join('\n      ');
+
+        let html = fs.readFileSync(path.join(__dirname, 'zakupki', 'oborudovanie-operation.html'), 'utf8');
+        html = html
+            .replace(/<!--META_TITLE-->/g, htmlEscape(buildOperationTitle(op, producers.length)))
+            .replace(/<!--META_DESC-->/g, htmlEscape(buildOperationDescription(op, producers.length)))
+            .replace(/<!--META_ROBOTS-->/g, buildOperationRobots(producers.length))
+            .replace(/<!--CANONICAL_URL-->/g, `${base}/oborudovanie/${op.slug}`)
+            .replace(/<!--JSON_LD-->/g, buildOperationJsonLd(op, producers.length, base))
+            .replace(/<!--OP_NAME-->/g, htmlEscape(op.name))
+            .replace(/<!--OP_LEAD-->/g, htmlEscape(op.lead))
+            .replace(/<!--OP_STATS-->/g, statsHtml)
+            .replace(/<!--OP_NAV-->/g, operationNav(op.slug))
+            .replace(/<!--OP_BODY-->/g, buildOperationSsr(op, producers.slice(0, 60)))
+            .replace(/<!--OP_REGIONS-->/g, regionLinksHtml());
+
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.type('html').send(html);
+    } catch (e) { next(e); }
+});
+
 app.get('/favicon.ico', (req, res) => {
     res.redirect(301, '/favicon.svg');
 });
@@ -668,6 +791,7 @@ app.get('/robots.txt', (req, res) => {
         'Allow: /\n' +
         'Allow: /zakupki\n' +
         'Allow: /zakupki/region/\n' +
+        'Allow: /oborudovanie\n' +
         'Allow: /map\n' +
         'Allow: /dlya-postavshchikov\n' +
         'Allow: /p/\n' +
@@ -718,6 +842,14 @@ app.get('/sitemap.xml', async (req, res, next) => {
         for (const r of REGIONS) {
             if ((regionCounts.get(r.name) || 0) < MIN_INDEXABLE) continue;
             pages.push({ url: `/zakupki/region/${r.slug}`, priority: '0.7', changefreq: 'weekly' });
+        }
+        // Операции: та же логика — в карту идут только непустые страницы.
+        pages.push({ url: '/oborudovanie', priority: '0.8', changefreq: 'weekly' });
+        const equipProducers = await loadEquipmentProducers();
+        for (const op of OPERATIONS) {
+            const n = equipProducers.filter(p => producerHasOperation(p, op)).length;
+            if (n < OP_MIN_INDEXABLE) continue;
+            pages.push({ url: `/oborudovanie/${op.slug}`, priority: '0.6', changefreq: 'weekly' });
         }
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
         // индексируем (4286 страниц «завод + продукция + город» — органический канал).
