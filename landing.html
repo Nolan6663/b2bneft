@@ -735,7 +735,10 @@
       transform: translateY(100%);
     }
     .lp-demo-overlay.is-open .lp-demo-sheet { transform: none; }
-    .lp-demo-body { min-height: 280px; padding: 20px 18px; }
+    /* min-width: 0 — иначе содержимое шага держит ширину и 18px демо-окна
+       уезжает под обрез на 390px. */
+    .lp-demo-body { min-height: 280px; padding: 20px 18px; min-width: 0; }
+    .lp-demo-body > * { max-width: 100%; }
     .lp-demo-step { inset: 20px 18px; }
     .lp-demo-foot { padding: 14px 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
     .lp-demo-drag {
