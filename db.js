@@ -99,6 +99,13 @@ async function initDb() {
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             UNIQUE(owner_company, company_id)
         );
+        CREATE TABLE IF NOT EXISTS favorite_orders (
+            id            SERIAL      PRIMARY KEY,
+            owner_company TEXT        NOT NULL,
+            order_id      INTEGER     NOT NULL,
+            created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE(owner_company, order_id)
+        );
         CREATE TABLE IF NOT EXISTS saved_searches (
             id            SERIAL      PRIMARY KEY,
             owner_company TEXT        NOT NULL,

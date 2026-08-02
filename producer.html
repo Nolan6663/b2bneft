@@ -59,6 +59,13 @@
             font-size: 14px; font-weight: 700; color: var(--text-primary-alt);
             flex: 1; min-width: 0; line-height: 1.35;
         }
+        .oc-star {
+            background: none; border: none; cursor: pointer; padding: 2px 4px;
+            font-size: 17px; line-height: 1; color: var(--text-tertiary);
+            border-radius: 3px; flex-shrink: 0; transition: color .12s, background .12s;
+        }
+        .oc-star:hover { background: rgba(245,185,66,.12); color: #f5b942; }
+        .oc-star.is-on { color: #f5b942; }
         .order-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
         .oc-badge {
             font-size: 10.5px; font-weight: 700; padding: 3px 9px;
@@ -391,6 +398,45 @@
         let currentOrderId = null;
         let currentOrderTitle = "";
         let ordersCache = [];
+        /* Закупки, отмеченные звёздочкой: держим id в памяти, чтобы не спрашивать
+           сервер на каждую перерисовку списка. Список — на странице «Избранное». */
+        const favoriteOrderIds = new Set();
+
+        async function loadFavoriteOrderIds() {
+            if (isGuest) return;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/favorites/orders`);
+                if (!r.ok) return;
+                const list = await r.json();
+                favoriteOrderIds.clear();
+                list.forEach(o => favoriteOrderIds.add(o.id));
+            } catch { /* без звёздочек список всё равно работает */ }
+        }
+
+        async function toggleFavoriteOrder(orderId, btn) {
+            const on = favoriteOrderIds.has(orderId);
+            if (btn) btn.disabled = true;
+            try {
+                const r = on
+                    ? await apiFetch(`${SERVER_URL}/favorites/orders/${orderId}`, { method: 'DELETE' })
+                    : await apiFetch(`${SERVER_URL}/favorites/orders`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId }),
+                    });
+                if (!r.ok) throw new Error();
+                if (on) favoriteOrderIds.delete(orderId); else favoriteOrderIds.add(orderId);
+                if (btn) {
+                    btn.textContent = on ? '☆' : '★';
+                    btn.classList.toggle('is-on', !on);
+                }
+                showToast(on ? 'Убрано из избранного' : 'Закупка в избранном');
+            } catch {
+                showToast('Не удалось изменить избранное', 'warn');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
 
         const session = hasSession() ? authGuard('producer') : { isGuest: true, role: null, company: null };
         if (!session) { /* redirected */ }
@@ -420,7 +466,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
-            loadOrdersForProducers();
+            loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
@@ -431,7 +477,7 @@
 
         window.__pageInit = function() {
             loadCompanyInfo();
-            loadOrdersForProducers();
+            loadFavoriteOrderIds().then(loadOrdersForProducers);
             initNotifications();
             initSidebarBadges();
             if (!isGuest) { loadMyProposals(); loadCrmStats(); loadActiveAuctions(); }
@@ -598,8 +644,9 @@
 
                 card.innerHTML = `
                     <div class="order-card-body">
-                        <div class="order-card-head">
-                            <div class="order-card-title">${escapeHtml(displayTitle)}</div>
+                        <div class="order-card-head" style="display:flex;align-items:flex-start;gap:8px;">
+                            <div class="order-card-title" style="flex:1;min-width:0;">${escapeHtml(displayTitle)}</div>
+                            ${isGuest ? '' : `<button class="oc-star${favoriteOrderIds.has(order.id) ? ' is-on' : ''}" title="В избранное" aria-label="В избранное" onclick="toggleFavoriteOrder(${order.id}, this)">${favoriteOrderIds.has(order.id) ? '★' : '☆'}</button>`}
                         </div>
                         <div class="order-card-badges">
                             <span class="oc-badge oc-badge-direct">ПРЯМАЯ ЗАКУПКА</span>

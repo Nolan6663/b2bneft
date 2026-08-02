@@ -200,31 +200,13 @@
         <div id="tabOrders" style="display:none;">
             <div class="fav-layout">
                 <div>
-                    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">3 закупки в избранном</div>
-                    <div style="display:flex;flex-direction:column;gap:10px;">
-                        <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">Компрессор воздушный ВП-50/8</div>
-                            <div class="fav-meta"><span>КО-2026-06-001</span><span>•</span><span>Срок до 20.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">8 предложений</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
-                        </div>
-                        <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">Насос ЦНС 38-132 в сборе</div>
-                            <div class="fav-meta"><span>КО-2026-06-005</span><span>•</span><span>Срок до 25.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">3 предложения</span><span style="font-size:11.5px;background:rgba(255,106,0,.1);color:var(--accent-cyan);padding:2px 8px;border-radius:12px;">Активный</span></div>
-                        </div>
-                        <div class="fav-card" onclick="window.location.href='index.html'">
-                            <div class="fav-name">Запорная арматура DN50 PN40</div>
-                            <div class="fav-meta"><span>КО-2026-06-006</span><span>•</span><span>Срок до 08.07.2026</span></div>
-                            <div class="fav-footer"><span class="fav-rating">5 предложений</span><span style="font-size:11.5px;background:rgba(251,191,36,.1);color:#b45309;padding:2px 8px;border-radius:12px;">В производстве</span></div>
-                        </div>
-                    </div>
+                    <div id="favOrdersCount" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Загрузка…</div>
+                    <div id="favOrdersList" style="display:flex;flex-direction:column;gap:10px;"></div>
                 </div>
                 <div class="fav-right">
                     <div class="fav-widget">
                         <div class="fav-widget-title">Статус закупок</div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-cyan);"></div><div class="fav-activity-text">Активных закупок</div><div class="fav-activity-time"><strong>2</strong></div></div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:#f59e0b;"></div><div class="fav-activity-text">В производстве</div><div class="fav-activity-time"><strong>1</strong></div></div>
-                        <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-green);"></div><div class="fav-activity-text">Завершённых</div><div class="fav-activity-time"><strong>0</strong></div></div>
+                        <div id="favOrdersStatus"></div>
                     </div>
                 </div>
             </div>
@@ -276,6 +258,7 @@
             loadFavorites();
             loadFavRecommendations();
             loadSavedSearches();
+            loadFavOrders();
         });
 
         window.__pageInit = function() {
@@ -284,6 +267,7 @@
             loadFavorites();
             loadFavRecommendations();
             loadSavedSearches();
+            loadFavOrders();
         };
 
         const MOCK_FAVS = [
@@ -299,6 +283,83 @@
             Object.assign(t.style, { position:'fixed', bottom:'24px', right:'24px', background:'var(--accent-bright)', color:'#fff', padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600', zIndex:'9999', boxShadow:'0 4px 16px rgba(0,0,0,.2)', transition:'opacity .3s' });
             document.body.appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        /* Избранные закупки: помечаются звёздочкой в списке закупок, здесь
+           показываются с актуальным статусом и числом откликов. */
+        const ORDER_STATUS_COLORS = {
+            'Активный': 'var(--accent-cyan)',
+            'В производстве': '#f59e0b',
+            'Завершён': 'var(--accent-green)',
+        };
+
+        async function loadFavOrders() {
+            const list = document.getElementById('favOrdersList');
+            const counter = document.getElementById('favOrdersCount');
+            const status = document.getElementById('favOrdersStatus');
+            if (!list) return;
+            let orders = [];
+            try {
+                const r = await apiFetch(`${SERVER_URL}/favorites/orders`);
+                if (!r.ok) throw new Error();
+                orders = await r.json();
+            } catch {
+                list.innerHTML = '<div class="fav-empty">Не удалось загрузить избранные закупки</div>';
+                if (counter) counter.textContent = '';
+                if (status) status.innerHTML = '';
+                return;
+            }
+
+            if (counter) {
+                counter.textContent = orders.length
+                    ? `${orders.length} ${orders.length === 1 ? 'закупка' : 'закупок'} в избранном`
+                    : '';
+            }
+
+            list.innerHTML = orders.length ? orders.map(o => {
+                const deadline = o.deadline
+                    ? new Date(o.deadline).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '';
+                const color = ORDER_STATUS_COLORS[o.status] || 'var(--text-secondary)';
+                return `<div class="fav-card">
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <div style="flex:1;min-width:0;cursor:pointer;" onclick="openFavOrder(${Number(o.id)})">
+                            <div class="fav-name">${escapeHtml(o.title || 'Закупка')}</div>
+                            <div class="fav-meta"><span>№ ${Number(o.id)}</span>${o.category ? '<span>•</span><span>' + escapeHtml(o.category) + '</span>' : ''}${deadline ? '<span>•</span><span>Срок до ' + deadline + '</span>' : ''}</div>
+                        </div>
+                        <button class="btn-secondary" style="height:28px;font-size:11.5px;color:var(--error);" onclick="removeFavOrder(${Number(o.id)}, this)">Убрать</button>
+                    </div>
+                    <div class="fav-footer">
+                        <span class="fav-rating">${Number(o.responses ?? 0)} ${Number(o.responses ?? 0) === 1 ? 'предложение' : 'предложений'}</span>
+                        <span style="font-size:11.5px;background:rgba(255,106,0,.1);color:${color};padding:2px 8px;border-radius:3px;">${escapeHtml(o.status || '—')}</span>
+                    </div>
+                </div>`;
+            }).join('') : '<div class="fav-empty">Избранных закупок нет. Отметьте закупку звёздочкой в списке закупок.</div>';
+
+            if (status) {
+                const by = s => orders.filter(o => o.status === s).length;
+                status.innerHTML = `
+                    <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-cyan);"></div><div class="fav-activity-text">Активных закупок</div><div class="fav-activity-time"><strong>${by('Активный')}</strong></div></div>
+                    <div class="fav-activity-item"><div class="fav-activity-dot" style="background:#f59e0b;"></div><div class="fav-activity-text">В производстве</div><div class="fav-activity-time"><strong>${by('В производстве')}</strong></div></div>
+                    <div class="fav-activity-item"><div class="fav-activity-dot" style="background:var(--accent-green);"></div><div class="fav-activity-text">Завершённых</div><div class="fav-activity-time"><strong>${by('Завершён')}</strong></div></div>`;
+            }
+        }
+
+        function openFavOrder(id) {
+            window.location.href = userRole === 'producer' ? `producer.html?order=${id}` : `index.html?order=${id}`;
+        }
+
+        async function removeFavOrder(id, btn) {
+            if (btn) btn.disabled = true;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/favorites/orders/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                if (!r.ok) throw new Error();
+                showFavToast('Закупка убрана из избранного');
+                loadFavOrders();
+            } catch {
+                if (btn) btn.disabled = false;
+                showFavToast('Не удалось убрать закупку');
+            }
         }
 
         /* Сохранённые поиски каталога. Заводятся кнопкой «Сохранить поиск» на
@@ -358,6 +419,7 @@
                 if (!r.ok) throw new Error();
                 showFavToast('Поиск удалён');
                 loadSavedSearches();
+            loadFavOrders();
             } catch {
                 if (btn) btn.disabled = false;
                 showFavToast('Не удалось удалить поиск');

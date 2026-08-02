@@ -3,7 +3,7 @@
 const express = require('express');
 
 function createFavoritesRouter(deps) {
-    const { pool, requireAuth, rowToCompany, enrichCompany } = deps;
+    const { pool, requireAuth, rowToCompany, enrichCompany, rowToOrder } = deps;
 
     const router = express.Router();
 
@@ -29,6 +29,46 @@ function createFavoritesRouter(deps) {
                 [req.user.company, id]
             );
             res.status(201).json({ message: 'Добавлено в избранное' });
+        } catch (e) { next(e); }
+    });
+
+    // ── Избранные закупки ────────────────────────────────────────────────────
+    // Закладка на чужую закупку: поставщик метит те, куда собирается ответить.
+    // Объявлено до /:companyId — иначе одиночный сегмент перехватит /orders/7.
+    router.get('/orders', requireAuth, async (req, res, next) => {
+        try {
+            const { rows } = await pool.query(
+                `SELECT o.* FROM orders o
+                 JOIN favorite_orders f ON o.id = f.order_id
+                 WHERE f.owner_company = $1
+                 ORDER BY f.created_at DESC`,
+                [req.user.company]
+            );
+            res.json(rows.map(rowToOrder));
+        } catch (e) { next(e); }
+    });
+
+    router.post('/orders', requireAuth, async (req, res, next) => {
+        try {
+            const id = Number(req.body.orderId);
+            if (!id) return res.status(400).json({ error: 'Не указан ID закупки' });
+            const { rows: [exists] } = await pool.query('SELECT 1 FROM orders WHERE id = $1', [id]);
+            if (!exists) return res.status(404).json({ error: 'Закупка не найдена' });
+            await pool.query(
+                'INSERT INTO favorite_orders (owner_company, order_id) VALUES ($1, $2) ON CONFLICT (owner_company, order_id) DO NOTHING',
+                [req.user.company, id]
+            );
+            res.status(201).json({ message: 'Закупка добавлена в избранное' });
+        } catch (e) { next(e); }
+    });
+
+    router.delete('/orders/:orderId', requireAuth, async (req, res, next) => {
+        try {
+            await pool.query(
+                'DELETE FROM favorite_orders WHERE owner_company = $1 AND order_id = $2',
+                [req.user.company, Number(req.params.orderId)]
+            );
+            res.json({ message: 'Закупка удалена из избранного' });
         } catch (e) { next(e); }
     });
 

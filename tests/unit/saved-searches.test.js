@@ -92,6 +92,63 @@ test('сохранённые поиски: удаление ограничено
     } finally { await srv.close(); }
 });
 
+test('избранные закупки: список только своей компании, с полями закупки', async () => {
+    const pool = fakePool([
+        { match: /JOIN favorite_orders/i, rows: [
+            { id: 4, title: 'Манжеты РТИ', status: 'Активный', category: 'РТИ' },
+        ] },
+    ]);
+    const srv = await srvWith(pool);
+    try {
+        const r = await srv.request('/api/favorites/orders');
+        assert.equal(r.status, 200);
+        assert.equal(r.json[0].title, 'Манжеты РТИ');
+        const sel = pool.calls.find(c => /JOIN favorite_orders/i.test(c.sql));
+        assert.deepEqual(sel.params, ['ООО Заказчик']);
+    } finally { await srv.close(); }
+});
+
+test('избранные закупки: 400 без orderId, 404 по несуществующей', async () => {
+    const pool = fakePool([
+        { match: /SELECT 1 FROM orders WHERE id/i, rows: [] },
+    ]);
+    const srv = await srvWith(pool);
+    try {
+        const r1 = await srv.request('/api/favorites/orders', { method: 'POST', body: {} });
+        assert.equal(r1.status, 400);
+        const r2 = await srv.request('/api/favorites/orders', { method: 'POST', body: { orderId: 999 } });
+        assert.equal(r2.status, 404);
+    } finally { await srv.close(); }
+});
+
+test('избранные закупки: добавление 201 и идемпотентность', async () => {
+    const pool = fakePool([
+        { match: /SELECT 1 FROM orders WHERE id/i, rows: [{ ok: 1 }] },
+        { match: /INSERT INTO favorite_orders/i, rows: [] },
+    ]);
+    const srv = await srvWith(pool);
+    try {
+        const r = await srv.request('/api/favorites/orders', { method: 'POST', body: { orderId: 7 } });
+        assert.equal(r.status, 201);
+        const ins = pool.calls.find(c => /INSERT INTO favorite_orders/i.test(c.sql));
+        assert.match(ins.sql, /ON CONFLICT/i);
+        assert.deepEqual(ins.params, ['ООО Заказчик', 7]);
+    } finally { await srv.close(); }
+});
+
+test('избранные закупки: удаление ограничено своей компанией', async () => {
+    const pool = fakePool([
+        { match: /DELETE FROM favorite_orders/i, rows: [] },
+    ]);
+    const srv = await srvWith(pool);
+    try {
+        const r = await srv.request('/api/favorites/orders/7', { method: 'DELETE' });
+        assert.equal(r.status, 200);
+        const del = pool.calls.find(c => /DELETE FROM favorite_orders/i.test(c.sql));
+        assert.deepEqual(del.params, ['ООО Заказчик', 7]);
+    } finally { await srv.close(); }
+});
+
 test('сохранённые поиски: битый JSON в базе не роняет список', async () => {
     const pool = fakePool([
         { match: /FROM saved_searches/i, rows: [{ id: 5, name: 'Кривой', params: '{не json', created_at: null }] },
