@@ -54,6 +54,7 @@ const createIntegrationsPush = require('./lib/integrations-push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
 const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots } = require('./lib/producer-seo');
 const { categorizeProducer } = require('./lib/producer-categories');
+const { withQuery } = require('./lib/redirect-query');
 const { REGIONS, regionBySlug, regionLabel } = require('./seo/regions-data');
 const { OPERATIONS, operationBySlug, producerHasOperation } = require('./seo/operations-data');
 const {
@@ -568,7 +569,12 @@ const PUBLIC_PAGES = [
 ];
 PUBLIC_PAGES.forEach(page => {
     const slug = '/' + page.replace('.html', '');
-    app.get('/' + page, (req, res) => res.redirect(301, slug === '/landing' ? '/' : slug));
+    app.get('/' + page, (req, res) => {
+        // Query переносим: без него delivery.html?id=1 превращался в /delivery,
+        // страница не находила сделку и уводила в «Заказы».
+        const target = slug === '/landing' ? '/' : slug;
+        res.redirect(301, withQuery(req.originalUrl, target));
+    });
     app.get(slug === '/landing' ? '/' : slug, (req, res) => {
         if (fs.existsSync(path.join(__dirname, page)) && fs.readFileSync(path.join(__dirname, page), 'utf8').includes('<div class="sidebar">')) {
             sendCabinetPage(page, res);
