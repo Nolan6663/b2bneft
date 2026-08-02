@@ -2449,7 +2449,14 @@ table {
     right: 16px;
     left: 16px;
     width: auto;
+    /* На телефоне карточка вырастала на пол-экрана и закрывала панель действий:
+       кнопки «Экспорт» и «Создать заказ» оказывались под ней. Ограничиваем
+       высоту и прокручиваем список внутри. */
+    max-height: 42vh;
+    display: flex;
+    flex-direction: column;
   }
+  .ob-cl-body, .ob-cl-list { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ob-cl-complete, .ob-cl-complete .ob-cl-ring { animation: none; }
