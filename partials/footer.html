@@ -34,7 +34,12 @@
        браузера и тёмных расширений: они перекрашивают текст по своим правилам и
        на белом футере дают белым по белому. Реквизиты и ссылку на политику
        обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
-    .tz-footer { grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    /* position + z-index обязательны: без собственного контекста наложения
+       WebKit (Safari на iPhone, Яндекс.Браузер) футер не отрисовывал — блок
+       занимал место и ловил клики, поэтому по невидимой ссылке можно было
+       уйти в политику, но на экране была пустая полоса. Chromium на десктопе
+       рисовал нормально, из-за чего ошибка ловилась только на устройствах. */
+    .tz-footer { position: relative; z-index: 1; grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
     :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
     :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
     :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
