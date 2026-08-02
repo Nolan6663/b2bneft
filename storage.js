@@ -149,6 +149,52 @@ async function streamToResponse(storedName, res, downloadName, options = {}) {
     res.sendFile(filepath);
 }
 
+/**
+ * Байты файла в память — для разбора чертежа моделью. Отдельно от
+ * streamToResponse: там поток уходит клиенту, здесь он нужен серверу.
+ * Лимит обязателен: в хранилище лежат сборочные чертежи в десятки мегабайт,
+ * а тянуть их целиком в память ради разбора незачем.
+ */
+async function readFileBuffer(storedName, { maxBytes = 15 * 1024 * 1024 } = {}) {
+    const prefix = resolvePrefix(storedName);
+    const key = objectKey(prefix, storedName);
+
+    if (USE_S3) {
+        const { GetObjectCommand } = require('@aws-sdk/client-s3');
+        const result = await s3Client.send(new GetObjectCommand({
+            Bucket: process.env.S3_BUCKET,
+            Key: key,
+        }));
+        const chunks = [];
+        let size = 0;
+        for await (const chunk of result.Body) {
+            size += chunk.length;
+            if (size > maxBytes) {
+                const err = new Error('Файл слишком большой для разбора');
+                err.code = 'FILE_TOO_BIG';
+                throw err;
+            }
+            chunks.push(chunk);
+        }
+        return { buffer: Buffer.concat(chunks), mime: result.ContentType || mimeFromName(storedName) };
+    }
+
+    const dir = prefix === 'photos' ? LOCAL_PHOTOS : LOCAL_DIR;
+    const filepath = path.join(dir, storedName);
+    if (!fs.existsSync(filepath)) {
+        const err = new Error('Файл не найден');
+        err.code = 'FILE_NOT_FOUND';
+        throw err;
+    }
+    const stat = fs.statSync(filepath);
+    if (stat.size > maxBytes) {
+        const err = new Error('Файл слишком большой для разбора');
+        err.code = 'FILE_TOO_BIG';
+        throw err;
+    }
+    return { buffer: fs.readFileSync(filepath), mime: mimeFromName(storedName) };
+}
+
 function existsLocally(storedName) {
     const prefix = resolvePrefix(storedName);
     const dir = prefix === 'photos' ? LOCAL_PHOTOS : LOCAL_DIR;
@@ -168,6 +214,7 @@ module.exports = {
     saveFile,
     deleteStored,
     streamToResponse,
+    readFileBuffer,
     existsLocally,
     photoPublicUrl,
     LOCAL_DIR,

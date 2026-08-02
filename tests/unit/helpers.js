@@ -85,6 +85,7 @@ function baseDeps(overrides = {}) {
         optionalAuth: passthrough,
         handleKPUpload: passthrough,
         handleDrawingUpload: passthrough,
+        handleDrawingImageUpload: passthrough,
         handlePhotoUpload: passthrough,
         persistUpload: async () => null,
         deleteDrawingFile: asyncNoop,

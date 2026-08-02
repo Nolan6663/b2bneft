@@ -458,6 +458,43 @@
             document.body.appendChild(modal);
         }
 
+        /* Разбор чертежа, уже приложенного к закупке: файл берёт сервер из хранилища. */
+        async function analyzeOrderDrawing(orderId, btn) {
+            const label = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Читаю…'; }
+            let payload;
+            try {
+                const r = await apiFetch(`${SERVER_URL}/ai/analyze-order-drawing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId }),
+                });
+                payload = await r.json().catch(() => ({}));
+                if (!r.ok) { showToast(payload.error || 'Не удалось разобрать чертёж', 'warn'); return; }
+            } catch {
+                showToast('Сервер недоступен', 'warn');
+                return;
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = label || 'Разобрать'; }
+            }
+
+            let modal = document.getElementById('drawingModal');
+            if (modal) modal.remove();
+            modal = document.createElement('div');
+            modal.id = 'drawingModal';
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="width:640px;max-width:96vw;">
+                    <h3>Разбор чертежа${payload.file ? ' · ' + escapeHtml(payload.file) : ''}</h3>
+                    <div>${renderDrawingCard(payload.card, payload.model, payload.source)}</div>
+                    <div class="modal-actions">
+                        <button class="btn-modal-cancel" onclick="document.getElementById('drawingModal').remove()">Закрыть</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
         async function runDrawingAnalysis() {
             const input = document.getElementById('drawingFile');
             const out = document.getElementById('drawingResult');
@@ -756,7 +793,10 @@
                 // Drawing
                 let drawingHTML = '';
                 if (!isGuest && order.drawing) {
-                    drawingHTML = buildDrawingLinksHtml(order.id, order.drawing);
+                    // Кнопка разбора идёт рядом со «Скачать»: чертёж уже в хранилище,
+                    // поставщику незачем выгружать его и загружать обратно вручную.
+                    drawingHTML = buildDrawingLinksHtml(order.id, order.drawing)
+                        .replace('</div>', `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button></div>`);
                 }
 
                 // Buttons

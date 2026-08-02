@@ -4,7 +4,7 @@ const express = require('express');
 const tzAi = require('../lib/ai-client');
 
 function createAiRouter(deps) {
-    const { pool, requireAuth, rowToCompany, genAI, handleDrawingImageUpload } = deps;
+    const { pool, requireAuth, rowToCompany, genAI, handleDrawingImageUpload, canAccessOrderDrawing, storage } = deps;
 
     const router = express.Router();
 
@@ -132,6 +132,40 @@ ${catalog}
             model: cfg.configured ? cfg.model : null,
             drawing: cfg.configured && cfg.provider === 'gigachat',
         });
+    });
+
+    // Разбор чертежа, уже приложенного к закупке: файл берём из хранилища, доступ
+    // проверяем тем же правилом, что и на скачивание, — иначе разбор стал бы
+    // обходным путём посмотреть чужой чертёж.
+    router.post('/ai/analyze-order-drawing', requireAuth, async (req, res, next) => {
+        try {
+            const orderId = Number(req.body && req.body.orderId);
+            if (!orderId) return res.status(400).json({ error: 'Не указана закупка' });
+            if (!(await canAccessOrderDrawing(req.user, orderId))) {
+                return res.status(403).json({ error: 'Нет доступа к чертежу этой закупки' });
+            }
+            const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [orderId]);
+            if (!row || !row.drawing) return res.status(404).json({ error: 'К закупке не приложен чертёж' });
+
+            let drawing;
+            try { drawing = JSON.parse(row.drawing); } catch { drawing = null; }
+            if (!drawing || !drawing.storedName) return res.status(404).json({ error: 'К закупке не приложен чертёж' });
+
+            const { buffer, mime } = await storage.readFileBuffer(drawing.storedName);
+            const { card, model, source } = await tzAi.analyzeDrawing({
+                buffer,
+                filename: drawing.originalName || drawing.storedName,
+                mime: mime || '',
+            });
+            res.json({ card, model, source: source || 'image', file: drawing.originalName || null });
+        } catch (e) {
+            if (e.code === 'AI_FORMAT' || e.code === 'AI_PDF_SCAN') return res.status(415).json({ error: e.message });
+            if (e.code === 'AI_NOT_CONFIGURED') return res.status(503).json({ error: 'Разбор чертежей не настроен на сервере' });
+            if (e.code === 'AI_EMPTY') return res.status(502).json({ error: 'Модель не смогла прочитать чертёж' });
+            if (e.code === 'FILE_TOO_BIG') return res.status(413).json({ error: 'Чертёж слишком большой для разбора' });
+            if (e.code === 'FILE_NOT_FOUND') return res.status(404).json({ error: 'Файл чертежа не найден в хранилище' });
+            next(e);
+        }
     });
 
     // Разбор чертежа: картинка → предварительная техкарта. Файл приходит одним
