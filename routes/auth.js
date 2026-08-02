@@ -12,6 +12,50 @@ const {
     verifyPassword,
 } = require('../lib/auth-tokens');
 const { DOC_VERSION } = require('../scripts/legal-data');
+const { OPERATIONS } = require('../seo/operations-data');
+
+const OPERATION_SLUGS = new Set(OPERATIONS.map(o => o.slug));
+
+/**
+ * Профиль, собранный мастером /zavod: берём только известные поля и только
+ * операции из справочника — в базу не должно попадать ничего, что человек
+ * дописал в запрос руками.
+ */
+function sanitizeProducerProfile(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const capabilities = Array.isArray(raw.capabilities)
+        ? raw.capabilities.filter(s => OPERATION_SLUGS.has(String(s))).slice(0, 12)
+        : [];
+    const load = raw.productionLoad == null || raw.productionLoad === ''
+        ? null
+        : Math.min(100, Math.max(0, Number(raw.productionLoad) || 0));
+    return {
+        phone: String(raw.phone || '').trim().slice(0, 60),
+        website: String(raw.website || '').trim().slice(0, 200),
+        city: String(raw.city || '').trim().slice(0, 100),
+        products: String(raw.products || '').trim().slice(0, 2000),
+        capabilities,
+        productionLoad: load,
+    };
+}
+
+/**
+ * Пары «колонка → значение» для профиля. Пустые значения не отдаём: у стаба из
+ * реестра уже есть телефон, сайт и продукция — пустое поле мастера не должно их
+ * затирать.
+ */
+function profileColumns(profile) {
+    if (!profile) return [];
+    const pairs = [
+        ['phone', profile.phone],
+        ['website', profile.website],
+        ['city', profile.city],
+        ['products', profile.products],
+    ].filter(([, v]) => v !== '');
+    if (profile.capabilities.length) pairs.push(['capabilities', JSON.stringify(profile.capabilities)]);
+    if (profile.productionLoad != null) pairs.push(['production_load', profile.productionLoad]);
+    return pairs;
+}
 
 module.exports = function createAuthRouter(deps) {
     const {
@@ -85,6 +129,9 @@ module.exports = function createAuthRouter(deps) {
             }
             if (password.length < 8) return res.status(400).json({ error: 'Пароль — минимум 8 символов' });
 
+            // Мастер /zavod присылает профиль вместе с регистрацией
+            const profile = sanitizeProducerProfile(req.body.profile);
+
             const { rows: [taken] } = await pool.query('SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)', [email]);
             if (taken) return res.status(409).json({ error: 'Пользователь с таким email уже зарегистрирован' });
 
@@ -127,22 +174,33 @@ module.exports = function createAuthRouter(deps) {
                     // Присоединение профиля из реестра: ИНН совпал со стабом → «усыновляем»
                     // (у стаба нет пользователей/заявок, переименование безопасно)
                     let adopted = null;
+                    const profileCols = resolvedRole === 'producer' ? profileColumns(profile) : [];
                     if (resolvedRole === 'producer' && (normInn.length === 10 || normInn.length === 12)) {
                         const { rows: [stub] } = await client.query(
                             "SELECT id FROM companies WHERE inn = $1 AND role = 'producer' AND claimed = false LIMIT 1 FOR UPDATE", [normInn]
                         );
                         if (stub) {
+                            // Профиль из мастера дописываем тем же UPDATE, что присваивает стаб:
+                            // человек уже всё ввёл, второй раз спрашивать незачем.
+                            const extra = profileCols.map(([col], i) => `${col} = $${i + 3}`).join(', ');
                             await client.query(
-                                "UPDATE companies SET company = $1, claimed = true, status = 'На проверке' WHERE id = $2",
-                                [resolvedCompany, stub.id]
+                                `UPDATE companies SET company = $1, claimed = true, status = 'На проверке'${extra ? ', ' + extra : ''} WHERE id = $2`,
+                                [resolvedCompany, stub.id, ...profileCols.map(([, v]) => v)]
                             );
                             adopted = stub.id;
                         }
                     }
                     if (!adopted) {
+                        const cols = ['company', 'inn', 'role', 'specialization', 'status', ...profileCols.map(([c]) => c)];
+                        const vals = [
+                            resolvedCompany,
+                            normInn.length === 10 || normInn.length === 12 ? normInn : (inn || ''),
+                            resolvedRole, '', 'На проверке',
+                            ...profileCols.map(([, v]) => v),
+                        ];
                         await client.query(
-                            "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,$2,$3,$4,$5)",
-                            [resolvedCompany, normInn.length === 10 || normInn.length === 12 ? normInn : (inn || ''), resolvedRole, '', 'На проверке']
+                            `INSERT INTO companies (${cols.join(',')}) VALUES (${vals.map((_, i) => '$' + (i + 1)).join(',')})`,
+                            vals
                         );
                     }
                 }

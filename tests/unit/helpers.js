@@ -109,6 +109,7 @@ function baseDeps(overrides = {}) {
         addNotification: asyncNoop,
         getCompanyEmail: async () => null,
         sendEmail: asyncNoop,
+        sendVerificationEmail: asyncNoop,
         getUserIdsByCompany: async () => [],
         sendPush: noop,
         sendTelegramNotification: noop,
