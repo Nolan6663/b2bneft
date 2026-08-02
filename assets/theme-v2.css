@@ -883,6 +883,9 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   .orders-controls { flex-wrap: wrap; }
   .orders-controls > * { min-width: 0; }
   .ct-grid-controls > *, .ct-grid-controls > * > * { min-width: 0; }
+  /* Кнопке с nowrap-подписью ужиматься нельзя — «＋ В избранное» превращалось
+     в «＋ В избранно». Пусть занимает свою ширину, а ряд переносится. */
+  .ct-grid-controls button { flex: 0 0 auto; min-width: max-content; }
 
   /* Без min-width: 0 флекс- и грид-элемент не ужимается ниже содержимого: ряд
      вкладок вырастал до 506px в контейнере 360px, и скролл на нём не помогал —
