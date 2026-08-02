@@ -1449,6 +1449,13 @@ app.use('/api/auth', createAuthRouter({
     getUserIdsByCompany,
     sendVerificationEmail,
     APP_URL,
+    // для догоняющей рассылки по закупкам, придержанным до подтверждения email
+    rowToOrder,
+    matchedProducers,
+    notifyCompanyEmail,
+    registryInviter,
+    plainTitle,
+    htmlEscape,
 }));
 
 const { triggerIntegrations, sapB1Login } = createIntegrationsPush({ pool });

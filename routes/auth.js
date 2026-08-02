@@ -27,6 +27,13 @@ module.exports = function createAuthRouter(deps) {
         getUserIdsByCompany,
         sendVerificationEmail,
         APP_URL,
+        // Догоняющая рассылка по закупкам, размещённым до подтверждения email
+        rowToOrder = (r) => r,
+        matchedProducers = async () => [],
+        notifyCompanyEmail = async () => {},
+        registryInviter = { inviteStubsForOrder: async () => 0 },
+        plainTitle = (s) => String(s || ''),
+        htmlEscape = (s) => String(s || ''),
     } = deps;
 
     const router = express.Router();
@@ -485,6 +492,33 @@ module.exports = function createAuthRouter(deps) {
         } catch (e) { next(e); }
     });
 
+    // Закупки, размещённые до подтверждения email (мастер /zayavka пускает первую
+    // без него), ждут рассылки. Отпускаем их ровно один раз: UPDATE ... RETURNING
+    // снимает флаг и выбирает заказы одним запросом, поэтому двойной клик по ссылке
+    // из письма второй рассылки не даёт.
+    async function flushPendingOutbound(company) {
+        const { rows } = await pool.query(
+            'UPDATE orders SET outbound_pending = false WHERE company = $1 AND outbound_pending = true RETURNING *',
+            [company]
+        );
+        for (const row of rows) {
+            const order = rowToOrder(row);
+            const orderTitle = plainTitle(order.title);
+            const matched = await matchedProducers(order, 50, true);
+            await Promise.all(matched.map(m => notifyCompanyEmail(
+                m.company,
+                `Подходящая закупка (${m.score}%): «${orderTitle}»`,
+                `Подходящая закупка (${m.score}%) — ТехЗаказ`,
+                `<p style="color:#444;font-size:14px;line-height:1.5;">Появилась закупка, которая подходит вашему профилю на <strong>${m.score}%</strong>:</p>
+                 <p style="font-size:15px;font-weight:600;color:#1E3A5F;">«${htmlEscape(orderTitle)}»</p>
+                 <p style="color:#666;font-size:13px;">Категория: ${htmlEscape(order.category || '—')}</p>
+                 <p style="margin-top:16px;"><a href="${APP_URL}/producer.html" style="display:inline-block;background:#FF6A00;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Открыть закупки →</a></p>`
+            )));
+            await registryInviter.inviteStubsForOrder(order);
+        }
+        return rows.length;
+    }
+
     router.post('/verify-email', async (req, res, next) => {
         try {
             const token = String(req.body?.token || req.query?.token || '').trim();
@@ -496,7 +530,14 @@ module.exports = function createAuthRouter(deps) {
             if (!row) return res.status(400).json({ error: 'Ссылка недействительна или истекла' });
             await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [row.user_id]);
             await pool.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [row.user_id]);
+            const { rows: [u] } = await pool.query('SELECT company FROM users WHERE id = $1', [row.user_id]);
             res.json({ message: 'Email успешно подтверждён' });
+            // Фоном: рассылка по нескольким заказам может занять секунды, ответ ждать не должен.
+            if (u?.company) {
+                flushPendingOutbound(u.company)
+                    .then(n => { if (n) console.log(`outbound-flush: отпущено заказов ${n} (${u.company})`); })
+                    .catch(e => console.error('outbound-flush:', e.message));
+            }
         } catch (e) { next(e); }
     });
 
