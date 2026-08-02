@@ -844,6 +844,57 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
      файлу) и оставляло заголовку 91px. Без имени компании тянуться незачем. */
   .header-right .user-menu { flex: 0 0 auto; }
   .table-wrap, .orders-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Телефон: то, что не влезает, должно прокручиваться, а не обрезаться ──
+     `.main-content` прячет переполнение по горизонтали, поэтому широкие таблицы,
+     ряды вкладок и панели просто срезало по правому краю — на скриншотах это
+     видно как «половина колонки и всё». Ниже каждому такому месту дан свой
+     скролл или перенос. */
+
+  /* Таблицы кабинета: сделки, доставки, статистика карты, аналитика */
+  .main-content table {
+    display: block;
+    width: max-content;
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .orders-table-section,
+  .orders-wrap > .section,
+  .stat-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Ряды вкладок: «Все · Активные · В производстве · Завершённые» и вкладки избранного */
+  .proc-list-tabs,
+  .fav-tabs,
+  .ct-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .proc-list-tabs::-webkit-scrollbar,
+  .fav-tabs::-webkit-scrollbar,
+  .ct-tabs::-webkit-scrollbar { display: none; }
+  .proc-list-tab, .fav-tab, .ct-tab { flex: 0 0 auto; white-space: nowrap; }
+
+  /* Избранное: правая колонка с рекомендациями уезжала за экран целиком */
+  .fav-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  .fav-right { position: static !important; }
+  .fav-grid { grid-template-columns: minmax(0, 1fr) !important; }
+
+  /* Виджет «топ поставщиков» на главной заказчика: строки резало по правому краю */
+  #top-suppliers-list,
+  #top-suppliers-list * { min-width: 0; }
+  #top-suppliers-list [class*="name"],
+  #top-suppliers-list [class*="spec"] { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Панели с кнопками: «Создать заказ», «Экспорт», фильтры контрагентов */
+  .ct-grid-controls, .orders-controls, .catalog-results-head { flex-wrap: wrap; gap: 8px; }
+  .ct-grid-controls .btn-primary, .ct-grid-controls .btn-secondary { white-space: nowrap; }
+
+  /* Шапка профиля производителя: кнопка наезжала на название компании */
+  .producer-banner { flex-wrap: wrap; gap: 10px; }
+  .producer-banner > * { min-width: 0; }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .orders-controls { flex-wrap: wrap; gap: 8px; }
   .orders-search { min-width: 0; flex: 1 1 100%; }
