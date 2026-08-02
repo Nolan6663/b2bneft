@@ -12,7 +12,7 @@ const PUBLIC_PAGES = [
     'zakupki/armatura.html', 'zakupki/elektro.html', 'zakupki/metall.html', 'zakupki/rti.html',
     'catalog.html', 'map.html', 'supplier-public.html', 'dlya-postavshchikov.html',
     'partners.html', 'tariff.html', 'delivery.html', 'privacy.html', 'terms.html',
-    'login.html', '404.html',
+    'login.html', '404.html', 'zayavka.html',
 ];
 
 // Мягкая цветная тень — маркер генерённого интерфейса. Hairline `0 1px 3px` это
@@ -87,7 +87,7 @@ function lintFile(rel) {
 
 // Стили кабинета: страницы в гостевой проход не входят, но CSS сторожим тем же
 // правилом — иначе pill-радиусы возвращаются через них.
-const CABINET_CSS = ['assets/settings-page.css', 'assets/deals-page.css', 'assets/zakupki-cat.css', 'assets/css/tokens.css'];
+const CABINET_CSS = ['assets/settings-page.css', 'assets/deals-page.css', 'assets/zakupki-cat.css', 'assets/css/tokens.css', 'assets/onboarding.css'];
 
 test('тема: мягких свечений, pill-радиусов и градиентов не осталось', () => {
     const hits = lintFile('assets/theme-v2.css');

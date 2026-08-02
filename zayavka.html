@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Разместить закупку — ТехЗаказ</title>
+<meta name="description" content="Опишите задачу своими словами или приложите чертёж — соберём техническое задание и покажем заводы, которые могут его выполнить. Регистрация в конце, не в начале.">
+<link rel="canonical" href="https://texzakaz.ru/zayavka">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/css/tokens.css?v=2026080301">
+<link rel="stylesheet" href="/assets/onboarding.css?v=2026080301">
+<script type="text/javascript">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110221667','ym');ym(110221667,'init',{ssr:true,webvisor:true,clickmap:true,accurateTrackBounce:true,trackLinks:true});window.__tzYmId=110221667;</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/110221667" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+</style>
+</head>
+<body class="ob-page">
+
+<header class="ob-header">
+    <a class="ob-logo" href="/"><span class="ob-logo-mark">Т</span>ТЕХЗАКАЗ</a>
+    <a class="ob-header-link" href="/login">Уже есть аккаунт</a>
+</header>
+
+<div class="ob-shell">
+
+    <div class="ob-progress" role="list">
+        <div class="ob-progress-item" data-progress-dot="1" role="listitem">01 · Задача</div>
+        <div class="ob-progress-item" data-progress-dot="2" role="listitem">02 · Условия</div>
+        <div class="ob-progress-item" data-progress-dot="3" role="listitem">03 · Исполнители</div>
+        <div class="ob-progress-item" data-progress-dot="4" role="listitem">04 · Публикация</div>
+    </div>
+
+    <!-- ШАГ 1: что нужно -->
+    <section class="ob-card" data-step="1" hidden>
+        <div class="ob-step-num">Шаг 01</div>
+        <h1 class="ob-title">Что нужно изготовить</h1>
+        <p class="ob-lead">Опишите задачу обычными словами — как объяснили бы снабженцу. Или приложите чертёж: разберём его и вытащим материал, размеры и операции.</p>
+
+        <div class="ob-field">
+            <label class="ob-label" for="brief">Задача</label>
+            <textarea class="ob-textarea" id="brief" placeholder="Например: манжеты уплотнительные для гидроцилиндров бурового оборудования, полиуретан, до 25 МПа, размеры по чертежу, поставка в Сургут"></textarea>
+        </div>
+
+        <div class="ob-file">
+            <button class="ob-btn ob-btn-ghost" type="button" id="pickDrawing">Приложить чертёж</button>
+            <span id="drawingName">Картинка или PDF, до 10 МБ. Необязательно.</span>
+            <input type="file" id="drawingInput" accept="image/*,application/pdf">
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn" type="button" id="buildTz">Собрать техническое задание</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn ob-btn-ghost" type="button" id="skipTz">Заполню сам</button>
+        </div>
+        <div class="ob-error" id="err1" hidden></div>
+    </section>
+
+    <!-- ШАГ 2: условия -->
+    <section class="ob-card" data-step="2" hidden>
+        <div class="ob-step-num">Шаг 02</div>
+        <h2 class="ob-title">Задание и условия</h2>
+        <p class="ob-lead">Проверьте текст задания — его увидят поставщики. Всё редактируется.</p>
+
+        <div class="ob-field">
+            <label class="ob-label" for="title">Название закупки</label>
+            <input class="ob-input" id="title" type="text" placeholder="Манжеты уплотнительные полиуретановые">
+        </div>
+
+        <div class="ob-field">
+            <label class="ob-label" for="description">Техническое задание</label>
+            <textarea class="ob-textarea" id="description" style="min-height:220px;"></textarea>
+            <ul class="ob-checklist" id="checklist"></ul>
+        </div>
+
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="category">Категория</label>
+                <select class="ob-select" id="category">
+                    <option value="РТИ">РТИ</option>
+                    <option value="Металл">Металл</option>
+                    <option value="Трубопроводная арматура">Трубопроводная арматура</option>
+                    <option value="Электрооборудование">Электрооборудование</option>
+                    <option value="Прочее">Прочее</option>
+                </select>
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="quantity">Количество, шт.</label>
+                <input class="ob-input" id="quantity" type="number" min="1" placeholder="200">
+            </div>
+        </div>
+
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="deadline">Срок поставки</label>
+                <input class="ob-input" id="deadline" type="date">
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="city">Город поставки</label>
+                <input class="ob-input" id="city" type="text" placeholder="Сургут">
+            </div>
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="1">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" id="toMatches">Кто это сделает</button>
+        </div>
+        <div class="ob-error" id="err2" hidden></div>
+    </section>
+
+    <!-- ШАГ 3: подбор -->
+    <section class="ob-card" data-step="3" hidden>
+        <div class="ob-step-num">Шаг 03</div>
+        <h2 class="ob-title">Кто может это выполнить</h2>
+        <p class="ob-lead">Подбор идёт по каталогу предприятий: специализация, продукция и заявленные операции сверяются с вашим заданием.</p>
+
+        <div><span class="ob-total" id="matchTotal">—</span><span class="ob-total-unit" id="matchUnit">предприятий подходит</span></div>
+        <div class="ob-match-list" id="matchList"></div>
+        <div class="ob-more" id="matchMore"></div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="2">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" id="toRegister">Получить отклики</button>
+        </div>
+        <div class="ob-error" id="err3" hidden></div>
+    </section>
+
+    <!-- ШАГ 4: регистрация и публикация -->
+    <section class="ob-card" data-step="4" hidden>
+        <div class="ob-step-num">Шаг 04</div>
+        <h2 class="ob-title">Куда присылать отклики</h2>
+        <p class="ob-lead">Аккаунт нужен, чтобы вы видели предложения и переписку по закупке. Закупка публикуется сразу после регистрации.</p>
+
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="regCompany">Название компании</label>
+                <input class="ob-input" id="regCompany" type="text" placeholder="ООО «Ваша компания»" autocomplete="organization">
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="regInn">ИНН</label>
+                <input class="ob-input" id="regInn" type="text" inputmode="numeric" placeholder="10 или 12 цифр">
+                <div class="ob-hint">Необязательно, но с ним поставщики видят, что компания реальная.</div>
+            </div>
+        </div>
+
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="regEmail">Рабочий email</label>
+                <input class="ob-input" id="regEmail" type="email" placeholder="you@company.ru" autocomplete="email">
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="regPassword">Пароль</label>
+                <input class="ob-input" id="regPassword" type="password" placeholder="Минимум 8 символов" autocomplete="new-password">
+            </div>
+        </div>
+
+        <label class="ob-consent">
+            <input type="checkbox" id="regConsent">
+            <span>Согласен на <a href="/privacy" target="_blank" rel="noopener">обработку персональных данных</a> и принимаю <a href="/terms" target="_blank" rel="noopener">условия использования</a></span>
+        </label>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-ghost" type="button" data-back="3">Назад</button>
+            <div class="ob-actions-spacer"></div>
+            <button class="ob-btn" type="button" id="publish">Опубликовать закупку</button>
+        </div>
+        <div class="ob-error" id="err4" hidden></div>
+        <div class="ob-foot-note">Закупку видят только зарегистрированные поставщики. Контакты вашей компании не публикуются.</div>
+    </section>
+
+</div>
+
+<script src="/assets/onboarding.js?v=2026080301"></script>
+<script>
+(function () {
+    const W = window.TZWizard;
+    const $ = (id) => document.getElementById(id);
+    // Чертёж держим в памяти вкладки: гостю на диск сервера ничего не пишем,
+    // файл уезжает уже вместе с публикацией закупки.
+    let drawingFile = null;
+
+    function restore() {
+        const d = W.getDraft();
+        if (d.brief) $('brief').value = d.brief;
+        if (d.title) $('title').value = d.title;
+        if (d.description) $('description').value = d.description;
+        if (d.category) $('category').value = d.category;
+        if (d.quantity) $('quantity').value = d.quantity;
+        if (d.deadline) $('deadline').value = d.deadline;
+        if (d.city) $('city').value = d.city;
+        if (Array.isArray(d.checklist)) renderChecklist(d.checklist);
+    }
+
+    function renderChecklist(items) {
+        const el = $('checklist');
+        el.innerHTML = '';
+        (items || []).forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            el.appendChild(li);
+        });
+    }
+
+    function collectStep2() {
+        return {
+            title: $('title').value.trim(),
+            description: $('description').value.trim(),
+            category: $('category').value,
+            quantity: $('quantity').value,
+            deadline: $('deadline').value,
+            city: $('city').value.trim(),
+        };
+    }
+
+    $('pickDrawing').onclick = () => $('drawingInput').click();
+    $('drawingInput').onchange = async (e) => {
+        drawingFile = e.target.files[0] || null;
+        if (!drawingFile) return;
+        $('drawingName').textContent = drawingFile.name;
+        W.showError($('err1'), '');
+        const btn = $('buildTz');
+        W.setBusy(btn, true, 'Читаю чертёж…');
+        try {
+            const fd = new FormData();
+            fd.append('drawing', drawingFile);
+            const out = await W.postForm('/api/public/analyze-drawing', fd);
+            const c = out.card || {};
+            const lines = [
+                c.part ? 'Деталь: ' + c.part : '',
+                c.material ? 'Материал: ' + c.material : '',
+                c.quantity ? 'Количество по чертежу: ' + c.quantity : '',
+                (c.operations || []).length ? 'Операции: ' + c.operations.join(', ') : '',
+                c.tolerances ? 'Допуски: ' + c.tolerances : '',
+                c.coating ? 'Покрытие: ' + c.coating : '',
+            ].filter(Boolean);
+            const brief = $('brief');
+            brief.value = (brief.value ? brief.value + '\n\n' : '') + lines.join('\n');
+            W.setDraft({ brief: brief.value });
+        } catch (err) {
+            W.showError($('err1'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    $('buildTz').onclick = async () => {
+        const brief = $('brief').value.trim();
+        if (brief.length < 5) return W.showError($('err1'), 'Опишите задачу — хотя бы пару слов');
+        W.showError($('err1'), '');
+        const btn = $('buildTz');
+        W.setBusy(btn, true, 'Собираю задание…');
+        try {
+            const out = await W.post('/api/public/tz-draft', { brief, category: $('category').value });
+            W.setDraft({ brief, title: out.title || '', description: out.description || '', checklist: out.checklist || [] });
+            $('title').value = out.title || '';
+            $('description').value = out.description || '';
+            renderChecklist(out.checklist);
+            W.goStep(2);
+        } catch (err) {
+            W.showError($('err1'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    $('skipTz').onclick = () => {
+        const brief = $('brief').value.trim();
+        W.setDraft({ brief });
+        if (brief && !$('description').value) $('description').value = brief;
+        W.goStep(2);
+    };
+
+    $('toMatches').onclick = async () => {
+        const data = collectStep2();
+        if (!data.title) return W.showError($('err2'), 'Дайте закупке название');
+        if (!data.description) return W.showError($('err2'), 'Опишите, что требуется');
+        if (!data.deadline) return W.showError($('err2'), 'Укажите срок поставки');
+        W.showError($('err2'), '');
+        W.setDraft(data);
+        const btn = $('toMatches');
+        W.setBusy(btn, true, 'Ищу заводы…');
+        try {
+            const out = await W.post('/api/public/match-preview', data);
+            $('matchTotal').textContent = out.total;
+            $('matchUnit').textContent = out.total === 1 ? 'предприятие подходит' : 'предприятий подходит';
+            $('matchList').innerHTML = (out.items || []).map(m => `
+                <div class="ob-match">
+                    <div>
+                        <div class="ob-match-name">${W.escapeHtml(m.company)}</div>
+                        <div class="ob-match-meta">${W.escapeHtml([m.city, m.products].filter(Boolean).join(' · '))}</div>
+                    </div>
+                    <span class="ob-score">${Number(m.score) || 0}%</span>
+                </div>`).join('');
+            const rest = Math.max(0, (out.total || 0) - (out.items || []).length);
+            $('matchMore').textContent = rest
+                ? 'И ещё ' + rest + ' — они увидят закупку в своём кабинете.'
+                : 'Контакты предприятий открываются после публикации закупки.';
+            W.goStep(3);
+        } catch (err) {
+            W.showError($('err2'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    $('toRegister').onclick = () => W.goStep(4);
+
+    $('publish').onclick = async () => {
+        const email = $('regEmail').value.trim();
+        const password = $('regPassword').value;
+        const company = $('regCompany').value.trim();
+        if (!company) return W.showError($('err4'), 'Укажите название компании');
+        if (!email) return W.showError($('err4'), 'Укажите рабочий email');
+        if (password.length < 8) return W.showError($('err4'), 'Пароль — минимум 8 символов');
+        if (!$('regConsent').checked) return W.showError($('err4'), 'Нужно согласие на обработку данных');
+        W.showError($('err4'), '');
+        const btn = $('publish');
+        W.setBusy(btn, true, 'Публикую…');
+        try {
+            await W.post('/api/auth/register', {
+                email, password, company,
+                inn: $('regInn').value.replace(/\D/g, ''),
+                role: 'customer',
+                consent: true,
+            });
+            const d = { ...W.getDraft(), ...collectStep2() };
+            const fd = new FormData();
+            fd.append('title', d.title);
+            fd.append('category', d.category || 'Прочее');
+            fd.append('deadline', d.deadline);
+            if (d.quantity) fd.append('quantity', d.quantity);
+            fd.append('description', [d.description, d.city ? 'Город поставки: ' + d.city : ''].filter(Boolean).join('\n\n'));
+            if (drawingFile) fd.append('drawing', drawingFile);
+            await W.postForm('/api/orders', fd);
+            W.goal('onboarding_order_published');
+            W.clearDraft();
+            window.location.href = '/index?published=1';
+        } catch (err) {
+            W.showError($('err4'), err.message);
+        } finally {
+            W.setBusy(btn, false);
+        }
+    };
+
+    document.querySelectorAll('[data-back]').forEach(btn => {
+        btn.onclick = () => W.goStep(Number(btn.dataset.back));
+    });
+
+    ['brief', 'title', 'description', 'category', 'quantity', 'deadline', 'city'].forEach(id => {
+        const el = $(id);
+        if (el) el.addEventListener('change', () => W.setDraft({ [id]: el.value }));
+    });
+
+    restore();
+    W.mount(4);
+})();
+</script>
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    /* color-scheme + явные цвета — страховка от принудительного тёмного режима
+       браузера и тёмных расширений: они перекрашивают текст по своим правилам и
+       на белом футере дают белым по белому. Реквизиты и ссылку на политику
+       обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
+    /* position + z-index обязательны: без собственного контекста наложения
+       WebKit (Safari на iPhone, Яндекс.Браузер) футер не отрисовывал — блок
+       занимал место и ловил клики, поэтому по невидимой ссылке можно было
+       уйти в политику, но на экране была пустая полоса. Chromium на десктопе
+       рисовал нормально, из-за чего ошибка ловилась только на устройствах. */
+    .tz-footer { position: relative; z-index: 1; grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-copy,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-links a,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-req a,
+    :root:not([data-theme="dark"]) .tz-cookie { color: #64748B; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-org { color: #0F172A; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
+</body>
+</html>
