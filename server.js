@@ -735,12 +735,13 @@ app.get('/oborudovanie/:slug', async (req, res, next) => {
         }
         const producers = (await loadEquipmentProducers()).filter(p => producerHasOperation(p, op));
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
-        const regionsOfOp = [...producers.reduce((m, p) => m.set(p.city || '—', (m.get(p.city || '—') || 0) + 1), new Map())]
-            .sort((a, b) => b[1] - a[1]).slice(0, 6);
+        // Считаем все регионы выдачи, а не первые несколько: плашка «6 регионов»
+        // при тридцати в списке — враньё цифрой, ровно то, что мы вычищаем.
+        const regionsOfOp = new Set(producers.map(p => (p.city || '').trim()).filter(Boolean));
 
         const statsHtml = [
             `<div class="zr-stat"><b>${producers.length}</b><span>${regionPlural(producers.length, 'предприятие', 'предприятия', 'предприятий')} заявили операцию</span></div>`,
-            regionsOfOp.length ? `<div class="zr-stat"><b>${regionsOfOp.length}</b><span>регионов в выдаче</span></div>` : '',
+            regionsOfOp.size ? `<div class="zr-stat"><b>${regionsOfOp.size}</b><span>${regionPlural(regionsOfOp.size, 'регион', 'региона', 'регионов')} в выдаче</span></div>` : '',
         ].filter(Boolean).join('\n      ');
 
         let html = fs.readFileSync(path.join(__dirname, 'zakupki', 'oborudovanie-operation.html'), 'utf8');
