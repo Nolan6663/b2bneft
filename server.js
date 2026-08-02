@@ -54,6 +54,17 @@ const createIntegrationsPush = require('./lib/integrations-push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
 const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots } = require('./lib/producer-seo');
 const { categorizeProducer } = require('./lib/producer-categories');
+const { REGIONS, regionBySlug, regionLabel } = require('./seo/regions-data');
+const {
+    buildRegionTitle,
+    buildRegionDescription,
+    buildRegionRobots,
+    buildRegionSsr,
+    buildRegionJsonLd,
+    esc: regionEsc,
+    plural: regionPlural,
+    MIN_INDEXABLE,
+} = require('./lib/region-seo');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -548,6 +559,86 @@ CAT_PAGES.forEach(({ slug, file }) => {
     });
 });
 
+// ── Страницы регионов: /zakupki/region/<slug> ────────────────────────────────
+// Реестр ГИСП пишет в колонку city название региона, поэтому группировка идёт по
+// точному совпадению строки. Состав каталога меняется раз в недели — час кэша.
+const _regionCache = new Map();
+const REGION_TTL_MS = 3600 * 1000;
+const REGION_CARDS_LIMIT = 60;
+
+async function loadRegionData(region) {
+    const cached = _regionCache.get(region.slug);
+    if (cached && Date.now() - cached.ts < REGION_TTL_MS) return cached.data;
+
+    const { rows } = await pool.query(
+        `SELECT id, company, city, specialization, products, about, equipment, capabilities,
+                verified_by_platform, claimed, source
+           FROM companies
+          WHERE role = 'producer' AND status <> 'Отклонено' AND city = $1
+          ORDER BY verified_by_platform DESC, claimed DESC, company ASC`,
+        [region.name]
+    );
+
+    const producers = rows.map(rowToCompany);
+    const catCount = new Map();
+    for (const p of producers) {
+        for (const c of categorizeProducer(p)) catCount.set(c, (catCount.get(c) || 0) + 1);
+    }
+    const data = {
+        producers: producers.slice(0, REGION_CARDS_LIMIT),
+        stats: {
+            total: producers.length,
+            verified: producers.filter(p => p.verifiedByPlatform).length,
+            claimed: producers.filter(p => p.claimed).length,
+            categories: [...catCount.entries()].sort((a, b) => b[1] - a[1]),
+        },
+    };
+    _regionCache.set(region.slug, { ts: Date.now(), data });
+    return data;
+}
+
+app.get('/zakupki/region/:slug', async (req, res, next) => {
+    try {
+        const region = regionBySlug(req.params.slug);
+        if (!region) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+        const { producers, stats } = await loadRegionData(region);
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        const label = regionLabel(region);
+
+        const lead = `В каталоге ${stats.total} ${regionPlural(stats.total, 'предприятие', 'предприятия', 'предприятий')} ${region.where}: производства из реестра Минпромторга и компании, которые сами завели профиль на площадке. Закупка размещается по чертежу или техническому заданию — заводы отвечают напрямую, без посредников и тендерных процедур.`;
+
+        const statsHtml = [
+            `<div class="zr-stat"><b>${stats.total}</b><span>предприятий в каталоге</span></div>`,
+            stats.claimed ? `<div class="zr-stat"><b>${stats.claimed}</b><span>с заполненным профилем</span></div>` : '',
+            stats.verified ? `<div class="zr-stat"><b>${stats.verified}</b><span>проверено платформой</span></div>` : '',
+        ].filter(Boolean).join('\n      ');
+
+        const others = REGIONS.filter(r => r.slug !== region.slug).slice(0, 16)
+            .map(r => `<li><a href="/zakupki/region/${r.slug}">${regionEsc(regionLabel(r))}</a></li>`)
+            .join('\n      ');
+
+        let html = fs.readFileSync(path.join(__dirname, 'zakupki', 'region.html'), 'utf8');
+        html = html
+            .replace(/<!--META_TITLE-->/g, htmlEscape(buildRegionTitle(region, stats.total)))
+            .replace(/<!--META_DESC-->/g, htmlEscape(buildRegionDescription(region, stats)))
+            .replace(/<!--META_ROBOTS-->/g, buildRegionRobots(stats.total))
+            .replace(/<!--CANONICAL_URL-->/g, `${base}/zakupki/region/${region.slug}`)
+            .replace(/<!--JSON_LD-->/g, buildRegionJsonLd(region, stats, base))
+            .replace(/<!--REGION_LABEL-->/g, htmlEscape(label))
+            .replace(/<!--REGION_WHERE-->/g, htmlEscape(region.where))
+            .replace(/<!--REGION_LEAD-->/g, htmlEscape(lead))
+            .replace(/<!--REGION_STATS-->/g, statsHtml)
+            .replace(/<!--REGION_BODY-->/g, buildRegionSsr(region, producers, stats))
+            .replace(/<!--REGION_LINKS-->/g, others);
+
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.type('html').send(html);
+    } catch (e) { next(e); }
+});
+
 app.get('/favicon.ico', (req, res) => {
     res.redirect(301, '/favicon.svg');
 });
@@ -576,6 +667,7 @@ app.get('/robots.txt', (req, res) => {
         'User-agent: *\n' +
         'Allow: /\n' +
         'Allow: /zakupki\n' +
+        'Allow: /zakupki/region/\n' +
         'Allow: /map\n' +
         'Allow: /dlya-postavshchikov\n' +
         'Allow: /p/\n' +
@@ -614,6 +706,19 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/privacy',             priority: '0.3', changefreq: 'yearly' },
             { url: '/terms',               priority: '0.3', changefreq: 'yearly' },
         ];
+        // Регионы: страница отдаёт noindex, пока предприятий меньше MIN_INDEXABLE,
+        // поэтому в карту идут только те, где каталог реально что-то показывает.
+        const { rows: regionRows } = await pool.query(
+            `SELECT city, COUNT(*)::int AS n FROM companies
+              WHERE role = 'producer' AND status <> 'Отклонено' AND city = ANY($1)
+              GROUP BY city`,
+            [REGIONS.map(r => r.name)]
+        );
+        const regionCounts = new Map(regionRows.map(r => [r.city, r.n]));
+        for (const r of REGIONS) {
+            if ((regionCounts.get(r.name) || 0) < MIN_INDEXABLE) continue;
+            pages.push({ url: `/zakupki/region/${r.slug}`, priority: '0.7', changefreq: 'weekly' });
+        }
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
         // индексируем (4286 страниц «завод + продукция + город» — органический канал).
         // Карточки без единого факта, кроме названия, исключаем: сама страница отдаёт

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title><!--META_TITLE--></title>
+<meta name="description" content="<!--META_DESC-->">
+<link rel="canonical" href="<!--CANONICAL_URL-->">
+<meta property="og:type" content="website">
+<meta property="og:url" content="<!--CANONICAL_URL-->">
+<meta property="og:site_name" content="ТехЗаказ">
+<meta property="og:title" content="<!--META_TITLE-->">
+<meta property="og:description" content="<!--META_DESC-->">
+<meta property="og:image" content="https://texzakaz.ru/landing-hero.png">
+<meta property="og:locale" content="ru_RU">
+<meta name="robots" content="<!--META_ROBOTS-->">
+<script type="application/ld+json"><!--JSON_LD--></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/zakupki-cat.css">
+<style>
+  .zr-lead { font-size: 15px; line-height: 1.7; color: var(--zc-text-secondary, #475569); max-width: 780px; }
+  .zr-stats { display: flex; flex-wrap: wrap; gap: 18px; margin: 22px 0 4px; }
+  .zr-stat { border: 1px solid var(--zc-border, #E2E8F0); background: #fff; padding: 12px 16px; min-width: 150px; }
+  .zr-stat b { display: block; font-size: 24px; font-weight: 800; color: var(--zc-text, #0F172A); line-height: 1.2; }
+  .zr-stat span { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--zc-text-secondary, #64748B); }
+  .zr-h2 { font-size: 20px; font-weight: 800; margin: 32px 0 12px; color: var(--zc-text, #0F172A); }
+  .zr-cats { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+  .zr-cats li { display: flex; align-items: baseline; gap: 8px; border: 1px solid var(--zc-border, #E2E8F0); padding: 8px 14px; background: #fff; font-size: 13.5px; }
+  .zr-cats b { font-weight: 800; }
+  .zr-cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .zr-card { border: 1px solid var(--zc-border, #E2E8F0); background: #fff; padding: 14px 16px; }
+  .zr-card-name { font-size: 14.5px; font-weight: 700; color: var(--zc-text, #0F172A); text-decoration: none; display: block; }
+  .zr-card-name:hover { color: var(--zc-accent, #FF6A00); }
+  .zr-card-line { font-size: 12.5px; line-height: 1.55; color: var(--zc-text-secondary, #64748B); margin: 6px 0 0; }
+  .zr-badge { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border: 1px solid var(--zc-border, #E2E8F0); color: var(--zc-text-secondary, #64748B); }
+  .zr-badge--ok { border-color: #41BD97; color: #2F8F72; }
+  .zr-empty { font-size: 14px; color: var(--zc-text-secondary, #64748B); }
+  .zr-regions { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .zr-regions a { font-size: 13px; color: var(--zc-text-secondary, #475569); text-decoration: none; border: 1px solid var(--zc-border, #E2E8F0); padding: 6px 12px; background: #fff; }
+  .zr-regions a:hover { color: var(--zc-accent, #FF6A00); border-color: var(--zc-accent, #FF6A00); }
+  .zr-more { margin: 14px 0 0; font-size: 13px; color: var(--zc-text-secondary, #64748B); }
+</style>
+</head>
+<body>
+<header class="zc-header">
+  <a href="/" class="zc-logo">
+    <div class="zc-logo-icon"><span>Т</span></div>
+    <span class="zc-logo-text">ТЕХЗАКАЗ</span>
+  </a>
+  <nav class="zc-nav">
+    <a href="/zakupki">Все закупки</a>
+    <a href="/dlya-postavshchikov">Поставщикам</a>
+    <a href="/map">Карта предприятий</a>
+  </nav>
+  <a href="/login#register" class="zc-cta">Разместить закупку</a>
+</header>
+
+<main>
+  <section class="zc-hero">
+    <div class="zc-breadcrumb">
+      <a href="/">Главная</a><span>›</span>
+      <a href="/zakupki">Закупки</a><span>›</span>
+      <span><!--REGION_LABEL--></span>
+    </div>
+    <h1 class="zc-h1">Производители <!--REGION_WHERE--></h1>
+    <p class="zr-lead"><!--REGION_LEAD--></p>
+    <div class="zr-stats"><!--REGION_STATS--></div>
+  </section>
+
+  <section class="zc-content">
+    <div class="zc-cats-nav">
+      <a href="/zakupki" class="zc-cat-link">Все категории</a>
+      <a href="/zakupki/rti" class="zc-cat-link">РТИ</a>
+      <a href="/zakupki/metall" class="zc-cat-link">Металлообработка</a>
+      <a href="/zakupki/armatura" class="zc-cat-link">Трубопроводная арматура</a>
+      <a href="/zakupki/elektro" class="zc-cat-link">Электрооборудование</a>
+    </div>
+
+    <!--REGION_BODY-->
+
+    <p class="zr-more">Карточка предприятия открывается без регистрации: направление работы, продукция и признак проверки. Чтобы получить предложения под свой чертёж, <a href="/login#register">разместите закупку</a> — она уйдёт профильным заводам.</p>
+
+    <h2 class="zr-h2">Другие регионы</h2>
+    <ul class="zr-regions"><!--REGION_LINKS--></ul>
+  </section>
+</main>
+
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    /* color-scheme + явные цвета — страховка от принудительного тёмного режима
+       браузера и тёмных расширений: они перекрашивают текст по своим правилам и
+       на белом футере дают белым по белому. Реквизиты и ссылку на политику
+       обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
+    .tz-footer { grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-copy,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-links a,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-req a,
+    :root:not([data-theme="dark"]) .tz-cookie { color: #64748B; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-org { color: #0F172A; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
+</body>
+</html>
