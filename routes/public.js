@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { categorizeProducer } = require('../lib/producer-categories');
+const tzAi = require('../lib/ai-client');
 
 function createPublicRouter(deps) {
     const {
@@ -15,6 +16,12 @@ function createPublicRouter(deps) {
         getCityProductionPoint,
         offsetProductionPoint,
         matchedProducers,
+        // ИИ берём из lib/ai-client, но через deps — так тесты подставляют заглушку
+        // вместо живых вызовов модели.
+        generateProcurementTz = tzAi.generateProcurementTz,
+        analyzeDrawing = tzAi.analyzeDrawing,
+        isTzAiConfigured = tzAi.isTzAiConfigured,
+        handleDrawingImageUpload = (req, res, next) => next(),
     } = deps;
 
     const router = express.Router();
@@ -380,6 +387,56 @@ function createPublicRouter(deps) {
                 })),
             });
         } catch (e) { next(e); }
+    });
+
+    // Сборка ТЗ до регистрации. Потолок по IP стоит в server.js, здесь — валидация
+    // и перевод кодов ошибок клиента модели в понятный человеку текст.
+    router.post('/public/tz-draft', async (req, res, next) => {
+        try {
+            const brief = String(req.body?.brief || '').trim();
+            if (brief.length < 5) return res.status(400).json({ error: 'Опишите задачу — хотя бы пару слов' });
+            if (!isTzAiConfigured()) {
+                return res.status(503).json({ error: 'Сборка задания временно недоступна. Заполните описание вручную — это не помешает разместить закупку.' });
+            }
+            const out = await generateProcurementTz({
+                brief: brief.slice(0, 2000),
+                category: String(req.body?.category || '').slice(0, 100),
+                quantity: req.body?.quantity ? Number(req.body.quantity) : null,
+                title: String(req.body?.title || '').slice(0, 200),
+            });
+            res.json(out);
+        } catch (e) {
+            console.error('[public/tz-draft]', e.message, e.code || '');
+            if (e.code === 'AI_NOT_CONFIGURED') {
+                return res.status(503).json({ error: 'Сборка задания временно недоступна. Заполните описание вручную — это не помешает разместить закупку.' });
+            }
+            if (e.code === 'AI_PARSE' || e.code === 'AI_EMPTY' || e.code === 'AI_RATE_LIMIT' || e.code === 'AI_AUTH') {
+                return res.status(502).json({ error: 'Не получилось собрать задание с первого раза. Попробуйте ещё раз или опишите своими словами.' });
+            }
+            next(e);
+        }
+    });
+
+    // Разбор чертежа до регистрации. Файл живёт только в памяти запроса: гостю на
+    // диск ничего не пишем, чтобы нечему было копиться и нечего абузить.
+    router.post('/public/analyze-drawing', handleDrawingImageUpload, async (req, res, next) => {
+        try {
+            if (!req.file) return res.status(400).json({ error: 'Приложите чертёж — картинку или PDF' });
+            const { card, model, source } = await analyzeDrawing({
+                buffer: req.file.buffer,
+                filename: req.file.originalname,
+                mime: req.file.mimetype,
+            });
+            res.json({ card, model, source: source || 'image' });
+        } catch (e) {
+            console.error('[public/analyze-drawing]', e.message, e.code || '');
+            if (e.code === 'AI_FORMAT' || e.code === 'AI_PDF_SCAN') return res.status(415).json({ error: e.message });
+            if (e.code === 'AI_NOT_CONFIGURED') return res.status(503).json({ error: 'Разбор чертежей временно недоступен. Опишите деталь словами — так тоже работает.' });
+            if (e.code === 'AI_PARSE' || e.code === 'AI_EMPTY') {
+                return res.status(502).json({ error: 'Не получилось разобрать чертёж. Опишите деталь словами — так тоже работает.' });
+            }
+            next(e);
+        }
     });
 
     // Завод вводит ИНН — показываем, что мы про него уже знаем из реестра, вместо
