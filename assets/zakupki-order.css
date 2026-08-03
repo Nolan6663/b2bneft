@@ -7,6 +7,14 @@
   padding: 28px 24px 8px;
 }
 
+/* zakupki-cat.css рисует заголовок и крошки белыми — там герой-блок тёмный.
+   Здесь фон светлый, поэтому цвета переопределяем, иначе белое по белому. */
+.zo-hero .zc-h1 { color: #0F172A; }
+.zo-hero .zc-breadcrumb a { color: #64748B; }
+.zo-hero .zc-breadcrumb a:hover { color: #FF6A00; }
+.zo-hero .zc-breadcrumb span { color: #94A3B8; }
+.zo-hero .zc-breadcrumb span:last-child { color: #475569; }
+
 .zo-status {
   display: inline-flex;
   align-items: center;
