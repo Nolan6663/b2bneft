@@ -102,9 +102,9 @@
         </div>
 
         <div class="card" style="padding:0;overflow:hidden;">
-            <div style="padding:18px 20px 14px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;">
+            <div class="card-toolbar" style="padding:18px 20px 14px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
                 <span style="font-size:14px;font-weight:600;color:var(--text-primary);">Все доставки</span>
-                <input id="searchInput" type="text" placeholder="Поиск по названию или контрагенту..."
+                <input id="searchInput" class="card-toolbar-search" type="text" placeholder="Поиск по названию или контрагенту..."
                     style="height:34px;padding:0 12px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text-primary);font-size:13px;width:280px;"
                     oninput="renderTable()">
             </div>

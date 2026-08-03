@@ -28,6 +28,12 @@
             gap: 16px;
             align-items: start;
         }
+        /* На телефоне вторая колонка (статус, детали заказа) уезжала за экран,
+           а таймлайн сжимался так, что слова переносились по одному. */
+        @media (max-width: 900px) {
+            .delivery-layout { grid-template-columns: 1fr; }
+            .delivery-layout > * { min-width: 0; }
+        }
 
         /* Timeline */
         .timeline-card {

@@ -36,7 +36,8 @@ module.exports = async function globalSetup() {
     await page.fill('#authEmail', email);
     await page.fill('#authPassword', password);
     await page.click('#btnSubmit');
-    await page.waitForURL(/admin\.html/, { timeout: 30000 });
+    // На проде адреса без .html: /admin вместо /admin.html
+    await page.waitForURL(/\/admin(\.html)?(\?|#|$)/, { timeout: 30000 });
 
     await context.storageState({ path: storageFile });
     await browser.close();

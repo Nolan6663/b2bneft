@@ -852,14 +852,37 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
      скролл или перенос. */
 
   /* Таблицы кабинета: сделки, доставки, статистика карты, аналитика.
-     Скроллит сама таблица — обернуть её в контейнер из CSS нельзя, а разметка
-     у каждой страницы своя. */
-  .main-content table {
-    display: block;
+     Скроллит обёртка `.table-scroll` (её вешает app.js), а не сама таблица:
+     `display: block` на <table> отдаёт строки анонимной таблице внутри, та
+     сжимается по минимальному содержимому — колонки схлопывались, и заголовки
+     вставали вплотную («КОМПАНИЙВЕРИФИЦ.РЕЙТИНГ»). Таблица остаётся таблицей. */
+  .main-content .table-scroll {
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  .main-content .table-scroll > table {
+    width: 100%;
+    min-width: 560px;
     white-space: nowrap;
+  }
+  /* Узкие виджет-таблицы («Итоги недели») должны влезать целиком без скролла */
+  .main-content .table-scroll[data-narrow="1"] > table {
+    min-width: 0;
+    white-space: normal;
+  }
+  /* Колонкам нужен зазор: у части таблиц padding задан инлайном как `4px 0` */
+  .main-content .table-scroll th + th,
+  .main-content .table-scroll td + td {
+    padding-left: 12px;
+  }
+
+  /* Шапка карточки «заголовок + поиск»: поле в 280px наезжало на заголовок */
+  .card-toolbar {
+    flex-wrap: wrap;
+  }
+  .card-toolbar-search {
+    width: 100% !important;
   }
   .orders-table-section,
   .orders-wrap > .section,
@@ -1432,9 +1455,12 @@ body {
   min-width: 0;
 }
 
+/* break-word, а не anywhere: `anywhere` обнуляет min-content заголовка, флекс
+   ужимает его уже слова, и «Сообщения» рвалось на «Сообщени / я». break-word
+   тоже спасает от длинного слова, но не даёт ужать блок уже самого слова. */
 .header h2,
 .msg-header h2 {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .header-right {
@@ -1511,8 +1537,9 @@ table {
     min-width: 0;
   }
 
+  /* Правая группа занимает свою ширину и не отнимает её у заголовка */
   .header-right {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     justify-content: flex-end;
     flex-wrap: nowrap;
     min-width: 0;

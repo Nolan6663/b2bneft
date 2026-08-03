@@ -107,8 +107,40 @@ async function initSidebarProfileLink() {
   } catch { /* ссылка останется # до следующей загрузки */ }
 }
 
+/* Обёртка для горизонтального скролла таблиц.
+   Скроллить должна обёртка, а не сама <table>: `display: block` на таблице
+   сжимает колонки по минимальному содержимому и склеивает заголовки. Разметка
+   таблиц у каждой страницы своя, поэтому обёртку ставим из одного места. */
+function wrapTablesForScroll(root = document) {
+  root.querySelectorAll('.main-content table').forEach((table) => {
+    const parent = table.parentElement;
+    if (!parent || parent.classList.contains('table-scroll')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    /* Компактные виджет-таблицы влезают целиком — им скролл не нужен */
+    if (table.closest('.bottom-widget')) wrap.dataset.narrow = '1';
+    parent.insertBefore(wrap, table);
+    wrap.appendChild(table);
+  });
+}
+
+function initTableScroll() {
+  wrapTablesForScroll();
+  /* Таблицы, которые страницы дорисовывают после загрузки данных */
+  const content = document.querySelector('.main-content');
+  if (!content || typeof MutationObserver === 'undefined') return;
+  const observer = new MutationObserver((records) => {
+    const added = records.some(r => [...r.addedNodes].some(
+      n => n.nodeType === 1 && (n.tagName === 'TABLE' || n.querySelector?.('table'))
+    ));
+    if (added) wrapTablesForScroll();
+  });
+  observer.observe(content, { childList: true, subtree: true });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyStoredTheme();
+  initTableScroll();
   initPageTransitionLoader();
   initSidebarRole();
   initSidebarExtra();
