@@ -11,8 +11,12 @@ const { test, expect } = require('@playwright/test');
 const customerFile = path.join(__dirname, 'customer-storage.json');
 const hasCustomer = fs.existsSync(customerFile);
 
+/* Сброс одноразовый: initScript выполняется на каждой навигации, и без
+   маркера в sessionStorage перезагрузка внутри теста сама возвращала бы тур. */
 const resetTour = (page, { tourDone = false } = {}) => page.addInitScript(({ done }) => {
     localStorage.setItem('ob_welcome_v2', '1');
+    if (sessionStorage.getItem('__tourResetOnce') === '1') return;
+    sessionStorage.setItem('__tourResetOnce', '1');
     if (done) localStorage.setItem('ob_tour_done_v1', '1');
     else localStorage.removeItem('ob_tour_done_v1');
 }, { done: tourDone });
