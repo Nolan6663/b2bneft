@@ -119,6 +119,39 @@ test('сбой ВК возвращает запись в очередь, пос�
     } finally { restore(); }
 });
 
+test('закрытая заявка и просроченный дедлайн в ленту не уходят', () => {
+    const poster = createVkPoster({ pool: fakePool() });
+    const future = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const past = new Date(Date.now() - 5 * 86400000).toISOString().slice(0, 10);
+
+    assert.equal(poster.skipReason({ status: 'Активный', deadline: future }), null, 'живую заявку публикуем');
+    assert.match(poster.skipReason({ status: 'Закрыта', deadline: future }), /статус/);
+    assert.match(poster.skipReason({ status: 'Отменена', deadline: future }), /статус/);
+    assert.match(poster.skipReason({ status: 'Активный', deadline: past }), /дедлайн/);
+    assert.equal(poster.skipReason(null), 'закупка удалена');
+});
+
+test('пропущенная закупка помечается skipped, к ВК не ходим', async () => {
+    const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '1' });
+    try {
+        const pool = fakePool([{ id: 1, order_id: 5, attempts: 0 }]);
+        /* закупка из fakePool закрыта дедлайном 2026-09-01 в прошлом или статусом */
+        pool.query = (sql, params) => {
+            pool.calls.push({ sql: sql.replace(/\s+/g, ' ').trim(), params });
+            if (/SELECT id, order_id, attempts FROM vk_posts/i.test(sql)) return Promise.resolve({ rows: [{ id: 1, order_id: 5, attempts: 0 }] });
+            if (/SELECT \* FROM orders WHERE id/i.test(sql)) return Promise.resolve({ rows: [{ id: 5, title: 'Манжеты', status: 'Закрыта', deadline: '2027-01-01' }] });
+            return Promise.resolve({ rows: [] });
+        };
+        let called = false;
+        const poster = createVkPoster({ pool, fetchImpl: async () => { called = true; return { json: async () => ({ response: {} }) }; } });
+        await poster.tick();
+        assert.equal(called, false, 'к ВК ходить незачем');
+        const upd = pool.calls.find(c => /status = 'skipped'/.test(c.sql));
+        assert.ok(upd, 'запись должна помечаться пропущенной');
+        assert.match(upd.params[0], /статус/);
+    } finally { restore(); }
+});
+
 test('успешная публикация помечается sent и сохраняет id поста', async () => {
     const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '240643596' });
     try {
