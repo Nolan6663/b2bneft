@@ -27,6 +27,8 @@ test.describe('Тур по кабинету', () => {
 
         const card = page.locator('.tour-card');
         await expect(card, 'тур должен открыться после первого входа').toBeVisible({ timeout: 20000 });
+        /* карточка показывается только заполненной, но подождать текст всё равно надо */
+        await expect(page.locator('#tourCount')).toContainText('Шаг', { timeout: 10000 });
 
         const total = Number((await page.locator('#tourCount').textContent()).match(/из (\d+)/)[1]);
         expect(total, 'в туре должен быть хотя бы один шаг').toBeGreaterThan(0);
@@ -47,6 +49,7 @@ test.describe('Тур по кабинету', () => {
         await resetTour(page);
         await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
         await expect(page.locator('.tour-card')).toBeVisible({ timeout: 20000 });
+        await expect(page.locator('#tourCount')).toContainText('Шаг', { timeout: 10000 });
 
         await page.click('#tourSkip');
         await expect(page.locator('.tour-card')).toHaveCount(0);
@@ -91,6 +94,7 @@ test.describe('Тур по кабинету', () => {
         await resetTour(page);
         await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
         await expect(page.locator('.tour-card')).toBeVisible({ timeout: 20000 });
+        await expect(page.locator('#tourCount')).toContainText('Шаг', { timeout: 10000 });
 
         const inside = await page.evaluate(() => {
             const r = document.querySelector('.tour-card').getBoundingClientRect();

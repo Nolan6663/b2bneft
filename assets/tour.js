@@ -113,6 +113,9 @@
             state.index === state.steps.length - 1 ? 'Готово' : 'Далее';
 
         placeCard(state.card, rect);
+        /* До первой отрисовки карточка пустая: между созданием и paintStep идёт
+           прокрутка к якорю. Показываем её только с готовым содержимым. */
+        state.card.classList.add('tour-card-ready');
     }
 
     function showStep() {

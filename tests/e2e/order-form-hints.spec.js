@@ -34,6 +34,15 @@ test.describe('Подсказки в форме заявки', () => {
     test.skip(!hasCustomer, 'нет сессии заказчика: задайте TEST_CUSTOMER_EMAIL и TEST_CUSTOMER_PASSWORD');
     test.use({ storageState: hasCustomer ? customerFile : undefined });
 
+    /* Тур глушим: он стартует сам и накрывает форму оверлеем — здесь проверяем
+       подсказки, а сам тур живёт в onboarding-tour.spec.js */
+    test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('ob_welcome_v2', '1');
+            localStorage.setItem('ob_tour_done_v1', '1');
+        });
+    });
+
     test('в модалке кабинета подсказка есть под каждым полем', async ({ page }) => {
         await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(2000);
