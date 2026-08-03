@@ -359,6 +359,13 @@
                 <div id="orderFileChosen" class="attach-list" style="display:none;"></div>
                 <div id="orderFileExisting" class="attach-list" style="display:none;"></div>
             </div>
+            <div class="form-group">
+                <label>Видео — необязательно, до 200 МБ (MP4, MOV, WEBM)</label>
+                <input type="file" id="orderVideo" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" onchange="onOrderVideoPicked(this)">
+                <div class="form-hint">Короткий ролик снимает половину вопросов: покажите деталь, узел или проблемное место. Загрузится после публикации заявки.</div>
+                <div id="orderVideoChosen" class="attach-list" style="display:none;"></div>
+                <div id="orderVideoProgress" style="display:none;font-size:12px;color:var(--text-secondary);margin-top:6px;"></div>
+            </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                 <input type="checkbox" id="saveAsTemplate" style="accent-color:#FF6A00;width:14px;height:14px;">
                 <label for="saveAsTemplate" style="font-size:13px;color:var(--text-secondary);cursor:pointer;">Сохранить как шаблон</label>
@@ -1018,8 +1025,80 @@
         function resetAttachmentState() {
             keptAttachments = [];
             chosenFiles = [];
+            chosenVideo = null;
             renderKeptAttachments(null);
             renderChosenFiles();
+            renderChosenVideo();
+            const vp = document.getElementById('orderVideoProgress');
+            if (vp) { vp.style.display = 'none'; vp.textContent = ''; }
+            const vi = document.getElementById('orderVideo');
+            if (vi) vi.value = '';
+        }
+
+        /* Видео уходит отдельным запросом уже после публикации заявки: ролик
+           весит сотни мегабайт, и держать создание закупки заложником такой
+           загрузки нельзя. */
+        const MAX_VIDEO_MB = 200;
+        let chosenVideo = null;
+
+        function onOrderVideoPicked(input) {
+            const file = (input.files || [])[0] || null;
+            input.value = '';
+            if (!file) return;
+            if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+                showToast(`Видео больше ${MAX_VIDEO_MB} МБ — сожмите или обрежьте ролик`, 'warn');
+                return;
+            }
+            chosenVideo = file;
+            renderChosenVideo();
+        }
+
+        function removeChosenVideo() {
+            chosenVideo = null;
+            renderChosenVideo();
+        }
+
+        function renderChosenVideo() {
+            const box = document.getElementById('orderVideoChosen');
+            if (!box) return;
+            if (!chosenVideo) { box.style.display = 'none'; box.innerHTML = ''; return; }
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="attach-item">
+                    <span class="attach-name">${escapeHtml(chosenVideo.name)}</span>
+                    <span class="attach-size">${(chosenVideo.size / 1048576).toFixed(1)} МБ</span>
+                    <button type="button" class="attach-remove" onclick="removeChosenVideo()" aria-label="Убрать видео">×</button>
+                </div>`;
+        }
+
+        /* XMLHttpRequest, а не fetch: нужен процент загрузки — на 200 МБ
+           молчащая кнопка выглядит как зависший интерфейс. */
+        function uploadOrderVideo(orderId, file) {
+            return new Promise((resolve, reject) => {
+                const box = document.getElementById('orderVideoProgress');
+                if (box) { box.style.display = 'block'; box.textContent = 'Загрузка видео: 0%'; }
+                const fd = new FormData();
+                fd.append('video', file);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${SERVER_URL}/orders/${orderId}/video`);
+                xhr.withCredentials = true;
+                xhr.upload.onprogress = (e) => {
+                    if (!box || !e.lengthComputable) return;
+                    box.textContent = `Загрузка видео: ${Math.round((e.loaded / e.total) * 100)}%`;
+                };
+                xhr.onload = () => {
+                    if (box) box.style.display = 'none';
+                    if (xhr.status >= 200 && xhr.status < 300) return resolve();
+                    let msg = 'Не удалось загрузить видео';
+                    try { msg = JSON.parse(xhr.responseText).error || msg; } catch { /* не json */ }
+                    reject(new Error(msg));
+                };
+                xhr.onerror = () => {
+                    if (box) box.style.display = 'none';
+                    reject(new Error('Обрыв связи при загрузке видео'));
+                };
+                xhr.send(fd);
+            });
         }
 
         function openEditModal(orderId) {
@@ -1601,6 +1680,21 @@
                             }),
                         }).catch(() => {});
                         document.getElementById('saveAsTemplate').checked = false;
+                    }
+                    /* Видео догружаем после сохранения заявки: сама заявка уже
+                       опубликована, и обрыв на ролике её не отменяет. */
+                    if (chosenVideo) {
+                        const saved = await response.json().catch(() => null);
+                        const targetId = isEdit ? editingOrderId : (saved && saved.id);
+                        if (targetId) {
+                            try {
+                                await uploadOrderVideo(targetId, chosenVideo);
+                                showToast('Видео загружено', 'success');
+                            } catch (e) {
+                                showToast(e.message + '. Заявка сохранена, видео можно приложить позже', 'warn');
+                            }
+                        }
+                        chosenVideo = null;
                     }
                     closeModal();
                     clearOrderDraft(true);

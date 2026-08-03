@@ -2591,6 +2591,17 @@ table {
 }
 .attach-remove:hover { background: var(--card-bg); color: var(--accent-red); }
 
+/* Видео, приложенное к заявке */
+.attach-video { margin-top: 8px; max-width: 420px; }
+.attach-video video {
+  width: 100%; max-height: 260px; border-radius: 10px;
+  background: #0F172A; display: block;
+}
+.attach-video-name {
+  margin-top: 4px; font-size: 12px; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 /* Заглушки карточек в ленте заявок производителя, пока идёт загрузка */
 .oc-skeleton { pointer-events: none; }
 .oc-skel-line {

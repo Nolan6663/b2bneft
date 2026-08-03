@@ -89,6 +89,8 @@ function baseDeps(overrides = {}) {
         handlePhotoUpload: passthrough,
         persistUpload: async () => null,
         persistUploads: async () => [],
+        handleVideoUpload: passthrough,
+        persistVideo: async () => null,
         parseOrderAttachments: () => [],
         maxOrderAttachments: 10,
         deleteDrawingFile: asyncNoop,

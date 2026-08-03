@@ -1127,7 +1127,19 @@ function buildAttachmentsHtml(orderId, order) {
   return list.map((f, i) => buildDrawingLinksHtml(orderId, f, i)).join('');
 }
 
+/* Видео показываем плеером, а не ссылкой «Скачать»: смысл ролика в том, чтобы
+   его посмотрели не выходя из карточки. Отдаётся тем же эндпоинтом, что и
+   остальные вложения, поэтому права те же — заводу после отклика. */
+function buildVideoHtml(orderId, file, index) {
+    const name = escapeHtml(file.originalName || 'Видео');
+    return `<div class="attach-video">
+    <video controls preload="metadata" playsinline src="${drawingPreviewUrl(orderId, index)}"></video>
+    <div class="attach-video-name" title="${escapeAttr(file.originalName || '')}">${name}</div>
+  </div>`;
+}
+
 function buildDrawingLinksHtml(orderId, drawing, index) {
+    if (drawing && drawing.kind === 'video') return buildVideoHtml(orderId, drawing, index);
   if (!drawing || !drawing.originalName) return '';
   const rawName = drawing.originalName;
   const name = /^[\x20-\x7E\u0400-\u04FF\s._\-()]+$/.test(rawName) ? rawName : 'Вложение';

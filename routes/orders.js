@@ -15,6 +15,8 @@ module.exports = function createOrdersRouter(deps) {
         canAccessOrderDrawing,
         vkPoster,
         persistUploads,
+        handleVideoUpload,
+        persistVideo,
         parseOrderAttachments,
         maxOrderAttachments,
         rowToOrder,
@@ -130,7 +132,45 @@ module.exports = function createOrdersRouter(deps) {
                 return res.status(404).json({ error: 'Файл был удалён с сервера' });
             }
             const inline = req.query.inline === '1';
-            await storage.streamToResponse(drawing.storedName, res, drawing.originalName, { inline });
+            /* Range прокидываем как есть: без него видео в плеере не мотается */
+            await storage.streamToResponse(drawing.storedName, res, drawing.originalName, {
+                inline,
+                range: req.headers.range || null,
+            });
+        } catch (e) { next(e); }
+    });
+
+    /* Видео грузится отдельным запросом, а не вместе с заявкой: ролик весит
+       сотни мегабайт, и держать создание закупки заложником такой загрузки
+       нельзя — заявка публикуется сразу, видео доезжает следом. */
+    router.post('/:orderId/video', requireAuth, requireRole('customer'), handleVideoUpload, async (req, res, next) => {
+        try {
+            const orderId = Number(req.params.orderId);
+            const { rows: [row] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+            if (!row) return res.status(404).json({ error: 'Заявка не найдена' });
+            const order = rowToOrder(row);
+            if (order.company && order.company !== req.user.company) {
+                return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
+            }
+            if (!req.file) return res.status(400).json({ error: 'Файл не получен' });
+
+            const files = Array.isArray(order.attachments) ? order.attachments.slice() : [];
+            if (files.length >= maxOrderAttachments) {
+                return res.status(400).json({ error: `К заявке уже приложено ${maxOrderAttachments} файлов` });
+            }
+            if (files.some(f => f.kind === 'video')) {
+                return res.status(400).json({ error: 'К заявке уже приложено видео' });
+            }
+
+            const video = await persistVideo(req.file);
+            files.push(video);
+
+            await pool.query(
+                'UPDATE orders SET drawing = $1, attachments = $2 WHERE id = $3',
+                [JSON.stringify(files[0]), JSON.stringify(files), orderId]
+            );
+            const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+            res.json(rowToOrder(updated));
         } catch (e) { next(e); }
     });
 

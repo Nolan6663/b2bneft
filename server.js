@@ -458,6 +458,58 @@ const uploadKP = multer({
     }
 }).single('kpFile');
 
+/* Видео к заявке. Через память процесса такое не пропустить: ролик с телефона
+   весит сотни мегабайт, а остальные загрузки живут в memoryStorage. Поэтому
+   отдельный multer с diskStorage — файл ложится во временную папку, а оттуда
+   уходит в хранилище потоком (storage.saveStreamFile). */
+const VIDEO_ALLOWED_EXT = ['.mp4', '.mov', '.m4v', '.webm'];
+const MAX_VIDEO_BYTES = Number(process.env.MAX_VIDEO_MB || 200) * 1024 * 1024;
+const VIDEO_TMP_DIR = path.join(__dirname, 'uploads', 'tmp');
+if (!fs.existsSync(VIDEO_TMP_DIR)) fs.mkdirSync(VIDEO_TMP_DIR, { recursive: true });
+
+const uploadVideo = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, VIDEO_TMP_DIR),
+        filename: (req, file, cb) => cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname).toLowerCase()}`),
+    }),
+    limits: { fileSize: MAX_VIDEO_BYTES, files: 1 },
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (!VIDEO_ALLOWED_EXT.includes(ext)) {
+            return cb(new Error('Видео принимается в форматах: ' + VIDEO_ALLOWED_EXT.join(', ')));
+        }
+        if (!/^video\//.test(file.mimetype || '')) return cb(new Error('Это не видеофайл'));
+        cb(null, true);
+    },
+}).single('video');
+
+function handleVideoUpload(req, res, next) {
+    uploadVideo(req, res, (err) => {
+        if (err) {
+            /* Недогруженный кусок с диска убираем сразу, иначе на сервере
+               копятся обрезки по несколько сотен мегабайт. */
+            if (req.file && req.file.path) fs.unlink(req.file.path, () => {});
+            const tooBig = err.code === 'LIMIT_FILE_SIZE';
+            return res.status(400).json({
+                error: tooBig
+                    ? `Видео больше ${Math.round(MAX_VIDEO_BYTES / 1024 / 1024)} МБ — сожмите или обрежьте ролик`
+                    : (err.message || 'Не удалось загрузить видео'),
+            });
+        }
+        next();
+    });
+}
+
+async function persistVideo(file) {
+    if (!file) return null;
+    const meta = await storage.saveStreamFile({
+        tmpPath: file.path,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+    }, 'videos');
+    return { originalName: meta.originalName, storedName: meta.storedName, kind: 'video', size: meta.size };
+}
+
 function handleDrawingUpload(req, res, next) {
     uploadDrawing(req, res, (err) => {
         if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить файл' });
@@ -748,9 +800,11 @@ app.get('/zakupka/:id', async (req, res, next) => {
             `<div class="zo-fact"><span>Откликов</span><b>${order.responses || 0}</b></div>`,
         ].filter(Boolean).join('\n      ');
 
-        const fileCount = (order.attachments || []).length;
+        const attachments = order.attachments || [];
+        const hasVideo = attachments.some(f => f.kind === 'video');
+        const fileCount = attachments.length;
         const filesHtml = fileCount
-            ? `<div class="zo-files"><b>К заявке приложено ${fileCount} ${orderPlural(fileCount, 'файл', 'файла', 'файлов')}</b> — чертежи и фото. Открываются в кабинете после отклика на заявку.</div>`
+            ? `<div class="zo-files"><b>К заявке приложено ${fileCount} ${orderPlural(fileCount, 'файл', 'файла', 'файлов')}</b> — чертежи и фото${hasVideo ? ', есть видео от заказчика' : ''}. Открываются в кабинете после отклика на заявку.</div>`
             : '';
 
         const description = (order.description || '').trim();
@@ -1614,6 +1668,9 @@ const routesDeps = {
     handlePhotoUpload,
     persistUpload,
     persistUploads,
+    handleVideoUpload,
+    persistVideo,
+    maxVideoBytes: MAX_VIDEO_BYTES,
     deleteDrawingFile,
     parseOrderAttachments,
     maxOrderAttachments: MAX_ORDER_ATTACHMENTS,

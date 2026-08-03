@@ -40,6 +40,7 @@ function objectKey(prefix, storedName) {
 function resolvePrefix(storedName) {
     if (storedName.startsWith('photo-')) return 'photos';
     if (storedName.startsWith('kp-')) return 'kp';
+    if (storedName.startsWith('video-')) return 'videos';
     return 'drawings';
 }
 
@@ -67,6 +68,36 @@ async function saveFile(file, prefix) {
     }
 
     return { originalName: file.originalname, storedName, key };
+}
+
+/* Видео весит сотни мегабайт, поэтому оно не проходит через память процесса:
+   multer кладёт его во временный файл на диске, а отсюда файл уходит в
+   хранилище потоком. Одиночный PUT с известной длиной, без multipart —
+   ради этого не тянем ещё одну зависимость. */
+async function saveStreamFile({ tmpPath, originalName, mimetype }, prefix) {
+    const ext = path.extname(originalName || '').toLowerCase();
+    const prefixName = prefix === 'videos' ? 'video-' : prefix === 'kp' ? 'kp-' : prefix === 'photos' ? 'photo-' : '';
+    const storedName = prefixName + uniqueName(ext);
+    const key = objectKey(prefix, storedName);
+    const size = fs.statSync(tmpPath).size;
+
+    if (USE_S3) {
+        const { PutObjectCommand } = require('@aws-sdk/client-s3');
+        await s3Client.send(new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET,
+            Key: key,
+            Body: fs.createReadStream(tmpPath),
+            ContentLength: size,
+            ContentType: mimetype || 'application/octet-stream',
+        }));
+        fs.unlink(tmpPath, () => {});
+    } else {
+        const dir = prefix === 'photos' ? LOCAL_PHOTOS : LOCAL_DIR;
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.renameSync(tmpPath, path.join(dir, storedName));
+    }
+
+    return { originalName, storedName, key, size };
 }
 
 async function deleteStored(storedName) {
@@ -97,6 +128,10 @@ function mimeFromName(name) {
         '.gif': 'image/gif',
         '.webp': 'image/webp',
         '.svg': 'image/svg+xml',
+        '.mp4': 'video/mp4',
+        '.mov': 'video/quicktime',
+        '.webm': 'video/webm',
+        '.m4v': 'video/x-m4v',
     };
     return map[ext] || null;
 }
@@ -106,6 +141,10 @@ async function streamToResponse(storedName, res, downloadName, options = {}) {
     const prefix = resolvePrefix(storedName);
     const key = objectKey(prefix, storedName);
     const label = downloadName || storedName;
+    /* Range нужен видео: без него плеер не мотает и на длинном ролике
+       вынужден скачивать всё с начала. Заголовок приходит от браузера и
+       просто прокидывается в хранилище. */
+    const range = options.range || null;
 
     if (USE_S3) {
         const { GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -113,7 +152,17 @@ async function streamToResponse(storedName, res, downloadName, options = {}) {
             const result = await s3Client.send(new GetObjectCommand({
                 Bucket: process.env.S3_BUCKET,
                 Key: key,
+                ...(range ? { Range: range } : {}),
             }));
+            if (range && result.ContentRange) {
+                res.status(206);
+                res.setHeader('Content-Range', result.ContentRange);
+                res.setHeader('Accept-Ranges', 'bytes');
+                if (result.ContentLength != null) res.setHeader('Content-Length', String(result.ContentLength));
+            } else if (result.ContentLength != null) {
+                res.setHeader('Accept-Ranges', 'bytes');
+                res.setHeader('Content-Length', String(result.ContentLength));
+            }
             const mime = result.ContentType || mimeFromName(label);
             if (mime) res.setHeader('Content-Type', mime);
             if (downloadName) {
@@ -212,6 +261,7 @@ function photoPublicUrl(storedName) {
 module.exports = {
     isRemote,
     saveFile,
+    saveStreamFile,
     deleteStored,
     streamToResponse,
     readFileBuffer,
