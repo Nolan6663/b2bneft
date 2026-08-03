@@ -645,10 +645,14 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadCompanyInfo();
             loadProfileCompleteness();
-            loadFavoriteOrderIds().then(loadOrdersForProducers);
+            /* Закупки идут в сеть сразу, остальное параллельно: как только
+               приедут избранное и свои КП, список перерисуется из кэша. */
+            showOrdersLoading();
+            loadOrdersForProducers();
+            loadFavoriteOrderIds().then(rerenderOrdersFromCache);
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals().then(loadOrdersForProducers); loadCrmStats(); loadActiveAuctions(); }
+            if (!isGuest) { loadMyProposals().then(rerenderOrdersFromCache); loadCrmStats(); loadActiveAuctions(); }
             document.getElementById('orderSearchInput').addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
             if (typeof socket !== 'undefined' && socket) socket.off('auction:closed').on('auction:closed', onAuctionClosed);
@@ -657,10 +661,14 @@
         window.__pageInit = function() {
             loadCompanyInfo();
             loadProfileCompleteness();
-            loadFavoriteOrderIds().then(loadOrdersForProducers);
+            /* Закупки идут в сеть сразу, остальное параллельно: как только
+               приедут избранное и свои КП, список перерисуется из кэша. */
+            showOrdersLoading();
+            loadOrdersForProducers();
+            loadFavoriteOrderIds().then(rerenderOrdersFromCache);
             initNotifications();
             initSidebarBadges();
-            if (!isGuest) { loadMyProposals().then(loadOrdersForProducers); loadCrmStats(); loadActiveAuctions(); }
+            if (!isGuest) { loadMyProposals().then(rerenderOrdersFromCache); loadCrmStats(); loadActiveAuctions(); }
             const si = document.getElementById('orderSearchInput');
             if (si) si.addEventListener('input', applyOrderFilters);
             document.addEventListener('tz:order:new', onTzOrderNew);
@@ -682,8 +690,26 @@
         }
 
         function refreshActiveTab() {
+            showOrdersLoading();
             loadOrdersForProducers();
-            if (!isGuest) { loadMyProposals(); loadActiveAuctions(); }
+            if (!isGuest) { loadMyProposals().then(rerenderOrdersFromCache); loadActiveAuctions(); }
+        }
+
+        /* Пустая область неотличима от «заявок нет» — на время загрузки
+           показываем заглушки карточек. */
+        function showOrdersLoading() {
+            const list = document.getElementById('ordersList');
+            if (!list || list.querySelector('.order-card')) return;
+            list.innerHTML = Array.from({ length: 3 }, () => `
+                <div class="order-card oc-skeleton" aria-hidden="true">
+                    <div class="oc-skel-line oc-skel-title"></div>
+                    <div class="oc-skel-line oc-skel-short"></div>
+                    <div class="oc-skel-line"></div>
+                </div>`).join('');
+        }
+
+        function rerenderOrdersFromCache() {
+            if (Array.isArray(ordersCache) && ordersCache.length) renderProducerOrders(ordersCache);
         }
 
         async function loadCompanyInfo() {
@@ -766,6 +792,16 @@
             }
 
             ordersCache = orders;
+            renderProducerOrders(orders);
+        }
+
+        /* Отрисовка вынесена отдельно: звёздочки избранного и отметки «уже
+           откликнулись» приходят другими запросами, и раньше лента ждала их,
+           уходя в сеть за закупками последней — на проде карточки появлялись
+           через три с лишним секунды, а до тех пор экран был пуст. Теперь
+           закупки грузятся сразу, а список перерисовывается по мере готовности
+           остального, уже без похода в сеть. */
+        function renderProducerOrders(orders) {
             document.getElementById('tabOrdersCount').innerText = orders.length;
 
             const ordersList = document.getElementById('ordersList');
@@ -853,6 +889,12 @@
             });
         }
 
+        function setCrmStatsPending() {
+            const el = id => document.getElementById(id);
+            ['crmLeads', 'crmSent', 'crmActive', 'crmWon', 'crmConversion']
+                .forEach(id => { if (el(id)) el(id).textContent = '—'; });
+        }
+
         function setCrmStatsMock() {
             const el = id => document.getElementById(id);
             if (el('crmLeads'))      el('crmLeads').textContent = '142';
@@ -863,7 +905,11 @@
         }
 
         async function loadCrmStats() {
-            setCrmStatsMock();
+            /* На проде показывать выдуманные 142 закупки и 28,9% конверсии нельзя:
+               до ответа сервера завод видел чужую красивую статистику как свою.
+               Заглушки остаются только для локального демо-режима. */
+            if (shouldUseMockData()) setCrmStatsMock();
+            else setCrmStatsPending();
             try {
                 const r = await apiFetch(`${SERVER_URL}/producer/crm-stats`);
                 if (!r.ok) return;

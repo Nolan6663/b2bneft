@@ -2572,6 +2572,19 @@ table {
 .skel-kpi {
   height: 60px; border-radius: 12px;
 }
+
+/* Заглушки карточек в ленте заявок производителя, пока идёт загрузка */
+.oc-skeleton { pointer-events: none; }
+.oc-skel-line {
+  height: 12px; margin-bottom: 10px; border-radius: 6px;
+  background: linear-gradient(90deg,
+    var(--inner-bg) 0%, var(--bg-secondary) 45%, var(--inner-bg) 90%);
+  background-size: 800px 100%;
+  animation: skel-shimmer 1.4s linear infinite;
+}
+.oc-skel-title { height: 16px; width: 55%; }
+.oc-skel-short { width: 30%; }
+.oc-skel-line:last-child { width: 80%; margin-bottom: 0; }
 .kpi-row.is-loading .kpi-value {
   display: inline-block; min-width: 56px; min-height: 32px;
   border-radius: 6px; vertical-align: middle;
