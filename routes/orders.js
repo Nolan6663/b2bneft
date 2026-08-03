@@ -13,6 +13,7 @@ module.exports = function createOrdersRouter(deps) {
         persistUpload,
         deleteDrawingFile,
         canAccessOrderDrawing,
+        vkPoster,
         persistUploads,
         parseOrderAttachments,
         maxOrderAttachments,
@@ -250,6 +251,13 @@ module.exports = function createOrdersRouter(deps) {
             for (const company of notifiedCompanies) {
                 emitDashboardRefresh(company);
                 emitRealtime(company, 'order:new', orderSummary);
+            }
+
+            /* Публикация в сообществе ВКонтакте: только ставим в очередь, постит
+               воркер. До подтверждения email наружу ничего не выпускаем — пост
+               в ленте так же не откатить, как и письмо. */
+            if (allowOutbound && vkPoster) {
+                vkPoster.enqueue(newOrder).catch(e => console.error('[vk] очередь:', e.message));
             }
 
             // Приглашения заводам из госреестра (fire-and-forget). До подтверждения

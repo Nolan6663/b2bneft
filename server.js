@@ -704,6 +704,93 @@ async function loadRegionData(region) {
     return data;
 }
 
+/* ── Публичная страница закупки: /zakupka/<id> ───────────────────────────────
+   Нужна для ссылок наружу (посты в сообществе, письма заводам): без неё завод
+   упирается в форму входа и не видит, на что его зовут. Показываем задание,
+   сроки и категорию; заказчика, контакты и файлы — нет, они за регистрацией. */
+function orderPlural(n, one, few, many) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+    return many;
+}
+
+function formatOrderDeadline(value) {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+app.get('/zakupka/:id', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+        const { rows: [row] } = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
+        if (!row) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+
+        const order = rowToOrder(row);
+        const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+        const isOpen = order.status !== 'Закрыта' && order.status !== 'Отменена' && order.status !== 'Дедлайн истёк';
+        const title = plainTitle(order.title);
+        const deadline = formatOrderDeadline(order.deadline);
+
+        const facts = [
+            order.category ? `<div class="zo-fact"><span>Категория</span><b>${htmlEscape(order.category)}</b></div>` : '',
+            order.quantity ? `<div class="zo-fact"><span>Количество</span><b>${order.quantity} шт.</b></div>` : '',
+            deadline ? `<div class="zo-fact"><span>Срок поставки</span><b>${htmlEscape(deadline)}</b></div>` : '',
+            `<div class="zo-fact"><span>Откликов</span><b>${order.responses || 0}</b></div>`,
+        ].filter(Boolean).join('\n      ');
+
+        const fileCount = (order.attachments || []).length;
+        const filesHtml = fileCount
+            ? `<div class="zo-files"><b>К заявке приложено ${fileCount} ${orderPlural(fileCount, 'файл', 'файла', 'файлов')}</b> — чертежи и фото. Открываются в кабинете после отклика на заявку.</div>`
+            : '';
+
+        const description = (order.description || '').trim();
+        const descHtml = description
+            ? htmlEscape(description)
+            : 'Заказчик описал задачу коротко. Подробности — в кабинете после отклика.';
+
+        const metaDesc = [
+            title,
+            order.category ? `категория: ${order.category}` : '',
+            order.quantity ? `${order.quantity} шт.` : '',
+            deadline ? `срок ${deadline}` : '',
+        ].filter(Boolean).join(', ').slice(0, 300);
+
+        const html = fs.readFileSync(path.join(__dirname, 'zakupki', 'order.html'), 'utf8')
+            .replace(/<!--META_TITLE-->/g, htmlEscape(`${title} — заявка на ТехЗаказ`))
+            .replace(/<!--META_DESC-->/g, htmlEscape(metaDesc))
+            /* Закрытые заявки из индекса убираем: страница живёт ради ссылок из
+               сообщества и писем, но в поиске мёртвая закупка бесполезна. */
+            .replace(/<!--META_ROBOTS-->/g, isOpen ? 'index, follow' : 'noindex, follow')
+            .replace(/<!--CANONICAL_URL-->/g, `${base}/zakupka/${order.id}`)
+            .replace(/<!--ORDER_CRUMB-->/g, htmlEscape(order.category || 'Заявка'))
+            .replace(/<!--ORDER_STATUS-->/g, isOpen
+                ? '<span class="zo-status zo-status-open">Приём предложений открыт</span>'
+                : `<span class="zo-status zo-status-closed">${htmlEscape(order.status || 'Заявка закрыта')}</span>`)
+            .replace(/<!--ORDER_TITLE-->/g, htmlEscape(title))
+            .replace(/<!--ORDER_FACTS-->/g, facts)
+            .replace(/<!--ORDER_DESCRIPTION-->/g, descHtml)
+            .replace(/<!--ORDER_FILES-->/g, filesHtml)
+            .replace(/<!--ORDER_CTA_HREF-->/g, isOpen ? '/zavod' : '/zakupki')
+            .replace(/<!--ORDER_CTA_LABEL-->/g, isOpen ? 'Откликнуться на заявку' : 'Смотреть открытые закупки')
+            .replace(/<!--ORDER_CTA_NOTE-->/g, isOpen
+                ? 'Регистрация по ИНН, данные подтянутся из реестра'
+                : 'Эта заявка уже не принимает предложения');
+
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.type('html').send(html);
+    } catch (e) { next(e); }
+});
+
 app.get('/zakupki/region/:slug', async (req, res, next) => {
     try {
         const region = regionBySlug(req.params.slug);
@@ -1459,6 +1546,9 @@ const { enrichCompany } = createCompanyEnricher({ pool, storage });
 const { createRegistryInviter } = require('./lib/registry-invites');
 const registryInviter = createRegistryInviter({ pool, sendEmail, appUrl: APP_URL, jwtSecret: JWT_SECRET });
 
+const { createVkPoster } = require('./lib/vk-poster');
+const vkPoster = createVkPoster({ pool, appUrl: APP_URL });
+
 // Отписка от приглашений из госреестра (ссылка в письме, без авторизации)
 app.get('/api/registry-invites/optout', async (req, res, next) => {
     try {
@@ -1525,6 +1615,7 @@ const routesDeps = {
     parseOrderAttachments,
     maxOrderAttachments: MAX_ORDER_ATTACHMENTS,
     canAccessOrderDrawing,
+    vkPoster,
     canAccessProposal,
     canAccessOrderThread,
     getOrderAccessRow,
@@ -1920,6 +2011,7 @@ async function start() {
     startAuctionCron();
     startOrderMaintenanceCron();
     startTelegramBot();
+    vkPoster.start();
     return httpServer;
 }
 

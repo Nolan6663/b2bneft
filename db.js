@@ -294,6 +294,19 @@ async function initDb() {
         -- остаётся ради уже размещённых заявок: при чтении она подмешивается
         -- первым вложением, при следующем сохранении переезжает в attachments.
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS attachments TEXT;
+        -- Очередь публикаций в сообщество ВКонтакте. UNIQUE по order_id —
+        -- дедупликация на уровне схемы: повторный пост той же закупки
+        -- невозможен, даже если воркер запустится дважды.
+        CREATE TABLE IF NOT EXISTS vk_posts (
+            id          SERIAL      PRIMARY KEY,
+            order_id    INTEGER     NOT NULL UNIQUE,
+            status      TEXT        NOT NULL DEFAULT 'pending',
+            attempts    INTEGER     NOT NULL DEFAULT 0,
+            vk_post_id  BIGINT,
+            last_error  TEXT,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            posted_at   TIMESTAMPTZ
+        );
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS invites_sent INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS kpp TEXT NOT NULL DEFAULT '';
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS legal_address TEXT NOT NULL DEFAULT '';
