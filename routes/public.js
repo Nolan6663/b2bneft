@@ -16,6 +16,8 @@ function createPublicRouter(deps) {
         getCityProductionPoint,
         offsetProductionPoint,
         matchedProducers,
+        computeMatchScore,
+        rowToOrder,
         // ИИ берём из lib/ai-client, но через deps — так тесты подставляют заглушку
         // вместо живых вызовов модели.
         generateProcurementTz = tzAi.generateProcurementTz,
@@ -384,6 +386,52 @@ function createPublicRouter(deps) {
                     city: m.city || '',
                     products: String(m.products || '').slice(0, 160),
                     score: Number(m.score) || 0,
+                })),
+            });
+        } catch (e) { next(e); }
+    });
+
+    /* Подбор закупок под профиль завода — зеркало match-preview.
+       Раньше мастер завода звал match-preview и показывал число подходящих
+       ПРЕДПРИЯТИЙ под подписью «подходит закупок»: заводу выводили количество
+       его же конкурентов. Здесь считаются именно активные закупки. */
+    router.post('/public/match-orders', async (req, res, next) => {
+        try {
+            const { products, capabilities, specialization } = req.body || {};
+            const profile = {
+                specialization: String(specialization || '').slice(0, 300),
+                products: String(products || '').slice(0, 1000),
+                about: String(products || '').slice(0, 1000),
+                capabilities: Array.isArray(capabilities) ? capabilities.slice(0, 20) : [],
+                equipment: [],
+            };
+            if (!profile.products.trim() && !profile.specialization.trim() && !profile.capabilities.length) {
+                return res.status(400).json({ error: 'Расскажите, что вы производите' });
+            }
+
+            const { rows } = await pool.query(
+                `SELECT id, title, category, quantity, deadline, description, created_at
+                   FROM orders
+                  WHERE status = 'Активный'
+                    AND (deadline IS NULL OR deadline >= CURRENT_DATE::text)
+                  ORDER BY created_at DESC
+                  LIMIT 200`
+            );
+
+            const scored = rows
+                .map(row => ({ row, score: computeMatchScore(rowToOrder(row), profile) }))
+                .filter(x => x.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            res.json({
+                total: scored.length,
+                items: scored.slice(0, 6).map(({ row, score }) => ({
+                    id: row.id,
+                    title: String(row.title || '').slice(0, 160),
+                    category: row.category || '',
+                    quantity: row.quantity || null,
+                    deadline: row.deadline || null,
+                    score,
                 })),
             });
         } catch (e) { next(e); }

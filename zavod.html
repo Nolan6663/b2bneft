@@ -283,15 +283,21 @@
         const btn = $('toMatches');
         W.setBusy(btn, true, 'Подбираю закупки…');
         try {
-            const out = await W.post('/api/public/match-preview', {
-                title: profile.products.slice(0, 200),
-                description: [profile.products, profile.capabilities.join(', ')].filter(Boolean).join('. '),
-                category: '',
+            /* Именно match-orders: match-preview подбирает предприятия под
+               заявку, и завод видел бы число своих конкурентов вместо закупок. */
+            const out = await W.post('/api/public/match-orders', {
+                products: profile.products,
+                specialization: profile.specialization || '',
+                capabilities: profile.capabilities || [],
             });
             $('matchLead').textContent = out.total
                 ? 'Под ваш профиль сейчас подходит закупок: ' + out.total + '. Аккаунт нужен, чтобы откликаться и вести переписку.'
                 : 'Активных закупок под ваш профиль сейчас нет — придут уведомлением, как только появятся.';
-            $('matchList').innerHTML = '';
+            $('matchList').innerHTML = (out.items || []).map(o => `
+                <div class="ob-match">
+                    <div class="ob-match-name">${W.escapeHtml(o.title)}</div>
+                    <div class="ob-match-meta">${[o.category, o.quantity ? o.quantity + ' шт.' : ''].filter(Boolean).map(W.escapeHtml).join(' · ')}</div>
+                </div>`).join('');
         } catch (err) {
             // Подбор — украшение шага, без него регистрация всё равно должна работать
             $('matchLead').textContent = 'Аккаунт нужен, чтобы откликаться на закупки и вести переписку.';
