@@ -2957,6 +2957,15 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 10%, transparent) !important;
   outline: none !important;
 }
+
+/* Поля с иконкой внутри: правило выше задаёт padding с !important и съедает
+   место под лупу — на странице производителя иконка налезала на подсказку.
+   Возвращаем отступ всем таким обёрткам разом. */
+.orders-search-wrap > input,
+.ct-search-wrap > input {
+  padding-left: 36px !important;
+}
+/* В каталоге иконка стоит в общем flex-ряду, а не поверх поля — там отступ не нужен */
 .form-label, label:not(.filter-check):not(.settings-tab-btn) {
   font-size: 12px !important;
   font-weight: 600 !important;
