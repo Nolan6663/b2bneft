@@ -42,4 +42,30 @@ module.exports = async function globalSetup() {
     await context.storageState({ path: storageFile });
     await browser.close();
     console.log('  Сессия сохранена\n');
+
+    /* Кабинет заказчика админу не показывают — его уводит в админку. Тестам
+       онбординга нужна настоящая сессия заказчика: localStorage без серверной
+       куки страницу не открывает. Кредов нет — файл не создаём, тесты сами
+       пропустятся. */
+    const customerEmail = process.env.TEST_CUSTOMER_EMAIL;
+    const customerPassword = process.env.TEST_CUSTOMER_PASSWORD;
+    const customerFile = path.join(__dirname, 'customer-storage.json');
+    if (!customerEmail || !customerPassword) {
+        if (fs.existsSync(customerFile)) fs.unlinkSync(customerFile);
+        console.log('  TEST_CUSTOMER_* не заданы — тесты кабинета заказчика будут пропущены\n');
+        return;
+    }
+
+    console.log('  Вход заказчиком...');
+    const cBrowser = await chromium.launch();
+    const cContext = await cBrowser.newContext({ baseURL });
+    const cPage = await cContext.newPage();
+    await cPage.goto('/login.html', { waitUntil: 'domcontentloaded' });
+    await cPage.fill('#authEmail', customerEmail);
+    await cPage.fill('#authPassword', customerPassword);
+    await cPage.click('#btnSubmit');
+    await cPage.waitForURL(/\/(index(\.html)?)?(\?|#|$)/, { timeout: 30000 });
+    await cContext.storageState({ path: customerFile });
+    await cBrowser.close();
+    console.log('  Сессия заказчика сохранена\n');
 };

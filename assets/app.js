@@ -1761,7 +1761,8 @@ window.markOnboardingStep = markOnboardingStep;
 window.obCompleteStep = markOnboardingStep;
 
 async function _obAutoCompleteFromPage() {
-  const page = location.pathname.split('/').pop() || 'index.html';
+  /* та же беда с адресами без .html — иначе галки чеклиста не проставлялись */
+  const page = _obPageName();
   if (page === 'catalog.html') markOnboardingStep('catalog');
   if (page === 'settings.html') markOnboardingStep('settings');
   if (page === 'producer.html') markOnboardingStep('browse');
@@ -1801,14 +1802,22 @@ async function _obAutoCompleteFromPage() {
   }
 }
 
+/* Прод отдаёт адреса без расширения: /index вместо /index.html. Сравнение
+   «в лоб» промахивалось, и на проде не показывались ни приветствие, ни тур. */
+function _obPageName() {
+  const last = location.pathname.split('/').pop() || '';
+  if (!last) return 'index.html';
+  return last.includes('.') ? last : `${last}.html`;
+}
+
 function initOnboarding() {
   _obMigrateChecklist();
-  const page = location.pathname.split('/').pop() || 'index.html';
+  const page = _obPageName();
   const role = localStorage.getItem('userRole') || '';
   if (role !== 'customer' && role !== 'producer') return;
 
   const mainPage = role === 'producer' ? 'producer.html' : 'index.html';
-  const onMainPage = page === mainPage || page === '';
+  const onMainPage = page === mainPage;
 
   _obAutoCompleteFromPage();
   _initObChecklist(role);
@@ -1941,9 +1950,8 @@ function startCabinetTour() {
 function _obMaybeAutoStartTour() {
   if (localStorage.getItem(_TOUR_DONE_KEY) === '1') return;
   const role = localStorage.getItem('userRole') || '';
-  const page = location.pathname.split('/').pop() || 'index.html';
   const mainPage = role === 'producer' ? 'producer.html' : 'index.html';
-  if (page !== mainPage && page !== '' && page !== 'index') return;
+  if (_obPageName() !== mainPage) return;
   setTimeout(() => { startCabinetTour(); }, 1200);
 }
 

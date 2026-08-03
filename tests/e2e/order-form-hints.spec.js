@@ -1,13 +1,19 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { test, expect } = require('@playwright/test');
 
-const storageFile = path.join(__dirname, 'admin-storage.json');
-
 /* Подсказки под полями заявки: тексты лежат в assets/onboarding-hints.js и
    используются двумя формами — модалкой кабинета и гостевым мастером. Тест
-   ловит два случая: подсказка пропала и тексты в двух формах разъехались. */
+   ловит два случая: подсказка пропала и тексты в двух формах разъехались.
+
+   Кабинет заказчика требует настоящей сессии (серверная кука), её готовит
+   global-setup из TEST_CUSTOMER_*. Без кредов пропускаем: админа в кабинет
+   заказчика не пускают, а localStorage без куки страницу не открывает. */
+
+const customerFile = path.join(__dirname, 'customer-storage.json');
+const hasCustomer = fs.existsSync(customerFile);
 
 const collectHints = () => {
     const out = {};
@@ -25,17 +31,14 @@ const collectHints = () => {
 };
 
 test.describe('Подсказки в форме заявки', () => {
+    test.skip(!hasCustomer, 'нет сессии заказчика: задайте TEST_CUSTOMER_EMAIL и TEST_CUSTOMER_PASSWORD');
+    test.use({ storageState: hasCustomer ? customerFile : undefined });
+
     test('в модалке кабинета подсказка есть под каждым полем', async ({ page }) => {
-        await page.context().addInitScript(() => {
-            localStorage.setItem('isLoggedIn', '1');
-            localStorage.setItem('userRole', 'customer');
-            localStorage.setItem('ob_welcome_v2', '1');
-            localStorage.setItem('ob_tour_done_v1', '1');
-        });
         await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2000);
         await page.click('#createOrderBtn');
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(500);
 
         const hints = await page.evaluate(collectHints);
         const keys = Object.keys(hints);
@@ -51,20 +54,14 @@ test.describe('Подсказки в форме заявки', () => {
     });
 
     test('тексты подсказок в мастере и в кабинете совпадают', async ({ page }) => {
-        await page.context().addInitScript(() => {
-            localStorage.setItem('isLoggedIn', '1');
-            localStorage.setItem('userRole', 'customer');
-            localStorage.setItem('ob_welcome_v2', '1');
-            localStorage.setItem('ob_tour_done_v1', '1');
-        });
         await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2000);
         await page.click('#createOrderBtn');
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(500);
         const cabinet = await page.evaluate(collectHints);
 
         await page.goto('/zayavka', { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(1200);
+        await page.waitForTimeout(1500);
         const wizard = await page.evaluate(collectHints);
 
         const shared = Object.keys(cabinet).filter(k => k in wizard);
@@ -76,16 +73,19 @@ test.describe('Подсказки в форме заявки', () => {
     });
 });
 
-test.describe('Подсказки видны админу на общей странице', () => {
-    test.use({ storageState: storageFile });
-
-    test('/index.html открывается без JS-ошибок с подключённым модулем подсказок', async ({ page }) => {
+test.describe('Гостевой мастер', () => {
+    test('на /zayavka подсказки подключены и без входа', async ({ page }) => {
         const errors = [];
         page.on('pageerror', e => errors.push(e.message));
-        await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
+        await page.goto('/zayavka', { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(1500);
+
         const hasModule = await page.evaluate(() => typeof window.applyFieldHints === 'function');
         expect(hasModule, 'assets/onboarding-hints.js не подключён').toBe(true);
+
+        const hints = await page.evaluate(collectHints);
+        const filled = Object.values(hints).filter(h => h.text && h.text.length > 10);
+        expect(filled.length, 'в мастере не отрисовалось ни одной подсказки').toBeGreaterThanOrEqual(5);
         expect(errors, `JS-ошибки: ${errors.join(', ')}`).toHaveLength(0);
     });
 });
