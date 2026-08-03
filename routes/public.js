@@ -409,11 +409,15 @@ function createPublicRouter(deps) {
                 return res.status(400).json({ error: 'Расскажите, что вы производите' });
             }
 
+            /* deadline — колонка TEXT, поэтому сравниваем как текст в формате
+               ISO: to_char даёт ровно '2026-08-04'. Приведение CURRENT_DATE::text
+               зависит от DateStyle сервера и на проде давало другой формат —
+               из-за этого условие отсекало все закупки разом. */
             const { rows } = await pool.query(
                 `SELECT id, title, category, quantity, deadline, description, created_at
                    FROM orders
                   WHERE status = 'Активный'
-                    AND (deadline IS NULL OR deadline >= CURRENT_DATE::text)
+                    AND (deadline IS NULL OR deadline = '' OR deadline >= to_char(CURRENT_DATE, 'YYYY-MM-DD'))
                   ORDER BY created_at DESC
                   LIMIT 200`
             );
