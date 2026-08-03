@@ -124,7 +124,7 @@ function renderCategoryPage(category) {
 <meta property="og:site_name" content="ТехЗаказ">
 <meta property="og:title" content="${esc(category.ogTitle)}">
 <meta property="og:description" content="${esc(category.ogDescription)}">
-<meta property="og:image" content="${BASE}/landing-hero.png">
+<meta property="og:image" content="${BASE}/assets/og-cover.png">
 <meta property="og:locale" content="ru_RU">
 <meta name="robots" content="index, follow">
 <script type="application/ld+json">

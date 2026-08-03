@@ -966,9 +966,12 @@ app.get('/favicon.svg', (req, res) => {
         res.sendFile(path.join(__dirname, file));
     });
 });
+/* Картинка лежит в assets: корневые png не попадают в репозиторий (.gitignore),
+   из-за чего адрес отдавал 500 и ВК не собирал карточку по ссылке. Маршрут
+   оставлен для старых ссылок и ведёт на файл из assets. */
 app.get('/landing-hero.png', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=604800');
-    res.sendFile(path.join(__dirname, 'landing-hero.png'));
+    res.sendFile(path.join(__dirname, 'assets', 'og-cover.png'));
 });
 app.get('/robots.txt', (req, res) => {
     res.type('text/plain');
