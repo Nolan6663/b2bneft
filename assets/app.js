@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebarBadges();
     initSidebarProfileLink();
     initOnboarding();
+    initTourMenuEntry();
   }
   if (hasSession() && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/assets/sw.js').catch(e =>
@@ -1947,6 +1948,46 @@ const _TOUR_STEPS = {
 };
 
 const _TOUR_DONE_KEY = 'ob_tour_done_v1';
+
+/* Постоянный вход в обучение. Раньше тур можно было перезапустить только из
+   виджета «Начало работы», а кнопка «Скрыть» помечает все шаги выполненными и
+   убирает виджет насовсем — обучение становилось недоступно после одного
+   случайного клика. Пункт в меню пользователя есть на каждой странице кабинета
+   и никуда не девается. */
+function initTourMenuEntry() {
+  const role = localStorage.getItem('userRole') || '';
+  if (role !== 'customer' && role !== 'producer') return;
+
+  document.querySelectorAll('.user-dropdown').forEach((menu) => {
+    if (menu.querySelector('[data-tour-entry]')) return;
+    const item = document.createElement('button');
+    item.className = 'user-dropdown-item';
+    item.dataset.tourEntry = '1';
+    item.type = 'button';
+    item.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Как это работает</span>`;
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      menu.classList.remove('open');
+      const dropdownHost = menu.closest('.user-menu');
+      if (dropdownHost) dropdownHost.classList.remove('open');
+      menu.style.display = '';
+      startTourOrExplain();
+    });
+    const sep = menu.querySelector('.user-dropdown-sep');
+    if (sep) menu.insertBefore(item, sep);
+    else menu.appendChild(item);
+  });
+}
+
+/* На вспомогательных страницах якорей тура нет — вместо молчания уводим на
+   главную страницу роли и запускаем тур там. */
+function startTourOrExplain() {
+  if (startCabinetTour()) return;
+  const role = localStorage.getItem('userRole') || '';
+  localStorage.removeItem(_TOUR_DONE_KEY);
+  location.href = role === 'producer' ? 'producer.html' : 'index.html';
+}
 
 function startCabinetTour() {
   const role = localStorage.getItem('userRole') || '';
