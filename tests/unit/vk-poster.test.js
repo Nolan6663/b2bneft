@@ -152,6 +152,54 @@ test('пропущенная закупка помечается skipped, к В�
     } finally { restore(); }
 });
 
+test('ВК отказал в карточке ссылки — постим без вложения, а не теряем публикацию', async () => {
+    const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '1' });
+    try {
+        const pool = fakePool([{ id: 1, order_id: 5, attempts: 0 }]);
+        const attempts = [];
+        const poster = createVkPoster({
+            pool,
+            fetchImpl: async (url, opts) => {
+                const params = Object.fromEntries(new URLSearchParams(opts.body));
+                attempts.push(params);
+                if (params.attachments) {
+                    return { json: async () => ({ error: { error_code: 100, error_msg: 'One of the parameters specified was missing or invalid: Violated: link_photo_sizing_rule. No photo given' } }) };
+                }
+                return { json: async () => ({ response: { post_id: 99 } }) };
+            },
+        });
+        await poster.tick();
+
+        assert.equal(attempts.length, 2, 'должно быть две попытки: с вложением и без');
+        assert.ok(attempts[0].attachments, 'сначала пробуем с карточкой');
+        assert.equal(attempts[1].attachments, undefined, 'потом без неё');
+        assert.match(attempts[1].message, /zakupka\/5/, 'ссылка остаётся в тексте');
+
+        const sent = pool.calls.find(c => /status = 'sent'/.test(c.sql));
+        assert.ok(sent, 'публикация должна засчитаться');
+        assert.equal(sent.params[0], 99);
+    } finally { restore(); }
+});
+
+test('прочие ошибки ВК не превращаются в повтор без вложения', async () => {
+    const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '1' });
+    try {
+        const pool = fakePool([{ id: 1, order_id: 5, attempts: 0 }]);
+        let calls = 0;
+        const poster = createVkPoster({
+            pool,
+            fetchImpl: async () => {
+                calls += 1;
+                return { json: async () => ({ error: { error_code: 214, error_msg: 'Access to adding post denied' } }) };
+            },
+        });
+        await poster.tick();
+        assert.equal(calls, 1, 'на отказ в правах повторять бессмысленно');
+        const upd = pool.calls.find(c => /UPDATE vk_posts SET status = \$1/.test(c.sql));
+        assert.equal(upd.params[0], 'pending');
+    } finally { restore(); }
+});
+
 test('успешная публикация помечается sent и сохраняет id поста', async () => {
     const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '240643596' });
     try {
