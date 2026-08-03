@@ -838,13 +838,20 @@
 
                 // Drawing
                 let drawingHTML = '';
-                if (!isGuest && order.drawing) {
-                    // Кнопка разбора идёт рядом со «Скачать», но только там, где чертёж
-                    // нам вообще открыт: доступ к файлу заказчик даёт после отклика.
+                const orderFiles = (Array.isArray(order.attachments) && order.attachments.length)
+                    ? order.attachments
+                    : (order.drawing ? [order.drawing] : []);
+                if (!isGuest && orderFiles.length) {
+                    // Кнопка разбора идёт рядом со «Скачать» у первого файла, но только
+                    // там, где чертёж нам вообще открыт: доступ заказчик даёт после отклика.
                     const extra = respondedOrderIds.has(Number(order.id))
                         ? `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button>`
                         : '<span style="font-size:11px;color:var(--text-secondary);">Чертёж и разбор — после отклика</span>';
-                    drawingHTML = buildDrawingLinksHtml(order.id, order.drawing).replace('</div>', `${extra}</div>`);
+                    drawingHTML = orderFiles
+                        .map((f, i) => (i === 0
+                            ? buildDrawingLinksHtml(order.id, f, i).replace('</div>', `${extra}</div>`)
+                            : buildDrawingLinksHtml(order.id, f, i)))
+                        .join('');
                 }
 
                 // Buttons

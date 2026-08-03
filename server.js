@@ -171,13 +171,34 @@ async function sendPush(userId, title, body, url) {
 
 // ===================== ROW MAPPERS =====================
 
+/* Вложения закупки: новая колонка attachments (массив), старая drawing (один
+   файл). Уже размещённые заявки живут в drawing, поэтому читаем обе и отдаём
+   единым списком; drawing в ответе остаётся ради старых мест в интерфейсе. */
+function parseOrderAttachments(r) {
+    if (!r) return [];
+    let list = [];
+    if (r.attachments) {
+        try { list = JSON.parse(r.attachments); } catch { list = []; }
+        if (!Array.isArray(list)) list = [];
+    }
+    if (!list.length && r.drawing) {
+        try {
+            const single = JSON.parse(r.drawing);
+            if (single && single.storedName) list = [single];
+        } catch { /* битый JSON старой записи — считаем, что файла нет */ }
+    }
+    return list.filter(f => f && f.storedName);
+}
+
 function rowToOrder(r) {
     if (!r) return null;
+    const attachments = parseOrderAttachments(r);
     return {
         id: r.id, title: r.title, category: r.category, status: r.status,
         responses: r.responses, deadline: r.deadline, quantity: r.quantity,
         description: r.description, company: r.company,
-        drawing: r.drawing ? JSON.parse(r.drawing) : null,
+        drawing: attachments[0] || null,
+        attachments,
         createdAt: r.created_at
     };
 }
@@ -397,16 +418,35 @@ async function persistUpload(file, prefix) {
     return JSON.stringify({ originalName: meta.originalName, storedName: meta.storedName });
 }
 
-const uploadDrawing = multer({
+/* Несколько вложений сразу: возвращает массив объектов, а не JSON-строку —
+   вызывающий сам решает, что положить в колонку. */
+async function persistUploads(files, prefix) {
+    const list = Array.isArray(files) ? files : [];
+    const saved = [];
+    for (const file of list) {
+        const meta = await storage.saveFile(file, prefix);
+        saved.push({ originalName: meta.originalName, storedName: meta.storedName });
+    }
+    return saved;
+}
+
+/* К закупке цепляется до десяти файлов: чертежи и фото. Поле `drawing`
+   оставлено ради старых клиентов, новые шлют `drawings`. */
+const MAX_ORDER_ATTACHMENTS = 10;
+const drawingUploadOptions = {
     storage: multer.memoryStorage(),
-    limits: { fileSize: 15 * 1024 * 1024 },
+    limits: { fileSize: 15 * 1024 * 1024, files: MAX_ORDER_ATTACHMENTS },
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
         if (!ALLOWED_DRAWING_EXT.includes(ext)) return cb(new Error('Недопустимый тип файла. Разрешены: ' + ALLOWED_DRAWING_EXT.join(', ')));
         if (BLOCKED_MIME.has(file.mimetype)) return cb(new Error('Недопустимый MIME-тип файла'));
         cb(null, true);
     }
-}).single('drawing');
+};
+const uploadDrawing = multer(drawingUploadOptions).fields([
+    { name: 'drawing', maxCount: MAX_ORDER_ATTACHMENTS },
+    { name: 'drawings', maxCount: MAX_ORDER_ATTACHMENTS },
+]);
 const uploadKP = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -421,6 +461,12 @@ const uploadKP = multer({
 function handleDrawingUpload(req, res, next) {
     uploadDrawing(req, res, (err) => {
         if (err) return res.status(400).json({ error: err.message || 'Не удалось загрузить файл' });
+        /* Оба поля сводим в один список: обработчикам всё равно, как назвал
+           файлы клиент. req.file оставлен для кода, ждущего один файл. */
+        const fields = req.files && !Array.isArray(req.files) ? req.files : {};
+        const list = [...(fields.drawings || []), ...(fields.drawing || [])];
+        req.uploadedFiles = list.slice(0, MAX_ORDER_ATTACHMENTS);
+        req.file = req.uploadedFiles[0] || undefined;
         next();
     });
 }
@@ -1474,7 +1520,10 @@ const routesDeps = {
     handleKPUpload,
     handlePhotoUpload,
     persistUpload,
+    persistUploads,
     deleteDrawingFile,
+    parseOrderAttachments,
+    maxOrderAttachments: MAX_ORDER_ATTACHMENTS,
     canAccessOrderDrawing,
     canAccessProposal,
     canAccessOrderThread,

@@ -354,9 +354,10 @@
                 <textarea id="orderDescription" data-hint="description" placeholder="Материал, ГОСТ, допуски, условия поставки..."></textarea>
             </div>
             <div class="form-group">
-                <label>Чертеж / Спецификация (PDF, DWG, STEP)</label>
-                <input type="file" id="orderFile" data-hint="drawing" accept=".pdf,.png,.jpg,.jpeg,.dxf,.dwg,.step,.stp">
-                <div id="orderFileExisting" style="font-size:12px; color:var(--text-secondary); display:none;"></div>
+                <label>Чертежи и фото — до 10 файлов (PDF, DWG, STEP, JPG, PNG)</label>
+                <input type="file" id="orderFile" data-hint="drawing" multiple accept=".pdf,.png,.jpg,.jpeg,.dxf,.dwg,.step,.stp" onchange="onOrderFilesPicked(this)">
+                <div id="orderFileChosen" class="attach-list" style="display:none;"></div>
+                <div id="orderFileExisting" class="attach-list" style="display:none;"></div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                 <input type="checkbox" id="saveAsTemplate" style="accent-color:#FF6A00;width:14px;height:14px;">
@@ -799,7 +800,7 @@
             document.getElementById('orderDeadline').value = '';
             document.getElementById('orderDescription').value = '';
             document.getElementById('orderFile').value = '';
-            document.getElementById('orderFileExisting').style.display = 'none';
+            resetAttachmentState();
             const brief = document.getElementById('aiTzBrief');
             const checklist = document.getElementById('aiTzChecklist');
             if (brief) brief.value = '';
@@ -957,6 +958,70 @@
             document.getElementById('orderModal').style.display = 'flex';
         }
 
+        /* Вложения закупки: слева уже приложенные (их можно убрать), справа
+           только что выбранные в поле. При сохранении список оставленных уезжает
+           в keepFiles, новые файлы — полем drawings. */
+        const MAX_ATTACHMENTS = 10;
+        let keptAttachments = [];
+        let chosenFiles = [];
+
+        function renderKeptAttachments(orderId) {
+            const box = document.getElementById('orderFileExisting');
+            if (!box) return;
+            if (!keptAttachments.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+            box.style.display = 'block';
+            box.innerHTML = keptAttachments.map((f, i) => `
+                <div class="attach-item">
+                    <span class="attach-name" title="${escapeAttr(f.originalName || '')}">${escapeHtml(f.originalName || 'файл')}</span>
+                    <a class="attach-open" href="${SERVER_URL}/orders/${orderId}/drawing?file=${i}" target="_blank" rel="noopener">Открыть</a>
+                    <button type="button" class="attach-remove" onclick="removeKeptAttachment(${i})" aria-label="Убрать файл">×</button>
+                </div>`).join('');
+        }
+
+        function removeKeptAttachment(index) {
+            keptAttachments.splice(index, 1);
+            renderKeptAttachments(editingOrderId);
+        }
+
+        function renderChosenFiles() {
+            const box = document.getElementById('orderFileChosen');
+            if (!box) return;
+            if (!chosenFiles.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+            box.style.display = 'block';
+            box.innerHTML = chosenFiles.map((f, i) => `
+                <div class="attach-item">
+                    <span class="attach-name">${escapeHtml(f.name)}</span>
+                    <span class="attach-size">${f.size < 102400 ? Math.max(1, Math.round(f.size / 1024)) + ' КБ' : (f.size / 1048576).toFixed(1) + ' МБ'}</span>
+                    <button type="button" class="attach-remove" onclick="removeChosenFile(${i})" aria-label="Убрать файл">×</button>
+                </div>`).join('');
+        }
+
+        function removeChosenFile(index) {
+            chosenFiles.splice(index, 1);
+            renderChosenFiles();
+        }
+
+        function onOrderFilesPicked(input) {
+            const room = MAX_ATTACHMENTS - keptAttachments.length - chosenFiles.length;
+            const picked = Array.from(input.files || []);
+            if (room <= 0) {
+                showToast(`К закупке можно приложить не больше ${MAX_ATTACHMENTS} файлов`, 'warn');
+            } else {
+                if (picked.length > room) showToast(`Добавлены первые ${room} — предел ${MAX_ATTACHMENTS} файлов`, 'warn');
+                chosenFiles = chosenFiles.concat(picked.slice(0, room));
+            }
+            /* поле очищаем, чтобы тот же файл можно было выбрать снова после удаления */
+            input.value = '';
+            renderChosenFiles();
+        }
+
+        function resetAttachmentState() {
+            keptAttachments = [];
+            chosenFiles = [];
+            renderKeptAttachments(null);
+            renderChosenFiles();
+        }
+
         function openEditModal(orderId) {
             const order = ordersCache.find(o => o.id === orderId);
             if (!order) return;
@@ -970,14 +1035,11 @@
             document.getElementById('orderDeadline').value = deadlineToInputValue(order.deadline);
             document.getElementById('orderDescription').value = order.description || '';
             document.getElementById('orderFile').value = '';
-            const existingEl = document.getElementById('orderFileExisting');
-            if (order.drawing) {
-                existingEl.style.display = 'block';
-                existingEl.innerHTML = buildDrawingLinksHtml(order.id, order.drawing)
-                    + '<div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">Выберите новый файл ниже, чтобы заменить</div>';
-            } else {
-                existingEl.style.display = 'none';
-            }
+            keptAttachments = Array.isArray(order.attachments)
+                ? order.attachments.slice()
+                : (order.drawing ? [order.drawing] : []);
+            renderKeptAttachments(order.id);
+            renderChosenFiles();
             const aiPanel = document.getElementById('aiTzPanel');
             if (aiPanel) aiPanel.style.display = 'none';
             document.getElementById('orderModal').style.display = 'flex';
@@ -1192,8 +1254,9 @@
                     <span style="${style}">${val}</span>
                 </div>`).join('');
 
-            if (order.drawing) {
-                meta.innerHTML += `<div style="margin-top:4px;">${buildDrawingLinksHtml(order.id, order.drawing)}</div>`;
+            const attachmentsHtml = buildAttachmentsHtml(order.id, order);
+            if (attachmentsHtml) {
+                meta.innerHTML += `<div style="margin-top:4px;">${attachmentsHtml}</div>`;
             }
 
             const proposalsEl = document.getElementById('detPanelProposals');
@@ -1491,7 +1554,6 @@
             const quantityInput = document.getElementById('orderQuantity');
             const deadlineInput = document.getElementById('orderDeadline');
             const descriptionInput = document.getElementById('orderDescription');
-            const fileInput = document.getElementById('orderFile');
 
             const cleanTitle = titleInput.value.trim();
             const category = categoryInput.value;
@@ -1513,7 +1575,10 @@
             if (quantityInput.value) formData.append('quantity', quantityInput.value);
             formData.append('description', descriptionInput.value.trim());
             if (!isEdit) formData.append('company', localStorage.getItem('userCompany'));
-            if (fileInput.files.length > 0) formData.append('drawing', fileInput.files[0]);
+            /* Оставленные файлы перечисляем явно: чего нет в keepFiles, то сервер
+               удалит из хранилища. Новые уезжают полем drawings. */
+            if (isEdit) formData.append('keepFiles', keptAttachments.map(f => f.storedName).join(','));
+            chosenFiles.forEach(f => formData.append('drawings', f));
 
             try {
                 const response = await apiFetch(url, { method, body: formData });
@@ -1604,7 +1669,7 @@
                     document.getElementById('orderDeadline').value = '';
                 }
                 document.getElementById('orderFile').value = '';
-                document.getElementById('orderFileExisting').style.display = 'none';
+                resetAttachmentState();
                 document.getElementById('orderModal').style.display = 'flex';
             } catch {}
         }

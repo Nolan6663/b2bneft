@@ -290,6 +290,10 @@ async function initDb() {
         -- Закупка размещена до подтверждения email: письма и инвайты ждут, пока
         -- заказчик подтвердит адрес (flushPendingOutbound в routes/auth.js).
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS outbound_pending BOOLEAN NOT NULL DEFAULT false;
+        -- К закупке можно приложить несколько файлов. Старая колонка drawing
+        -- остаётся ради уже размещённых заявок: при чтении она подмешивается
+        -- первым вложением, при следующем сохранении переезжает в attachments.
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS attachments TEXT;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS invites_sent INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS kpp TEXT NOT NULL DEFAULT '';
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS legal_address TEXT NOT NULL DEFAULT '';

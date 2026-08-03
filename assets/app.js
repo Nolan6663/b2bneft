@@ -1107,15 +1107,26 @@ function escapeAttr(value) {
     .replace(/'/g, '&#39;');
 }
 
-function drawingDownloadUrl(orderId) {
-  return `${SERVER_URL}/orders/${orderId}/drawing`;
+function drawingDownloadUrl(orderId, index) {
+  const base = `${SERVER_URL}/orders/${orderId}/drawing`;
+  return index ? `${base}?file=${index}` : base;
 }
 
-function drawingPreviewUrl(orderId) {
-  return `${drawingDownloadUrl(orderId)}?inline=1`;
+function drawingPreviewUrl(orderId, index) {
+  return index ? `${drawingDownloadUrl(orderId, index)}&inline=1` : `${drawingDownloadUrl(orderId)}?inline=1`;
 }
 
-function buildDrawingLinksHtml(orderId, drawing) {
+/* К закупке может быть приложено несколько файлов: рисуем список. Старые
+   закупки приходят с одним `drawing` — их обрабатывает тот же код. */
+function buildAttachmentsHtml(orderId, order) {
+  const list = (order && Array.isArray(order.attachments) && order.attachments.length)
+    ? order.attachments
+    : (order && order.drawing ? [order.drawing] : []);
+  if (!list.length) return '';
+  return list.map((f, i) => buildDrawingLinksHtml(orderId, f, i)).join('');
+}
+
+function buildDrawingLinksHtml(orderId, drawing, index) {
   if (!drawing || !drawing.originalName) return '';
   const rawName = drawing.originalName;
   const name = /^[\x20-\x7E\u0400-\u04FF\s._\-()]+$/.test(rawName) ? rawName : 'Вложение';
@@ -1126,15 +1137,16 @@ function buildDrawingLinksHtml(orderId, drawing) {
   // `onclick="openDrawingPreview(9, "` — кнопка «Просмотр» не работала ни разу
   // ни на одном чертеже. escapeHtml превращает кавычки в &quot;, парсер вернёт
   // их обратно уже внутри значения атрибута.
+  const fileIndex = Number(index) || 0;
   const previewBtn = previewable
-    ? `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="openDrawingPreview(${orderId}, ${escapeAttr(JSON.stringify(name))})">Просмотр</button>`
+    ? `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="openDrawingPreview(${orderId}, ${escapeAttr(JSON.stringify(name))}, ${fileIndex})">Просмотр</button>`
     : '';
   const hint = previewable ? '' : '<span style="font-size:11px;color:var(--text-secondary);">Просмотр в браузере: PDF или изображение</span>';
   return `<div class="drawing-links" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--accent-cyan);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
     <span style="font-size:12px;font-weight:600;color:var(--text-primary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${safeName}">${safeName}</span>
     ${previewBtn}
-    <a href="${drawingDownloadUrl(orderId)}" class="drawing-link-btn" target="_blank" rel="noopener">Скачать</a>
+    <a href="${drawingDownloadUrl(orderId, fileIndex)}" class="drawing-link-btn" target="_blank" rel="noopener">Скачать</a>
     ${hint}
   </div>`;
 }
@@ -1162,13 +1174,13 @@ function ensureDrawingPreviewModal() {
   });
 }
 
-function openDrawingPreview(orderId, fileName) {
+function openDrawingPreview(orderId, fileName, fileIndex) {
   if (!hasSession()) {
     showToast('Войдите, чтобы просмотреть чертёж', 'warn');
     return;
   }
   if (!isDrawingPreviewable(fileName)) {
-    window.open(drawingDownloadUrl(orderId), '_blank', 'noopener');
+    window.open(drawingDownloadUrl(orderId, fileIndex), '_blank', 'noopener');
     return;
   }
   ensureDrawingPreviewModal();
@@ -1179,12 +1191,12 @@ function openDrawingPreview(orderId, fileName) {
   if (!modal || !body || !title || !download) return;
 
   title.textContent = fileName || 'Чертёж';
-  download.href = drawingDownloadUrl(orderId);
+  download.href = drawingDownloadUrl(orderId, fileIndex);
   body.innerHTML = '<div style="padding:40px;color:var(--text-secondary);font-size:13px;">Загрузка…</div>';
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  const url = drawingPreviewUrl(orderId);
+  const url = drawingPreviewUrl(orderId, fileIndex);
   const ext = drawingFileExt(fileName);
   if (ext === '.pdf') {
     body.innerHTML = `<iframe src="${url}" title="${escapeHtml(fileName)}" style="width:100%;height:min(75vh,720px);border:none;background:#fff;"></iframe>`;

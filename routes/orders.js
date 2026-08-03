@@ -13,6 +13,9 @@ module.exports = function createOrdersRouter(deps) {
         persistUpload,
         deleteDrawingFile,
         canAccessOrderDrawing,
+        persistUploads,
+        parseOrderAttachments,
+        maxOrderAttachments,
         rowToOrder,
         rowToCompany,
         computeMatchScore,
@@ -106,15 +109,22 @@ module.exports = function createOrdersRouter(deps) {
         } catch (e) { next(e); }
     });
 
+    /* Один эндпоинт на все вложения: ?file=<индекс> выбирает нужное, без
+       параметра отдаётся первое — так продолжают работать старые ссылки. */
     router.get('/:orderId/drawing', requireAuth, async (req, res, next) => {
         try {
             const orderId = Number(req.params.orderId);
             if (!(await canAccessOrderDrawing(req.user, orderId))) {
                 return res.status(403).json({ error: 'Нет доступа к чертежу этой закупки' });
             }
-            const { rows: [row] } = await pool.query('SELECT drawing FROM orders WHERE id = $1', [orderId]);
-            if (!row || !row.drawing) return res.status(404).json({ error: 'Файл не найден' });
-            const drawing = JSON.parse(row.drawing);
+            const { rows: [row] } = await pool.query('SELECT drawing, attachments FROM orders WHERE id = $1', [orderId]);
+            const files = parseOrderAttachments(row);
+            if (!files.length) return res.status(404).json({ error: 'Файл не найден' });
+
+            const index = req.query.file !== undefined ? Number(req.query.file) : 0;
+            const drawing = Number.isInteger(index) ? files[index] : null;
+            if (!drawing) return res.status(404).json({ error: 'Файл не найден' });
+
             if (!storage.isRemote() && !storage.existsLocally(drawing.storedName)) {
                 return res.status(404).json({ error: 'Файл был удалён с сервера' });
             }
@@ -186,11 +196,15 @@ module.exports = function createOrdersRouter(deps) {
             // ждут подтверждения (их отпускает flushPendingOutbound в routes/auth.js).
             const allowOutbound = req.user.role === 'admin' || Boolean(req.user.email_verified);
 
-            const drawing = await persistUpload(req.file, 'drawings');
+            const files = await persistUploads(req.uploadedFiles, 'drawings');
+            /* drawing пишем первым файлом: на него смотрят старые записи и код,
+               который умеет только один чертёж. Полный список — в attachments. */
+            const drawing = files.length ? JSON.stringify(files[0]) : null;
+            const attachments = files.length ? JSON.stringify(files) : null;
             const { rows: [newRow] } = await pool.query(
-                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing,outbound_pending) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing,attachments,outbound_pending) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
                 [title, category, deadline, quantity ? Number(quantity) : null,
-                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing, !allowOutbound]
+                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing, attachments, !allowOutbound]
             );
             const newOrder = rowToOrder(newRow);
             await logOrderEvent(newOrder.id, 'created', 'Закупка опубликована', newOrder.category || '', req.user.company);
@@ -262,17 +276,27 @@ module.exports = function createOrdersRouter(deps) {
             if (order.company && order.company !== req.user.company) return res.status(403).json({ error: 'Это закупка принадлежит другой компании' });
             if (order.status === 'Закрыта' || order.status === 'Отменена') return res.status(400).json({ error: 'Закрытую или отменённую закупку нельзя редактировать' });
 
-            let drawingJson = row.drawing;
-            if (req.file) {
-                deleteDrawingFile(order.drawing);
-                drawingJson = await persistUpload(req.file, 'drawings');
+            /* Вложения: клиент присылает список оставленных файлов (keepFiles —
+               storedName через запятую) и, возможно, новые. Чего нет в списке —
+               удаляем из хранилища. Поля нет вообще — считаем, что старые файлы
+               остаются: так старый клиент не потеряет чертёж. */
+            let files = Array.isArray(order.attachments) ? order.attachments.slice() : [];
+            if (req.body.keepFiles !== undefined) {
+                const keep = new Set(String(req.body.keepFiles).split(',').map(s => s.trim()).filter(Boolean));
+                files.filter(f => !keep.has(f.storedName)).forEach(deleteDrawingFile);
+                files = files.filter(f => keep.has(f.storedName));
             }
+            const added = await persistUploads(req.uploadedFiles, 'drawings');
+            files = files.concat(added).slice(0, maxOrderAttachments);
+
+            const drawingJson = files.length ? JSON.stringify(files[0]) : null;
+            const attachmentsJson = files.length ? JSON.stringify(files) : null;
 
             await pool.query(
-                'UPDATE orders SET title=$1,category=$2,deadline=$3,quantity=$4,description=$5,drawing=$6 WHERE id=$7',
+                'UPDATE orders SET title=$1,category=$2,deadline=$3,quantity=$4,description=$5,drawing=$6,attachments=$7 WHERE id=$8',
                 [title, category, deadline, quantity ? Number(quantity) : null,
                  description !== undefined ? String(description).slice(0, 1000) : (order.description || ''),
-                 drawingJson, orderId]
+                 drawingJson, attachmentsJson, orderId]
             );
             const { rows: [updated] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
             await logOrderEvent(orderId, 'updated', 'Закупка изменена', title, req.user.company);
