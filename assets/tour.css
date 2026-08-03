@@ -1,0 +1,97 @@
+/* Тур по кабинету: затемнение с вырезом и карточка с пояснением.
+   Затемнение рисует не оверлей, а огромная тень вокруг выреза — так вырез
+   всегда точно по элементу и не нужен второй слой с маской. */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.tour-spot {
+  position: absolute;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, .55);
+  transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
+  pointer-events: none;
+}
+
+.tour-card {
+  position: fixed;
+  /* выше баннера подтверждения email (z-index 999) — иначе он режет кнопки */
+  z-index: 1001;
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px 18px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--card-border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
+}
+
+.tour-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #1e2a3a);
+  margin-bottom: 6px;
+}
+
+.tour-card-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #475569);
+}
+
+.tour-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.tour-card-count {
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+}
+
+.tour-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-btn {
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent-bright, #ff6a00);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tour-btn-ghost {
+  background: none;
+  color: var(--text-secondary, #475569);
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  /* bottom проставляет tour.js: снизу может стоять и нижняя навигация,
+     и баннер «подтвердите email» — высота считается по факту */
+  .tour-card,
+  .tour-card-bottom {
+    top: auto !important;
+    left: 16px !important;
+    right: 16px;
+    width: auto;
+  }
+
+  .tour-btn,
+  .tour-btn-ghost {
+    height: 44px;
+    padding: 0 16px;
+  }
+}

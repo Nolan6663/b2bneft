@@ -486,6 +486,21 @@ html[data-user-role="producer"] #sidebarProfileLink { display: flex !important; 
 .form-group textarea { height: auto; padding: 12px 14px; min-height: 90px; resize: vertical; }
 .form-group input:focus, .form-group textarea:focus, .search-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(255,106,0,.1); }
 
+/* Подсказка под полем заявки: объясняет последствие, а не описывает поле.
+   Внутри .form-group расстояние держит gap контейнера, снаружи — свой отступ. */
+.form-hint { margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+.form-group > .form-hint { margin-top: 0; }
+
+/* Блок «что будет после публикации» в конце формы закупки */
+.order-next-steps {
+  margin-bottom: 14px; padding: 12px 14px;
+  border: 1px solid var(--inner-border); border-radius: 8px;
+  background: var(--inner-bg);
+}
+.order-next-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.order-next-steps ol { margin: 0; padding-left: 18px; }
+.order-next-steps li { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+
 /* ── Custom checkbox — replaces native everywhere ────────────────────── */
 input[type="checkbox"] {
   -webkit-appearance: none;
@@ -2467,6 +2482,9 @@ table {
   transition: background .12s, color .12s;
 }
 .ob-cl-dismiss:hover { background: var(--inner-bg); color: var(--text-secondary); }
+/* Две кнопки в подвале чеклиста: запуск тура и «скрыть» */
+.ob-cl-foot { display: flex; gap: 4px; }
+.ob-cl-foot .ob-cl-dismiss { flex: 1 1 0; width: auto; margin: 4px 6px 10px; min-width: 0; }
 
 @media (max-width: 520px) {
   .ob-modal { padding: 28px 20px 22px; border-radius: 18px; }

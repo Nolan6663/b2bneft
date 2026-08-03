@@ -1815,6 +1815,9 @@ function initOnboarding() {
 
   if (onMainPage && !localStorage.getItem(_OB_WELCOME_KEY)) {
     _showObWelcome(role);
+  } else if (onMainPage) {
+    /* Приветствие уже видели — тур запускается сам, если ещё не проходили */
+    _obMaybeAutoStartTour();
   }
 }
 
@@ -1884,6 +1887,64 @@ function closeObWelcome() {
   if (!overlay) return;
   overlay.classList.remove('ob-visible');
   setTimeout(() => overlay.remove(), 280);
+  /* Приветствие закрыто — можно вести по кабинету */
+  _obMaybeAutoStartTour();
+}
+
+/* ---------- Тур по кабинету ---------- */
+
+/* Маршруты описаны данными: движок в assets/tour.js про страницы не знает.
+   У шага несколько селекторов — на телефоне боковое меню становится нижней
+   панелью, и якорь надо искать по обоим вариантам. */
+const _TOUR_STEPS = {
+  customer: [
+    { selectors: ['#createOrderBtn'], title: 'Отсюда начинается заявка',
+      text: 'Опишите, что нужно изготовить. Техзадание можно собрать по описанию или по чертежу — платформа предложит формулировки.' },
+    { selectors: ['#orders-table-body', '#ordersMobileList'], title: 'Ваши закупки',
+      text: 'Здесь виден статус каждой заявки и сколько заводов откликнулось.' },
+    /* У заказчика отдельного пункта «КП» в меню нет — он скрыт для этой роли
+       (assets/app.js:78). Отклики он видит числом в строке закупки. */
+    { selectors: ['#thResponses'], title: 'Отклики заводов',
+      text: 'Число в этой колонке — сколько заводов ответило. Клик по строке открывает предложения: цену, срок и файл.' },
+    { selectors: ['.sidebar a[href="messages.html"]'], title: 'Переписка',
+      text: 'Уточнения по заявке идут в чате внутри платформы, а не по почте.' },
+    { selectors: ['#sidebarProfileLink', '.sidebar a[href^="company-profile.html"]'], title: 'Профиль компании',
+      text: 'Заполненный профиль повышает доверие: заводы видят, с кем работают.' },
+  ],
+  producer: [
+    { selectors: ['#ordersList'], title: 'Лента заявок',
+      text: 'Сюда попадают закупки, подходящие вашему производству.' },
+    { selectors: ['#categoryFilter'], title: 'Фильтр по специализации',
+      text: 'Отсекает чужое: оставьте свои категории, чтобы не листать лишнее.' },
+    { selectors: ['#tabProposalsBtn'], title: 'Ваши предложения',
+      text: 'Отправленные КП и их статусы собраны здесь.' },
+    { selectors: ['.sidebar a[href="messages.html"]'], title: 'Переписка',
+      text: 'Заказчик задаёт вопросы по заявке в чате платформы.' },
+    { selectors: ['#myProfileLink', '#sidebarProfileLink'], title: 'Профиль',
+      text: 'Специализация и оборудование влияют на то, какие заявки вам покажут.' },
+  ],
+};
+
+const _TOUR_DONE_KEY = 'ob_tour_done_v1';
+
+function startCabinetTour() {
+  const role = localStorage.getItem('userRole') || '';
+  const steps = _TOUR_STEPS[role];
+  if (!steps || typeof window.startTour !== 'function') return false;
+  return window.startTour(steps, {
+    onFinish: () => localStorage.setItem(_TOUR_DONE_KEY, '1'),
+  });
+}
+
+/* Автозапуск: только на главной странице роли, один раз, и лишь после того,
+   как список закупок отрисован — иначе якорь пустой и шаг пропадёт. */
+function _obMaybeAutoStartTour() {
+  if (localStorage.getItem(_TOUR_DONE_KEY) === '1') return;
+  const role = localStorage.getItem('userRole') || '';
+  const page = location.pathname.split('/').pop() || 'index.html';
+  const mainPage = role === 'producer' ? 'producer.html' : 'index.html';
+  if (page !== mainPage && page !== '' && page !== 'index') return;
+  setTimeout(() => { startCabinetTour(); }, 1200);
 }
 
 /* ---------- Чеклист «Начало работы» (виджет нижний правый) ---------- */
@@ -1935,7 +1996,10 @@ function _initObChecklist(role) {
     </div>
     <div class="ob-cl-body">
       <div class="ob-cl-items">${itemsHtml}</div>
-      <button class="ob-cl-dismiss" onclick="dismissObChecklist()">Скрыть</button>
+      <div class="ob-cl-foot">
+        <button class="ob-cl-dismiss" onclick="startCabinetTour()">Как это работает</button>
+        <button class="ob-cl-dismiss" onclick="dismissObChecklist()">Скрыть</button>
+      </div>
     </div>`;
 
   widget.addEventListener('click', (e) => {

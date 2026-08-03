@@ -68,19 +68,19 @@
 
         <div class="ob-field">
             <label class="ob-label" for="title">Название закупки</label>
-            <input class="ob-input" id="title" type="text" placeholder="Манжеты уплотнительные полиуретановые">
+            <input class="ob-input" id="title" data-hint="name" type="text" placeholder="Манжеты уплотнительные полиуретановые">
         </div>
 
         <div class="ob-field">
             <label class="ob-label" for="description">Техническое задание</label>
-            <textarea class="ob-textarea" id="description" style="min-height:220px;"></textarea>
+            <textarea class="ob-textarea" id="description" data-hint="description" style="min-height:220px;"></textarea>
             <ul class="ob-checklist" id="checklist"></ul>
         </div>
 
         <div class="ob-row">
             <div class="ob-field">
                 <label class="ob-label" for="category">Категория</label>
-                <select class="ob-select" id="category">
+                <select class="ob-select" id="category" data-hint="category">
                     <option value="РТИ">РТИ</option>
                     <option value="Металл">Металл</option>
                     <option value="Трубопроводная арматура">Трубопроводная арматура</option>
@@ -90,18 +90,18 @@
             </div>
             <div class="ob-field">
                 <label class="ob-label" for="quantity">Количество, шт.</label>
-                <input class="ob-input" id="quantity" type="number" min="1" placeholder="200">
+                <input class="ob-input" id="quantity" data-hint="quantity" type="number" min="1" placeholder="200">
             </div>
         </div>
 
         <div class="ob-row">
             <div class="ob-field">
                 <label class="ob-label" for="deadline">Срок поставки</label>
-                <input class="ob-input" id="deadline" type="date">
+                <input class="ob-input" id="deadline" data-hint="deadline" type="date">
             </div>
             <div class="ob-field">
                 <label class="ob-label" for="city">Город поставки</label>
-                <input class="ob-input" id="city" type="text" placeholder="Сургут">
+                <input class="ob-input" id="city" data-hint="city" type="text" placeholder="Сургут">
             </div>
         </div>
 
@@ -177,6 +177,7 @@
 </div>
 
 <script src="/assets/onboarding.js?v=2026080301"></script>
+<script src="/assets/onboarding-hints.js?v=1"></script>
 <script>
 (function () {
     const W = window.TZWizard;
@@ -358,6 +359,8 @@
     });
 
     restore();
+    /* Подсказки к полям — общие с модалкой кабинета, см. assets/onboarding-hints.js */
+    if (typeof applyFieldHints === 'function') applyFieldHints(document);
     W.mount(4);
 })();
 </script>
