@@ -8,8 +8,11 @@
   z-index: 1000;
 }
 
+/* fixed, а не absolute: координаты берутся из getBoundingClientRect, то есть
+   от окна. В absolute внутри fixed-оверлея на iOS вырез уезжал от элемента —
+   Safari меняет систему координат вместе с адресной строкой. */
 .tour-spot {
-  position: absolute;
+  position: fixed;
   border-radius: 10px;
   box-shadow: 0 0 0 9999px rgba(15, 23, 42, .55);
   transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
@@ -86,8 +89,9 @@
   /* bottom проставляет tour.js: снизу может стоять и нижняя навигация,
      и баннер «подтвердите email» — высота считается по факту */
   .tour-card,
+  /* top не через !important: tour.js уводит карточку наверх, когда снизу
+     стоит сам подсвечиваемый элемент */
   .tour-card-bottom {
-    top: auto !important;
     left: 16px !important;
     right: 16px;
     width: auto;

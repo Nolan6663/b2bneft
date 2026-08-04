@@ -17,8 +17,25 @@
         return null;
     }
 
+    /* Элемент внутри фиксированного блока прокруткой не достать: если он сейчас
+       за краем экрана, значит он там и останется. Так на телефоне отсеиваются
+       пункты бокового меню, уехавшего вниз, — иначе счётчик обещал бы шаги,
+       которых человек не увидит. */
+    function insideFixed(el) {
+        for (let node = el; node && node !== document.body; node = node.parentElement) {
+            if (getComputedStyle(node).position === 'fixed') return true;
+        }
+        return false;
+    }
+
+    function reachable(el) {
+        if (!el) return false;
+        if (reallyVisible(el)) return true;
+        return !insideFixed(el);
+    }
+
     function visibleSteps(steps) {
-        return (steps || []).filter(s => findAnchor(s.selectors));
+        return (steps || []).filter(s => reachable(findAnchor(s.selectors)));
     }
 
     function isTourAvailable(steps) {
@@ -70,9 +87,19 @@
     function placeCard(card, rect) {
         if (window.innerWidth <= MOBILE_WIDTH) {
             card.classList.add('tour-card-bottom');
-            card.style.top = '';
             card.style.left = '';
-            card.style.bottom = `${bottomObstacleHeight() + 16}px`;
+            /* Карточка прижата к низу, но подсвечиваемый элемент может быть там
+               же — например, «Сообщения» в нижней панели. Тогда уводим карточку
+               наверх, иначе она закрывает ровно то, что показывает. */
+            const cardHeight = card.getBoundingClientRect().height || 180;
+            const bottomZone = window.innerHeight - bottomObstacleHeight() - cardHeight - 32;
+            if (rect.top > bottomZone) {
+                card.style.bottom = 'auto';
+                card.style.top = '16px';
+            } else {
+                card.style.top = 'auto';
+                card.style.bottom = `${bottomObstacleHeight() + 16}px`;
+            }
             return;
         }
         card.style.bottom = '';
@@ -91,11 +118,37 @@
         card.style.left = `${Math.round(left)}px`;
     }
 
+    /* Виден ли элемент человеку на самом деле. offsetParent врёт: на телефоне
+       боковое меню уезжает за нижний край, ссылки в нём формально «видимы», и
+       тур подсвечивал пустое место. Проверяем по точке: что лежит в центре
+       элемента, не считая слоёв самого тура. */
+    function reallyVisible(el) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return false;
+        if (r.bottom <= 0 || r.top >= window.innerHeight) return false;
+        if (r.right <= 0 || r.left >= window.innerWidth) return false;
+
+        const x = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
+        const y = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
+        const stack = typeof document.elementsFromPoint === 'function'
+            ? document.elementsFromPoint(x, y)
+            : [document.elementFromPoint(x, y)];
+        const top = stack.filter(e => e && !e.closest('.tour-overlay, .tour-card'))[0];
+        return Boolean(top && (top === el || el.contains(top) || top.contains(el)));
+    }
+
     function paintStep() {
         if (!state) return;
         const step = state.steps[state.index];
         const anchor = findAnchor(step.selectors);
-        if (!anchor) { next(); return; }
+        if (!anchor || !reallyVisible(anchor)) {
+            /* Шаг выбрасываем из маршрута, а не просто перескакиваем: иначе
+               счётчик обещал бы «Шаг 3 из 4», когда шагов осталось два. */
+            state.steps.splice(state.index, 1);
+            if (!state.steps.length || state.index >= state.steps.length) { finish(); return; }
+            showStep();
+            return;
+        }
 
         const rect = anchor.getBoundingClientRect();
         const pad = 6;
@@ -118,13 +171,31 @@
         state.card.classList.add('tour-card-ready');
     }
 
+    /* Ждём, пока прокрутка действительно закончится: на iOS плавный скролл
+       длится дольше фиксированной паузы, и подсветка вставала по устаревшим
+       координатам — вырез оказывался в стороне от элемента. Считаем позицию
+       стабильной, когда она не менялась два кадра подряд. */
+    function whenSettled(anchor, done) {
+        let prev = null;
+        let same = 0;
+        const started = Date.now();
+        const tick = () => {
+            if (!state) return;
+            const top = Math.round(anchor.getBoundingClientRect().top);
+            same = (prev !== null && top === prev) ? same + 1 : 0;
+            prev = top;
+            if (same >= 2 || Date.now() - started > 1500) { done(); return; }
+            requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
     function showStep() {
         const step = state.steps[state.index];
         const anchor = findAnchor(step.selectors);
         if (!anchor) { next(); return; }
         anchor.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        /* Позицию считаем после прокрутки, иначе подсветка встаёт по старым координатам */
-        setTimeout(paintStep, 320);
+        whenSettled(anchor, paintStep);
     }
 
     function next() {
