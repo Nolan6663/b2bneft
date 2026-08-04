@@ -429,6 +429,16 @@ function createPublicRouter(deps) {
 
             res.json({
                 total: scored.length,
+                /* временная диагностика: сколько заявок просмотрено и какой
+                   лучший балл — без неё непонятно, режет запрос или подбор */
+                debug: req.query.debug === '1'
+                    ? {
+                        scanned: rows.length,
+                        best: rows.reduce((max, row) => Math.max(max, computeMatchScore(rowToOrder(row), profile)), 0),
+                        profileText: [profile.specialization, profile.about].filter(Boolean).join(' | ').slice(0, 120),
+                        firstCategory: rows[0] ? rows[0].category : null,
+                    }
+                    : undefined,
                 items: scored.slice(0, 6).map(({ row, score }) => ({
                     id: row.id,
                     title: String(row.title || '').slice(0, 160),
