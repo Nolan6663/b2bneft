@@ -437,6 +437,12 @@ function createPublicRouter(deps) {
                         best: rows.reduce((max, row) => Math.max(max, computeMatchScore(rowToOrder(row), profile)), 0),
                         profileText: [profile.specialization, profile.about].filter(Boolean).join(' | ').slice(0, 120),
                         firstCategory: rows[0] ? rows[0].category : null,
+                        firstOrderKeys: rows[0] ? Object.keys(rowToOrder(rows[0])).join(',') : null,
+                        /* эталон: если и здесь ноль — дело в самой функции, а не в данных */
+                        sample: computeMatchScore(
+                            { category: 'РТИ', title: 'Манжеты', description: 'уплотнения полиуретан' },
+                            { specialization: 'рти манжеты полиуретан уплотнения кольца', about: '', capabilities: [], equipment: [] }
+                        ),
                     }
                     : undefined,
                 items: scored.slice(0, 6).map(({ row, score }) => ({
