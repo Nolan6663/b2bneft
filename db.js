@@ -298,6 +298,17 @@ async function initDb() {
             updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
         CREATE INDEX IF NOT EXISTS logistics_cities_key ON logistics_cities (search_key);
+        -- Кэш расчётов. Тарифы меняются редко, а маршрут в карточке КП
+        -- открывают многократно — незачем дёргать чужой публичный API на каждый
+        -- показ. Ключ считается от нормализованного запроса (lib/logistics/index.js),
+        -- срок жизни проверяется по created_at при чтении.
+        CREATE TABLE IF NOT EXISTS logistics_quotes_cache (
+            cache_key  TEXT        PRIMARY KEY,
+            carrier    TEXT        NOT NULL,
+            payload    TEXT        NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS logistics_cache_created ON logistics_quotes_cache (created_at);
     `);
 
     await pool.query(`
