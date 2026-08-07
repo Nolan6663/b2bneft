@@ -8,6 +8,8 @@
     "test:unit": "node scripts/run-unit-tests.js",
     "check": "node scripts/static-checks.js",
     "smoke:api": "node scripts/mvp-api-smoke.js",
+    "check:logistics": "node scripts/check-logistics.js",
+    "sync:logistics-cities": "node scripts/sync-logistics-cities.js",
     "sync:legal": "node scripts/sync-legal.js",
     "sync:categories": "node scripts/sync-category-pages.js",
     "test:e2e": "playwright test",
