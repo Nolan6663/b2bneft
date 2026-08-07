@@ -3,6 +3,9 @@
 const express = require('express');
 const { acceptWonProposal } = require('../lib/proposal-accept');
 const { buildContractPdf } = require('../export-pdf');
+const { parseCargo } = require('../lib/logistics/cargo');
+
+const CARGO_FIELDS = ['cargoWeight', 'cargoLength', 'cargoWidth', 'cargoHeight', 'cargoPlaces'];
 
 function createProposalsRouter(deps) {
     const {
@@ -105,11 +108,15 @@ function createProposalsRouter(deps) {
             if (existing) return res.status(409).json({ error: 'Вы уже подали КП на эту закупку. Отредактируйте существующее предложение.' });
 
             const kpFile = await persistUpload(req.file, 'kp');
+            const cargo = parseCargo(req.body);
 
             const newRow = await withTransaction(async (client) => {
                 const { rows: [r] } = await client.query(
-                    'INSERT INTO proposals (order_id,order_title,price,days,company,kp_file,message) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-                    [Number(orderId), orderTitle || orderRow.title, Number(price), Number(days), req.user.company, kpFile, proposalMessage]
+                    `INSERT INTO proposals (order_id,order_title,price,days,company,kp_file,message,
+                                            cargo_weight,cargo_length,cargo_width,cargo_height,cargo_places)
+                     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+                    [Number(orderId), orderTitle || orderRow.title, Number(price), Number(days), req.user.company, kpFile, proposalMessage,
+                        cargo.weight, cargo.length, cargo.width, cargo.height, cargo.places]
                 );
                 await client.query('UPDATE orders SET responses = responses + 1 WHERE id = $1', [Number(orderId)]);
                 return r;
@@ -223,11 +230,27 @@ function createProposalsRouter(deps) {
             if (row.company !== req.user.company) return res.status(403).json({ error: 'Это предложение принадлежит другой компании' });
             if (row.status !== 'Ожидает ответа') return res.status(400).json({ error: 'Можно редактировать только предложения в статусе "Ожидает ответа"' });
 
+            const sets = ['price = $1', 'days = $2'];
+            const params = [Number(price), Number(days)];
             if (proposalMessage !== null) {
-                await pool.query('UPDATE proposals SET price = $1, days = $2, message = $3 WHERE id = $4', [Number(price), Number(days), proposalMessage, proposalId]);
-            } else {
-                await pool.query('UPDATE proposals SET price = $1, days = $2 WHERE id = $3', [Number(price), Number(days), proposalId]);
+                params.push(proposalMessage);
+                sets.push(`message = $${params.length}`);
             }
+            // Габариты трогаем только если форма их прислала: старые клиенты
+            // этих полей не знают, и молчание не должно стирать уже указанное.
+            if (CARGO_FIELDS.some((field) => req.body[field] !== undefined)) {
+                const cargo = parseCargo(req.body);
+                for (const [column, value] of [
+                    ['cargo_weight', cargo.weight], ['cargo_length', cargo.length],
+                    ['cargo_width', cargo.width], ['cargo_height', cargo.height],
+                    ['cargo_places', cargo.places],
+                ]) {
+                    params.push(value);
+                    sets.push(`${column} = $${params.length}`);
+                }
+            }
+            params.push(proposalId);
+            await pool.query(`UPDATE proposals SET ${sets.join(', ')} WHERE id = $${params.length}`, params);
             const { rows: [updated] } = await pool.query('SELECT * FROM proposals WHERE id = $1', [proposalId]);
             res.json(rowToProposal(updated));
         } catch (e) { next(e); }

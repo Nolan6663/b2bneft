@@ -210,6 +210,15 @@ function rowToProposal(r) {
         price: r.price, days: r.days, company: r.company, status: r.status,
         kpFile: r.kp_file ? JSON.parse(r.kp_file) : null,
         message: r.message || '',
+        // Габариты для расчёта доставки. null во всех полях, если завод их не
+        // указал, — в таком КП расчёта не будет, и это нормальный случай.
+        cargo: {
+            weight: r.cargo_weight == null ? null : Number(r.cargo_weight),
+            length: r.cargo_length == null ? null : Number(r.cargo_length),
+            width: r.cargo_width == null ? null : Number(r.cargo_width),
+            height: r.cargo_height == null ? null : Number(r.cargo_height),
+            places: r.cargo_places == null ? null : Number(r.cargo_places),
+        },
         createdAt: r.created_at
     };
 }

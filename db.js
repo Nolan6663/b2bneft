@@ -309,6 +309,14 @@ async function initDb() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
         CREATE INDEX IF NOT EXISTS logistics_cache_created ON logistics_quotes_cache (created_at);
+        -- Габариты груза указывает завод при подаче КП: он знает вес готового
+        -- изделия, заказчик обычно нет. Все поля необязательные — КП без
+        -- габаритов полноценно, просто без расчёта доставки.
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS cargo_weight REAL;
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS cargo_length REAL;
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS cargo_width  REAL;
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS cargo_height REAL;
+        ALTER TABLE proposals ADD COLUMN IF NOT EXISTS cargo_places INTEGER;
     `);
 
     await pool.query(`
