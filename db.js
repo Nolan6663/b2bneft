@@ -275,6 +275,29 @@ async function initDb() {
             error         TEXT        NOT NULL DEFAULT '',
             created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        -- Сопоставление городов с кодами перевозчиков. Справочники у всех свои и
+        -- несовместимые: у ПЭК собственные числовые id, у Деловых Линий КЛАДР.
+        -- search_key — нормализованное имя (см. lib/logistics/geo.js), по нему
+        -- ищется город, введённый человеком: «СПб» и «г. Санкт-Петербург»
+        -- должны попадать в одну строку.
+        --
+        -- search_key НЕ уникален, и это важно: в справочнике ПЭК 307 названий
+        -- встречаются больше одного раза. «Белый Яр» есть под Абаканом и под
+        -- Сургутом — между ними 2500 км. Уникальность здесь означала бы молчаливый
+        -- выбор одного из двух, поэтому неоднозначность хранится и разрешается
+        -- человеком. Уникален pecom_id — он и держит повторную загрузку.
+        CREATE TABLE IF NOT EXISTS logistics_cities (
+            id          SERIAL      PRIMARY KEY,
+            name        TEXT        NOT NULL,
+            qualifier   TEXT        NOT NULL DEFAULT '',
+            search_key  TEXT        NOT NULL,
+            pecom_id    TEXT        UNIQUE,
+            pecom_hub   TEXT        NOT NULL DEFAULT '',
+            dellin_code TEXT,
+            is_hub      BOOLEAN     NOT NULL DEFAULT false,
+            updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS logistics_cities_key ON logistics_cities (search_key);
     `);
 
     await pool.query(`
