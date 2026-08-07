@@ -1605,6 +1605,14 @@
                             ? `<div style="font-size:11.5px;color:var(--text-secondary);margin-top:3px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(prop.message)}">${escapeHtml(prop.message)}</div>`
                             : '';
 
+                        // Кнопку расчёта показываем только там, где он возможен:
+                        // без габаритов от завода считать нечего, и предлагать
+                        // действие, которое заведомо упрётся в отказ, незачем.
+                        const hasCargo = prop.cargo && prop.cargo.weight && prop.cargo.length && prop.cargo.width && prop.cargo.height;
+                        const deliveryBtn = hasCargo
+                            ? `<button type="button" onclick="toggleDeliveryQuotes(${prop.id})" style="margin-top:4px;padding:0;border:none;background:none;color:var(--accent-blue);font-size:11.5px;cursor:pointer;">Рассчитать доставку</button>`
+                            : '';
+
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td style="text-align:center;">
@@ -1614,6 +1622,7 @@
                                 <div style="display:flex; align-items:center; gap:8px;"><strong>${escapeHtml(prop.company)}</strong>${chatIconBtn}</div>
                                 ${fileLink}
                                 ${messageHtml}
+                                ${deliveryBtn}
                             </td>
                             <td>${matchScoreBadge(prop.matchScore, prop.matchReasons)}</td>
                             <td>${prop.price != null ? prop.price : '—'} ₽/шт</td>
@@ -1622,6 +1631,16 @@
                             <td>${actionCell}</td>
                         `;
                         tableBody.appendChild(row);
+
+                        if (hasCargo) {
+                            const deliveryRow = document.createElement('tr');
+                            deliveryRow.id = `deliveryRow-${prop.id}`;
+                            deliveryRow.style.display = 'none';
+                            deliveryRow.innerHTML = `<td colspan="7" style="padding:10px 14px;background:var(--inner-bg);border-top:1px solid var(--inner-border);">
+                                <div id="deliveryBody-${prop.id}"></div>
+                            </td>`;
+                            tableBody.appendChild(deliveryRow);
+                        }
                     });
                 }
             } catch { /* тихо */ }

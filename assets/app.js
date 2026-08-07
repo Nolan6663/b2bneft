@@ -1584,6 +1584,111 @@ function renderPriceBenchmark(b) {
     <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">Анонимная статистика по закрытым прямым закупкам на платформе</div>`;
 }
 
+/* Расчёт доставки по КП: перевозчик, способ, цена, срок.
+   Показываем варианты, а не одно число: у одного перевозчика авто и авиа
+   отличаются в разы, и выбор — дело заказчика.
+
+   Оговорка под таблицей обязательна. Мы не сторона сделки и цену от своего
+   лица не обещаем: это публичный тариф перевозчика, без обрешётки, негабарита
+   и класса груза. Без этой строки первый же разошедшийся счёт станет
+   претензией к платформе. */
+function renderDeliveryQuotes(data) {
+  if (!data) {
+    return '<div style="font-size:12px;color:var(--text-secondary);">Не удалось рассчитать доставку</div>';
+  }
+  if (data.error) {
+    return `<div style="font-size:12px;color:var(--text-secondary);line-height:1.45;">${escapeHtml(data.error)}</div>`;
+  }
+
+  const fmt = v => new Intl.NumberFormat('ru-RU').format(v);
+  const SERVICE = { auto: 'авто', avia: 'авиа', express: 'экспресс' };
+
+  // Никто не ответил и никто не посчитал — честно говорим об этом, а не
+  // показываем пустую таблицу.
+  if (!data.quotes || data.quotes.length === 0) {
+    const who = data.failed && data.failed.length
+      ? `${data.failed.join(', ')} не ответил${data.failed.length > 1 ? 'и' : ''}`
+      : 'Перевозчики не возят по этому маршруту';
+    return `<div style="font-size:12px;color:var(--text-secondary);">${escapeHtml(who)}. Попробуйте позже.</div>`;
+  }
+
+  /* Строками, а не таблицей. Таблица из пяти колонок на 390px требует
+     горизонтальной прокрутки, и человек видит один столбец с названиями
+     перевозчиков — то есть ровно не ту колонку, ради которой пришёл.
+     Здесь цена и срок держатся рядом с перевозчиком на любой ширине. */
+  const rows = data.quotes.map((q, i) => {
+    const days = q.days ? `${q.days.min}–${q.days.max} сут.` : 'срок уточняется';
+    const best = i === 0
+      ? '<span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(5,150,105,.12);color:var(--accent-green);font-weight:700;">Дешевле</span>'
+      : '';
+    const parts = [];
+    if (q.price.pickup) parts.push(`забор ${fmt(q.price.pickup)}`);
+    if (q.price.delivery) parts.push(`доставка ${fmt(q.price.delivery)}`);
+    if (q.price.insurance) parts.push(`страховка ${fmt(q.price.insurance)}`);
+    const breakdown = parts.length
+      ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">плечо ${fmt(q.price.line)}, ${parts.join(', ')}</div>`
+      : '';
+
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--inner-border);">
+      <div style="flex:1 1 170px;min-width:0;">
+        <div style="font-size:12.5px;font-weight:600;">${escapeHtml(q.carrierName)}${best}</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${escapeHtml(SERVICE[q.service] || q.service)} · ${escapeHtml(days)}</div>
+        ${breakdown}
+      </div>
+      <div style="text-align:right;white-space:nowrap;">
+        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;">${fmt(q.price.total)} ₽</div>
+        <a href="${escapeHtml(q.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent-blue);">Оформить</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  const route = data.from && data.to
+    ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">${escapeHtml(data.from.name)} → ${escapeHtml(data.to.name)}</div>`
+    : '';
+  const failed = data.failed && data.failed.length
+    ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Не ответили: ${escapeHtml(data.failed.join(', '))}</div>`
+    : '';
+
+  /* Блок живёт в ячейке таблицы откликов, а она шире экрана: семь колонок с
+     кнопками не помещаются ни в модалку на десктопе, ни тем более в 390px.
+     Без явного потолка содержимое растягивается по ширине таблицы и уезжает
+     за правый край — проверено на снимке. Потолок берём по меньшему из ширины
+     модалки и вьюпорта. text-align задан явно: ячейка таблицы наследует
+     выравнивание колонки, и текст оказывался прижат вправо. */
+  return `
+    <div style="max-width:min(620px, calc(100vw - 72px));text-align:left;">
+      ${route}
+      ${rows}
+      ${failed}
+      <div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.45;">
+        Ориентировочный расчёт по публичному тарифу перевозчика. Не учитывает обрешётку,
+        негабарит и класс груза. Итоговую стоимость подтверждает перевозчик.
+      </div>
+    </div>`;
+}
+
+/* Загрузка ленивая: чужой API не дёргается на каждую отрисовку списка КП,
+   только когда заказчик раскрыл блок. Второе раскрытие уже ничего не грузит. */
+async function toggleDeliveryQuotes(proposalId) {
+  const row = document.getElementById(`deliveryRow-${proposalId}`);
+  const body = document.getElementById(`deliveryBody-${proposalId}`);
+  if (!row || !body) return;
+
+  if (row.style.display !== 'none') { row.style.display = 'none'; return; }
+  row.style.display = '';
+  if (row.dataset.loaded === '1') return;
+
+  body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Считаем доставку…</div>';
+  try {
+    const res = await apiFetch(`${SERVER_URL}/logistics/quote?proposalId=${proposalId}`);
+    const data = await res.json();
+    body.innerHTML = renderDeliveryQuotes(res.ok ? data : { error: data.error });
+    if (res.ok) row.dataset.loaded = '1';
+  } catch {
+    body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Сервер недоступен</div>';
+  }
+}
+
 function renderProducerPriceHint(price, benchmark) {
   if (!benchmark?.enough || !price || price <= 0) return '';
   const fmt = v => new Intl.NumberFormat('ru-RU').format(v);
