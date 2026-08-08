@@ -22,27 +22,49 @@ function pad(value, width) {
     return String(value).padEnd(width);
 }
 
-async function main() {
-    const { rows } = await pool.query(
-        `SELECT id, company, city, role FROM companies ORDER BY id`
-    );
-
+async function classify(rows) {
     const buckets = { ok: [], ambiguous: [], not_found: [], empty: [] };
-
     for (const row of rows) {
         if (!String(row.city || '').trim()) { buckets.empty.push(row); continue; }
         const found = await resolveCity(pool, row.city);
         buckets[found.status].push({ ...row, candidates: found.candidates });
     }
+    return buckets;
+}
 
-    const total = rows.length;
+function report(title, buckets, total) {
     const share = (n) => (total ? Math.round((n / total) * 100) : 0);
-
-    console.log(`Компаний всего: ${total}\n`);
+    console.log(`\n${title}: ${total}`);
     console.log(`  ${pad('распознаётся', 22)} ${pad(buckets.ok.length, 6)} ${share(buckets.ok.length)}%`);
     console.log(`  ${pad('город не заполнен', 22)} ${pad(buckets.empty.length, 6)} ${share(buckets.empty.length)}%`);
     console.log(`  ${pad('не найден', 22)} ${pad(buckets.not_found.length, 6)} ${share(buckets.not_found.length)}%`);
     console.log(`  ${pad('двойники, нужен выбор', 22)} ${pad(buckets.ambiguous.length, 6)} ${share(buckets.ambiguous.length)}%`);
+}
+
+async function main() {
+    const { rows } = await pool.query(
+        `SELECT id, company, city, role, claimed FROM companies ORDER BY id`
+    );
+
+    /* Разделение по claimed — главное в этом отчёте.
+       Реестровых карточек из ГИСП тысячи, и у большинства в city лежит регион
+       («Московская область»), потому что регион — это всё, что даёт источник.
+       Но у такой карточки нет ни аккаунта, ни КП: расчёт доставки по ней
+       никто и никогда не запросит. Общий процент по всей таблице выглядит
+       катастрофой, не будучи ею, и решения по нему принимать нельзя. */
+    const claimed = rows.filter((r) => r.claimed);
+    const stubs = rows.filter((r) => !r.claimed);
+
+    const buckets = await classify(rows);
+    const claimedBuckets = await classify(claimed);
+
+    report('С аккаунтом — тех, кто реально торгует', claimedBuckets, claimed.length);
+    console.log(`\nРеестровых карточек без аккаунта: ${stubs.length} — у них расчёт никто не запрашивает,`);
+    console.log('город появится, когда компания заберёт профиль и выберет его из подсказок.');
+
+    const total = rows.length;
+    const share = (n) => (total ? Math.round((n / total) * 100) : 0);
+    report('Всего в таблице', buckets, total);
 
     // Нераспознанные интереснее всего: обычно это несколько повторяющихся
     // форм записи, а не сотни разных ошибок.
@@ -66,8 +88,11 @@ async function main() {
         if (buckets.ambiguous.length > 15) console.log(`  …и ещё ${buckets.ambiguous.length - 15}`);
     }
 
+    const blockedClaimed = claimedBuckets.empty.length + claimedBuckets.not_found.length + claimedBuckets.ambiguous.length;
     const blocked = buckets.empty.length + buckets.not_found.length + buckets.ambiguous.length;
-    console.log(`\nИтого расчёт доставки не состоится у ${blocked} компаний из ${total} (${share(blocked)}%).`);
+
+    console.log(`\nРасчёт не состоится у ${blockedClaimed} компаний с аккаунтом из ${claimed.length} — вот эта цифра и важна.`);
+    console.log(`По всей таблице: ${blocked} из ${total} (${share(blocked)}%), но там в основном реестровые карточки.`);
     console.log('Ничего не изменено: это только отчёт.');
 
     await pool.end();
