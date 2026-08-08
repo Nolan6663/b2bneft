@@ -165,6 +165,39 @@ test('suggestCities ищет по префиксу', async () => {
     assert.equal(pool.calls[0].params[0], 'екатер%');
 });
 
+test('код Деловых Линий добывается один раз и запоминается', async () => {
+    const { fillDellinCode } = require('../../lib/logistics/geo');
+    let lookups = 0;
+    const pool = fakePool([{ match: /UPDATE logistics_cities/i, rows: [] }]);
+    const point = { id: 7, name: 'Екатеринбург', codes: { pecom: '-473', dellin: null } };
+
+    await fillDellinCode(pool, point, async () => { lookups += 1; return '6600000100000000000000000'; });
+    assert.equal(point.codes.dellin, '6600000100000000000000000');
+    assert.equal(pool.calls[0].params[0], '6600000100000000000000000');
+
+    await fillDellinCode(pool, point, async () => { lookups += 1; return 'ещё раз'; });
+    assert.equal(lookups, 1, 'код уже есть — второй раз не спрашиваем');
+});
+
+test('поиск кода упал — считаем без Деловых Линий, а не падаем', async () => {
+    const { fillDellinCode } = require('../../lib/logistics/geo');
+    const pool = fakePool([]);
+    const point = { id: 7, name: 'Екатеринбург', codes: { pecom: '-473', dellin: null } };
+
+    await fillDellinCode(pool, point, async () => { throw new Error('сеть'); });
+    assert.equal(point.codes.dellin, null);
+    assert.equal(pool.calls.length, 0, 'в базу ничего не пишем');
+});
+
+test('код не нашёлся — в базу пустое не пишем', async () => {
+    const { fillDellinCode } = require('../../lib/logistics/geo');
+    const pool = fakePool([]);
+    const point = { id: 7, name: 'Нью-Васюки', codes: { pecom: '-1', dellin: null } };
+
+    await fillDellinCode(pool, point, async () => null);
+    assert.equal(pool.calls.length, 0);
+});
+
 test('saveCities пишет пачками, а не по запросу на город', async () => {
     const pool = fakePool([{ match: /INSERT INTO logistics_cities/i, rows: [] }]);
     const cities = Array.from({ length: 7 }, (_, i) => ({

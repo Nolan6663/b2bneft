@@ -14,7 +14,8 @@
 
 const express = require('express');
 const { quoteAll } = require('../lib/logistics');
-const { resolveCity, suggestCities } = require('../lib/logistics/geo');
+const { resolveCity, suggestCities, fillDellinCode } = require('../lib/logistics/geo');
+const { findCityCode } = require('../lib/logistics/dellin');
 const { isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
 
 function cargoOf(row) {
@@ -44,7 +45,11 @@ async function pointFor(pool, city, who) {
 function createLogisticsRouter(deps) {
     // quoteAll подменяем в тестах: иначе юниты пошли бы в сеть к перевозчикам,
     // а деплойный гейт не должен зависеть от доступности чужих сайтов.
-    const { pool, requireAuth, canAccessProposal, quoteAll: quoteCarriers = quoteAll } = deps;
+    const {
+        pool, requireAuth, canAccessProposal,
+        quoteAll: quoteCarriers = quoteAll,
+        dellinLookup = findCityCode,
+    } = deps;
     const router = express.Router();
 
     // Подсказки для полей города. Пускаем любого авторизованного: это
@@ -88,6 +93,13 @@ function createLogisticsRouter(deps) {
             if (from.error) return res.status(422).json({ error: from.error, reason: 'from_city' });
             const to = await pointFor(pool, cityOf(proposal.order_company), 'Заказчик');
             if (to.error) return res.status(422).json({ error: to.error, reason: 'to_city' });
+
+            // Код Деловых Линий добывается их же поиском при первом расчёте по
+            // городу и запоминается. Не нашёлся — считаем без них.
+            await Promise.all([
+                fillDellinCode(pool, from.point, dellinLookup),
+                fillDellinCode(pool, to.point, dellinLookup),
+            ]);
 
             const result = await quoteCarriers(pool, {
                 from: from.point,
