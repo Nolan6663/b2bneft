@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { checkQuote, checkCarrier, checkAllCarriers } = require('../../lib/logistics/health');
+const { checkQuote, checkCarrier, checkAllCarriers, formatCarrierAlert } = require('../../lib/logistics/health');
 
 /* Живая проверка перевозчиков (npm run check:logistics). Сам скрипт ходит в
    сеть, но его правила годности — обычные функции, и здесь они проверяются
@@ -92,4 +92,23 @@ test('все живы — список сломанных пуст', async () =>
         { CARRIER: 'ok', CARRIER_NAME: 'Живой', quote: async () => [goodQuote()] },
     ]);
     assert.deepEqual(broken, []);
+});
+
+test('в тревоге написано, что именно сломалось, а не «проверка не прошла»', () => {
+    const results = [
+        { carrierName: 'Живой', ok: true, problems: [] },
+        { carrierName: 'Мёртвый', ok: false, problems: ['запрос не прошёл: 502'] },
+    ];
+    const alert = formatCarrierAlert(results, ['Мёртвый']);
+
+    assert.match(alert.subject, /Мёртвый/, 'имя должно быть видно уже в теме письма');
+    assert.match(alert.text, /запрос не прошёл: 502/, 'без конкретной претензии письмо бесполезно');
+    assert.match(alert.text, /Отвечают нормально: Живой/, 'видно, что сломалось не всё');
+    assert.match(alert.text, /npm run check:logistics/, 'подсказка, чем проверить руками');
+});
+
+test('когда не отвечает никто, это сказано прямо', () => {
+    const results = [{ carrierName: 'Мёртвый', ok: false, problems: ['502'] }];
+    const alert = formatCarrierAlert(results, ['Мёртвый']);
+    assert.match(alert.text, /Нормально не отвечает никто/);
 });

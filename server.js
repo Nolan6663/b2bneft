@@ -43,7 +43,7 @@ const createAdminRouter = require('./routes/admin');
 const createNotificationsRouter = require('./routes/notifications');
 const createLogisticsRouter = require('./routes/logistics');
 const { purgeExpiredQuotes } = require('./lib/logistics');
-const { checkAllCarriers } = require('./lib/logistics/health');
+const { checkAllCarriers, formatCarrierAlert } = require('./lib/logistics/health');
 const createTasksRouter = require('./routes/tasks');
 const createIntegrationsRouter = require('./routes/integrations');
 const createTeamRouter = require('./routes/team');
@@ -2041,8 +2041,10 @@ function startOrderMaintenanceCron() {
  * ответа. И только на проде — локальный сервер не должен ходить к перевозчикам
  * при каждом запуске.
  *
- * Тревога уходит в Sentry, потому что это единственный настроенный в проекте
- * канал для того, что должен увидеть не пользователь, а мы.
+ * Тревога уходит и в Sentry, и письмом на OPS_EMAIL — оба канала
+ * необязательные, и на сервере может не быть ни одного. Поэтому шлём во все
+ * настроенные сразу: тревога, которую никто не получил, бесполезнее, чем её
+ * отсутствие, потому что создаёт ложное ощущение присмотра.
  */
 function startLogisticsCheckCron() {
     if (process.env.NODE_ENV !== 'production') return;
@@ -2053,11 +2055,22 @@ function startLogisticsCheckCron() {
             for (const result of results) {
                 if (!result.ok) console.error(`[logistics] ${result.carrierName}: ${result.problems.join('; ')}`);
             }
-            if (broken.length) {
-                const detail = results.filter(r => !r.ok).map(r => `${r.carrierName}: ${r.problems.join('; ')}`).join(' | ');
-                Sentry.captureMessage(`Расчёт доставки сломан у ${broken.join(', ')}. ${detail}`, 'error');
-            } else {
+            if (!broken.length) {
                 console.log('[logistics] проверка перевозчиков: все отвечают');
+                return;
+            }
+
+            const alert = formatCarrierAlert(results, broken);
+            if (process.env.SENTRY_DSN) Sentry.captureMessage(`${alert.subject}\n${alert.text}`, 'error');
+            if (process.env.OPS_EMAIL) {
+                await sendEmail(
+                    process.env.OPS_EMAIL,
+                    alert.subject,
+                    `<pre style="font-family:sans-serif;font-size:14px;white-space:pre-wrap;">${htmlEscape(alert.text)}</pre>`
+                ).catch(e => console.error('[logistics] письмо о поломке не ушло:', e.message));
+            }
+            if (!process.env.SENTRY_DSN && !process.env.OPS_EMAIL) {
+                console.error('[logistics] некуда отправить тревогу: не заданы ни SENTRY_DSN, ни OPS_EMAIL');
             }
         } catch (e) {
             console.error('[logistics] проверка перевозчиков не выполнилась:', e.message);
