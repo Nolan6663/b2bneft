@@ -48,6 +48,12 @@ test('нормализация: дефис и пробел равнозначн�
     assert.equal(normalizeCityName('Санкт-Петербург'), 'санкт петербург');
 });
 
+test('нормализация: регион после запятой отбрасывается', () => {
+    assert.equal(normalizeCityName('Санкт-Петербург, Ленинградская обл'), 'санкт петербург');
+    assert.equal(normalizeCityName('г. Челябинск, Челябинская область'), 'челябинск');
+    assert.equal(normalizeCityName('Москва,'), 'москва');
+});
+
 test('нормализация: разговорные формы из профилей компаний', () => {
     const spb = normalizeCityName('Санкт-Петербург');
     assert.equal(normalizeCityName('СПб'), spb);

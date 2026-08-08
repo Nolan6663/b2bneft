@@ -10,6 +10,7 @@
     "smoke:api": "node scripts/mvp-api-smoke.js",
     "check:logistics": "node scripts/check-logistics.js",
     "sync:logistics-cities": "node scripts/sync-logistics-cities.js",
+    "audit:cities": "node scripts/audit-company-cities.js",
     "sync:legal": "node scripts/sync-legal.js",
     "sync:categories": "node scripts/sync-category-pages.js",
     "test:e2e": "playwright test",
