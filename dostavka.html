@@ -19,85 +19,164 @@
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/theme-v2.css?v=10">
 <style>
-/* Страница публичная и живёт вне кабинета: собственный каркас, но переменные
-   темы общие — иначе она разъедется с остальным сайтом при смене палитры. */
+/* Страница в фирменном языке проекта: чертёжная сетка на тёмном, моноширинные
+   надписи с оранжевой чертой, срезанный угол и жёсткая тень без размытия —
+   то же, что на лендинге. Собственный каркас, но переменные темы общие. */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 /* theme-v2.css задаёт кабинетный каркас: body во flex, высота ровно в экран,
    overflow скрыт. Здесь страница обычная, с прокруткой и без сайдбара, поэтому
    каркас снимаем явно — без этого main схлопывался до ширины содержимого
-   (замерено: 345px вместо 940 на десктопе). Переменные темы при этом остаются
-   общими, чтобы страница не разъехалась с сайтом при смене палитры. */
+   (замерено: 345px вместо 940 на десктопе). */
 body {
-    display: block; height: auto; min-height: 100vh; overflow: visible;
-    font-family: 'Manrope', sans-serif;
-    background: var(--page-bg, #F7FAFC); color: var(--text-primary, #071B2A);
+    display: block; height: auto; min-height: 100vh; overflow-x: hidden; overflow-y: auto;
+    font-family: 'Manrope', sans-serif; background: #F7FAFC; color: #071B2A;
 }
 
+.dv-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ── Шапка ───────────────────────────────────────────────────────────── */
 .dv-header {
-    background: #0B2233;
+    background: #071B2A; height: 64px; position: sticky; top: 0; z-index: 40;
     padding: 0 clamp(16px, 4vw, 64px);
-    height: 64px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
 }
 .dv-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .dv-logo-mark {
-    width: 36px; height: 36px; border-radius: 9px;
-    border: 1px solid rgba(255,255,255,.15);
+    width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.18);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    position: relative;
 }
-.dv-logo-mark span { font-weight: 800; font-size: 19px; color: #fff; }
-.dv-logo-text { color: #fff; font-weight: 800; letter-spacing: .04em; font-size: 15px; }
-.dv-nav { display: flex; gap: 22px; }
-.dv-nav a { color: rgba(255,255,255,.72); text-decoration: none; font-size: 14px; }
+.dv-logo-mark span { font-weight: 800; font-size: 18px; color: #fff; }
+.dv-logo-mark::after { content: ''; position: absolute; right: 3px; bottom: 3px; width: 6px; height: 6px; background: #FF6A00; }
+.dv-logo-text { color: #fff; font-weight: 800; letter-spacing: .06em; font-size: 14px; }
+.dv-nav { display: flex; gap: 26px; }
+.dv-nav a {
+    color: rgba(255,255,255,.62); text-decoration: none;
+    font-size: 10.5px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 700;
+}
 .dv-nav a:hover { color: #fff; }
-.dv-cta {
-    background: #FF6A00; color: #fff; text-decoration: none;
-    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; white-space: nowrap;
+.dv-header-cta {
+    color: #fff; text-decoration: none; font-size: 13px; font-weight: 700;
+    padding: 10px 18px; background: #FF6A00; white-space: nowrap;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
 }
-@media (max-width: 860px) { .dv-nav { display: none; } }
+@media (max-width: 900px) { .dv-nav { display: none; } }
 
-.dv-wrap { max-width: 940px; margin: 0 auto; padding: clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px) 64px; }
-.dv-h1 { font-size: clamp(24px, 4vw, 34px); line-height: 1.2; margin-bottom: 12px; }
-.dv-lead { font-size: 16px; line-height: 1.6; color: var(--text-secondary); max-width: 640px; }
-
-.dv-card {
-    background: var(--card-bg); border: 1px solid var(--card-border);
-    border-radius: 12px; padding: clamp(16px, 3vw, 24px); margin-top: 28px;
+/* ── Герой ───────────────────────────────────────────────────────────── */
+.dv-hero { background: #071B2A; position: relative; overflow: hidden; padding: clamp(48px, 7vw, 92px) 0 clamp(96px, 11vw, 150px); }
+.dv-hero-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
 }
-.dv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.dv-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
-@media (max-width: 640px) { .dv-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.dv-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+.dv-inner { max-width: 1180px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 64px); position: relative; z-index: 1; }
+.dv-hero-cols { display: grid; grid-template-columns: 1fr minmax(240px, 300px); gap: clamp(28px, 5vw, 72px); align-items: start; }
+@media (max-width: 900px) { .dv-hero-cols { grid-template-columns: 1fr; } }
+
+.dv-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.55);
+}
+.dv-eyebrow::before { content: ''; width: 18px; height: 2px; background: #FF6A00; }
+.dv-eyebrow.is-dark { color: #64748B; }
+
+h1.dv-title {
+    font-size: clamp(30px, 4.2vw, 48px); font-weight: 800; line-height: 1.08;
+    letter-spacing: -1.2px; color: #fff; margin-bottom: 20px; max-width: 22ch;
+}
+.dv-hero-lead { font-size: 16.5px; line-height: 1.65; color: rgba(255,255,255,.6); max-width: 46ch; font-weight: 500; }
+
+/* Табличка со сводкой — «шильдик» на чертеже */
+.dv-plate { border: 1px solid rgba(255,255,255,.14); padding: 20px 22px; background: rgba(255,255,255,.02); }
+.dv-plate-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+.dv-plate-row:last-child { border-bottom: none; padding-bottom: 0; }
+.dv-plate-row:first-child { padding-top: 0; }
+.dv-plate-k { font-size: 12.5px; color: rgba(255,255,255,.5); }
+.dv-plate-v { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -.5px; }
+
+/* ── Калькулятор: наезжает на герой ─────────────────────────────────── */
+.dv-calc-wrap { margin-top: clamp(-124px, -9vw, -72px); position: relative; z-index: 2; }
+.dv-calc {
+    background: #fff; border: 1px solid #E2E8F0; padding: clamp(20px, 3.4vw, 34px);
+    clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
+}
+.dv-calc-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.dv-calc-title { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+.dv-calc-hint { font-size: 12.5px; color: #64748B; }
+
+.dv-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.dv-grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .dv-grid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .dv-grid-2 { grid-template-columns: 1fr; } }
+
+.dv-field label {
+    display: block; margin-bottom: 7px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase; color: #94A3B8;
+}
 .dv-field input {
-    width: 100%; padding: 10px 12px; font-family: inherit; font-size: 14px;
-    background: var(--input-bg, transparent); color: var(--text-primary);
-    border: 1px solid var(--input-border, var(--card-border)); border-radius: 8px;
+    width: 100%; padding: 12px 14px; font-family: inherit; font-size: 15px; font-weight: 600;
+    color: #071B2A; background: #fff; border: 1px solid #CBD5E1; border-radius: 0;
+    transition: border-color .12s ease;
 }
-.dv-doors { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
-.dv-doors label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.dv-field input:focus { outline: none; border-color: #FF6A00; }
+.dv-field input::placeholder { color: #CBD5E1; font-weight: 500; }
+
+.dv-doors { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #E2E8F0; }
+.dv-doors label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #334155; }
+.dv-doors input { width: 15px; height: 15px; cursor: pointer; accent-color: #FF6A00; }
+
 .dv-submit {
-    margin-top: 18px; width: 100%; padding: 12px 20px;
-    background: #FF6A00; color: #fff; border: none; border-radius: 8px;
-    font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    margin-top: 22px; padding: 15px 34px;
+    background: #FF6A00; color: #fff; border: none; font-family: inherit;
+    font-size: 14px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    box-shadow: 4px 4px 0 rgba(255,106,0,0.28);
+    transition: transform .15s ease, box-shadow .15s ease;
 }
-.dv-submit[disabled] { opacity: .6; cursor: default; }
-.dv-result { margin-top: 18px; }
+.dv-submit:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgba(255,106,0,0.28); }
+.dv-submit:active { transform: translate(2px, 2px); box-shadow: 0 0 0 rgba(255,106,0,0.28); }
+.dv-submit[disabled] { opacity: .55; transform: none; box-shadow: 4px 4px 0 rgba(255,106,0,0.18); cursor: default; }
+.dv-result:not(:empty) { margin-top: 26px; padding-top: 22px; border-top: 2px solid #071B2A; }
 
-.dv-section { margin-top: 44px; }
-.dv-section h2 { font-size: clamp(19px, 3vw, 23px); margin-bottom: 12px; }
-.dv-section p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); margin-bottom: 12px; max-width: 720px; }
-.dv-section li { font-size: 15px; line-height: 1.65; color: var(--text-secondary); margin: 0 0 8px 20px; }
+/* ── Текстовые разделы ──────────────────────────────────────────────── */
+.dv-sections { padding: clamp(56px, 8vw, 96px) 0; }
+.dv-block { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: clamp(24px, 5vw, 64px); padding: clamp(28px, 4vw, 44px) 0; border-top: 1px solid #E2E8F0; }
+.dv-block:first-child { border-top: none; padding-top: 0; }
+@media (max-width: 860px) { .dv-block { grid-template-columns: 1fr; gap: 14px; } }
+.dv-block h2 { font-size: clamp(21px, 2.4vw, 27px); font-weight: 800; letter-spacing: -.6px; line-height: 1.15; }
+.dv-block p { font-size: 15.5px; line-height: 1.7; color: #475569; margin-bottom: 14px; max-width: 62ch; }
+.dv-block p:last-child { margin-bottom: 0; }
+.dv-list { list-style: none; }
+.dv-list li { position: relative; padding-left: 20px; font-size: 15.5px; line-height: 1.7; color: #475569; margin-bottom: 10px; max-width: 62ch; }
+.dv-list li::before { content: ''; position: absolute; left: 0; top: 11px; width: 8px; height: 2px; background: #FF6A00; }
 
-.dv-next {
-    margin-top: 44px; padding: clamp(18px, 3vw, 26px);
-    border: 1px solid var(--card-border); border-radius: 12px; background: var(--card-bg);
+/* ── Финальный блок ─────────────────────────────────────────────────── */
+.dv-cta { background: #071B2A; position: relative; overflow: hidden; padding: clamp(48px, 7vw, 84px) 0; }
+.dv-cta-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to top, #000 0%, #000 60%, transparent 100%);
 }
-.dv-next h2 { font-size: 20px; margin-bottom: 10px; }
-.dv-next p { font-size: 15px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; max-width: 640px; }
-.dv-next a {
-    display: inline-block; background: #FF6A00; color: #fff; text-decoration: none;
-    padding: 11px 22px; border-radius: 8px; font-weight: 600; font-size: 15px;
+.dv-cta h2 { font-size: clamp(24px, 3.2vw, 36px); font-weight: 800; letter-spacing: -.8px; color: #fff; margin-bottom: 16px; max-width: 20ch; }
+.dv-cta p { font-size: 16px; line-height: 1.65; color: rgba(255,255,255,.58); max-width: 52ch; margin-bottom: 28px; }
+.dv-cta a {
+    display: inline-block; padding: 15px 32px; background: #FF6A00; color: #fff;
+    text-decoration: none; font-size: 14px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+    box-shadow: 4px 4px 0 rgba(255,106,0,0.28);
+    transition: transform .15s ease, box-shadow .15s ease;
 }
+.dv-cta a:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgba(255,106,0,0.28); }
 </style>
 </head>
 <body>
@@ -109,34 +188,59 @@ body {
   </a>
   <nav class="dv-nav">
     <a href="/zakupki">Закупки</a>
-    <a href="/map">Карта предприятий</a>
-    <a href="/dlya-postavshchikov">Для поставщиков</a>
+    <a href="/map">Карта заводов</a>
+    <a href="/dlya-postavshchikov">Поставщикам</a>
   </nav>
-  <a href="/zayavka" class="dv-cta">Разместить закупку</a>
+  <a href="/zayavka" class="dv-header-cta">Разместить закупку</a>
 </header>
 
-<main class="dv-wrap">
+<section class="dv-hero">
+  <div class="dv-hero-grid"></div>
+  <div class="dv-inner dv-hero-cols">
+    <div>
+      <div class="dv-eyebrow">Логистика · сборные грузы</div>
+      <h1 class="dv-title">Во что обойдётся привезти станок или партию металла</h1>
+      <p class="dv-hero-lead">
+        Считаем по публичным тарифам транспортных компаний и показываем варианты рядом:
+        наземный, экспресс и авиа, с забором от двери и без него. Без регистрации.
+      </p>
+    </div>
+    <div class="dv-plate">
+      <div class="dv-plate-row">
+        <span class="dv-plate-k">Транспортных компаний</span>
+        <span class="dv-plate-v">2</span>
+      </div>
+      <div class="dv-plate-row">
+        <span class="dv-plate-k">Вариантов на маршрут</span>
+        <span class="dv-plate-v">до 5</span>
+      </div>
+      <div class="dv-plate-row">
+        <span class="dv-plate-k">Городов в справочнике</span>
+        <span class="dv-plate-v">4810</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <h1 class="dv-h1">Расчёт доставки промышленного груза</h1>
-  <p class="dv-lead">
-    Станок, партия изделий, металлопрокат, оснастка — сравните, во что обойдётся перевозка
-    у разных транспортных компаний. Считаем по публичным тарифам ПЭК и Деловых Линий:
-    наземная доставка, экспресс и авиа, с забором от двери и без.
-  </p>
+<div class="dv-inner dv-calc-wrap">
+  <section class="dv-calc">
+    <div class="dv-calc-head">
+      <div class="dv-calc-title">Расчёт перевозки</div>
+      <div class="dv-calc-hint">Габариты — одного места. Дробные пишите через запятую.</div>
+    </div>
 
-  <section class="dv-card">
-    <div class="dv-grid">
+    <div class="dv-grid-2">
       <div class="dv-field">
         <label for="dvFrom">Откуда</label>
-        <input type="text" id="dvFrom" placeholder="Начните вводить: Москва" autocomplete="off">
+        <input type="text" id="dvFrom" placeholder="Москва" autocomplete="off">
       </div>
       <div class="dv-field">
         <label for="dvTo">Куда</label>
-        <input type="text" id="dvTo" placeholder="Начните вводить: Екатеринбург" autocomplete="off">
+        <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
       </div>
     </div>
 
-    <div class="dv-grid-3">
+    <div class="dv-grid-5">
       <div class="dv-field">
         <label for="dvLength">Длина, м</label>
         <input type="number" id="dvLength" min="0" step="0.01" placeholder="1,2">
@@ -150,11 +254,11 @@ body {
         <input type="number" id="dvHeight" min="0" step="0.01" placeholder="0,6">
       </div>
       <div class="dv-field">
-        <label for="dvWeight">Вес одного места, кг</label>
+        <label for="dvWeight">Вес места, кг</label>
         <input type="number" id="dvWeight" min="0" step="0.1" placeholder="500">
       </div>
       <div class="dv-field">
-        <label for="dvPlaces">Количество мест</label>
+        <label for="dvPlaces">Мест</label>
         <input type="number" id="dvPlaces" min="1" step="1" value="1">
       </div>
     </div>
@@ -167,64 +271,86 @@ body {
     <button type="button" class="dv-submit" id="dvSubmit">Рассчитать</button>
     <div class="dv-result" id="dvResult"></div>
   </section>
+</div>
 
-  <section class="dv-section">
-    <h2>Что считается сборным грузом</h2>
-    <p>
-      Сборная перевозка — это когда ваш груз едет в одной машине с чужими. Так возят почти всё,
-      что не заполняет фуру целиком: узлы и агрегаты, партии деталей, оснастку, метизы, рулоны и
-      листы металла. Платите за занятый объём и вес, а не за машину, поэтому для партии в
-      несколько мест это обычно дешевле отдельного транспорта в разы.
-    </p>
-    <p>
-      Перевозчик считает по большему из двух: фактическому весу и объёмному. Один кубометр
-      приравнивается к определённой массе, и лёгкий габаритный груз тарифицируется по объёму.
-      Поэтому в форме выше нужны все три размера, а не только вес.
-    </p>
-  </section>
+<div class="dv-inner dv-sections">
 
-  <section class="dv-section">
-    <h2>Терминал или дверь</h2>
-    <p>
-      Забор от адреса и доставка до адреса — отдельные услуги, и на маршруте Москва — Екатеринбург
-      они добавляют к перевозке несколько тысяч рублей. Если у вас есть чем подъехать на терминал,
-      снимите галочки в форме и сравните: цифра меняется заметно.
-    </p>
-    <p>
-      Терминал-терминал имеет смысл, когда груз забирает сам получатель или у отправителя есть
-      своя машина. Дверь-дверь — когда важнее не трогать логистику руками.
-    </p>
-  </section>
+  <div class="dv-block">
+    <div>
+      <div class="dv-eyebrow is-dark">01 · Основы</div>
+      <h2>Что считается сборным грузом</h2>
+    </div>
+    <div>
+      <p>
+        Сборная перевозка — это когда ваш груз едет в одной машине с чужими. Так возят почти всё,
+        что не заполняет фуру целиком: узлы и агрегаты, партии деталей, оснастку, метизы, рулоны
+        и листы металла. Платите за занятый объём и вес, а не за машину, поэтому для партии
+        в несколько мест это обычно дешевле отдельного транспорта в разы.
+      </p>
+      <p>
+        Перевозчик считает по большему из двух: фактическому весу и объёмному. Кубометр
+        приравнивается к определённой массе, и лёгкий габаритный груз тарифицируется по объёму.
+        Поэтому в форме нужны все три размера, а не только вес.
+      </p>
+    </div>
+  </div>
 
-  <section class="dv-section">
-    <h2>Что расчёт не учитывает</h2>
-    <ul>
-      <li>Обрешётку и жёсткую упаковку — для станков и хрупкого их обычно требуют отдельно.</li>
-      <li>Негабарит: если одна сторона выходит за пределы, тариф считается по особым правилам.</li>
-      <li>Класс и характер груза — опасный, температурный, требующий разрешений.</li>
-      <li>Погрузочные работы, если на адресе нет ни рампы, ни техники.</li>
-    </ul>
-    <p>
-      Поэтому цифры выше — ориентир для сравнения перевозчиков между собой, а не счёт.
-      Итоговую стоимость подтверждает транспортная компания. ТехЗаказ грузы не возит и стороной
-      перевозки не является.
-    </p>
-  </section>
+  <div class="dv-block">
+    <div>
+      <div class="dv-eyebrow is-dark">02 · Экономия</div>
+      <h2>Терминал или дверь</h2>
+    </div>
+    <div>
+      <p>
+        Забор от адреса и доставка до адреса — отдельные услуги. На маршруте Москва — Екатеринбург
+        они добавляют к перевозке несколько тысяч рублей. Если есть чем подъехать на терминал,
+        снимите галочки в форме и сравните: цифра меняется заметно.
+      </p>
+      <p>
+        Терминал-терминал имеет смысл, когда груз забирает сам получатель или у отправителя есть
+        своя машина. Дверь-дверь — когда важнее не трогать логистику руками.
+      </p>
+    </div>
+  </div>
 
-  <section class="dv-next">
+  <div class="dv-block">
+    <div>
+      <div class="dv-eyebrow is-dark">03 · Границы</div>
+      <h2>Чего расчёт не знает</h2>
+    </div>
+    <div>
+      <ul class="dv-list">
+        <li>Обрешётку и жёсткую упаковку — для станков и хрупкого их обычно требуют отдельно.</li>
+        <li>Негабарит: если одна сторона выходит за пределы, тариф считается по особым правилам.</li>
+        <li>Класс и характер груза — опасный, температурный, требующий разрешений.</li>
+        <li>Погрузочные работы, если на адресе нет ни рампы, ни техники.</li>
+      </ul>
+      <p>
+        Поэтому цифры выше — ориентир для сравнения перевозчиков между собой, а не счёт.
+        Итоговую стоимость подтверждает транспортная компания. ТехЗаказ грузы не возит
+        и стороной перевозки не является.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<section class="dv-cta">
+  <div class="dv-cta-grid"></div>
+  <div class="dv-inner">
+    <div class="dv-eyebrow">Прямые закупки</div>
     <h2>Ищете, кто изготовит?</h2>
     <p>
-      Мы площадка прямых закупок: заказчики размещают чертёж или техническое задание, а профильные
-      заводы отвечают коммерческими предложениями. Доставка — только часть сделки, и в кабинете
-      она считается автоматически, по габаритам из предложения завода.
+      Разместите чертёж или техническое задание — профильные заводы ответят коммерческими
+      предложениями. Доставка при этом считается сама, по габаритам из предложения завода,
+      и заказчик сразу видит полную стоимость сделки.
     </p>
     <a href="/zayavka">Разместить закупку</a>
-  </section>
+  </div>
+</section>
 
-</main>
-
-<script src="/assets/city-suggest.js?v=1"></script>
-<script src="/assets/delivery-quotes.js?v=1"></script>
+<script src="/assets/city-suggest.js?v=2"></script>
+<script src="/assets/delivery-quotes.js?v=2"></script>
 <script>
 (function () {
     const $ = (id) => document.getElementById(id);
@@ -236,6 +362,7 @@ body {
     attachCitySuggest($('dvTo'));
 
     function say(html) { $('dvResult').innerHTML = html; }
+    function note(text) { say(`<div style="font-size:14px;color:#64748B;">${text}</div>`); }
 
     async function calculate() {
         const payload = {
@@ -252,14 +379,11 @@ body {
 
         // Города проверяем до запроса: иначе человек ждёт ответа сервера, чтобы
         // узнать то, что видно сразу.
-        if (!payload.from || !payload.to) {
-            say('<div style="font-size:13px;color:var(--text-secondary);">Укажите город отправления и получения.</div>');
-            return;
-        }
+        if (!payload.from || !payload.to) { note('Укажите город отправления и получения.'); return; }
 
         const btn = $('dvSubmit');
         btn.disabled = true;
-        say('<div style="font-size:13px;color:var(--text-secondary);">Считаем у перевозчиков…</div>');
+        note('Считаем у перевозчиков…');
 
         try {
             const res = await fetch(`${API}/logistics/public-quote`, {
@@ -268,20 +392,24 @@ body {
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
-            // maxWidth снимаем: на своей странице блок не зажат ячейкой таблицы.
-            say(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%' }));
+            // На своей странице блок не зажат ячейкой таблицы и он здесь главный,
+            // поэтому крупный вариант и полная ширина.
+            say(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%', variant: 'page' }));
         } catch {
-            say('<div style="font-size:13px;color:var(--text-secondary);">Не удалось связаться с сервером. Попробуйте ещё раз.</div>');
+            note('Не удалось связаться с сервером. Попробуйте ещё раз.');
         } finally {
             btn.disabled = false;
         }
     }
 
     $('dvSubmit').addEventListener('click', calculate);
-    // Enter в любом поле формы считает: иначе приходится тянуться к кнопке.
-    document.querySelectorAll('.dv-card input').forEach((input) => {
+    // Enter в любом поле считает — но не тогда, когда открыт список подсказок:
+    // там Enter выбирает город.
+    document.querySelectorAll('.dv-calc input').forEach((input) => {
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !document.querySelector('.city-suggest-list[style*="block"]')) calculate();
+            if (e.key !== 'Enter') return;
+            const openList = [...document.querySelectorAll('.city-suggest-list')].some(l => l.style.display === 'block');
+            if (!openList) calculate();
         });
     });
 })();

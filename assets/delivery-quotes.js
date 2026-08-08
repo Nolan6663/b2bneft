@@ -26,8 +26,19 @@
     const SERVICE = { auto: 'авто', avia: 'авиа', express: 'экспресс' };
     const fmt = (v) => new Intl.NumberFormat('ru-RU').format(v);
 
+    /* Два размера одного блока.
+       В кабинете он живёт в строке таблицы среди других данных и должен быть
+       компактным. На собственной странице он — главное, ради чего пришли, и
+       мелкий шрифт там читается как черновик. Формат и оговорки при этом
+       одинаковые: меняется только масштаб. */
+    const SIZES = {
+        compact: { carrier: 12.5, meta: 11.5, small: 10.5, price: 13, link: 11.5, pad: 8, note: 10 },
+        page: { carrier: 15, meta: 13, small: 12, price: 22, link: 13, pad: 14, note: 11.5 },
+    };
+
     function renderDeliveryQuotes(data, proposalId, options) {
         const opts = options || {};
+        const s = SIZES[opts.variant === 'page' ? 'page' : 'compact'];
         // В кабинете блок живёт в ячейке таблицы, которая шире модалки, поэтому
         // там нужен жёсткий потолок. На отдельной странице он только мешает.
         const maxWidth = opts.maxWidth || 'min(620px, calc(100vw - 72px))';
@@ -68,26 +79,34 @@
             if (q.price.pickup) parts.push(`забор ${fmt(q.price.pickup)}`);
             if (q.price.delivery) parts.push(`доставка ${fmt(q.price.delivery)}`);
             const breakdown = parts.length
-                ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">плечо ${fmt(q.price.line)}, ${parts.join(', ')}</div>`
+                ? `<div style="font-size:${s.small}px;color:var(--text-muted);margin-top:3px;">плечо ${fmt(q.price.line)}, ${parts.join(', ')}</div>`
                 : '';
             /* Страхование стоит отдельной строкой и в итог не входит: перевозчики
                считают его по-разному — ПЭК от объявленной стоимости, Деловые Линии
                по своим правилам. В общей сумме это выглядело бы как сравнение,
                которым не является, а по итогу ещё и сортируется список. */
             const insurance = q.price.insurance
-                ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">+ страхование ${fmt(q.price.insurance)} ₽ по расчёту перевозчика</div>`
+                ? `<div style="font-size:${s.small}px;color:var(--text-muted);margin-top:3px;">+ страхование ${fmt(q.price.insurance)} ₽ по расчёту перевозчика</div>`
                 : '';
 
-            return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--inner-border);">
+            /* На отдельной странице самый дешёвый вариант помечаем оранжевой
+               чертой слева: значка «Дешевле» в длинном списке недостаточно,
+               глаз цепляется за цену, а не за подпись. В кабинете строк мало
+               и лишний акцент там только шумит. */
+            const mark = opts.variant === 'page' && i === 0
+                ? 'border-left:2px solid #FF6A00;padding-left:16px;'
+                : (opts.variant === 'page' ? 'padding-left:18px;' : '');
+
+            return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;justify-content:space-between;padding:${s.pad}px 0;border-top:1px solid var(--inner-border);${mark}">
       <div style="flex:1 1 170px;min-width:0;">
-        <div style="font-size:12.5px;font-weight:600;">${esc(q.carrierName)}${best}</div>
-        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${esc(SERVICE[q.service] || q.service)} · ${esc(days)}${esc(endsNote)}</div>
+        <div style="font-size:${s.carrier}px;font-weight:700;">${esc(q.carrierName)}${best}</div>
+        <div style="font-size:${s.meta}px;color:var(--text-secondary);margin-top:2px;">${esc(SERVICE[q.service] || q.service)} · ${esc(days)}${esc(endsNote)}</div>
         ${breakdown}
         ${insurance}
       </div>
       <div style="text-align:right;white-space:nowrap;">
-        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;">${fmt(q.price.total)} ₽</div>
-        <a href="${esc(q.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent-blue);">Оформить</a>
+        <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:${s.price}px;letter-spacing:-.5px;">${fmt(q.price.total)} ₽</div>
+        <a href="${esc(q.url)}" target="_blank" rel="noopener" style="font-size:${s.link}px;color:var(--accent-blue);font-weight:600;">Оформить</a>
       </div>
     </div>`;
         }).join('');
@@ -127,7 +146,7 @@
       ${doors}
       ${rows}
       ${failed}
-      <div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.45;">
+      <div style="font-size:${s.note}px;color:var(--text-muted);margin-top:10px;line-height:1.5;border-top:1px solid var(--inner-border);padding-top:10px;">
         Цена — за перевозку с забором и доставкой. Страхование показано отдельно и в сумму
         не входит: перевозчики считают его по-разному. Ориентировочный расчёт по публичному
         тарифу, без обрешётки, негабарита и класса груза. Итог подтверждает перевозчик.
