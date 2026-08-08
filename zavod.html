@@ -133,7 +133,8 @@
 
         <div class="ob-field">
             <label class="ob-label" for="city">Город</label>
-            <input class="ob-input" id="city" type="text" placeholder="Ижевск">
+            <input class="ob-input" id="city" type="text" placeholder="Начните вводить: Ижевск">
+            <div class="form-hint">Выберите из списка — по городу считается доставка до заказчика.</div>
         </div>
 
         <div class="ob-field">
@@ -183,12 +184,17 @@
 
 </div>
 
+<script src="/assets/city-suggest.js?v=1"></script>
 <script src="/assets/onboarding.js?v=2026080301"></script>
 <script>
 (function () {
     const W = window.TZWizard;
     const $ = (id) => document.getElementById(id);
     let claimed = false; // предприятие уже присвоено другим аккаунтом
+
+    // Город из справочника перевозчиков: заводы регистрируются здесь, и именно
+    // отсюда в базу попадает большинство значений companies.city.
+    if (typeof attachCitySuggest === 'function') attachCitySuggest($('city'));
 
     function currentProfile() {
         return {

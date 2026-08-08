@@ -50,6 +50,37 @@ function router({ proposal = PROPOSAL, cities = {}, companies = null, quoteAll =
 const MOSCOW = [{ id: 1, name: 'Москва', qualifier: '', pecom_id: '-446', pecom_hub: 'Москва Восток', dellin_code: null, is_hub: true }];
 const EKB = [{ id: 2, name: 'Екатеринбург', qualifier: '', pecom_id: '-473', pecom_hub: 'Екатеринбург', dellin_code: null, is_hub: true }];
 
+test('подсказки городов доступны гостю: город спрашивают до регистрации', async () => {
+    const pool = fakePool([{
+        match: /FROM logistics_cities/i,
+        rows: [{ id: 2, name: 'Екатеринбург', qualifier: '', pecom_id: '-473', pecom_hub: 'Екатеринбург', is_hub: true }],
+    }]);
+    const app = await serve('/api/logistics', createLogisticsRouter(baseDeps({
+        pool,
+        // Гость: requireAuth сюда не подставляем вовсе, роут должен обойтись optionalAuth
+        optionalAuth: (req, res, next) => next(),
+    })));
+    try {
+        const res = await app.request('/api/logistics/cities?q=екат');
+        assert.equal(res.status, 200);
+        assert.equal(res.json[0].name, 'Екатеринбург');
+    } finally { await app.close(); }
+});
+
+test('короткий запрос подсказок не ходит в базу', async () => {
+    const pool = fakePool([]);
+    const app = await serve('/api/logistics', createLogisticsRouter(baseDeps({
+        pool,
+        optionalAuth: (req, res, next) => next(),
+    })));
+    try {
+        const res = await app.request('/api/logistics/cities?q=е');
+        assert.equal(res.status, 200);
+        assert.deepEqual(res.json, []);
+        assert.equal(pool.calls.length, 0);
+    } finally { await app.close(); }
+});
+
 test('без габаритов расчёта нет, и сказано, что делать', async () => {
     const app = await serve('/api/logistics', router({
         proposal: { ...PROPOSAL, cargo_weight: null, cargo_length: null, cargo_width: null, cargo_height: null },

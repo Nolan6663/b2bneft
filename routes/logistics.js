@@ -46,15 +46,17 @@ function createLogisticsRouter(deps) {
     // quoteAll подменяем в тестах: иначе юниты пошли бы в сеть к перевозчикам,
     // а деплойный гейт не должен зависеть от доступности чужих сайтов.
     const {
-        pool, requireAuth, canAccessProposal,
+        pool, requireAuth, optionalAuth, canAccessProposal,
         quoteAll: quoteCarriers = quoteAll,
         dellinLookup = findCityCode,
     } = deps;
     const router = express.Router();
 
-    // Подсказки для полей города. Пускаем любого авторизованного: это
-    // справочник перевозчика, ничего своего мы тут не раскрываем.
-    router.get('/cities', requireAuth, async (req, res, next) => {
+    // Подсказки для полей города. Без авторизации: город спрашивают ещё в
+    // гостевом мастере завода, до регистрации. Раскрывать тут нечего — это
+    // справочник перевозчиков, а не наши данные. От перебора закрывает
+    // guestLookupLimiter, навешенный на путь в server.js.
+    router.get('/cities', optionalAuth, async (req, res, next) => {
         try {
             const found = await suggestCities(pool, req.query.q || '', 10);
             res.json(found.map((c) => ({ id: c.id, name: c.name, qualifier: c.qualifier })));

@@ -187,7 +187,8 @@
             <div class="form-row-2">
                 <div class="form-group">
                     <label>Город</label>
-                    <input type="text" id="editCity" placeholder="Например, г. Ярославль">
+                    <input type="text" id="editCity" placeholder="Начните вводить: Ярославль">
+                    <div class="form-hint">Выберите из списка — по городу считается доставка от завода до заказчика.</div>
                 </div>
                 <div class="form-group">
                     <label>Опыт работы, лет</label>
@@ -320,6 +321,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js?v=6"></script>
+    <script src="assets/city-suggest.js?v=1"></script>
     <script src="assets/ui-animations.js"></script>
     <script>
         if (!hasSession()) window.location.href = 'login.html';
@@ -784,6 +786,9 @@
 
             document.getElementById('editSpecialization').value = currentData.specialization || '';
             document.getElementById('editCity').value = currentData.city || '';
+            // Подсказки по справочнику перевозчиков: от того, что здесь написано,
+            // зависит, посчитается ли доставка по сделкам этой компании.
+            if (typeof attachCitySuggest === 'function') attachCitySuggest(document.getElementById('editCity'));
             document.getElementById('editPhone').value = currentData.phone || '';
             document.getElementById('editWebsite').value = currentData.website || '';
             document.getElementById('editYears').value = currentData.yearsExperience || '';

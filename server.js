@@ -353,6 +353,8 @@ app.post('/api/public/tz-draft', guestAiLimiter);
 app.post('/api/public/analyze-drawing', guestAiLimiter);
 app.post('/api/public/match-preview', guestLookupLimiter);
 app.get('/api/public/company-by-inn', guestLookupLimiter);
+// Подсказки городов нужны в гостевом мастере завода, до регистрации.
+app.get('/api/logistics/cities', guestLookupLimiter);
 
 // ===================== WEBSOCKET =====================
 let Server = null;

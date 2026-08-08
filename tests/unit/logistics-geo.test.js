@@ -136,6 +136,37 @@ test('resolveCity ищет по нормализованному ключу и �
     assert.equal(pool.calls[0].params[0], 'москва', 'в запрос уходит нормализованный ключ');
 });
 
+test('уточнение из скобок разводит двойников', async () => {
+    const twins = [
+        { id: 1, name: 'Белый Яр (Алтайский р-н)', qualifier: 'Алтайский р-н', pecom_id: '587941', pecom_hub: 'Абакан', is_hub: false },
+        { id: 2, name: 'Белый Яр', qualifier: '', pecom_id: '600100', pecom_hub: 'Сургут', is_hub: false },
+    ];
+    const pool = fakePool([{ match: /FROM logistics_cities/i, rows: twins }]);
+
+    const chosen = await resolveCity(pool, 'Белый Яр (Алтайский р-н)');
+    assert.equal(chosen.status, 'ok', 'человек выбрал в подсказках — выбор надо уважать');
+    assert.equal(chosen.point.codes.pecom, '587941');
+});
+
+test('без уточнения двойники по-прежнему требуют выбора', async () => {
+    const twins = [
+        { id: 1, name: 'Белый Яр (Алтайский р-н)', qualifier: 'Алтайский р-н', pecom_id: '587941', is_hub: false },
+        { id: 2, name: 'Белый Яр', qualifier: '', pecom_id: '600100', is_hub: false },
+    ];
+    const pool = fakePool([{ match: /FROM logistics_cities/i, rows: twins }]);
+    assert.equal((await resolveCity(pool, 'Белый Яр')).status, 'ambiguous');
+});
+
+test('уточнение, которого нет ни у одного кандидата, не отсекает всех', async () => {
+    const pool = fakePool([{
+        match: /FROM logistics_cities/i,
+        rows: [{ id: 7, name: 'Москва', qualifier: '', pecom_id: '-446', is_hub: true }],
+    }]);
+    const found = await resolveCity(pool, 'Москва (Тверская область)');
+    assert.equal(found.status, 'ok', 'мусор в скобках не должен ломать разрешение города');
+    assert.equal(found.point.codes.pecom, '-446');
+});
+
 test('resolveCity: неизвестный город не даёт догадки', async () => {
     const pool = fakePool([{ match: /FROM logistics_cities/i, rows: [] }]);
     const r = await resolveCity(pool, 'Нью-Васюки');
