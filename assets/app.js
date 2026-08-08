@@ -1699,13 +1699,35 @@ function renderDeliveryQuotes(data, proposalId) {
     </div>`;
 }
 
+/* Блок расчёта живёт на двух страницах: строкой в списке откликов (index) и
+   секцией в карточке сделки (deals). Разметка разная, поведение одинаковое,
+   поэтому элементы регистрируются, а не ищутся по фиксированным id.
+   stateEl хранит выбранные условия доставки в dataset. */
+const _deliveryTargets = new Map();
+
+function registerDeliveryTarget(proposalId, stateEl, bodyEl) {
+  if (stateEl && bodyEl) _deliveryTargets.set(String(proposalId), { stateEl, bodyEl });
+}
+
+function deliveryTarget(proposalId) {
+  const key = String(proposalId);
+  if (!_deliveryTargets.has(key)) {
+    registerDeliveryTarget(
+      proposalId,
+      document.getElementById(`deliveryRow-${proposalId}`),
+      document.getElementById(`deliveryBody-${proposalId}`)
+    );
+  }
+  return _deliveryTargets.get(key) || null;
+}
+
 /* Загрузка ленивая: чужой API не дёргается на каждую отрисовку списка КП,
    только когда заказчик раскрыл блок. Повторное раскрытие уже ничего не грузит,
    а вот смена условий доставки — грузит, это другой расчёт. */
 async function loadDeliveryQuotes(proposalId) {
-  const row = document.getElementById(`deliveryRow-${proposalId}`);
-  const body = document.getElementById(`deliveryBody-${proposalId}`);
-  if (!row || !body) return;
+  const target = deliveryTarget(proposalId);
+  if (!target) return;
+  const { stateEl: row, bodyEl: body } = target;
 
   const doorFrom = row.dataset.doorFrom !== '0';
   const doorTo = row.dataset.doorTo !== '0';
@@ -1724,8 +1746,9 @@ async function loadDeliveryQuotes(proposalId) {
 }
 
 async function toggleDeliveryQuotes(proposalId) {
-  const row = document.getElementById(`deliveryRow-${proposalId}`);
-  if (!row) return;
+  const target = deliveryTarget(proposalId);
+  if (!target) return;
+  const row = target.stateEl;
 
   if (row.style.display !== 'none') { row.style.display = 'none'; return; }
   row.style.display = '';
@@ -1735,9 +1758,9 @@ async function toggleDeliveryQuotes(proposalId) {
 
 /** Сняли забор или доставку — это другой расчёт, считаем заново. */
 async function setDeliveryDoor(proposalId, which, checked) {
-  const row = document.getElementById(`deliveryRow-${proposalId}`);
-  if (!row) return;
-  row.dataset[which === 'from' ? 'doorFrom' : 'doorTo'] = checked ? '1' : '0';
+  const target = deliveryTarget(proposalId);
+  if (!target) return;
+  target.stateEl.dataset[which === 'from' ? 'doorFrom' : 'doorTo'] = checked ? '1' : '0';
   await loadDeliveryQuotes(proposalId);
 }
 

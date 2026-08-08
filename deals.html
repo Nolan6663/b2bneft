@@ -181,6 +181,11 @@
                 </div>
                 <div id="ddpKPList"></div>
 
+                <div id="ddpDeliveryWrap" style="display:none;">
+                    <div class="ddp-section-title">Доставка</div>
+                    <div id="ddpDeliveryBody"></div>
+                </div>
+
                 <div id="ddpTimelineWrap" style="display:none;">
                     <div class="ddp-section-title">История сделки</div>
                     <div id="ddpTimeline"></div>
@@ -590,8 +595,32 @@
                 }
             }
 
+            showDealDelivery(pid);
             loadDealTimeline(d.proposalId || d.id);
             renderTable();
+        }
+
+        /* Расчёт доставки по принятому КП. Здесь он нужнее, чем в списке
+           откликов: поставщик выбран, изделие поедет, вопрос только чем.
+
+           Кнопка показывается всегда, в отличие от списка откликов, где мы
+           прячем её у КП без габаритов. Там их десяток и лишняя кнопка — шум,
+           а здесь сделка одна, и сообщение «завод не указал габариты» само по
+           себе полезно: у заказчика есть с кем это обсудить. */
+        function showDealDelivery(proposalId) {
+            const wrap = document.getElementById('ddpDeliveryWrap');
+            const body = document.getElementById('ddpDeliveryBody');
+            if (!wrap || !body) return;
+            if (!proposalId) { wrap.style.display = 'none'; return; }
+
+            wrap.style.display = '';
+            wrap.dataset.loaded = '0';
+            delete wrap.dataset.doorFrom;
+            delete wrap.dataset.doorTo;
+            registerDeliveryTarget(proposalId, wrap, body);
+
+            body.innerHTML = `<button type="button" class="btn-secondary" style="width:100%;"
+                onclick="loadDeliveryQuotes(${proposalId})">Рассчитать доставку</button>`;
         }
 
         async function loadDealTimeline(proposalId) {
