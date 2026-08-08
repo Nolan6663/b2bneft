@@ -1624,9 +1624,15 @@ function renderDeliveryQuotes(data) {
     const parts = [];
     if (q.price.pickup) parts.push(`забор ${fmt(q.price.pickup)}`);
     if (q.price.delivery) parts.push(`доставка ${fmt(q.price.delivery)}`);
-    if (q.price.insurance) parts.push(`страховка ${fmt(q.price.insurance)}`);
     const breakdown = parts.length
       ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">плечо ${fmt(q.price.line)}, ${parts.join(', ')}</div>`
+      : '';
+    /* Страхование стоит отдельной строкой и в итог не входит: перевозчики
+       считают его по-разному — ПЭК от объявленной стоимости, Деловые Линии по
+       своим правилам. В общей сумме это выглядело бы как сравнение, которым не
+       является, а по итогу ещё и сортируется список. */
+    const insurance = q.price.insurance
+      ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">+ страхование ${fmt(q.price.insurance)} ₽ по расчёту перевозчика</div>`
       : '';
 
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--inner-border);">
@@ -1634,6 +1640,7 @@ function renderDeliveryQuotes(data) {
         <div style="font-size:12.5px;font-weight:600;">${escapeHtml(q.carrierName)}${best}</div>
         <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${escapeHtml(SERVICE[q.service] || q.service)} · ${escapeHtml(days)}</div>
         ${breakdown}
+        ${insurance}
       </div>
       <div style="text-align:right;white-space:nowrap;">
         <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;">${fmt(q.price.total)} ₽</div>
@@ -1661,8 +1668,9 @@ function renderDeliveryQuotes(data) {
       ${rows}
       ${failed}
       <div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.45;">
-        Ориентировочный расчёт по публичному тарифу перевозчика. Не учитывает обрешётку,
-        негабарит и класс груза. Итоговую стоимость подтверждает перевозчик.
+        Цена — за перевозку с забором и доставкой. Страхование показано отдельно и в сумму
+        не входит: перевозчики считают его по-разному. Ориентировочный расчёт по публичному
+        тарифу, без обрешётки, негабарита и класса груза. Итог подтверждает перевозчик.
       </div>
     </div>`;
 }

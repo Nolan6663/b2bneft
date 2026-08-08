@@ -42,6 +42,7 @@ const createAiRouter = require('./routes/ai');
 const createAdminRouter = require('./routes/admin');
 const createNotificationsRouter = require('./routes/notifications');
 const createLogisticsRouter = require('./routes/logistics');
+const { purgeExpiredQuotes } = require('./lib/logistics');
 const createTasksRouter = require('./routes/tasks');
 const createIntegrationsRouter = require('./routes/integrations');
 const createTeamRouter = require('./routes/team');
@@ -2018,6 +2019,15 @@ function startOrderMaintenanceCron() {
     cron.schedule('0 5 * * *', async () => {
         await sendDeadlineReminders();
         await closeExpiredOrders();
+        // Протухший кэш расчётов доставки: TTL проверяется при чтении, но сами
+        // строки без уборки лежат вечно. Ошибка здесь не должна ронять крон —
+        // это уборка, а не работа.
+        try {
+            const removed = await purgeExpiredQuotes(pool);
+            if (removed) console.log(`[logistics] удалено протухших расчётов: ${removed}`);
+        } catch (e) {
+            console.error('[logistics] не удалось почистить кэш расчётов:', e.message);
+        }
     });
 }
 

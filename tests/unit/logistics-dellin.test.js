@@ -39,18 +39,18 @@ test('вес суммируется по всем местам', () => {
     assert.equal(volume, 2);
 });
 
-test('итог наземной доставки сходится с их собственным полем price', () => {
+test('перевозка со страховкой сходится с их собственным полем price', () => {
     const [auto] = parseDellinResponse(FIXTURE);
     assert.equal(auto.service, 'auto');
-    assert.equal(auto.price.total, Math.round(Number(FIXTURE.price)),
+    assert.equal(auto.price.total + auto.price.insurance, Math.round(Number(FIXTURE.price)),
         'состав ответа поменялся: наша формула больше не даёт их же итог');
 });
 
-test('разбивка складывается в итог без остатка', () => {
+test('страхование в итог не входит: у перевозчиков разная база', () => {
     const [auto] = parseDellinResponse(FIXTURE);
     const { total, line, pickup, delivery, insurance } = auto.price;
-    assert.equal(line + pickup + delivery + insurance, total,
-        'иначе на экране разбивка не сойдётся с показанной суммой');
+    assert.equal(line + pickup + delivery, total, 'итог — только перевозка');
+    assert.ok(insurance > 0, 'но саму сумму страховки показываем отдельно');
 });
 
 test('три способа доставки — наземный, экспресс и авиа', () => {
@@ -65,12 +65,12 @@ test('срок, которого в ответе нет, не выдумывае
     assert.equal(avia.days, null, 'у авиа в ответе нет time — в таблице будет прочерк');
 });
 
-test('без забора и доставки в итог идёт только плечо со страховкой', () => {
+test('без забора и доставки в итог идёт только плечо', () => {
     const [auto] = parseDellinResponse(FIXTURE, { doorFrom: false, doorTo: false });
     assert.equal(auto.price.pickup, 0);
     assert.equal(auto.price.delivery, 0);
     assert.equal(auto.doorToDoor, false);
-    assert.equal(auto.price.total, auto.price.line + auto.price.insurance);
+    assert.equal(auto.price.total, auto.price.line);
 });
 
 test('ошибки перевозчика дают пустой список, а не выдуманную цену', () => {

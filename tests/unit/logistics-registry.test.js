@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { fakePool } = require('./helpers');
-const { quoteAll, cacheKey, sortQuotes } = require('../../lib/logistics');
+const { quoteAll, cacheKey, sortQuotes, purgeExpiredQuotes } = require('../../lib/logistics');
 
 /* Реестр перевозчиков. Все API здесь чужие и публичные, гарантий доступности
    нет ни у кого — поэтому главное, что проверяется, это что один упавший
@@ -149,6 +149,22 @@ test('ключ кэша различает груз, маршрут и зака�
         cacheKey('pecom', { ...PARAMS, places: [{ width: 1, length: 1, height: 1, weight: 501 }] }),
         'вес не округляется: округление меняет тарифную ступень'
     );
+});
+
+test('версия формата входит в ключ: старые записи после правки формулы недостижимы', () => {
+    const { CACHE_VERSION } = require('../../lib/logistics');
+    assert.ok(Number.isInteger(CACHE_VERSION) && CACHE_VERSION >= 2,
+        'версия должна расти при изменении состава Quote');
+    assert.match(cacheKey('pecom', PARAMS), /^pecom:[0-9a-f]{40}$/);
+});
+
+test('уборка кэша удаляет только протухшее', async () => {
+    const pool = fakePool([{ match: /DELETE FROM logistics_quotes_cache/i, rows: [] }]);
+    pool.query = async (sql) => {
+        assert.match(sql, /created_at < NOW\(\) - INTERVAL/i, 'свежие записи не трогаем');
+        return { rows: [], rowCount: 3 };
+    };
+    assert.equal(await purgeExpiredQuotes(pool), 3);
 });
 
 test('сортировка не портит исходный массив', () => {

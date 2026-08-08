@@ -67,7 +67,12 @@ test('разбор: составляющие цены совпадают с жи
     assert.equal(auto.price.pickup, 2650, 'забор груза');
     assert.equal(auto.price.delivery, 1350, 'доставка получателю');
     assert.equal(auto.price.insurance, 682, 'страхование, 681.6 округляется');
-    assert.equal(auto.price.total, 12900 + 2650 + 1350 + 682);
+});
+
+test('страхование в итог не входит: у перевозчиков разная база', () => {
+    const [auto] = parsePecomResponse(FIXTURE);
+    assert.equal(auto.price.total, 12900 + 2650 + 1350, 'итог — только перевозка');
+    assert.ok(auto.price.insurance > 0, 'но саму сумму страховки показываем');
 });
 
 test('разбор: срок берётся из структурного поля', () => {
@@ -85,7 +90,7 @@ test('разбор: без забора и доставки в итог идёт
     const [auto] = parsePecomResponse(FIXTURE, { doorFrom: false, doorTo: false });
     assert.equal(auto.price.pickup, 0);
     assert.equal(auto.price.delivery, 0);
-    assert.equal(auto.price.total, 12900 + 682);
+    assert.equal(auto.price.total, 12900);
     assert.equal(auto.doorToDoor, false);
 });
 
@@ -108,8 +113,7 @@ test('разбор: посторонняя услуга не считается 
     delete other.ADD_3;
     other.ADD_1 = { '1': 'Обрешётка', '2': '', '3': 5000 };
     const [auto] = parsePecomResponse(other);
-    assert.equal(auto.price.insurance, 0);
-    assert.equal(auto.price.total, 12900 + 2650 + 1350);
+    assert.equal(auto.price.insurance, 0, 'обрешётка — не страховка');
 });
 
 test('разбор: ошибка перевозчика даёт пустой список, а не выдуманную цену', () => {
