@@ -1592,7 +1592,7 @@ function renderPriceBenchmark(b) {
    лица не обещаем: это публичный тариф перевозчика, без обрешётки, негабарита
    и класса груза. Без этой строки первый же разошедшийся счёт станет
    претензией к платформе. */
-function renderDeliveryQuotes(data) {
+function renderDeliveryQuotes(data, proposalId) {
   if (!data) {
     return '<div style="font-size:12px;color:var(--text-secondary);">Не удалось рассчитать доставку</div>';
   }
@@ -1602,6 +1602,12 @@ function renderDeliveryQuotes(data) {
 
   const fmt = v => new Intl.NumberFormat('ru-RU').format(v);
   const SERVICE = { auto: 'авто', avia: 'авиа', express: 'экспресс' };
+  // Куда именно едет груз, если забор или доставку сняли: без этой пометки
+  // упавшая цена выглядит просто дешевле, а не «до терминала».
+  const ends = [];
+  if (data.doorFrom === false) ends.push('от терминала');
+  if (data.doorTo === false) ends.push('до терминала');
+  const endsNote = ends.length ? ` · ${ends.join(', ')}` : '';
 
   // Никто не ответил и никто не посчитал — честно говорим об этом, а не
   // показываем пустую таблицу.
@@ -1638,7 +1644,7 @@ function renderDeliveryQuotes(data) {
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--inner-border);">
       <div style="flex:1 1 170px;min-width:0;">
         <div style="font-size:12.5px;font-weight:600;">${escapeHtml(q.carrierName)}${best}</div>
-        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${escapeHtml(SERVICE[q.service] || q.service)} · ${escapeHtml(days)}</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);margin-top:2px;">${escapeHtml(SERVICE[q.service] || q.service)} · ${escapeHtml(days)}${escapeHtml(endsNote)}</div>
         ${breakdown}
         ${insurance}
       </div>
@@ -1652,6 +1658,23 @@ function renderDeliveryQuotes(data) {
   const route = data.from && data.to
     ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">${escapeHtml(data.from.name)} → ${escapeHtml(data.to.name)}</div>`
     : '';
+
+  /* Забор и доставка включены по умолчанию, но их можно снять: завод нередко
+     сам везёт на терминал, а заказчик сам забирает. На Москве — Екатеринбурге
+     это около пяти тысяч, поэтому выбор виден, а не спрятан в настройках. */
+  const doors = proposalId == null ? '' : `
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 8px;font-size:11.5px;color:var(--text-secondary);">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" ${data.doorFrom === false ? '' : 'checked'} style="width:13px;height:13px;cursor:pointer;"
+               onchange="setDeliveryDoor(${proposalId}, 'from', this.checked)">
+        Забор от завода
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" ${data.doorTo === false ? '' : 'checked'} style="width:13px;height:13px;cursor:pointer;"
+               onchange="setDeliveryDoor(${proposalId}, 'to', this.checked)">
+        Доставка до адреса
+      </label>
+    </div>`;
   const failed = data.failed && data.failed.length
     ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Не ответили: ${escapeHtml(data.failed.join(', '))}</div>`
     : '';
@@ -1665,6 +1688,7 @@ function renderDeliveryQuotes(data) {
   return `
     <div style="max-width:min(620px, calc(100vw - 72px));text-align:left;">
       ${route}
+      ${doors}
       ${rows}
       ${failed}
       <div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.45;">
@@ -1676,25 +1700,45 @@ function renderDeliveryQuotes(data) {
 }
 
 /* Загрузка ленивая: чужой API не дёргается на каждую отрисовку списка КП,
-   только когда заказчик раскрыл блок. Второе раскрытие уже ничего не грузит. */
-async function toggleDeliveryQuotes(proposalId) {
+   только когда заказчик раскрыл блок. Повторное раскрытие уже ничего не грузит,
+   а вот смена условий доставки — грузит, это другой расчёт. */
+async function loadDeliveryQuotes(proposalId) {
   const row = document.getElementById(`deliveryRow-${proposalId}`);
   const body = document.getElementById(`deliveryBody-${proposalId}`);
   if (!row || !body) return;
 
-  if (row.style.display !== 'none') { row.style.display = 'none'; return; }
-  row.style.display = '';
-  if (row.dataset.loaded === '1') return;
+  const doorFrom = row.dataset.doorFrom !== '0';
+  const doorTo = row.dataset.doorTo !== '0';
 
   body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Считаем доставку…</div>';
   try {
-    const res = await apiFetch(`${SERVER_URL}/logistics/quote?proposalId=${proposalId}`);
+    const query = `proposalId=${proposalId}&doorFrom=${doorFrom ? 1 : 0}&doorTo=${doorTo ? 1 : 0}`;
+    const res = await apiFetch(`${SERVER_URL}/logistics/quote?${query}`);
     const data = await res.json();
-    body.innerHTML = renderDeliveryQuotes(res.ok ? data : { error: data.error });
-    if (res.ok) row.dataset.loaded = '1';
+    body.innerHTML = renderDeliveryQuotes(res.ok ? data : { error: data.error }, proposalId);
+    row.dataset.loaded = res.ok ? '1' : '0';
   } catch {
     body.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);">Сервер недоступен</div>';
+    row.dataset.loaded = '0';
   }
+}
+
+async function toggleDeliveryQuotes(proposalId) {
+  const row = document.getElementById(`deliveryRow-${proposalId}`);
+  if (!row) return;
+
+  if (row.style.display !== 'none') { row.style.display = 'none'; return; }
+  row.style.display = '';
+  if (row.dataset.loaded === '1') return;
+  await loadDeliveryQuotes(proposalId);
+}
+
+/** Сняли забор или доставку — это другой расчёт, считаем заново. */
+async function setDeliveryDoor(proposalId, which, checked) {
+  const row = document.getElementById(`deliveryRow-${proposalId}`);
+  if (!row) return;
+  row.dataset[which === 'from' ? 'doorFrom' : 'doorTo'] = checked ? '1' : '0';
+  await loadDeliveryQuotes(proposalId);
 }
 
 function renderProducerPriceHint(price, benchmark) {

@@ -144,6 +144,47 @@ test('груз собирается по количеству мест и ухо
     } finally { await app.close(); }
 });
 
+test('забор и доставка включены по умолчанию', async () => {
+    let seen = null;
+    const app = await serve('/api/logistics', router({
+        cities: { 'москва': MOSCOW, 'екатеринбург': EKB },
+        quoteAll: async (pool, params) => { seen = params; return { quotes: [], failed: [], fromCache: [] }; },
+    }));
+    try {
+        const res = await app.request('/api/logistics/quote?proposalId=1');
+        assert.equal(seen.doorFrom, true);
+        assert.equal(seen.doorTo, true);
+        assert.equal(res.json.doorFrom, true, 'интерфейс должен знать, что посчитано');
+    } finally { await app.close(); }
+});
+
+test('до терминала: флаги доходят до перевозчиков и возвращаются в ответе', async () => {
+    let seen = null;
+    const app = await serve('/api/logistics', router({
+        cities: { 'москва': MOSCOW, 'екатеринбург': EKB },
+        quoteAll: async (pool, params) => { seen = params; return { quotes: [], failed: [], fromCache: [] }; },
+    }));
+    try {
+        const res = await app.request('/api/logistics/quote?proposalId=1&doorFrom=0&doorTo=0');
+        assert.equal(seen.doorFrom, false);
+        assert.equal(seen.doorTo, false);
+        assert.equal(res.json.doorTo, false);
+    } finally { await app.close(); }
+});
+
+test('снять можно только один конец маршрута', async () => {
+    let seen = null;
+    const app = await serve('/api/logistics', router({
+        cities: { 'москва': MOSCOW, 'екатеринбург': EKB },
+        quoteAll: async (pool, params) => { seen = params; return { quotes: [], failed: [], fromCache: [] }; },
+    }));
+    try {
+        await app.request('/api/logistics/quote?proposalId=1&doorTo=0');
+        assert.equal(seen.doorFrom, true, 'завод везёт как раньше');
+        assert.equal(seen.doorTo, false, 'заказчик забирает сам');
+    } finally { await app.close(); }
+});
+
 test('никто не ответил — это не ошибка, а пустой список с именами молчунов', async () => {
     const app = await serve('/api/logistics', router({
         cities: { 'москва': MOSCOW, 'екатеринбург': EKB },

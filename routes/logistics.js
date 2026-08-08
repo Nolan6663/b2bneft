@@ -101,19 +101,28 @@ function createLogisticsRouter(deps) {
                 fillDellinCode(pool, to.point, dellinLookup),
             ]);
 
+            // Забор и доставка по умолчанию включены — это то, чего ждёт
+            // большинство. Но многие заводы сами возят на терминал, а заказчики
+            // сами забирают: на Москве — Екатеринбурге это около пяти тысяч,
+            // и прятать такую возможность неправильно.
+            const doorFrom = req.query.doorFrom !== '0';
+            const doorTo = req.query.doorTo !== '0';
+
             const result = await quoteCarriers(pool, {
                 from: from.point,
                 to: to.point,
                 places: cargoToPlaces(cargo),
                 insurance: Number(proposal.price) || 0,
-                doorFrom: true,
-                doorTo: true,
+                doorFrom,
+                doorTo,
             });
 
             res.json({
                 from: { name: from.point.name },
                 to: { name: to.point.name },
                 cargo,
+                doorFrom,
+                doorTo,
                 quotes: result.quotes,
                 failed: result.failed,
             });
