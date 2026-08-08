@@ -43,6 +43,7 @@ const createAdminRouter = require('./routes/admin');
 const createNotificationsRouter = require('./routes/notifications');
 const createLogisticsRouter = require('./routes/logistics');
 const { purgeExpiredQuotes } = require('./lib/logistics');
+const { checkAllCarriers } = require('./lib/logistics/health');
 const createTasksRouter = require('./routes/tasks');
 const createIntegrationsRouter = require('./routes/integrations');
 const createTeamRouter = require('./routes/team');
@@ -2031,6 +2032,39 @@ function startOrderMaintenanceCron() {
     });
 }
 
+/*
+ * Недельная проверка перевозчиков. Скрипт npm run check:logistics делает то же
+ * самое руками, но руками про него однажды забудут — а он сделан ровно против
+ * поломки, которая происходит молча и на нашей стороне никак не проявляется.
+ *
+ * Раз в неделю, а не ежедневно: ловим не колебания тарифа, а изменение формата
+ * ответа. И только на проде — локальный сервер не должен ходить к перевозчикам
+ * при каждом запуске.
+ *
+ * Тревога уходит в Sentry, потому что это единственный настроенный в проекте
+ * канал для того, что должен увидеть не пользователь, а мы.
+ */
+function startLogisticsCheckCron() {
+    if (process.env.NODE_ENV !== 'production') return;
+    // Понедельник, 06:00 по Москве (03:00 UTC)
+    cron.schedule('0 3 * * 1', async () => {
+        try {
+            const { results, broken } = await checkAllCarriers();
+            for (const result of results) {
+                if (!result.ok) console.error(`[logistics] ${result.carrierName}: ${result.problems.join('; ')}`);
+            }
+            if (broken.length) {
+                const detail = results.filter(r => !r.ok).map(r => `${r.carrierName}: ${r.problems.join('; ')}`).join(' | ');
+                Sentry.captureMessage(`Расчёт доставки сломан у ${broken.join(', ')}. ${detail}`, 'error');
+            } else {
+                console.log('[logistics] проверка перевозчиков: все отвечают');
+            }
+        } catch (e) {
+            console.error('[logistics] проверка перевозчиков не выполнилась:', e.message);
+        }
+    });
+}
+
 function startAuctionCron() {
     cron.schedule('* * * * *', closeExpiredAuctions); // every minute
     cron.schedule('* * * * *', notifyAuctionsEndingSoon); // every minute
@@ -2091,6 +2125,7 @@ async function start() {
     startDigestCron();
     startAuctionCron();
     startOrderMaintenanceCron();
+    startLogisticsCheckCron();
     startTelegramBot();
     vkPoster.start();
     return httpServer;

@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { checkQuote, checkCarrier } = require('../../scripts/check-logistics');
+const { checkQuote, checkCarrier, checkAllCarriers } = require('../../lib/logistics/health');
 
 /* Живая проверка перевозчиков (npm run check:logistics). Сам скрипт ходит в
    сеть, но его правила годности — обычные функции, и здесь они проверяются
@@ -75,4 +75,21 @@ test('исправный перевозчик проходит', async () => {
     const res = await checkCarrier(carrier);
     assert.equal(res.ok, true);
     assert.deepEqual(res.problems, []);
+});
+
+test('сводка называет поимённо тех, кто сломался', async () => {
+    const { broken, results } = await checkAllCarriers([
+        { CARRIER: 'ok', CARRIER_NAME: 'Живой', quote: async () => [goodQuote()] },
+        { CARRIER: 'bad', CARRIER_NAME: 'Мёртвый', quote: async () => { throw new Error('502'); } },
+    ]);
+    assert.deepEqual(broken, ['Мёртвый'], 'в тревогу должно попасть имя, а не «один из двух»');
+    assert.equal(results.length, 2);
+    assert.equal(results[0].ok, true);
+});
+
+test('все живы — список сломанных пуст', async () => {
+    const { broken } = await checkAllCarriers([
+        { CARRIER: 'ok', CARRIER_NAME: 'Живой', quote: async () => [goodQuote()] },
+    ]);
+    assert.deepEqual(broken, []);
 });
