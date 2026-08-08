@@ -355,6 +355,16 @@ app.post('/api/public/match-preview', guestLookupLimiter);
 app.get('/api/public/company-by-inn', guestLookupLimiter);
 // Подсказки городов нужны в гостевом мастере завода, до регистрации.
 app.get('/api/logistics/cities', guestLookupLimiter);
+// Публичный калькулятор на /dostavka ходит в чужие API перевозчиков, поэтому
+// потолок ниже общего: 20 расчётов за 10 минут с адреса. Честному человеку
+// столько на подбор габаритов хватает с запасом, скрипту — нет.
+app.post('/api/logistics/public-quote', rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много расчётов подряд. Подождите несколько минут.' },
+}));
 
 // ===================== WEBSOCKET =====================
 let Server = null;
@@ -698,6 +708,7 @@ const PUBLIC_PAGES = [
     'settings.html', 'admin.html', 'deals.html', 'tariff.html', '404.html', 'catalog.html', 'map.html', 'delivery.html', 'deliveries.html',
     'zakupki.html',
     'dlya-postavshchikov.html',
+    'dostavka.html',
     'zayavka.html',
     'zavod.html',
     'privacy.html', 'terms.html',
@@ -1051,6 +1062,7 @@ app.get('/robots.txt', (req, res) => {
         'Allow: /oborudovanie\n' +
         'Allow: /map\n' +
         'Allow: /dlya-postavshchikov\n' +
+        'Allow: /dostavka\n' +
         'Allow: /p/\n' +
         'Disallow: /api/\n' +
         'Disallow: /admin\n' +
@@ -1083,6 +1095,7 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/zakupki/elektro',     priority: '0.8', changefreq: 'daily'  },
             { url: '/zakupki/rti',         priority: '0.8', changefreq: 'daily'  },
             { url: '/dlya-postavshchikov', priority: '0.8', changefreq: 'weekly' },
+            { url: '/dostavka',            priority: '0.7', changefreq: 'monthly' },
             { url: '/map',                 priority: '0.7', changefreq: 'weekly' },
             { url: '/privacy',             priority: '0.3', changefreq: 'yearly' },
             { url: '/terms',               priority: '0.3', changefreq: 'yearly' },

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Расчёт доставки промышленного груза — ТехЗаказ</title>
+<meta name="description" content="Сравните стоимость и сроки перевозки станка, металлопроката или партии изделий: ПЭК и Деловые Линии в одной таблице. Публичные тарифы, забор и доставка, расчёт до терминала.">
+<link rel="canonical" href="https://texzakaz.ru/dostavka">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://texzakaz.ru/dostavka">
+<meta property="og:site_name" content="ТехЗаказ">
+<meta property="og:title" content="Расчёт доставки промышленного груза — ТехЗаказ">
+<meta property="og:description" content="Сравните стоимость и сроки перевозки станка, металлопроката или партии изделий: ПЭК и Деловые Линии в одной таблице.">
+<meta property="og:image" content="https://texzakaz.ru/assets/og-cover.png">
+<meta property="og:locale" content="ru_RU">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/theme-v2.css?v=10">
+<style>
+/* Страница публичная и живёт вне кабинета: собственный каркас, но переменные
+   темы общие — иначе она разъедется с остальным сайтом при смене палитры. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* theme-v2.css задаёт кабинетный каркас: body во flex, высота ровно в экран,
+   overflow скрыт. Здесь страница обычная, с прокруткой и без сайдбара, поэтому
+   каркас снимаем явно — без этого main схлопывался до ширины содержимого
+   (замерено: 345px вместо 940 на десктопе). Переменные темы при этом остаются
+   общими, чтобы страница не разъехалась с сайтом при смене палитры. */
+body {
+    display: block; height: auto; min-height: 100vh; overflow: visible;
+    font-family: 'Manrope', sans-serif;
+    background: var(--page-bg, #F7FAFC); color: var(--text-primary, #071B2A);
+}
+
+.dv-header {
+    background: #0B2233;
+    padding: 0 clamp(16px, 4vw, 64px);
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.dv-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.dv-logo-mark {
+    width: 36px; height: 36px; border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.dv-logo-mark span { font-weight: 800; font-size: 19px; color: #fff; }
+.dv-logo-text { color: #fff; font-weight: 800; letter-spacing: .04em; font-size: 15px; }
+.dv-nav { display: flex; gap: 22px; }
+.dv-nav a { color: rgba(255,255,255,.72); text-decoration: none; font-size: 14px; }
+.dv-nav a:hover { color: #fff; }
+.dv-cta {
+    background: #FF6A00; color: #fff; text-decoration: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+@media (max-width: 860px) { .dv-nav { display: none; } }
+
+.dv-wrap { max-width: 940px; margin: 0 auto; padding: clamp(24px, 5vw, 48px) clamp(16px, 4vw, 32px) 64px; }
+.dv-h1 { font-size: clamp(24px, 4vw, 34px); line-height: 1.2; margin-bottom: 12px; }
+.dv-lead { font-size: 16px; line-height: 1.6; color: var(--text-secondary); max-width: 640px; }
+
+.dv-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: clamp(16px, 3vw, 24px); margin-top: 28px;
+}
+.dv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.dv-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+@media (max-width: 640px) { .dv-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dv-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
+.dv-field input {
+    width: 100%; padding: 10px 12px; font-family: inherit; font-size: 14px;
+    background: var(--input-bg, transparent); color: var(--text-primary);
+    border: 1px solid var(--input-border, var(--card-border)); border-radius: 8px;
+}
+.dv-doors { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+.dv-doors label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.dv-submit {
+    margin-top: 18px; width: 100%; padding: 12px 20px;
+    background: #FF6A00; color: #fff; border: none; border-radius: 8px;
+    font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.dv-submit[disabled] { opacity: .6; cursor: default; }
+.dv-result { margin-top: 18px; }
+
+.dv-section { margin-top: 44px; }
+.dv-section h2 { font-size: clamp(19px, 3vw, 23px); margin-bottom: 12px; }
+.dv-section p { font-size: 15px; line-height: 1.65; color: var(--text-secondary); margin-bottom: 12px; max-width: 720px; }
+.dv-section li { font-size: 15px; line-height: 1.65; color: var(--text-secondary); margin: 0 0 8px 20px; }
+
+.dv-next {
+    margin-top: 44px; padding: clamp(18px, 3vw, 26px);
+    border: 1px solid var(--card-border); border-radius: 12px; background: var(--card-bg);
+}
+.dv-next h2 { font-size: 20px; margin-bottom: 10px; }
+.dv-next p { font-size: 15px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; max-width: 640px; }
+.dv-next a {
+    display: inline-block; background: #FF6A00; color: #fff; text-decoration: none;
+    padding: 11px 22px; border-radius: 8px; font-weight: 600; font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<header class="dv-header">
+  <a href="/" class="dv-logo">
+    <span class="dv-logo-mark"><span>Т</span></span>
+    <span class="dv-logo-text">ТЕХЗАКАЗ</span>
+  </a>
+  <nav class="dv-nav">
+    <a href="/zakupki">Закупки</a>
+    <a href="/map">Карта предприятий</a>
+    <a href="/dlya-postavshchikov">Для поставщиков</a>
+  </nav>
+  <a href="/zayavka" class="dv-cta">Разместить закупку</a>
+</header>
+
+<main class="dv-wrap">
+
+  <h1 class="dv-h1">Расчёт доставки промышленного груза</h1>
+  <p class="dv-lead">
+    Станок, партия изделий, металлопрокат, оснастка — сравните, во что обойдётся перевозка
+    у разных транспортных компаний. Считаем по публичным тарифам ПЭК и Деловых Линий:
+    наземная доставка, экспресс и авиа, с забором от двери и без.
+  </p>
+
+  <section class="dv-card">
+    <div class="dv-grid">
+      <div class="dv-field">
+        <label for="dvFrom">Откуда</label>
+        <input type="text" id="dvFrom" placeholder="Начните вводить: Москва" autocomplete="off">
+      </div>
+      <div class="dv-field">
+        <label for="dvTo">Куда</label>
+        <input type="text" id="dvTo" placeholder="Начните вводить: Екатеринбург" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="dv-grid-3">
+      <div class="dv-field">
+        <label for="dvLength">Длина, м</label>
+        <input type="number" id="dvLength" min="0" step="0.01" placeholder="1,2">
+      </div>
+      <div class="dv-field">
+        <label for="dvWidth">Ширина, м</label>
+        <input type="number" id="dvWidth" min="0" step="0.01" placeholder="0,8">
+      </div>
+      <div class="dv-field">
+        <label for="dvHeight">Высота, м</label>
+        <input type="number" id="dvHeight" min="0" step="0.01" placeholder="0,6">
+      </div>
+      <div class="dv-field">
+        <label for="dvWeight">Вес одного места, кг</label>
+        <input type="number" id="dvWeight" min="0" step="0.1" placeholder="500">
+      </div>
+      <div class="dv-field">
+        <label for="dvPlaces">Количество мест</label>
+        <input type="number" id="dvPlaces" min="1" step="1" value="1">
+      </div>
+    </div>
+
+    <div class="dv-doors">
+      <label><input type="checkbox" id="dvDoorFrom" checked> Забор от адреса отправителя</label>
+      <label><input type="checkbox" id="dvDoorTo" checked> Доставка до адреса получателя</label>
+    </div>
+
+    <button type="button" class="dv-submit" id="dvSubmit">Рассчитать</button>
+    <div class="dv-result" id="dvResult"></div>
+  </section>
+
+  <section class="dv-section">
+    <h2>Что считается сборным грузом</h2>
+    <p>
+      Сборная перевозка — это когда ваш груз едет в одной машине с чужими. Так возят почти всё,
+      что не заполняет фуру целиком: узлы и агрегаты, партии деталей, оснастку, метизы, рулоны и
+      листы металла. Платите за занятый объём и вес, а не за машину, поэтому для партии в
+      несколько мест это обычно дешевле отдельного транспорта в разы.
+    </p>
+    <p>
+      Перевозчик считает по большему из двух: фактическому весу и объёмному. Один кубометр
+      приравнивается к определённой массе, и лёгкий габаритный груз тарифицируется по объёму.
+      Поэтому в форме выше нужны все три размера, а не только вес.
+    </p>
+  </section>
+
+  <section class="dv-section">
+    <h2>Терминал или дверь</h2>
+    <p>
+      Забор от адреса и доставка до адреса — отдельные услуги, и на маршруте Москва — Екатеринбург
+      они добавляют к перевозке несколько тысяч рублей. Если у вас есть чем подъехать на терминал,
+      снимите галочки в форме и сравните: цифра меняется заметно.
+    </p>
+    <p>
+      Терминал-терминал имеет смысл, когда груз забирает сам получатель или у отправителя есть
+      своя машина. Дверь-дверь — когда важнее не трогать логистику руками.
+    </p>
+  </section>
+
+  <section class="dv-section">
+    <h2>Что расчёт не учитывает</h2>
+    <ul>
+      <li>Обрешётку и жёсткую упаковку — для станков и хрупкого их обычно требуют отдельно.</li>
+      <li>Негабарит: если одна сторона выходит за пределы, тариф считается по особым правилам.</li>
+      <li>Класс и характер груза — опасный, температурный, требующий разрешений.</li>
+      <li>Погрузочные работы, если на адресе нет ни рампы, ни техники.</li>
+    </ul>
+    <p>
+      Поэтому цифры выше — ориентир для сравнения перевозчиков между собой, а не счёт.
+      Итоговую стоимость подтверждает транспортная компания. ТехЗаказ грузы не возит и стороной
+      перевозки не является.
+    </p>
+  </section>
+
+  <section class="dv-next">
+    <h2>Ищете, кто изготовит?</h2>
+    <p>
+      Мы площадка прямых закупок: заказчики размещают чертёж или техническое задание, а профильные
+      заводы отвечают коммерческими предложениями. Доставка — только часть сделки, и в кабинете
+      она считается автоматически, по габаритам из предложения завода.
+    </p>
+    <a href="/zayavka">Разместить закупку</a>
+  </section>
+
+</main>
+
+<script src="/assets/city-suggest.js?v=1"></script>
+<script src="/assets/delivery-quotes.js?v=1"></script>
+<script>
+(function () {
+    const $ = (id) => document.getElementById(id);
+    const host = window.location.hostname;
+    const isLocal = window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1';
+    const API = isLocal ? 'http://localhost:5000/api' : '/api';
+
+    attachCitySuggest($('dvFrom'));
+    attachCitySuggest($('dvTo'));
+
+    function say(html) { $('dvResult').innerHTML = html; }
+
+    async function calculate() {
+        const payload = {
+            from: $('dvFrom').value.trim(),
+            to: $('dvTo').value.trim(),
+            length: $('dvLength').value,
+            width: $('dvWidth').value,
+            height: $('dvHeight').value,
+            weight: $('dvWeight').value,
+            places: $('dvPlaces').value || 1,
+            doorFrom: $('dvDoorFrom').checked,
+            doorTo: $('dvDoorTo').checked,
+        };
+
+        // Города проверяем до запроса: иначе человек ждёт ответа сервера, чтобы
+        // узнать то, что видно сразу.
+        if (!payload.from || !payload.to) {
+            say('<div style="font-size:13px;color:var(--text-secondary);">Укажите город отправления и получения.</div>');
+            return;
+        }
+
+        const btn = $('dvSubmit');
+        btn.disabled = true;
+        say('<div style="font-size:13px;color:var(--text-secondary);">Считаем у перевозчиков…</div>');
+
+        try {
+            const res = await fetch(`${API}/logistics/public-quote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            // maxWidth снимаем: на своей странице блок не зажат ячейкой таблицы.
+            say(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%' }));
+        } catch {
+            say('<div style="font-size:13px;color:var(--text-secondary);">Не удалось связаться с сервером. Попробуйте ещё раз.</div>');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    $('dvSubmit').addEventListener('click', calculate);
+    // Enter в любом поле формы считает: иначе приходится тянуться к кнопке.
+    document.querySelectorAll('.dv-card input').forEach((input) => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !document.querySelector('.city-suggest-list[style*="block"]')) calculate();
+        });
+    });
+})();
+</script>
+
+<!-- legal-footer:start -->
+<footer class="tz-footer">
+  <div class="tz-footer-inner">
+    <div class="tz-footer-req">
+      <div class="tz-footer-org">ИП Лапшина Диана Николаевна</div>
+      <div class="tz-footer-line">ИНН 650112190630 · ОГРНИП 326650000001066</div>
+      <div class="tz-footer-line">Сахалинская обл., г. Южно-Сахалинск</div>
+      <div class="tz-footer-line"><a href="mailto:info.texzakaz@yandex.com">info.texzakaz@yandex.com</a></div>
+    </div>
+    <div class="tz-footer-links">
+      <a href="/privacy">Политика обработки персональных данных</a>
+      <a href="/terms">Условия использования</a>
+    </div>
+    <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
+  </div>
+  <div class="tz-cookie" id="tzCookie" hidden>
+    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
+    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+  </div>
+  <script>
+    (function () {
+      try {
+        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
+      } catch (e) { /* приватный режим — плашку не показываем */ }
+    })();
+    function tzCookieAccept() {
+      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
+      document.getElementById('tzCookie').hidden = true;
+    }
+  </script>
+  <style>
+    /* Фолбэки в var() обязательны: tokens.css приходит только через @import в theme-v2.css,
+       а его грузят не все страницы с футером (landing, login, zakupki/*). Значения — светлая тема. */
+    /* color-scheme + явные цвета — страховка от принудительного тёмного режима
+       браузера и тёмных расширений: они перекрашивают текст по своим правилам и
+       на белом футере дают белым по белому. Реквизиты и ссылку на политику
+       обязаны видеть все, поэтому здесь цвета не зависят от переменных темы. */
+    /* position + z-index обязательны: без собственного контекста наложения
+       WebKit (Safari на iPhone, Яндекс.Браузер) футер не отрисовывал — блок
+       занимал место и ловил клики, поэтому по невидимой ссылке можно было
+       уйти в политику, но на экране была пустая полоса. Chromium на десктопе
+       рисовал нормально, из-за чего ошибка ловилась только на устройствах. */
+    .tz-footer { position: relative; z-index: 1; grid-column: 1 / -1; color-scheme: light; border-top: 1px solid var(--inner-border, #E2E8F0); background: var(--card-bg, #FFFFFF); padding: 28px 32px; margin-top: 48px; }
+    :root:not([data-theme="dark"]) .tz-footer { background: #FFFFFF; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-inner,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-line,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-copy,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-links a,
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-req a,
+    :root:not([data-theme="dark"]) .tz-cookie { color: #64748B; }
+    :root:not([data-theme="dark"]) .tz-footer .tz-footer-org { color: #0F172A; }
+    .tz-footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 13px; color: var(--text-secondary, #64748B); }
+    .tz-footer-org { font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; }
+    .tz-footer-line { line-height: 1.7; }
+    .tz-footer-links { display: flex; flex-direction: column; gap: 6px; }
+    .tz-footer-links a, .tz-footer-req a { color: var(--text-secondary, #64748B); text-decoration: none; border-bottom: 1px solid var(--inner-border, #E2E8F0); }
+    .tz-footer-links a:hover, .tz-footer-req a:hover { color: var(--accent-bright, #FF6A00); border-bottom-color: var(--accent-bright, #FF6A00); }
+    .tz-footer-copy { align-self: flex-end; }
+    /* Плашка в потоке футера, а не fixed поверх страницы: на узких экранах
+       фиксированная перекрывала кнопку входа через Яндекс на login и съедала клик. */
+    .tz-cookie { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; max-width: 780px; margin: 20px auto 0; padding: 14px 18px; font-size: 13px; background: var(--card-bg, #FFFFFF); color: var(--text-secondary, #64748B); border: 1px solid var(--inner-border, #E2E8F0); border-radius: 3px; box-shadow: 3px 3px 0 var(--inner-border, #E2E8F0); }
+    /* Авторский display:flex выше перебивает UA-правило [hidden]{display:none} — без этого плашка неснимаемая. */
+    .tz-cookie[hidden] { display: none !important; }
+    .tz-cookie a { color: var(--accent-bright, #FF6A00); }
+    .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .tz-cookie button:active { transform: translate(1px, 1px); }
+    @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
+  </style>
+</footer>
+<!-- legal-footer:end -->
+</body>
+</html>

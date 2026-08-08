@@ -16,7 +16,7 @@ const express = require('express');
 const { quoteAll } = require('../lib/logistics');
 const { resolveCity, suggestCities, fillDellinCode } = require('../lib/logistics/geo');
 const { findCityCode } = require('../lib/logistics/dellin');
-const { isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
+const { parseCargo, isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
 
 function cargoOf(row) {
     return {
@@ -36,8 +36,8 @@ async function pointFor(pool, city, who) {
     const found = await resolveCity(pool, city);
     if (found.status === 'ok') return { point: found.point };
     if (found.status === 'ambiguous') {
-        const names = found.candidates.map((c) => (c.qualifier ? `${c.name}` : c.name)).slice(0, 3);
-        return { error: `Городов с названием «${city}» несколько (${names.join(', ')}) — уточните в профиле`, candidates: found.candidates };
+        const names = found.candidates.map((c) => c.name).slice(0, 3);
+        return { error: `Городов с названием «${city}» несколько (${names.join(', ')}) — уточните район`, candidates: found.candidates };
     }
     return { error: `Город «${city}» не найден в справочниках перевозчиков` };
 }
@@ -60,6 +60,70 @@ function createLogisticsRouter(deps) {
         try {
             const found = await suggestCities(pool, req.query.q || '', 10);
             res.json(found.map((c) => ({ id: c.id, name: c.name, qualifier: c.qualifier })));
+        } catch (e) { next(e); }
+    });
+
+    /* Публичный расчёт по произвольному маршруту — для страницы /dostavka.
+     *
+     * Отдельно от /quote, а не флагом в нём: у того другая модель доступа
+     * (проверка прав на конкретное КП), и смешивать их — верный способ однажды
+     * открыть чужие данные. Здесь никакого доступа к нашим данным нет вовсе:
+     * на входе город и коробка, на выходе чужие тарифы.
+     *
+     * POST, а не GET: расчёт не должен индексироваться как ссылка и собираться
+     * ботами обходом параметров. Потолок запросов навешен на путь в server.js.
+     */
+    router.post('/public-quote', async (req, res, next) => {
+        try {
+            const body = req.body || {};
+            // Габариты проверяем тем же модулем, что и КП: те же границы
+            // (20 тонн, 20 метров), тот же разбор запятой в дробных.
+            const cargo = parseCargo({
+                cargoWeight: body.weight,
+                cargoLength: body.length,
+                cargoWidth: body.width,
+                cargoHeight: body.height,
+                cargoPlaces: body.places,
+            });
+            if (!isCargoComplete(cargo)) {
+                return res.status(422).json({ error: 'Укажите вес и все три габарита одного места', reason: 'no_cargo' });
+            }
+
+            const from = await pointFor(pool, body.from, 'Город отправления');
+            if (from.error) return res.status(422).json({ error: from.error, reason: 'from_city', candidates: from.candidates });
+            const to = await pointFor(pool, body.to, 'Город получения');
+            if (to.error) return res.status(422).json({ error: to.error, reason: 'to_city', candidates: to.candidates });
+
+            if (from.point.id === to.point.id) {
+                return res.status(422).json({ error: 'Города отправления и получения совпадают', reason: 'same_city' });
+            }
+
+            await Promise.all([
+                fillDellinCode(pool, from.point, dellinLookup),
+                fillDellinCode(pool, to.point, dellinLookup),
+            ]);
+
+            const doorFrom = body.doorFrom !== false;
+            const doorTo = body.doorTo !== false;
+
+            const result = await quoteCarriers(pool, {
+                from: from.point,
+                to: to.point,
+                places: cargoToPlaces(cargo),
+                insurance: 0,
+                doorFrom,
+                doorTo,
+            });
+
+            res.json({
+                from: { name: from.point.name },
+                to: { name: to.point.name },
+                cargo,
+                doorFrom,
+                doorTo,
+                quotes: result.quotes,
+                failed: result.failed,
+            });
         } catch (e) { next(e); }
     });
 

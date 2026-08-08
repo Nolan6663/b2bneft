@@ -13,6 +13,7 @@ const PUBLIC_PAGES = [
     'catalog.html', 'map.html', 'supplier-public.html', 'dlya-postavshchikov.html',
     'partners.html', 'tariff.html', 'delivery.html', 'privacy.html', 'terms.html',
     'login.html', '404.html', 'zayavka.html', 'zavod.html',
+    'dostavka.html',
 ];
 
 // Мягкая цветная тень — маркер генерённого интерфейса. Hairline `0 1px 3px` это

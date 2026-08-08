@@ -133,11 +133,21 @@
             else if (e.key === 'Escape') close();
         });
 
+        /* Выбор делаем на click, а закрытие поля от потери фокуса — через
+           preventDefault на mousedown.
+           Раньше выбор происходил прямо на mousedown, и список исчезал между
+           нажатием и отпусканием кнопки: элемент, по которому шёл клик,
+           переставал существовать на середине жеста. Живой браузер такой клик
+           доводит, а всё, что проверяет состояние между шагами, спотыкается.
+           preventDefault не даёт полю потерять фокус, поэтому список доживает
+           до click, и жест остаётся целым. */
         list.addEventListener('mousedown', (e) => {
-            // mousedown, а не click: blur поля срабатывает раньше клика и успел
-            // бы закрыть список.
+            if (e.target.closest('[data-i]')) e.preventDefault();
+        });
+
+        list.addEventListener('click', (e) => {
             const target = e.target.closest('[data-i]');
-            if (target) { e.preventDefault(); pick(Number(target.dataset.i)); }
+            if (target) pick(Number(target.dataset.i));
         });
 
         input.addEventListener('blur', () => setTimeout(close, 120));
