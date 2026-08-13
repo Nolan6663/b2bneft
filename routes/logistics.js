@@ -14,8 +14,9 @@
 
 const express = require('express');
 const { quoteAll } = require('../lib/logistics');
-const { resolveCity, suggestCities, fillDellinCode } = require('../lib/logistics/geo');
+const { resolveCity, suggestCities, fillDellinCode, fillVozovozGuid } = require('../lib/logistics/geo');
 const { findCityCode } = require('../lib/logistics/dellin');
+const { findCityGuid } = require('../lib/logistics/vozovoz');
 const { parseCargo, isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
 
 function cargoOf(row) {
@@ -49,6 +50,7 @@ function createLogisticsRouter(deps) {
         pool, requireAuth, optionalAuth, canAccessProposal,
         quoteAll: quoteCarriers = quoteAll,
         dellinLookup = findCityCode,
+        vozovozLookup = findCityGuid,
     } = deps;
     const router = express.Router();
 
@@ -101,6 +103,8 @@ function createLogisticsRouter(deps) {
             await Promise.all([
                 fillDellinCode(pool, from.point, dellinLookup),
                 fillDellinCode(pool, to.point, dellinLookup),
+                fillVozovozGuid(pool, from.point, vozovozLookup),
+                fillVozovozGuid(pool, to.point, vozovozLookup),
             ]);
 
             const doorFrom = body.doorFrom !== false;
@@ -160,11 +164,13 @@ function createLogisticsRouter(deps) {
             const to = await pointFor(pool, cityOf(proposal.order_company), 'Заказчик');
             if (to.error) return res.status(422).json({ error: to.error, reason: 'to_city' });
 
-            // Код Деловых Линий добывается их же поиском при первом расчёте по
-            // городу и запоминается. Не нашёлся — считаем без них.
+            // Коды Деловых Линий и Возовоза добываются их же поиском при первом
+            // расчёте по городу и запоминаются. Не нашёлся — считаем без них.
             await Promise.all([
                 fillDellinCode(pool, from.point, dellinLookup),
                 fillDellinCode(pool, to.point, dellinLookup),
+                fillVozovozGuid(pool, from.point, vozovozLookup),
+                fillVozovozGuid(pool, to.point, vozovozLookup),
             ]);
 
             // Забор и доставка по умолчанию включены — это то, чего ждёт

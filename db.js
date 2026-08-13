@@ -298,6 +298,10 @@ async function initDb() {
             updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
         CREATE INDEX IF NOT EXISTS logistics_cities_key ON logistics_cities (search_key);
+        -- Коды перевозчиков, добываемые лениво их же поиском (см. fillCarrierCode
+        -- в lib/logistics/geo.js). Отдельной колонкой на каждого: справочники
+        -- несовместимы, у Возовоза это guid их внутреннего реестра.
+        ALTER TABLE logistics_cities ADD COLUMN IF NOT EXISTS vozovoz_guid TEXT;
         -- Кэш расчётов. Тарифы меняются редко, а маршрут в карточке КП
         -- открывают многократно — незачем дёргать чужой публичный API на каждый
         -- показ. Ключ считается от нормализованного запроса (lib/logistics/index.js),

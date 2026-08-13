@@ -1,0 +1,120 @@
+{
+  "response": {
+    "data": [
+      {
+        "guid": "e90f1820-0128-11e5-80c7-00155d903d03",
+        "name": "Москва",
+        "type": "г",
+        "coordinates": "37.617815,55.755773",
+        "country": "RU",
+        "fias": "0c5b2444-70a0-4932-980c-b4dc0d3f02b5",
+        "region_str": "Город федерального значения",
+        "default_terminal": {
+          "guid": "0f807fbb-f367-11eb-a8b9-7cfe909e8460",
+          "name": "Дмитровское ш. 31 А, стр. 1 (д. Грибки)"
+        }
+      },
+      {
+        "guid": "f6cbd773-7177-11ee-b19d-0cc47a3455a3",
+        "name": "Москва",
+        "type": "г",
+        "coordinates": "37.419072,55.646233",
+        "country": "RU",
+        "fias": "de2051a4-62ac-4bde-a44a-7da129440a85",
+        "region_str": "Москва г, Московский п, Город федерального значения",
+        "default_terminal": {
+          "guid": "0f807fbb-f367-11eb-a8b9-7cfe909e8460",
+          "location_guid": "e90f1820-0128-11e5-80c7-00155d903d03",
+          "name": "Дмитровское ш. 31 А, стр. 1 (д. Грибки)",
+          "location_country": "RU",
+          "location_name": "Москва г"
+        }
+      },
+      {
+        "guid": "5305bf65-0126-11e5-80c7-00155d903d03",
+        "name": "Москва",
+        "type": "д",
+        "coordinates": "49.10742,57.966448",
+        "country": "RU",
+        "fias": "f1c72b9d-a2d7-45b7-b9f5-2222c12d5164",
+        "region_str": "Кировская обл, Верхошижемский р-н",
+        "default_terminal": {
+          "guid": "52c95a3a-65ee-11e5-80d2-00155d903d03",
+          "location_guid": "5305bd4a-0126-11e5-80c7-00155d903d03",
+          "name": "Ивана Попова ул. 71",
+          "location_country": "RU",
+          "location_name": "Киров г"
+        }
+      },
+      {
+        "guid": "b07fd5aa-72fa-11ee-b19d-0cc47a3455a3",
+        "name": "Москва",
+        "type": "тер. СНТ",
+        "coordinates": "39.004302,55.51224",
+        "country": "RU",
+        "fias": "41a0e32e-f8da-4249-b8ba-aca40751f0be",
+        "region_str": "Московская обл, Орехово-Зуево г",
+        "default_terminal": {
+          "guid": "0f807fbb-f367-11eb-a8b9-7cfe909e8460",
+          "location_guid": "e90f1820-0128-11e5-80c7-00155d903d03",
+          "name": "Дмитровское ш. 31 А, стр. 1 (д. Грибки)",
+          "location_country": "RU",
+          "location_name": "Москва г"
+        }
+      },
+      {
+        "guid": "6701c620-72fb-11ee-b19d-0cc47a3455a3",
+        "name": "Москва",
+        "type": "снт",
+        "coordinates": "38.240617,56.293242",
+        "country": "RU",
+        "fias": "35946dea-7662-49d3-8f31-790a010c3c3c",
+        "region_str": "Московская обл, Сергиев Посад г",
+        "default_terminal": {
+          "guid": "0f807fbb-f367-11eb-a8b9-7cfe909e8460",
+          "location_guid": "e90f1820-0128-11e5-80c7-00155d903d03",
+          "name": "Дмитровское ш. 31 А, стр. 1 (д. Грибки)",
+          "location_country": "RU",
+          "location_name": "Москва г"
+        }
+      },
+      {
+        "guid": "ca405d3a-0127-11e5-80c7-00155d903d03",
+        "name": "Москва",
+        "type": "д",
+        "coordinates": "29.185545,57.448671",
+        "country": "RU",
+        "fias": "26a25efa-4f63-4d4b-8db6-dfc29cdaab24",
+        "region_str": "Псковская обл, Порховский р-н",
+        "default_terminal": {
+          "guid": "fc1d7417-c2aa-11ea-bbde-00155db5c401",
+          "location_guid": "e90f19de-0128-11e5-80c7-00155d903d03",
+          "name": "1-ый Бадаевский проезд 11(прием груза)",
+          "location_country": "RU",
+          "location_name": "Санкт-Петербург г"
+        }
+      },
+      {
+        "guid": "71806a28-0128-11e5-80c7-00155d903d03",
+        "name": "Москва",
+        "type": "д",
+        "coordinates": "32.16479,56.916389",
+        "country": "RU",
+        "fias": "3605e660-e90e-47d3-b58e-068f24e68145",
+        "region_str": "Тверская обл, Пено пгт.",
+        "default_terminal": {
+          "guid": "fc1d7417-c2aa-11ea-bbde-00155db5c401",
+          "location_guid": "e90f19de-0128-11e5-80c7-00155d903d03",
+          "name": "1-ый Бадаевский проезд 11(прием груза)",
+          "location_country": "RU",
+          "location_name": "Санкт-Петербург г"
+        }
+      }
+    ],
+    "meta": {
+      "limit": 20,
+      "offset": 0,
+      "total": 320247
+    }
+  }
+}

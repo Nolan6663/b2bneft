@@ -1,0 +1,331 @@
+{
+  "response": {
+    "data": [
+      {
+        "guid": "bce296fe-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "п",
+        "coordinates": "85.839002,51.927663",
+        "country": "RU",
+        "fias": "bbef2de4-9ff9-4ca1-974b-9483841a9d23",
+        "region_str": "Алтай Респ, Майминский р-н",
+        "default_terminal": {
+          "guid": "402b26b3-f19f-11ea-aefc-506b4b6ad201",
+          "location_guid": "3a564c7c-0125-11e5-80c7-00155d903d03",
+          "name": "Власихинская ул.д.141 А корп. 2",
+          "location_country": "RU",
+          "location_name": "Барнаул г"
+        }
+      },
+      {
+        "guid": "990b2f75-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "56.074493,54.127022",
+        "country": "RU",
+        "fias": "83b2ac8c-e12a-4395-a81f-e143857df314",
+        "region_str": "Башкортостан Респ, Аургазинский р-н",
+        "default_terminal": {
+          "guid": "42572fd0-ddc4-11e8-812f-00155d903d0c",
+          "location_guid": "9311232b-0124-11e5-80c7-00155d903d03",
+          "name": "Трамвайная ул. 16/1",
+          "location_country": "RU",
+          "location_name": "Уфа г"
+        }
+      },
+      {
+        "guid": "990b30da-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "53.929029,55.263316",
+        "country": "RU",
+        "fias": "5e15df11-1663-4535-bc4e-d9d0b9f0c665",
+        "region_str": "Башкортостан Респ, Бакалинский р-н",
+        "default_terminal": {
+          "guid": "42572fd0-ddc4-11e8-812f-00155d903d0c",
+          "location_guid": "9311232b-0124-11e5-80c7-00155d903d03",
+          "name": "Трамвайная ул. 16/1",
+          "location_country": "RU",
+          "location_name": "Уфа г"
+        }
+      },
+      {
+        "guid": "9f048245-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "54.012222,53.556342",
+        "country": "RU",
+        "fias": "9b3afdf7-fa8c-42e4-aedd-f623b03dbd43",
+        "region_str": "Башкортостан Респ, Бижбулякский р-н",
+        "default_terminal": {
+          "guid": "42572fd0-ddc4-11e8-812f-00155d903d0c",
+          "location_guid": "9311232b-0124-11e5-80c7-00155d903d03",
+          "name": "Трамвайная ул. 16/1",
+          "location_country": "RU",
+          "location_name": "Уфа г"
+        }
+      },
+      {
+        "guid": "a4fe3d52-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "56.615198,55.646386",
+        "country": "RU",
+        "fias": "1147fb35-876c-405c-a80b-2654c85caa88",
+        "region_str": "Башкортостан Респ, Караидельский р-н",
+        "default_terminal": {
+          "guid": "42572fd0-ddc4-11e8-812f-00155d903d0c",
+          "location_guid": "9311232b-0124-11e5-80c7-00155d903d03",
+          "name": "Трамвайная ул. 16/1",
+          "location_country": "RU",
+          "location_name": "Уфа г"
+        }
+      },
+      {
+        "guid": "aaf791a2-0124-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "55.024569,53.55157",
+        "country": "RU",
+        "fias": "d61d598f-417b-4bb5-b689-2451974700e2",
+        "region_str": "Башкортостан Респ, Миякинский р-н",
+        "default_terminal": {
+          "guid": "42572fd0-ddc4-11e8-812f-00155d903d0c",
+          "location_guid": "9311232b-0124-11e5-80c7-00155d903d03",
+          "name": "Трамвайная ул. 16/1",
+          "location_country": "RU",
+          "location_name": "Уфа г"
+        }
+      },
+      {
+        "guid": "99e3e58c-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "х",
+        "coordinates": "37.725092,50.237641",
+        "country": "RU",
+        "fias": "4fdaf51a-0ef1-4010-b1c5-19fe239b91eb",
+        "region_str": "Белгородская обл, Валуйский р-н",
+        "default_terminal": {
+          "guid": "199a8cf7-5700-11f0-ae6c-ac1f6b447939",
+          "location_guid": "99e3e4e3-0125-11e5-80c7-00155d903d03",
+          "name": "Коммунальная ул. 18",
+          "location_country": "RU",
+          "location_name": "Белгород г"
+        }
+      },
+      {
+        "guid": "a5d6e815-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "с",
+        "coordinates": "34.5376,52.691957",
+        "country": "RU",
+        "fias": "9f150107-b05e-4ee4-922c-297377e5d152",
+        "region_str": "Брянская обл, Брасовский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "9fdd33a1-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "34.300067,53.385353",
+        "country": "RU",
+        "fias": "92d9069d-444a-446b-a422-8ad1965b2e51",
+        "region_str": "Брянская обл, Брянский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "a5d6e8d0-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "п",
+        "coordinates": "32.10948,52.965316",
+        "country": "RU",
+        "fias": "a18e1061-ffa0-4ed8-b64c-99dcf8789506",
+        "region_str": "Брянская обл, Гордеевский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "a5d6e914-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "рп",
+        "coordinates": "33.504726,53.690408",
+        "country": "RU",
+        "fias": "da6eaaf7-128f-443d-b6d2-939248770519",
+        "region_str": "Брянская обл, Дубровский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "a5d6e937-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "33.508786,53.667614",
+        "country": "RU",
+        "fias": "9643740d-44f5-4795-abe5-8dcba585250b",
+        "region_str": "Брянская обл, Дубровский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "abcfb674-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "32.002976,52.447225",
+        "country": "RU",
+        "fias": "7958e057-2397-432e-b2b1-18610e99854c",
+        "region_str": "Брянская обл, Новозыбковский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "abcfb779-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "п",
+        "coordinates": "33.288169,52.893728",
+        "country": "RU",
+        "fias": "753215c7-7756-4b00-b4aa-c376353e116b",
+        "region_str": "Брянская обл, Почепский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "abcfb8ad-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "33.809255,53.864437",
+        "country": "RU",
+        "fias": "4192615f-798c-4510-bdea-2d2cdb06582f",
+        "region_str": "Брянская обл, Рогнединский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "b1c88a3c-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "с",
+        "coordinates": "32.454739,53.091266",
+        "country": "RU",
+        "fias": "f079b10c-d9fe-49dc-9dfa-668d3e5bf70a",
+        "region_str": "Брянская обл, Суражский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "b1c88b42-0125-11e5-80c7-00155d903d03",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "33.054849,52.925938",
+        "country": "RU",
+        "fias": "94f1d77a-e03e-40ca-9736-9e0abe0385f3",
+        "region_str": "Брянская обл, Унечский р-н",
+        "default_terminal": {
+          "guid": "cf78d296-6ba8-11f1-9030-9e69507ca4e5",
+          "location_guid": "9fdd3375-0125-11e5-80c7-00155d903d03",
+          "name": "Московский проезд 7",
+          "location_country": "RU",
+          "location_name": "Брянск г"
+        }
+      },
+      {
+        "guid": "df48b0db-be8f-11e9-bbac-00155d069401",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "29.5129076,55.0068792",
+        "country": "BY",
+        "fias": "relation:7469385",
+        "region_str": "Республика Беларусь, Витебская обл, Бешенковичский р-н",
+        "default_terminal": {
+          "guid": "4e466b59-37a7-11ef-b1a1-0cc47a3455a3",
+          "location_guid": "e54159f6-be8f-11e9-bbac-00155d069401",
+          "name": "Промышленный пер.12",
+          "location_country": "BY",
+          "location_name": "Минск г"
+        }
+      },
+      {
+        "guid": "e9c4e2ba-b18e-11eb-af00-506b4b6ad201",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "26.9340129,55.3538265",
+        "country": "BY",
+        "fias": "relation:7471245",
+        "region_str": "Республика Беларусь, Витебская обл, Браславский р-н",
+        "default_terminal": {
+          "guid": "4e466b59-37a7-11ef-b1a1-0cc47a3455a3",
+          "location_guid": "e54159f6-be8f-11e9-bbac-00155d069401",
+          "name": "Промышленный пер.12",
+          "location_country": "BY",
+          "location_name": "Минск г"
+        }
+      },
+      {
+        "guid": "e9c4e2bb-b18e-11eb-af00-506b4b6ad201",
+        "name": "Дубровка",
+        "type": "д",
+        "coordinates": "27.42788,54.8689",
+        "country": "BY",
+        "fias": "relation:7483449",
+        "region_str": "Республика Беларусь, Витебская обл, Докшицкий р-н",
+        "default_terminal": {
+          "guid": "4e466b59-37a7-11ef-b1a1-0cc47a3455a3",
+          "location_guid": "e54159f6-be8f-11e9-bbac-00155d069401",
+          "name": "Промышленный пер.12",
+          "location_country": "BY",
+          "location_name": "Минск г"
+        }
+      }
+    ],
+    "meta": {
+      "limit": 20,
+      "offset": 0,
+      "total": 320247
+    }
+  }
+}
