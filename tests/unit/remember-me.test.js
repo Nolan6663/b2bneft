@@ -32,11 +32,12 @@ function setCookies(res) {
     return out;
 }
 
-function authApp({ tokenRows } = {}) {
+function authApp({ tokenRows, sessionRows } = {}) {
     const pool = fakePool([
         { match: /SELECT \* FROM users WHERE LOWER\(email\)/i, rows: [USER] },
         { match: /INSERT INTO refresh_tokens/i, rows: [] },
         { match: /SELECT \* FROM refresh_tokens/i, rows: tokenRows || [] },
+        { match: /FROM refresh_tokens\s+WHERE user_id/i, rows: sessionRows || [] },
         { match: /SELECT \* FROM users WHERE id/i, rows: [USER] },
         { match: /UPDATE refresh_tokens SET last_used_at/i, rows: [] },
     ]);
@@ -44,7 +45,7 @@ function authApp({ tokenRows } = {}) {
         pool, crypto,
         speakeasy: { totp: { verify: () => true } },
         QRCode: { toDataURL: async () => '' },
-        requireAuth: (req, res, next) => next(),
+        requireAuth: (req, res, next) => { req.user = USER; next(); },
         withTransaction: async (fn) => fn(pool),
         sendEmail: async () => {},
         sendPush: () => {},
@@ -113,6 +114,36 @@ test('старый клиент без поля remember помнится по-�
         assert.equal(res.json.remembered, true);
         const insert = pool.calls.find(c => /INSERT INTO refresh_tokens/i.test(c.sql));
         assert.equal(insert.params[5], true);
+    } finally { await srv.close(); }
+});
+
+test('в «Активных сессиях» разовый вход назван разовым', async () => {
+    // Куки такой сессии умерли с браузером, а строка живёт до своих 12 часов и
+    // в списке ничем не отличалась от постоянной — человек видел устройство,
+    // которое сам уже закрыл, и не понимал, почему оно «активно».
+    const { router } = authApp({
+        sessionRows: [
+            { id: 1, token: 'a', user_agent: 'Mozilla/5.0', ip: '1.1.1.1', persistent: false },
+            { id: 2, token: 'b', user_agent: 'Mozilla/5.0', ip: '2.2.2.2', persistent: true },
+        ],
+    });
+    const srv = await serve('/api/auth', router);
+    try {
+        const res = await srv.request('/api/auth/sessions');
+        assert.equal(res.status, 200);
+        assert.equal(res.json[0].persistent, false);
+        assert.equal(res.json[1].persistent, true);
+    } finally { await srv.close(); }
+});
+
+test('старые сессии без колонки считаются постоянными, а не разовыми', async () => {
+    // Строки, созданные до этой правки: persistent там NULL/undefined, и
+    // назвать их разовыми значило бы соврать про них в интерфейсе.
+    const { router } = authApp({ sessionRows: [{ id: 3, token: 'c', user_agent: '', ip: '' }] });
+    const srv = await serve('/api/auth', router);
+    try {
+        const res = await srv.request('/api/auth/sessions');
+        assert.equal(res.json[0].persistent, true);
     } finally { await srv.close(); }
 });
 

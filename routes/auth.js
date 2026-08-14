@@ -487,7 +487,7 @@ module.exports = function createAuthRouter(deps) {
         try {
             const current = getRefreshToken(req);
             const { rows } = await pool.query(
-                `SELECT id, token, user_agent, ip, created_at, last_used_at
+                `SELECT id, token, user_agent, ip, created_at, last_used_at, persistent, expires_at
                  FROM refresh_tokens
                  WHERE user_id = $1 AND expires_at > NOW()
                  ORDER BY last_used_at DESC NULLS LAST, created_at DESC`,
@@ -503,6 +503,11 @@ module.exports = function createAuthRouter(deps) {
                     createdAt: r.created_at,
                     lastUsedAt: r.last_used_at,
                     current: Boolean(current && r.token === current),
+                    /* Вход без «запомнить меня». Куки такой сессии умирают с
+                       браузером, но строка живёт до своих 12 часов и в списке
+                       выглядит как обычная — поэтому её надо назвать. */
+                    persistent: r.persistent !== false,
+                    expiresAt: r.expires_at,
                 };
             }));
         } catch (e) { next(e); }

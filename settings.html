@@ -880,7 +880,7 @@
                         ${s.mobile ? mobileSvg : desktopSvg}
                         <div style="flex:1;">
                             <div style="font-size:13.5px;font-weight:600;color:var(--text-primary);">${escapeHtml(s.label)}</div>
-                            <div style="font-size:12px;color:var(--text-secondary);">${s.current ? 'Текущая сессия' : 'Активность: ' + sessionAgo(s.lastUsedAt)}${s.ip ? ' · ' + escapeHtml(s.ip) : ''}</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">${s.current ? 'Текущая сессия' : 'Активность: ' + sessionAgo(s.lastUsedAt)}${s.ip ? ' · ' + escapeHtml(s.ip) : ''}${s.persistent === false ? ' · разовый вход, до закрытия браузера' : ''}</div>
                         </div>
                         ${s.current
                             ? '<span style="font-size:11px;color:var(--accent-green);font-weight:600;">Активна</span>'
