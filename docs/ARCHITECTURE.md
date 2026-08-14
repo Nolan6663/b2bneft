@@ -55,6 +55,8 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `lib/session-renew.js` | продление access-токена сервером по refresh-куке, только GET/HEAD — для прямых ссылок на файлы, которые идут мимо `apiFetch` |
 | `lib/http-errors.js` | `sendHttpError`: переходу браузера — страница с причиной и выходом, `fetch` — прежний JSON. Развилка по `Accept` |
 | `lib/purge-expired.js` | ночная уборка протухших токенов (refresh/reset/verification) — зовётся из крона 05:00 |
+| `lib/companies-cache.js` | общий кэш каталога и карты. Сбрасывается любой записью в `companies`; TTL — страховка от изменений мимо процесса. Класть сюда выдачи, зависящие от пользователя, нельзя |
+| `lib/company-enrich.js` | рейтинг/статистика/фото/избранное для карточек. Считается **пачкой** (`enrichCompanies`), 5 запросов на список любой длины; `enrichCompany` — обёртка над пачкой из одного |
 | `lib/proposal-accept.js` | транзакция «принять КП»: статусы Выигран/Проигран, закрытие заявки, нотификации всем сторонам |
 | `lib/registry-invites.js` | инвайты заводам-заглушкам: matchScore≥2, ≤1 письма/14 дней, ≤20/закупку, opt-out по HMAC-ссылке. Kill switch `REGISTRY_INVITES_ENABLED=0` |
 | `lib/egrul-verify.js` | верификация компаний по ЕГРЮЛ |

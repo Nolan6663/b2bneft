@@ -12,6 +12,7 @@ const {
     verifyPassword,
 } = require('../lib/auth-tokens');
 const { DOC_VERSION } = require('../scripts/legal-data');
+const companiesCache = require('../lib/companies-cache');
 const { OPERATIONS } = require('../seo/operations-data');
 
 const OPERATION_SLUGS = new Set(OPERATIONS.map(o => o.slug));
@@ -218,6 +219,9 @@ module.exports = function createAuthRouter(deps) {
                 if (inviteData) {
                     await client.query('UPDATE invitations SET accepted=true WHERE id=$1', [inviteData.id]);
                 }
+                // Регистрация меняет состав каталога: либо появилась новая
+                // компания, либо стаб из реестра стал живым профилем.
+                companiesCache.invalidate();
                 return u;
             });
 
@@ -400,6 +404,7 @@ module.exports = function createAuthRouter(deps) {
                             "INSERT INTO companies (company,inn,role,specialization,status) VALUES ($1,'','customer','','На проверке')",
                             [company]
                         );
+                        companiesCache.invalidate();
                     }
                     user = u;
                 });

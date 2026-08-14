@@ -3,7 +3,7 @@
 const express = require('express');
 
 function createFavoritesRouter(deps) {
-    const { pool, requireAuth, rowToCompany, enrichCompany, rowToOrder } = deps;
+    const { pool, requireAuth, rowToCompany, enrichCompanies, rowToOrder } = deps;
 
     const router = express.Router();
 
@@ -13,8 +13,7 @@ function createFavoritesRouter(deps) {
                 'SELECT c.* FROM companies c JOIN favorites f ON c.id = f.company_id WHERE f.owner_company = $1',
                 [req.user.company]
             );
-            const enriched = await Promise.all(rows.map(r => enrichCompany(rowToCompany(r), req.user.company)));
-            res.json(enriched);
+            res.json(await enrichCompanies(rows.map(rowToCompany), req.user.company));
         } catch (e) { next(e); }
     });
 

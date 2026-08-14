@@ -1,9 +1,15 @@
 'use strict';
 
-const { test } = require('node:test');
+const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const createPublicRouter = require('../../routes/public');
+const companiesCache = require('../../lib/companies-cache');
 const { fakePool, serve, baseDeps } = require('./helpers');
+
+/* Кэш карты переехал из замыкания роутера в общий модуль (lib/companies-cache):
+   его должны сбрасывать правки профилей, а до них роутер не дотягивался. Плата
+   за это — состояние живёт между тестами, поэтому чистим его руками. */
+beforeEach(() => companiesCache.invalidate());
 
 const ROWS = [
     { id: 1, company: 'ООО Первый', city: 'Казань', role: 'producer', lat: 55.79, lng: 49.11 },

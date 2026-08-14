@@ -1659,7 +1659,7 @@ async function canAccessOrderDrawing(user, orderId) {
     return false;
 }
 
-const { enrichCompany } = createCompanyEnricher({ pool, storage });
+const { enrichCompany, enrichCompanies } = createCompanyEnricher({ pool, storage });
 
 const { createRegistryInviter } = require('./lib/registry-invites');
 const registryInviter = createRegistryInviter({ pool, sendEmail, appUrl: APP_URL, jwtSecret: JWT_SECRET });
@@ -1746,6 +1746,7 @@ const routesDeps = {
     rowToMessage,
     rowToNotification,
     enrichCompany,
+    enrichCompanies,
     geocodeCity,
     computeMatchScore,
     computeMatchReasons,

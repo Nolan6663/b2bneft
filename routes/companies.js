@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { profileCompleteness } = require('../lib/profile-completeness');
+const companiesCache = require('../lib/companies-cache');
 
 function createTopSuppliersRouter({ pool }) {
     const router = express.Router();
@@ -51,17 +52,46 @@ function createCompaniesRouter(deps) {
         handlePhotoUpload,
         rowToCompany,
         enrichCompany,
+        enrichCompanies,
         geocodeCity,
     } = deps;
 
     const router = express.Router();
 
+    /* Список компаний.
+     *
+     * Обогащение считается пачкой (см. lib/company-enrich): по одной карточке
+     * это было семь запросов на компанию, то есть больше тридцати тысяч на
+     * один заход в настройки, сделки или тариф — они все дёргают этот список.
+     *
+     * Фильтры необязательные, и появились они не от хорошей жизни: страницы
+     * уже слали ?role=producer&limit=3 и ?search=…, а роут эти параметры
+     * молча игнорировал и отдавал весь реестр целиком. Теперь просивший
+     * малое получает малое, а кто просит всё — получает всё, как и раньше.
+     */
     router.get('/', optionalAuth, async (req, res, next) => {
         try {
             const ownerCompany = req.user ? req.user.company : null;
-            const { rows } = await pool.query('SELECT * FROM companies');
-            const enriched = await Promise.all(rows.map(r => enrichCompany(rowToCompany(r), ownerCompany)));
-            res.json(enriched);
+            const where = [];
+            const params = [];
+            if (req.query.role === 'producer' || req.query.role === 'customer') {
+                params.push(req.query.role);
+                where.push(`role = $${params.length}`);
+            }
+            const search = String(req.query.search || '').trim();
+            if (search) {
+                params.push(`%${search}%`);
+                where.push(`(company ILIKE $${params.length} OR inn ILIKE $${params.length})`);
+            }
+            const limit = Number(req.query.limit);
+            const limitSql = Number.isInteger(limit) && limit > 0 && limit <= 500 ? ` LIMIT ${limit}` : '';
+
+            const { rows } = await pool.query(
+                `SELECT * FROM companies${where.length ? ' WHERE ' + where.join(' AND ') : ''}
+                 ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC${limitSql}`,
+                params
+            );
+            res.json(await enrichCompanies(rows.map(rowToCompany), ownerCompany));
         } catch (e) { next(e); }
     });
 
@@ -111,10 +141,13 @@ function createCompaniesRouter(deps) {
                 const cityVal = str(city, 100);
                 f('city', cityVal);
                 if (cityVal !== row.city) {
-                    geocodeCity(cityVal).then(coords => {
-                        if (coords) pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, id]);
-                        else pool.query('UPDATE companies SET lat=NULL,lng=NULL WHERE id=$1', [id]);
-                    });
+                    geocodeCity(cityVal).then(async coords => {
+                        if (coords) await pool.query('UPDATE companies SET lat=$1,lng=$2 WHERE id=$3', [coords.lat, coords.lng, id]);
+                        else await pool.query('UPDATE companies SET lat=NULL,lng=NULL WHERE id=$1', [id]);
+                        // Координаты доезжают после ответа — точка на карте
+                        // сдвинется только со следующим построением кэша.
+                        companiesCache.invalidate();
+                    }).catch(() => {});
                 }
             }
             if (yearsExperience !== undefined)    f('years_experience', num(yearsExperience));
@@ -158,6 +191,9 @@ function createCompaniesRouter(deps) {
             if (sets.length) {
                 vals.push(id);
                 await pool.query(`UPDATE companies SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals);
+                // Иначе завод увидит в каталоге свой старый профиль и решит,
+                // что правка не сохранилась.
+                companiesCache.invalidate();
             }
 
             const { rows: [updated] } = await pool.query('SELECT * FROM companies WHERE id = $1', [id]);

@@ -109,6 +109,7 @@ function baseDeps(overrides = {}) {
         rowToMessage: (r) => r,
         rowToNotification: (r) => r,
         enrichCompany: async (c) => c,
+        enrichCompanies: async (list) => list,
         geocodeCity: async () => null,
         computeMatchScore: () => 0,
         computeMatchReasons: () => [],

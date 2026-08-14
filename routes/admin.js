@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { fetchEgrulData, evaluateAutoVerification } = require('../lib/egrul-verify');
+const companiesCache = require('../lib/companies-cache');
 
 function createAdminRouter(deps) {
     const {
@@ -77,6 +78,9 @@ function createAdminRouter(deps) {
                         [company.id]
                     );
                 });
+                // Галочка проверки видна в каталоге и на карте и двигает
+                // компанию в сортировке — кэш обеих выдач устарел.
+                companiesCache.invalidate();
     
                 const checksText = evaluation.checks.map(c => c.detail).filter(Boolean).join(' · ');
                 await addNotification(
@@ -201,6 +205,7 @@ function createAdminRouter(deps) {
                 await client.query("UPDATE verification_requests SET status='approved', reviewed_at=NOW() WHERE id=$1", [id]);
                 await client.query("UPDATE companies SET verified_by_platform=true, status='Верифицирован' WHERE id=$1", [vr.company_id]);
             });
+            companiesCache.invalidate();
             if (companyRow) {
                 await addNotification(companyRow.company, 'Ваша компания успешно верифицирована платформой!');
                 const email = await getCompanyEmail(companyRow.company);

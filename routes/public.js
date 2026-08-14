@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { categorizeProducer } = require('../lib/producer-categories');
+const companiesCache = require('../lib/companies-cache');
 const tzAi = require('../lib/ai-client');
 
 function createPublicRouter(deps) {
@@ -83,14 +84,12 @@ function createPublicRouter(deps) {
     // Самый тяжёлый публичный запрос: 4300 строк, геокодирование и разведение точек
     // одного города по спирали — и всё это на каждый заход на карту. Состав каталога
     // меняется раз в недели, так что час кэша ничего не искажает.
-    let _mapCache = { ts: 0, data: null };
     const MAP_TTL_MS = 3600 * 1000;
 
     router.get('/map', async (req, res, next) => {
         try {
-            if (_mapCache.data && Date.now() - _mapCache.ts < MAP_TTL_MS) {
-                return res.json(_mapCache.data);
-            }
+            const cached = companiesCache.get('map', MAP_TTL_MS);
+            if (cached) return res.json(cached);
             const { rows } = await pool.query(`
                 SELECT *
                 FROM companies
@@ -141,7 +140,7 @@ function createPublicRouter(deps) {
             }).filter(Boolean);
             // Пустую выдачу не кэшируем: геокодирование доезжает после старта,
             // иначе карта залипнет пустой на час — та же логика, что у geo-density.
-            if (result.length) _mapCache = { ts: Date.now(), data: result };
+            if (result.length) companiesCache.set('map', result);
             res.json(result);
         } catch (e) { next(e); }
     });
@@ -169,14 +168,24 @@ function createPublicRouter(deps) {
     
     // ===================== КАТАЛОГ ПРОИЗВОДИТЕЛЕЙ =====================
     
+    /* Каталог одинаков для всех вошедших, поэтому кэш общий (см.
+       lib/companies-cache: правки профиля сбрасывают его сразу, TTL — только
+       страховка от изменений мимо процесса). Если в эту выдачу когда-нибудь
+       добавится что-то своё для каждого — избранное, контакты по правам, —
+       кэш придётся снимать, иначе оно уедет соседу. */
+    const CATALOG_TTL_MS = 5 * 60 * 1000;
+
     router.get('/catalog', requireAuth, async (req, res, next) => {
         try {
+            const cached = companiesCache.get('catalog', CATALOG_TTL_MS);
+            if (cached) return res.json(cached);
+
             const { rows } = await pool.query(`
                 SELECT * FROM companies
                 WHERE role = 'producer'
                 ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC
             `);
-            res.json(rows.map(rowToCompany));
+            res.json(companiesCache.set('catalog', rows.map(rowToCompany)));
         } catch (e) { next(e); }
     });
     
