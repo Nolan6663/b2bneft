@@ -199,6 +199,18 @@ function applyAuthSession(data) {
   }
   localStorage.removeItem('authToken');
   localStorage.removeItem('refreshToken');
+  /* Вход без «запомнить меня»: куки такого входа умрут вместе с браузером, а
+     метка о входе в localStorage — нет, и кабинет показался бы вошедшим до
+     первого запроса. sessionStorage умирает ровно тогда же, когда куки, — по
+     нему это и ловим (см. dropSessionOnlyLogin ниже). */
+  try {
+    if (data.remembered === false) {
+      localStorage.setItem('sessionOnly', '1');
+      sessionStorage.setItem('sessionAlive', '1');
+    } else {
+      localStorage.removeItem('sessionOnly');
+    }
+  } catch { /* приватный режим: хранилище недоступно — тогда и метки нет */ }
 }
 
 function hasSession() {
@@ -214,8 +226,20 @@ function clearAuthSession() {
   localStorage.removeItem('userCompany');
   localStorage.removeItem('emailVerified');
   localStorage.removeItem('_myCompanyId');
+  localStorage.removeItem('sessionOnly');
   if (theme) localStorage.setItem('theme', theme);
 }
+
+/* Браузер перезапустили после входа без «запомнить меня» — стираем метку
+   сразу, не дожидаясь, пока первый запрос упрётся в 401 и выкинет человека
+   на login с уже отрисованного кабинета. */
+(function dropSessionOnlyLogin() {
+  try {
+    if (localStorage.getItem('sessionOnly') === '1' && sessionStorage.getItem('sessionAlive') !== '1') {
+      clearAuthSession();
+    }
+  } catch { /* приватный режим — меток нет вовсе */ }
+})();
 
 function authGuard(requiredRole) {
   const role = localStorage.getItem('userRole');

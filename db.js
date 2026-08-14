@@ -382,6 +382,10 @@ async function initDb() {
         ALTER TABLE companies ADD COLUMN IF NOT EXISTS tax_system TEXT NOT NULL DEFAULT '';
         ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS user_agent TEXT NOT NULL DEFAULT '';
+        -- persistent=false — вход без «запомнить меня»: куки живут до закрытия
+        -- браузера. Флаг нужен именно в базе: продление сессии (lib/session-renew)
+        -- выставляет куки заново и без него молча сделало бы вход постоянным.
+        ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS persistent BOOLEAN NOT NULL DEFAULT TRUE;
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS ip TEXT NOT NULL DEFAULT '';
         ALTER TABLE refresh_tokens ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ DEFAULT NOW();
         ALTER TABLE proposals ADD COLUMN IF NOT EXISTS delivery_stage TEXT NOT NULL DEFAULT 'КП принят';

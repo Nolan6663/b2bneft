@@ -450,6 +450,13 @@ body {
         <a href="#" class="forgot-link" onclick="openForgot(); return false;">Забыли пароль?</a>
       </div>
 
+      <label class="consent-row" style="margin-bottom:4px;">
+        <input type="checkbox" id="authRemember" checked>
+        <span>Запомнить меня на этом устройстве<br>
+          <span style="font-size:12px;opacity:.75;">Снимите на чужом или общем компьютере — вход закончится вместе с браузером</span>
+        </span>
+      </label>
+
       <div id="auth-error-login" class="auth-error" role="alert" aria-live="polite" style="display:none;"></div>
 
       <!-- 2FA step (shown when server returns require2fa) -->
@@ -615,6 +622,17 @@ function applyAuthSession(data) {
   if (data.emailVerified != null) {
     localStorage.setItem('emailVerified', data.emailVerified ? '1' : '0');
   }
+  /* Своя копия — эта страница не грузит assets/app.js. Метку держим ту же,
+     что там: sessionStorage умирает вместе с браузером, как и куки входа без
+     «запомнить меня», и кабинет по ней поймёт, что вход кончился. */
+  try {
+    if (data.remembered === false) {
+      localStorage.setItem('sessionOnly', '1');
+      sessionStorage.setItem('sessionAlive', '1');
+    } else {
+      localStorage.removeItem('sessionOnly');
+    }
+  } catch { /* приватный режим */ }
 }
 
 function switchTab(tab) {
@@ -729,7 +747,9 @@ async function handleLogin() {
   if (!btn) return;
   setLoading(btn, true);
   try {
-    const body = { email, password };
+    // Галочка снята — сервер поставит куки без срока: такой вход закончится
+    // вместе с браузером. Шаг 2FA перерисовывает форму, поэтому читаем её здесь.
+    const body = { email, password, remember: document.getElementById('authRemember')?.checked !== false };
     if (totpCode) body.totpCode = totpCode;
 
     const res = await fetch(`${SERVER_URL}/auth/login`, {

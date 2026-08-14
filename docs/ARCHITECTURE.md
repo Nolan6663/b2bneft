@@ -29,7 +29,7 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | Файл/каталог | Что делает |
 |---|---|
 | `server.js` (~2.1k строк) | bootstrap: helmet/cors/rate-limit, auth middleware (`requireAuth`, `requireRole`, `requireVerifiedEmail`), маппинг строк БД → API-объектов (`rowToCompany` и др.), socket.io, cron'ы, email/push/TG-хелперы и интеграционные push-хелперы (Bitrix24/AmoCRM/SAP), оставшиеся inline-роуты — только инфраструктура (health, company-photos, registry-optout, auth/digest, rate-limiterы) |
-| `db.js` | вся схема: 24 таблицы, создание при старте, «миграции» = `ALTER TABLE ... IF NOT EXISTS` внизу файла. Новая колонка → добавляй туда же |
+| `db.js` | вся схема: 32 таблицы, создание при старте, «миграции» = `ALTER TABLE ... IF NOT EXISTS` внизу файла. Новая колонка → добавляй туда же |
 | `routes/auth.js` | регистрация (+claim профиля из реестра по ИНН), login, 2FA (speakeasy), OAuth Яндекс, refresh-токены/сессии, сброс пароля, email-верификация |
 | `routes/orders.js` | CRUD закупок, матчинг поставщиков (`computeMatchScore`), «горячий матч» ≥70% → email/push/TG, триггер registry-invites |
 | `routes/proposals.js` | подача/редактирование/принятие/отклонение КП, файл КП, договор PDF (`GET /:id/contract.pdf`) |
@@ -77,7 +77,9 @@ email (SMTP/nodemailer) + Web Push (VAPID) + Telegram (если привязан
 
 **Auth:** пароль (+опционально TOTP 2FA) или Яндекс OAuth → access-JWT (cookie, 1ч) +
 refresh-токен (БД; страница «Активные сессии» в settings). `window.open` на скачивание
-файлов/PDF работает за счёт cookie.
+файлов/PDF работает за счёт cookie. Галочка «запомнить меня» на входе: снятая — куки
+без срока (умирают вместе с браузером) и запись в БД на 12 часов вместо 30 суток,
+флаг `refresh_tokens.persistent`; продление сессии его сохраняет.
 
 ## Данные (группы таблиц)
 

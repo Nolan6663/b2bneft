@@ -50,6 +50,16 @@ test('живой refresh продлевает сессию и не трогае�
     assert.deepEqual(lookup.params, [LIVE_TOKEN]);
 });
 
+test('разовый вход продлевается такими же сессионными куками', async () => {
+    const { pool, req, res, cookies } = ctx({ tokenRows: [{ id: 11, user_id: 3, persistent: false }] });
+    await renewAccessToken({ pool, req, res });
+
+    for (const cookie of cookies) {
+        assert.equal(cookie.opts.maxAge, undefined,
+            `${cookie.name} со сроком пережил бы браузер — продление втихую сделало бы вход постоянным`);
+    }
+});
+
 test('POST не продлевается: cookie-авторизацию не расширяем на то, что меняет данные', async () => {
     const { pool, req, res, cookies } = ctx({ method: 'POST' });
     assert.equal(await renewAccessToken({ pool, req, res }), null);

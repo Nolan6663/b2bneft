@@ -89,12 +89,23 @@ module.exports = function createAuthRouter(deps) {
         return (req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
     }
 
-    async function storeRefreshToken(req, userId, refreshToken) {
+    /* Вход без «запомнить меня» живёт 12 часов вместо тридцати суток: куки в
+       браузере и так умрут с его закрытием, но запись в базе переживёт это и
+       осталась бы годной ключом от чужой машины на месяц. Двенадцати часов
+       хватает на рабочий день — ради этого галочку и снимают. */
+    async function storeRefreshToken(req, userId, refreshToken, persistent = true) {
         await pool.query(
-            `INSERT INTO refresh_tokens (user_id, token, expires_at, user_agent, ip, last_used_at)
-             VALUES ($1, $2, NOW() + INTERVAL '30 days', $3, $4, NOW())`,
-            [userId, refreshToken, String(req.headers['user-agent'] || '').slice(0, 500), clientIp(req)]
+            `INSERT INTO refresh_tokens (user_id, token, expires_at, user_agent, ip, last_used_at, persistent)
+             VALUES ($1, $2, NOW() + ($5::int * INTERVAL '1 hour'), $3, $4, NOW(), $6)`,
+            [userId, refreshToken, String(req.headers['user-agent'] || '').slice(0, 500), clientIp(req),
+                persistent ? 24 * 30 : 12, persistent]
         );
+    }
+
+    /* Галочка «запомнить меня». Отсутствие поля — это старый клиент или
+       мобильное приложение, для них поведение прежнее: помним. */
+    function wantsPersistent(req) {
+        return req.body?.remember !== false;
     }
 
     /* «Windows — Chrome» из user-agent; без внешних библиотек */
@@ -257,9 +268,10 @@ module.exports = function createAuthRouter(deps) {
                 if (!valid) return res.status(401).json({ error: 'Неверный код 2FA' });
             }
 
+            const persistent = wantsPersistent(req);
             const { accessToken, refreshToken } = generateTokens(user);
-            await storeRefreshToken(req, user.id, refreshToken);
-            setAuthCookies(res, accessToken, refreshToken);
+            await storeRefreshToken(req, user.id, refreshToken, persistent);
+            setAuthCookies(res, accessToken, refreshToken, { persistent });
             res.json({
                 token: accessToken,
                 refreshToken,
@@ -267,6 +279,7 @@ module.exports = function createAuthRouter(deps) {
                 company: user.company,
                 emailVerified: Boolean(user.email_verified),
                 totpEnabled:   Boolean(user.totp_enabled),
+                remembered:    persistent,
             });
         } catch (e) { next(e); }
     });
@@ -462,7 +475,8 @@ module.exports = function createAuthRouter(deps) {
             const payload = { userId: user.id, role: user.role, company: user.company };
             const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
             pool.query('UPDATE refresh_tokens SET last_used_at = NOW() WHERE id = $1', [tokenRow.id]).catch(() => {});
-            setAuthCookies(res, accessToken, refreshToken);
+            // Продление не должно превращать вход «до закрытия браузера» в постоянный.
+            setAuthCookies(res, accessToken, refreshToken, { persistent: tokenRow.persistent !== false });
             res.json({ token: accessToken, emailVerified: Boolean(user.email_verified) });
         } catch (e) { next(e); }
     });
