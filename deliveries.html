@@ -162,10 +162,23 @@
             if (!filtered.length) {
                 tbody.innerHTML = '';
                 empty.innerHTML = '';
-                empty.appendChild(createEmptyState({
+                /* Пустой экран без действия — тупик: человек заходит и не знает,
+                   куда идти дальше. Поэтому кнопка, и разная по роли: заводу
+                   идти за закупками, заказчику — размещать свою. */
+                const isEmpty = !allDeliveries.length;
+                const isProducer = localStorage.getItem('userRole') === 'producer';
+                empty.appendChild(createEmptyState(isEmpty ? {
                     icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
                     title: 'Нет активных доставок',
-                    desc: 'Доставки появятся после того как поставщик примет заказ в работу'
+                    desc: isProducer
+                        ? 'Доставка появится здесь, когда заказчик примет ваше предложение и вы возьмёте заказ в работу'
+                        : 'Доставка появится здесь, когда вы выберете поставщика и он примет заказ в работу',
+                    ctaText: isProducer ? 'Смотреть закупки' : 'Собрать ТЗ и разместить закупку',
+                    ctaHref: isProducer ? 'producer.html' : '/zayavka'
+                } : {
+                    icon: `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+                    title: 'Ничего не найдено',
+                    desc: 'Попробуйте изменить поисковый запрос'
                 }));
                 empty.style.display = '';
                 return;

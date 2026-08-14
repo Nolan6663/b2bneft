@@ -1609,6 +1609,10 @@ function canAccessProposal(user, proposal) {
     return proposal.company === user.company || proposal.order_company === user.company;
 }
 
+/* Доступ заводу открывают два события: поданное КП и запрос чертежа.
+   Второе появилось потому, что первого было мало: КП требует цену, а цену без
+   чертежа не назвать. Запрос — шаг без обязательств, но именной: он лежит в
+   order_drawing_requests, и заказчик видит, кто открывал его чертёж. */
 async function canAccessOrderDrawing(user, orderId) {
     if (!user) return false;
     if (user.role === 'admin') return true;
@@ -1616,11 +1620,14 @@ async function canAccessOrderDrawing(user, orderId) {
     if (!order) return false;
     if (user.role === 'customer') return order.company === user.company;
     if (user.role === 'producer') {
-        const { rows: [proposal] } = await pool.query(
-            'SELECT id FROM proposals WHERE order_id = $1 AND company = $2 LIMIT 1',
+        const { rows: [granted] } = await pool.query(
+            `SELECT 1 FROM proposals WHERE order_id = $1 AND company = $2
+              UNION ALL
+             SELECT 1 FROM order_drawing_requests WHERE order_id = $1 AND company = $2
+             LIMIT 1`,
             [Number(orderId), user.company]
         );
-        return Boolean(proposal);
+        return Boolean(granted);
     }
     return false;
 }

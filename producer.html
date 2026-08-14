@@ -375,38 +375,53 @@
                 <label>Прикрепить КП / прайс-лист (PDF, Word, Excel)</label>
                 <input type="file" id="proposalFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="padding:10px 12px; border:2px dashed var(--input-border); background:transparent; cursor:pointer; height:auto;">
             </div>
-            <!-- Раскрыт по умолчанию: свёрнутый блок не открывает почти никто,
-                 а без габаритов заказчик вообще не увидит расчёта доставки —
-                 то есть свёрнутость тихо отключала бы всю функцию. -->
-            <details class="form-group" id="cargoDetails" open>
-                <summary style="cursor:pointer; font-weight:600; font-size:14px; padding:4px 0;">Габариты для расчёта доставки</summary>
-                <div class="form-hint">Заказчик увидит стоимость доставки от нескольких перевозчиков и полную сумму сделки. Без габаритов расчёта не будет — и ваше предложение будет выглядеть дороже, чем есть.</div>
-                <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-top:10px;">
-                    <div>
-                        <label>Вес одного места, кг</label>
-                        <input type="number" id="cargoWeight" min="0" step="0.1" placeholder="Например, 500">
-                    </div>
-                    <div>
-                        <label>Количество мест</label>
-                        <input type="number" id="cargoPlaces" min="1" step="1" placeholder="1">
-                    </div>
-                    <div>
-                        <label>Длина, м</label>
-                        <input type="number" id="cargoLength" min="0" step="0.01" placeholder="1,2">
-                    </div>
-                    <div>
-                        <label>Ширина, м</label>
-                        <input type="number" id="cargoWidth" min="0" step="0.01" placeholder="0,8">
-                    </div>
-                    <div>
-                        <label>Высота, м</label>
-                        <input type="number" id="cargoHeight" min="0" step="0.01" placeholder="0,6">
-                    </div>
-                </div>
-            </details>
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeRespondModal()">Отмена</button>
                 <button class="btn-modal-submit" id="submitProposalBtn" onclick="sendProposal()">Отправить КП</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Габариты спрашиваем ПОСЛЕ отправки КП, отдельным шагом.
+         Сначала они стояли в самой форме, раскрытые: свёрнутый блок никто не
+         открывает, а без габаритов расчёт доставки не работает вовсе. Но пять
+         лишних полей на пути к главному действию путали даже своих — форму
+         подачи КП удлинять нельзя, за её простоту боролись в онбординге.
+         Здесь предложение уже ушло, торопиться некуда, и «Пропустить» —
+         честный выход, а не потеря отклика. -->
+    <div class="modal" id="cargoModal">
+        <div class="modal-content">
+            <h3>КП отправлено</h3>
+            <div class="form-hint" style="margin-bottom:14px;">
+                Осталось необязательное. Укажите габариты — заказчик увидит стоимость доставки
+                от трёх перевозчиков и полную сумму сделки. Без них расчёта не будет,
+                и ваше предложение будет выглядеть дороже, чем есть.
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;">
+                <div>
+                    <label>Вес одного места, кг</label>
+                    <input type="number" id="cargoWeight" min="0" step="0.1" placeholder="Например, 500">
+                </div>
+                <div>
+                    <label>Количество мест</label>
+                    <input type="number" id="cargoPlaces" min="1" step="1" placeholder="1">
+                </div>
+                <div>
+                    <label>Длина, м</label>
+                    <input type="number" id="cargoLength" min="0" step="0.01" placeholder="1,2">
+                </div>
+                <div>
+                    <label>Ширина, м</label>
+                    <input type="number" id="cargoWidth" min="0" step="0.01" placeholder="0,8">
+                </div>
+                <div>
+                    <label>Высота, м</label>
+                    <input type="number" id="cargoHeight" min="0" step="0.01" placeholder="0,6">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeCargoModal()">Пропустить</button>
+                <button class="btn-modal-submit" id="saveCargoBtn" onclick="saveProposalCargo()">Сохранить габариты</button>
             </div>
         </div>
     </div>
@@ -871,16 +886,26 @@
                     ? order.attachments
                     : (order.drawing ? [order.drawing] : []);
                 if (!isGuest && orderFiles.length) {
-                    // Кнопка разбора идёт рядом со «Скачать» у первого файла, но только
-                    // там, где чертёж нам вообще открыт: доступ заказчик даёт после отклика.
-                    const extra = respondedOrderIds.has(Number(order.id))
-                        ? `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button>`
-                        : '<span style="font-size:11px;color:var(--text-secondary);">Чертёж и разбор — после отклика</span>';
-                    drawingHTML = orderFiles
-                        .map((f, i) => (i === 0
-                            ? buildDrawingLinksHtml(order.id, f, i).replace('</div>', `${extra}</div>`)
-                            : buildDrawingLinksHtml(order.id, f, i)))
-                        .join('');
+                    if (hasDrawingAccess(order.id)) {
+                        // Кнопка разбора идёт рядом со «Скачать» у первого файла.
+                        const extra = `<button type="button" class="drawing-link-btn" onclick="analyzeOrderDrawing(${order.id}, this)">Разобрать</button>`;
+                        drawingHTML = orderFiles
+                            .map((f, i) => (i === 0
+                                ? buildDrawingLinksHtml(order.id, f, i).replace('</div>', `${extra}</div>`)
+                                : buildDrawingLinksHtml(order.id, f, i)))
+                            .join('');
+                    } else {
+                        /* Кнопок «Просмотр» и «Скачать» здесь нет намеренно: доступа к
+                           файлу ещё нет, сервер ответит отказом, и на экран вылезет
+                           текст ошибки вместо чертежа. Вместо них — честное действие. */
+                        const closed = order.status === 'Отменена' || order.status === 'Закрыта';
+                        const action = closed
+                            ? '<span style="font-size:11px;color:var(--text-secondary);">Заявка закрыта — чертёж по ней не выдаётся</span>'
+                            : `<button type="button" class="drawing-link-btn drawing-link-btn-primary" onclick="requestOrderDrawing(${order.id}, this)">Посмотреть чертёж</button>
+                               <span style="font-size:11px;color:var(--text-secondary);">Цену называть не нужно. Заказчик увидит, что вы открыли чертёж.</span>`;
+                        drawingHTML = orderFiles.map(f => buildLockedAttachmentHtml(f)).join('')
+                            + `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;">${action}</div>`;
+                    }
                 }
 
                 // Buttons
@@ -959,10 +984,52 @@
         }
 
         /* Закупки, на которые мы уже откликнулись: по ним открыт доступ к чертежу,
-           а значит и разбор. До отклика чертёж заказчика нам не показывают. */
+           а значит и разбор. */
         const respondedOrderIds = new Set();
 
+        /* Закупки, где мы запросили чертёж, не подавая КП. Доступ тот же, но
+           обязательств нет: назвать цену, не видя чертежа, нельзя, и требовать
+           этого от завода было ошибкой. */
+        const drawingAccessIds = new Set();
+
+        const hasDrawingAccess = (orderId) =>
+            respondedOrderIds.has(Number(orderId)) || drawingAccessIds.has(Number(orderId));
+
+        async function loadDrawingAccess() {
+            try {
+                const response = await apiFetch(`${SERVER_URL}/orders/drawing-access`);
+                if (!response.ok) return;
+                const ids = await response.json();
+                drawingAccessIds.clear();
+                (Array.isArray(ids) ? ids : []).forEach(id => drawingAccessIds.add(Number(id)));
+            } catch { /* тихо: без списка просто не покажем ссылки на файлы */ }
+        }
+
+        /* Открыть чертёж до отклика. Заказчик увидит, что мы его смотрели, —
+           поэтому и говорим об этом прямо, а не прячем за незаметной ссылкой. */
+        async function requestOrderDrawing(orderId, btn) {
+            if (btn) { btn.disabled = true; btn.textContent = 'Открываем…'; }
+            try {
+                const response = await apiFetch(`${SERVER_URL}/orders/${orderId}/drawing-access`, { method: 'POST' });
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    showToast(data.error || 'Не удалось открыть чертёж', 'warn');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Посмотреть чертёж'; }
+                    return;
+                }
+                drawingAccessIds.add(Number(orderId));
+                rerenderOrdersFromCache();
+            } catch {
+                showToast('Не удалось открыть чертёж', 'warn');
+                if (btn) { btn.disabled = false; btn.textContent = 'Посмотреть чертёж'; }
+            }
+        }
+
         async function loadMyProposals() {
+            // Доступ к чертежам тянем здесь же: обе выборки нужны карточке
+            // одновременно, и звать их порознь означало бы отрисовать список
+            // дважды — второй раз ради того же самого.
+            await loadDrawingAccess();
             try {
                 const response = await apiFetch(`${SERVER_URL}/proposals`);
                 const data = response.ok ? await response.json() : null;
@@ -1097,16 +1164,6 @@
             formData.append('price', price);
             formData.append('days', days);
             formData.append('message', document.getElementById('proposalMessage')?.value?.trim() || '');
-            // Габариты необязательны: пустые поля просто не отправляем, сервер
-            // сохранит КП без них — расчёта доставки по нему не будет.
-            for (const [field, id] of [
-                ['cargoWeight', 'cargoWeight'], ['cargoLength', 'cargoLength'],
-                ['cargoWidth', 'cargoWidth'], ['cargoHeight', 'cargoHeight'],
-                ['cargoPlaces', 'cargoPlaces'],
-            ]) {
-                const value = document.getElementById(id)?.value?.trim();
-                if (value) formData.append(field, value);
-            }
             if (fileInput.files.length > 0) formData.append('kpFile', fileInput.files[0]);
 
             try {
@@ -1115,13 +1172,13 @@
                     body: formData
                 });
                 if (response.ok) {
+                    const created = await response.json().catch(() => null);
                     closeRespondModal(); priceInput.value = ''; daysInput.value = '';
-                    for (const id of ['cargoWeight', 'cargoLength', 'cargoWidth', 'cargoHeight', 'cargoPlaces']) {
-                        const field = document.getElementById(id);
-                        if (field) field.value = '';
-                    }
                     if (typeof markOnboardingStep === 'function') markOnboardingStep('proposal');
                     loadOrdersForProducers(); loadMyProposals();
+                    // Габариты — вторым шагом, когда КП уже ушло. Не спросить не
+                    // можем: без них расчёта доставки не будет ни у кого.
+                    openCargoModal(created);
                 } else {
                     const err = await response.json();
                     showToast(err.error || 'Не удалось отправить предложение', 'error');
@@ -1130,6 +1187,59 @@
                 showToast('Сервер недоступен. Проверьте, что бэкенд запущен.', 'error');
             }
         }
+        /* Габариты уже отправленного КП. Цену и срок шлём те же самые: PUT
+           требует их обязательными, а менять их этот шаг не должен. */
+        let _cargoProposal = null;
+
+        function openCargoModal(proposal) {
+            if (!proposal || !proposal.id) return;   // КП ушло, шаг просто пропускаем
+            _cargoProposal = proposal;
+            for (const id of ['cargoWeight', 'cargoLength', 'cargoWidth', 'cargoHeight', 'cargoPlaces']) {
+                const field = document.getElementById(id);
+                if (field) field.value = '';
+            }
+            document.getElementById('cargoModal').style.display = 'flex';
+        }
+
+        function closeCargoModal() {
+            document.getElementById('cargoModal').style.display = 'none';
+            _cargoProposal = null;
+        }
+
+        async function saveProposalCargo() {
+            if (!_cargoProposal) return closeCargoModal();
+            const body = { price: _cargoProposal.price, days: _cargoProposal.days };
+            let filled = false;
+            for (const id of ['cargoWeight', 'cargoLength', 'cargoWidth', 'cargoHeight', 'cargoPlaces']) {
+                const value = document.getElementById(id)?.value?.trim();
+                if (value) { body[id] = value; filled = true; }
+            }
+            // Пустая форма и «Пропустить» — это одно и то же, незачем ходить на сервер.
+            if (!filled) return closeCargoModal();
+
+            const btn = document.getElementById('saveCargoBtn');
+            if (btn) btn.disabled = true;
+            try {
+                const response = await apiFetch(`${SERVER_URL}/proposals/${_cargoProposal.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (response.ok) {
+                    showToast('Габариты сохранены — заказчик увидит расчёт доставки', 'success');
+                    closeCargoModal();
+                    loadMyProposals();
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    showToast(err.error || 'Не удалось сохранить габариты', 'warn');
+                }
+            } catch {
+                showToast('Сервер недоступен', 'warn');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
         /* ══ AUCTIONS ══════════════════════════════════════════════════════════ */
         let _bidAuctionId = null;
         let _bidAuctionIntervals = {};

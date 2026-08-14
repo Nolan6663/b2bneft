@@ -140,6 +140,65 @@ module.exports = function createOrdersRouter(deps) {
         } catch (e) { next(e); }
     });
 
+    /* Запрос доступа к чертежу.
+     *
+     * Размыкает круг, в который упирался завод: чертёж открывался после КП, а
+     * КП требует цену — то есть цену просили назвать вслепую. Теперь доступ
+     * даёт отдельный шаг, ни к чему не обязывающий.
+     *
+     * Шаг именной: запись остаётся в order_drawing_requests, заказчик получает
+     * уведомление и видит, кто открывал его чертёж. Защита от растаскивания
+     * чертежей по каталогу не исчезла — она перестала быть замком и стала
+     * журналом, и это осознанный размен.
+     */
+    router.post('/:orderId/drawing-access', requireAuth, requireRole('producer'), async (req, res, next) => {
+        try {
+            const orderId = Number(req.params.orderId);
+            if (!orderId) return res.status(400).json({ error: 'Не указана закупка' });
+
+            const order = await getOrderAccessRow(orderId);
+            if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
+            // По закрытой заявке чертёж не выдаём: откликнуться на неё уже
+            // нельзя, а значит и смотреть незачем — это был бы просто слив.
+            if (order.status === 'Отменена' || order.status === 'Закрыта') {
+                return res.status(409).json({ error: 'Заявка закрыта — чертёж по ней больше не выдаётся' });
+            }
+
+            // RETURNING, а не rowCount: по нему видно, была ли запись создана
+            // именно сейчас, и это же читаемо в тестах без живой базы.
+            const { rows: [created] } = await pool.query(
+                `INSERT INTO order_drawing_requests (order_id, company) VALUES ($1, $2)
+                 ON CONFLICT (order_id, company) DO NOTHING
+                 RETURNING id`,
+                [orderId, req.user.company]
+            );
+
+            // Уведомляем заказчика только на первом запросе: повторный — это тот
+            // же завод, открывший чертёж во второй раз, дёргать человека незачем.
+            if (created) {
+                await addNotification(
+                    order.company,
+                    `Завод «${req.user.company}» открыл чертёж по заявке «${plainTitle(order.title) || ''}»`
+                );
+            }
+            res.json({ ok: true });
+        } catch (e) { next(e); }
+    });
+
+    /* Заявки, по которым чертёж этой компании уже открыт. Нужен интерфейсу:
+       без него он не знает, рисовать кнопку «Посмотреть чертёж» или сами
+       ссылки на файл, и рисовал бы ссылки всегда — ровно тот баг, из-за
+       которого завод получал на экран текст ошибки вместо чертежа. */
+    router.get('/drawing-access', requireAuth, requireRole('producer'), async (req, res, next) => {
+        try {
+            const { rows } = await pool.query(
+                'SELECT order_id FROM order_drawing_requests WHERE company = $1',
+                [req.user.company]
+            );
+            res.json(rows.map((r) => r.order_id));
+        } catch (e) { next(e); }
+    });
+
     /* Видео грузится отдельным запросом, а не вместе с заявкой: ролик весит
        сотни мегабайт, и держать создание закупки заложником такой загрузки
        нельзя — заявка публикуется сразу, видео доезжает следом. */

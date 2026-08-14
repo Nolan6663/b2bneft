@@ -1164,6 +1164,22 @@ function buildDrawingLinksHtml(orderId, drawing, index) {
   </div>`;
 }
 
+/* Вложение, к которому доступа пока нет: та же строка, но без кнопок.
+   Раньше кнопки «Просмотр» и «Скачать» рисовались всем подряд, а сервер на них
+   отвечал 403 — и завод получал на экран голый JSON «Нет доступа к чертежу
+   этой закупки». Правило работало, а выглядело как поломка сайта. Кнопки,
+   которые заведомо ведут в ошибку, рисовать нельзя. */
+function buildLockedAttachmentHtml(drawing) {
+  if (!drawing || !drawing.originalName) return '';
+  const rawName = drawing.originalName;
+  const name = /^[\x20-\x7E\u0400-\u04FF\s._\-()]+$/.test(rawName) ? rawName : 'Вложение';
+  const safeName = escapeHtml(name);
+  return `<div class="drawing-links" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;opacity:.75;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--text-secondary);"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span style="font-size:12px;font-weight:600;color:var(--text-secondary);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${safeName}">${safeName}</span>
+  </div>`;
+}
+
 function ensureDrawingPreviewModal() {
   if (document.getElementById('drawingPreviewModal')) return;
   const wrap = document.createElement('div');

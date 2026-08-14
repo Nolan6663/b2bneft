@@ -76,6 +76,25 @@ async function initDb() {
             created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             completion_status TEXT        NOT NULL DEFAULT 'active'
         );
+        -- Запрос доступа к чертежу.
+        --
+        -- До этой таблицы чертёж открывался заводу только после подачи КП, а КП
+        -- требует цену. Получался замкнутый круг: назови цену, не видя чертежа.
+        -- Первый же живой завод в него упёрся.
+        --
+        -- Теперь доступ даёт отдельный шаг без обязательств. Защита от того,
+        -- чтобы чертежи разошлись по всему каталогу, при этом не исчезает, а
+        -- меняет природу: раньше «почти никто не мог посмотреть», теперь
+        -- «смотреть может завод, который назвался». Заказчик видит поимённо,
+        -- кто открывал, — на это и опирается доверие.
+        CREATE TABLE IF NOT EXISTS order_drawing_requests (
+            id         SERIAL      PRIMARY KEY,
+            order_id   INTEGER     NOT NULL,
+            company    TEXT        NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE (order_id, company)
+        );
+        CREATE INDEX IF NOT EXISTS order_drawing_requests_order ON order_drawing_requests (order_id);
         CREATE TABLE IF NOT EXISTS messages (
             id         SERIAL      PRIMARY KEY,
             order_id   INTEGER     NOT NULL,
