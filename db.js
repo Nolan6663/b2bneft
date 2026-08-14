@@ -442,6 +442,11 @@ async function initDb() {
      * Когда таблицы вырастут, добавлять новые индексы придётся отдельным
      * скриптом с CONCURRENTLY, а не здесь.
      */
+    /* Отдельным запросом и под try: индекс — это ускорение, а не работа.
+       Упавший CREATE INDEX (нет прав, занятая таблица) не должен ронять старт
+       процесса — без индекса сайт работает медленнее, без старта не работает
+       вовсе. */
+    try {
     await pool.query(`
         CREATE INDEX IF NOT EXISTS idx_notifications_company_created ON notifications (company, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications (company) WHERE read = false;
@@ -459,6 +464,9 @@ async function initDb() {
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens (expires_at);
         CREATE INDEX IF NOT EXISTS idx_delivery_events_proposal ON delivery_events (proposal_id);
     `);
+    } catch (e) {
+        console.warn('[db] индексы не построены:', e.message);
+    }
 
     await pool.query(`
         UPDATE users u SET email_verified = true
