@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { sendHttpError } = require('../lib/http-errors');
 
 module.exports = function createOrdersRouter(deps) {
     const {
@@ -118,18 +119,18 @@ module.exports = function createOrdersRouter(deps) {
         try {
             const orderId = Number(req.params.orderId);
             if (!(await canAccessOrderDrawing(req.user, orderId))) {
-                return res.status(403).json({ error: 'Нет доступа к чертежу этой закупки' });
+                return sendHttpError(req, res, 403, 'Нет доступа к чертежу этой закупки');
             }
             const { rows: [row] } = await pool.query('SELECT drawing, attachments FROM orders WHERE id = $1', [orderId]);
             const files = parseOrderAttachments(row);
-            if (!files.length) return res.status(404).json({ error: 'Файл не найден' });
+            if (!files.length) return sendHttpError(req, res, 404, 'Файл не найден');
 
             const index = req.query.file !== undefined ? Number(req.query.file) : 0;
             const drawing = Number.isInteger(index) ? files[index] : null;
-            if (!drawing) return res.status(404).json({ error: 'Файл не найден' });
+            if (!drawing) return sendHttpError(req, res, 404, 'Файл не найден');
 
             if (!storage.isRemote() && !storage.existsLocally(drawing.storedName)) {
-                return res.status(404).json({ error: 'Файл был удалён с сервера' });
+                return sendHttpError(req, res, 404, 'Файл был удалён с сервера');
             }
             const inline = req.query.inline === '1';
             /* Range прокидываем как есть: без него видео в плеере не мотается */

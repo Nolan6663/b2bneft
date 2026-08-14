@@ -3,6 +3,7 @@
 const express = require('express');
 const ExcelJS = require('exceljs');
 const { buildOrdersPdf, buildProposalsPdf, buildCompareKpPdf } = require('../export-pdf');
+const { sendHttpError } = require('../lib/http-errors');
 
 function createExportRouter(deps) {
     const {
@@ -168,10 +169,10 @@ function createExportRouter(deps) {
     router.get('/compare-kp.pdf', requireAuth, requireRole('customer'), async (req, res, next) => {
         try {
             const orderId = Number(req.query.orderId);
-            if (!orderId) return res.status(400).json({ error: 'Укажите orderId' });
+            if (!orderId) return sendHttpError(req, res, 400, 'Укажите orderId');
             const { rows: [order] } = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-            if (!order) return res.status(404).json({ error: 'Закупка не найдена' });
-            if (order.company !== req.user.company) return res.status(403).json({ error: 'Нет доступа' });
+            if (!order) return sendHttpError(req, res, 404, 'Закупка не найдена');
+            if (order.company !== req.user.company) return sendHttpError(req, res, 403, 'Нет доступа');
 
             const ids = String(req.query.ids || '')
                 .split(',').map(Number).filter(n => Number.isInteger(n) && n > 0);
@@ -187,7 +188,7 @@ function createExportRouter(deps) {
                      FROM proposals p WHERE p.order_id = $1 ORDER BY p.price ASC NULLS LAST`,
                     [orderId]
                   );
-            if (rows.length < 2) return res.status(400).json({ error: 'Нужно минимум 2 КП для сравнения' });
+            if (rows.length < 2) return sendHttpError(req, res, 400, 'Нужно минимум 2 КП для сравнения');
 
             const orderObj = rowToOrder(order);
             const benchmark = await computePriceBenchmark(orderObj.category, orderId);
@@ -215,9 +216,9 @@ function createExportRouter(deps) {
                 WHERE p.id = $1
             `, [Number(req.params.proposalId)]);
 
-            if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
+            if (!row) return sendHttpError(req, res, 404, 'Предложение не найдено');
             if (row.customer !== req.user.company && req.user.role !== 'admin')
-                return res.status(403).json({ error: 'Нет доступа' });
+                return sendHttpError(req, res, 403, 'Нет доступа');
 
             const now     = new Date().toISOString();
             const dateStr = now.split('T')[0];

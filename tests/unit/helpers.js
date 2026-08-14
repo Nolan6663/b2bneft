@@ -59,7 +59,12 @@ async function serve(mountPath, router) {
     async function request(path, opts = {}) {
         const res = await fetch(url + path, {
             method: opts.method || 'GET',
-            headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+            headers: {
+                ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
+                // Accept задаётся тестом там, где проверяется разница между
+                // переходом браузера (страница) и fetch (JSON).
+                ...(opts.headers || {}),
+            },
             body: opts.body ? JSON.stringify(opts.body) : undefined,
         });
         const buf = Buffer.from(await res.arrayBuffer());

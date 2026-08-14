@@ -26,6 +26,8 @@ const cron      = require('node-cron');
 const createExportRouter = require('./routes/export');
 const { startTelegramBot } = require('./telegram-bot');
 const { JWT_SECRET, getAccessToken } = require('./lib/auth-tokens');
+const { renewAccessToken } = require('./lib/session-renew');
+const { sendHttpError } = require('./lib/http-errors');
 const createAuthRouter = require('./routes/auth');
 const createOrdersRouter = require('./routes/orders');
 const createProposalsRouter = require('./routes/proposals');
@@ -1406,12 +1408,22 @@ async function matchedProducers(order, minScore = 0, withReasons = false) {
 async function requireAuth(req, res, next) {
     try {
         const token = getAccessToken(req);
-        if (!token) return res.status(401).json({ error: 'Требуется авторизация' });
-        let payload;
-        try { payload = jwt.verify(token, JWT_SECRET); }
-        catch { return res.status(401).json({ error: 'Неверный или истёкший токен' }); }
+        let payload = null;
+        if (token) {
+            try { payload = jwt.verify(token, JWT_SECRET); } catch { payload = null; }
+        }
+        /* Access-кука живёт час и по истечении просто исчезает из браузера.
+           Для fetch это ничего не значит — apiFetch поймает 401 и обновит
+           токен. Для прямой ссылки на файл ловить некому, поэтому продлеваем
+           сессию здесь: см. lib/session-renew.js. */
+        if (!payload) {
+            const renewed = await renewAccessToken({ pool, req, res });
+            if (renewed) { req.user = renewed; return next(); }
+            return sendHttpError(req, res, 401,
+                token ? 'Неверный или истёкший токен' : 'Требуется авторизация');
+        }
         const { rows: [user] } = await pool.query('SELECT * FROM users WHERE id = $1', [payload.userId]);
-        if (!user) return res.status(401).json({ error: 'Пользователь не найден' });
+        if (!user) return sendHttpError(req, res, 401, 'Пользователь не найден');
         req.user = user;
         next();
     } catch (e) { next(e); }
@@ -1445,7 +1457,9 @@ async function sendVerificationEmail(user) {
 
 function requireRole(role) {
     return (req, res, next) => {
-        if (req.user.role !== role) return res.status(403).json({ error: 'Недостаточно прав для этого действия' });
+        if (req.user.role !== role) {
+            return sendHttpError(req, res, 403, 'Недостаточно прав для этого действия');
+        }
         next();
     };
 }
@@ -1924,7 +1938,10 @@ if (process.env.SENTRY_DSN) {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    // Ответ уже начали писать (упал стрим файла на середине) — добавить к нему
+    // нечего, любая попытка кончится ERR_HTTP_HEADERS_SENT поверх настоящей ошибки.
+    if (res.headersSent) return next(err);
+    sendHttpError(req, res, 500, 'Внутренняя ошибка сервера');
 });
 
 // ===================== ЗАПУСК =====================

@@ -4,6 +4,7 @@ const express = require('express');
 const { acceptWonProposal } = require('../lib/proposal-accept');
 const { buildContractPdf } = require('../export-pdf');
 const { parseCargo } = require('../lib/logistics/cargo');
+const { sendHttpError } = require('../lib/http-errors');
 
 const CARGO_FIELDS = ['cargoWeight', 'cargoLength', 'cargoWidth', 'cargoHeight', 'cargoPlaces'];
 
@@ -48,11 +49,11 @@ function createProposalsRouter(deps) {
                 JOIN orders o ON o.id = p.order_id
                 WHERE p.id = $1
             `, [Number(req.params.proposalId)]);
-            if (!row || !row.kp_file) return res.status(404).json({ error: 'Файл не найден' });
-            if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этому файлу' });
+            if (!row || !row.kp_file) return sendHttpError(req, res, 404, 'Файл не найден');
+            if (!canAccessProposal(req.user, row)) return sendHttpError(req, res, 403, 'Нет доступа к этому файлу');
             const kpFile = JSON.parse(row.kp_file);
             if (!storage.isRemote() && !storage.existsLocally(kpFile.storedName)) {
-                return res.status(404).json({ error: 'Файл был удалён с сервера' });
+                return sendHttpError(req, res, 404, 'Файл был удалён с сервера');
             }
             await storage.streamToResponse(kpFile.storedName, res, kpFile.originalName);
         } catch (e) { next(e); }
@@ -68,9 +69,11 @@ function createProposalsRouter(deps) {
                 JOIN orders o ON o.id = p.order_id
                 WHERE p.id = $1
             `, [proposalId]);
-            if (!row) return res.status(404).json({ error: 'Предложение не найдено' });
-            if (!canAccessProposal(req.user, row)) return res.status(403).json({ error: 'Нет доступа к этой сделке' });
-            if (row.status !== 'Выигран') return res.status(400).json({ error: 'Договор доступен только по принятому КП' });
+            if (!row) return sendHttpError(req, res, 404, 'Предложение не найдено');
+            if (!canAccessProposal(req.user, row)) return sendHttpError(req, res, 403, 'Нет доступа к этой сделке');
+            if (row.status !== 'Выигран') {
+                return sendHttpError(req, res, 400, 'Договор доступен только по принятому КП');
+            }
 
             const payment = ['prepay100', 'split5050', 'postpay'].includes(req.query.payment)
                 ? req.query.payment : 'split5050';

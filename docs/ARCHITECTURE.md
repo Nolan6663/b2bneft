@@ -52,6 +52,8 @@ S3/Cloudflare R2 — файлы (чертежи, КП, фото) через stor
 | `lib/integrations-push.js` | push принятого КП в Bitrix24/AmoCRM/SAP (`triggerIntegrations`, `sapB1Login`) — фабрика над pool |
 | `lib/ai-client.js` | генерация ТЗ (заказчик) и сопроводительного письма КП (поставщик). Провайдер сменный через env; прод — GigaChat (нужен русский CA-сертификат из `certs/`, переменная в ecosystem.config.js) |
 | `lib/auth-tokens.js` | JWT: access из cookie или Bearer-заголовка, refresh в таблице `refresh_tokens` |
+| `lib/session-renew.js` | продление access-токена сервером по refresh-куке, только GET/HEAD — для прямых ссылок на файлы, которые идут мимо `apiFetch` |
+| `lib/http-errors.js` | `sendHttpError`: переходу браузера — страница с причиной и выходом, `fetch` — прежний JSON. Развилка по `Accept` |
 | `lib/proposal-accept.js` | транзакция «принять КП»: статусы Выигран/Проигран, закрытие заявки, нотификации всем сторонам |
 | `lib/registry-invites.js` | инвайты заводам-заглушкам: matchScore≥2, ≤1 письма/14 дней, ≤20/закупку, opt-out по HMAC-ссылке. Kill switch `REGISTRY_INVITES_ENABLED=0` |
 | `lib/egrul-verify.js` | верификация компаний по ЕГРЮЛ |
@@ -116,6 +118,7 @@ refresh-токен (БД; страница «Активные сессии» в 
 5. pdfkit + Helvetica = кракозябры вместо кириллицы. Только зарегистрированные TTF из `assets/fonts/pdf/`.
 6. `theme-v2.css` содержит дублированные селекторы, каскад зависит от порядка правил — не пересортировывать; переменные править в `assets/css/tokens.css` (+bump `?v=` в @import первой строки theme-v2.css).
 7. Один AmneziaWG-пир = одно устройство. Тот же конфиг со второго устройства — сервер флип-флопит endpoint, трафик молча умирает.
+8. Файлы открываются прямой ссылкой (`window.open`, `<a href>`, `window.location`) — это **не** `apiFetch`: ни повтора запроса, ни обновления токена, ни тоста там нет. Ошибку такому клиенту отдавать через `sendHttpError`, иначе человек получит на экран голый JSON и прочитает это как поломку сайта.
 
 ## CI
 
