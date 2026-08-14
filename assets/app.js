@@ -674,9 +674,11 @@ async function refreshNotificationBadge() {
   if (!badgeEl) return;
   if (!hasSession()) return;
   try {
-    const response = await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}`);
-    const list = await response.json();
-    const unreadCount = list.filter(n => !n.read).length;
+    // Раз в 12 секунд из каждой вкладки — поэтому спрашиваем число, а не
+    // список: раньше сюда приезжали все уведомления компании целиком.
+    const response = await apiFetch(`${SERVER_URL}/notifications/${encodeURIComponent(currentCompanyName)}/unread-count`);
+    const { unread } = await response.json();
+    const unreadCount = Number(unread) || 0;
     badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
     if (unreadCount > 0) badgeEl.innerText = unreadCount;
   } catch { /* тихо */ }

@@ -425,6 +425,41 @@ async function initDb() {
         CREATE INDEX IF NOT EXISTS idx_order_events_order_id ON order_events(order_id);
     `);
 
+    /* Индексы под запросы, которые повторяются постоянно.
+     *
+     * До сих пор их не было почти нигде: на нынешних объёмах (4300 компаний,
+     * остальные таблицы — сотни строк) последовательное чтение дёшево, и
+     * заметить это нельзя. Но связь заказчик↔компания у нас по строковому
+     * имени, а не по id, — то есть в каждом чтении лежит сравнение текста, и
+     * дорожать оно начнёт раньше, чем мы это увидим по жалобам.
+     *
+     * Индексы ставятся не «на всякий случай», а по конкретным запросам:
+     * колокольчик (раз в 12 секунд с вкладки), счётчики дашборда (раз в 20),
+     * список КП по заявке, чат по заявке, вход по email, продление сессии.
+     *
+     * CREATE INDEX без CONCURRENTLY блокирует запись в таблицу на время
+     * построения — на этих объёмах это миллисекунды при старте процесса.
+     * Когда таблицы вырастут, добавлять новые индексы придётся отдельным
+     * скриптом с CONCURRENTLY, а не здесь.
+     */
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_notifications_company_created ON notifications (company, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications (company) WHERE read = false;
+        CREATE INDEX IF NOT EXISTS idx_orders_company_status ON orders (company, status);
+        CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders (status, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_proposals_order ON proposals (order_id);
+        CREATE INDEX IF NOT EXISTS idx_proposals_company_status ON proposals (company, status);
+        CREATE INDEX IF NOT EXISTS idx_messages_order_created ON messages (order_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_messages_company_unread ON messages (company) WHERE read = false;
+        CREATE INDEX IF NOT EXISTS idx_companies_company ON companies (company);
+        CREATE INDEX IF NOT EXISTS idx_companies_role ON companies (role);
+        CREATE INDEX IF NOT EXISTS idx_users_company ON users (company);
+        CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens (user_id);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens (expires_at);
+        CREATE INDEX IF NOT EXISTS idx_delivery_events_proposal ON delivery_events (proposal_id);
+    `);
+
     await pool.query(`
         UPDATE users u SET email_verified = true
         WHERE email_verified = false

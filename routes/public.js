@@ -118,7 +118,12 @@ function createPublicRouter(deps) {
                     city: producer.city,
                     region: point.region || producer.city || '',
                     specialization: producer.specialization || '',
-                    about: producer.about || '',
+                    /* about отсюда убран: карта его не показывает и не ищет по
+                       нему (см. popup и searchText в map.html) — то есть текст
+                       профиля уезжал на клиент 4501 раз без единого читателя.
+                       Веса в этом, вопреки ожиданию, почти нет: замер на живом
+                       ответе — 55 КБ из 2,4 МБ, а после сжатия 3,7 КБ. Скорость
+                       здесь сделал gzip, а не эта строка. */
                     equipment: producer.equipment || [],
                     capabilities: producer.capabilities || [],
                     categories: categories.length ? categories : ['Прочее'],

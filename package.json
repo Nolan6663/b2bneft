@@ -33,6 +33,7 @@
     "@google/generative-ai": "^0.24.1",
     "@playwright/test": "^1.61.0",
     "@sentry/node": "^10.60.0",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^16.4.5",
     "exceljs": "^4.4.0",

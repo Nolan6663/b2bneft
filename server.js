@@ -9,6 +9,7 @@ if (process.env.SENTRY_DSN) {
 }
 const express = require('express');
 const helmet = require('helmet');
+const compression = require('compression');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
@@ -45,6 +46,7 @@ const createAdminRouter = require('./routes/admin');
 const createNotificationsRouter = require('./routes/notifications');
 const createLogisticsRouter = require('./routes/logistics');
 const { purgeExpiredQuotes } = require('./lib/logistics');
+const { purgeExpiredTokens } = require('./lib/purge-expired');
 const { checkAllCarriers, formatCarrierAlert } = require('./lib/logistics/health');
 const createTasksRouter = require('./routes/tasks');
 const createIntegrationsRouter = require('./routes/integrations');
@@ -291,6 +293,17 @@ function rowToNotification(r) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.set('trust proxy', 1);
+/* Сжатие ответов.
+ *
+ * До этого его не было нигде: nginx впереди стоит, но gzip у него выключен, и
+ * наружу всё уходило как есть. Проверено на проде 15.08: /api/map отдавал
+ * 2 434 220 байт и на клиента приезжал полностью, даже когда браузер просил
+ * gzip. JSON и HTML жмутся примерно в десять раз, и это самая дешёвая правка
+ * из всех, что вообще влияют на скорость страниц.
+ *
+ * Место в цепочке важно: до статики и до роутов, иначе сжимать будет нечего.
+ */
+app.use(compression());
 app.use(helmet({
     contentSecurityPolicy: false,      // inline-скрипты в HTML-страницах
     crossOriginEmbedderPolicy: false,  // внешние ресурсы (Leaflet CDN, fonts)
@@ -2067,6 +2080,14 @@ function startOrderMaintenanceCron() {
             if (removed) console.log(`[logistics] удалено протухших расчётов: ${removed}`);
         } catch (e) {
             console.error('[logistics] не удалось почистить кэш расчётов:', e.message);
+        }
+        // Мёртвые токены: истёкшие строки ничего не открывают, но лежат вечно.
+        const { removed, failed } = await purgeExpiredTokens(pool);
+        for (const [table, n] of Object.entries(removed)) {
+            console.log(`[purge] ${table}: удалено протухших строк ${n}`);
+        }
+        for (const [table, message] of Object.entries(failed)) {
+            console.error(`[purge] ${table}: уборка не удалась — ${message}`);
         }
     });
 }
