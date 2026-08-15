@@ -95,6 +95,56 @@
             </div>
         </div>
 
+        <!-- Расчёт доставки прямо в разделе.
+             Он и раньше существовал — в карточке КП и на публичной странице
+             /dostavka, — но завод искал его здесь: «габариты, расстояние вбил,
+             и тебе дают три компании». Раздел, называющийся «Доставки», должен
+             уметь посчитать доставку, а не только показывать чужие.
+             Развёрнутым: свёрнутый блок никто не открывает — этот урок мы уже
+             прошли на габаритах в форме КП. -->
+        <div class="card" style="margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">Рассчитать доставку</span>
+                <span style="font-size:12px;color:var(--text-secondary);">ПЭК, Деловые Линии и Возовоз — по публичным тарифам</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:12px;">
+                <div>
+                    <label for="dvFrom">Откуда</label>
+                    <input type="text" id="dvFrom" placeholder="Москва" autocomplete="off">
+                </div>
+                <div>
+                    <label for="dvTo">Куда</label>
+                    <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
+                </div>
+                <div>
+                    <label for="dvWeight">Вес места, кг</label>
+                    <input type="number" id="dvWeight" min="0" step="0.1" placeholder="500">
+                </div>
+                <div>
+                    <label for="dvPlaces">Мест</label>
+                    <input type="number" id="dvPlaces" min="1" step="1" value="1">
+                </div>
+                <div>
+                    <label for="dvLength">Длина, м</label>
+                    <input type="number" id="dvLength" min="0" step="0.01" placeholder="1,2">
+                </div>
+                <div>
+                    <label for="dvWidth">Ширина, м</label>
+                    <input type="number" id="dvWidth" min="0" step="0.01" placeholder="0,8">
+                </div>
+                <div>
+                    <label for="dvHeight">Высота, м</label>
+                    <input type="number" id="dvHeight" min="0" step="0.01" placeholder="0,6">
+                </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;color:var(--text-secondary);">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorFrom" checked style="width:auto;margin:0;"> Забор от адреса отправителя</label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorTo" checked style="width:auto;margin:0;"> Доставка до адреса получателя</label>
+            </div>
+            <button type="button" class="btn-primary" id="dvSubmit" style="margin-top:14px;" onclick="calculateDelivery()">Рассчитать</button>
+            <div id="dvResult" style="margin-top:14px;"></div>
+        </div>
+
         <div class="kpi-row" style="margin-bottom:20px;">
             <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Всего сделок</div></div><div class="kpi-value" id="kpiTotal">—</div></div>
             <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">В процессе</div></div><div class="kpi-value" id="kpiActive">—</div></div>
@@ -131,8 +181,57 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js?v=6"></script>
     <script src="assets/ui-animations.js"></script>
+    <script src="assets/city-suggest.js?v=2"></script>
+    <script src="assets/delivery-quotes.js?v=2"></script>
     <script>
         authGuard(null);
+
+        /* Расчёт доставки. Эндпоинт тот же, что у публичной страницы: наших
+           данных он не касается вовсе — на входе город и коробка, на выходе
+           чужие тарифы. Своего заводить незачем, а потолок в 20 расчётов за
+           10 минут честному человеку на подбор габаритов хватает. */
+        attachCitySuggest(document.getElementById('dvFrom'));
+        attachCitySuggest(document.getElementById('dvTo'));
+
+        function dvSay(html) { document.getElementById('dvResult').innerHTML = html; }
+        function dvNote(text) {
+            dvSay(`<div style="font-size:13px;color:var(--text-secondary);">${text}</div>`);
+        }
+
+        async function calculateDelivery() {
+            const val = (id) => document.getElementById(id).value;
+            const payload = {
+                from: val('dvFrom').trim(),
+                to: val('dvTo').trim(),
+                length: val('dvLength'),
+                width: val('dvWidth'),
+                height: val('dvHeight'),
+                weight: val('dvWeight'),
+                places: val('dvPlaces') || 1,
+                doorFrom: document.getElementById('dvDoorFrom').checked,
+                doorTo: document.getElementById('dvDoorTo').checked,
+            };
+            // Города проверяем до запроса: иначе человек ждёт ответа сервера,
+            // чтобы узнать то, что видно сразу.
+            if (!payload.from || !payload.to) { dvNote('Укажите город отправления и получения.'); return; }
+
+            const btn = document.getElementById('dvSubmit');
+            btn.disabled = true;
+            dvNote('Считаем у перевозчиков…');
+            try {
+                const res = await fetch(`${SERVER_URL}/logistics/public-quote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json().catch(() => ({}));
+                dvSay(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%', variant: 'page' }));
+            } catch {
+                dvNote('Не удалось связаться с сервером. Попробуйте ещё раз.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
 
         const STAGES = ['КП принят','В производстве','Готов к отгрузке','Отгружен','Доставлен','Принят заказчиком'];
         const STAGE_CLASS = {
