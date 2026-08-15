@@ -953,6 +953,18 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
   /* Шапка профиля производителя: кнопка наезжала на название компании */
   .producer-banner { flex-wrap: wrap; gap: 10px; }
   .producer-banner > * { min-width: 0; }
+  /* Перенос строк сам по себе не спас: аватар, блок с названием и кнопка в
+     сумме укладывались в ширину экрана, поэтому переноса не происходило —
+     вместо него сжимался блок названия. Кнопка «Профиль компании» не
+     сжимается вовсе (nowrap, ~180px), и на 390px от названия оставалось 73px:
+     оно ломалось на две строки, а бейдж «На проверке» — шире остатка — вылезал
+     из своей колонки прямо под кнопку. Замечено на живом показе 15.08.
+     Кнопке — своя строка: трём колонкам в этом ряду не бывать. */
+  .producer-banner > .btn-secondary,
+  .producer-banner > a.btn-secondary {
+    flex: 1 0 100%;
+    justify-content: center;
+  }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .orders-controls { flex-wrap: wrap; gap: 8px; }
   .orders-search { min-width: 0; flex: 1 1 100%; }
@@ -1648,6 +1660,27 @@ table {
     display: none !important;
   }
 
+  /* Меню сгруппировано: .sidebar-nav-group — колонка со своим заголовком и
+     несколькими ссылками. На десктопе так и надо, а внизу экрана бар — строка,
+     и группы оставались колонками внутри неё: наружу торчал только первый
+     пункт каждой, остальные уезжали ниже экрана. С телефона были недоступны
+     девять пунктов из тринадцати — «Каталог», «Мои отклики», «Доставки»,
+     «Сообщения», «Мой профиль» и прочие. Замечено на живом показе 15.08:
+     «тут чё-то съезжает постоянно с мобилки».
+
+     display: contents распускает группу, и ссылки становятся прямыми детьми
+     бара — теми самыми колонками по 76px, под которые правила ниже и писаны.
+     Заголовки групп при этом лишние: место занимают, нажать нельзя. */
+  .sidebar-nav-group,
+  [data-sidebar-collapsed="1"] .sidebar-nav-group {
+    display: contents;
+  }
+
+  .sidebar .sidebar-nav-label,
+  [data-sidebar-collapsed="1"] .sidebar .sidebar-nav-label {
+    display: none !important;
+  }
+
   .sidebar a,
   [data-sidebar-collapsed="1"] .sidebar a {
     flex: 0 0 76px;
@@ -2170,8 +2203,14 @@ table {
 }
 .cs-open .cs-arrow { transform: rotate(180deg); }
 
+/* Меню шире поля, когда пункты длиннее поля. Раньше стояло left:0;right:0 —
+   ширина равнялась полю, и в фильтре категорий (154px на телефоне)
+   «Электрооборудование» упиралось в край и обрезалось: слово длинное,
+   переносить его не по чему. Замечено на живом показе 15.08.
+   Уехать за правый край не даём — правку края доводит open() в ui-animations. */
 .cs-menu {
-  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 600;
+  position: absolute; top: calc(100% + 5px); left: 0; right: auto; z-index: 600;
+  min-width: 100%; width: max-content; max-width: min(88vw, 340px);
   background: var(--card-bg); border: 1px solid var(--card-border);
   border-radius: 10px; box-shadow: 0 10px 32px rgba(0,0,0,.14);
   overflow: hidden; max-height: 220px; overflow-y: auto;
@@ -2185,7 +2224,7 @@ table {
 .cs-opt {
   padding: 9px 14px; font-size: 13px; color: var(--text-primary);
   cursor: pointer; transition: background .08s;
-  display: flex; align-items: center;
+  display: flex; align-items: center; white-space: nowrap;
 }
 .cs-opt:hover { background: var(--inner-bg); }
 .cs-opt-active { color: var(--accent-cyan); font-weight: 600; }

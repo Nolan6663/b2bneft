@@ -73,6 +73,17 @@ function buildCustomSelect(sel) {
             menu.style.top = 'calc(100% + 5px)';
             menu.style.bottom = 'auto';
         }
+
+        // Меню может быть шире поля (длинные названия категорий). Слева оно
+        // стоит по умолчанию; если при этом упирается в правый край экрана —
+        // прижимаем к правому краю поля. Сбрасываем каждый раз: положение
+        // зависит от того, где поле оказалось на этом экране.
+        menu.style.left = '0';
+        menu.style.right = 'auto';
+        if (menu.getBoundingClientRect().right > window.innerWidth - 8) {
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+        }
     }
 
     function close() {
