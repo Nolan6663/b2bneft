@@ -814,6 +814,30 @@ input[type=range].load-range { width: 100%; accent-color: var(--accent-cyan); cu
 }
 .sidebar-overlay.visible { display: block; }
 
+/* Плашка «Подтвердите email» прибита к низу окна. На телефоне там же стоит
+   нижнее меню, и плашка ложилась прямо поверх него: навигация пропадала
+   целиком — ни «Доставок», ни «Настроек». Поднимаем её ровно на высоту меню.
+   Стиль здесь, а не в app.js, где плашка создаётся: инлайновый bottom перебил
+   бы медиазапрос. */
+#emailVerifyBanner { bottom: 0; }
+@media (max-width: 768px) {
+  #emailVerifyBanner { bottom: var(--mobile-bottom-nav-height, 68px); }
+}
+
+/* Прокрутка широких таблиц — на любой ширине, а не только на телефоне.
+   Обёртку .table-scroll вешает app.js, но правило с overflow жило внутри
+   мобильного блока ниже. На десктопе от этого страдала аналитика: при окне
+   1280 карточка получает 289px (сайдбар плюс панель инсайтов), а таблица
+   поставщиков — 680px, и лишнее молча срезал .main-content с
+   overflow-x: hidden. На фото с монитора 16.08 это выглядело как обрубленная
+   правая колонка. Ширину колонок и nowrap не трогаем — это решение
+   мобильного блока, там оно осознанное. */
+.main-content .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
   .burger-btn { display: flex; }
   .sidebar {

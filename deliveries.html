@@ -226,6 +226,9 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 dvSay(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%', variant: 'page' }));
+                // На телефоне ответ выпадает ниже кнопки, за край экрана: человек
+                // жмёт «Рассчитать» и видит ту же форму. Подводим ответ к глазам.
+                document.getElementById('dvResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch {
                 dvNote('Не удалось связаться с сервером. Попробуйте ещё раз.');
             } finally {

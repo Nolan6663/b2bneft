@@ -62,7 +62,7 @@
         .an-filter-reset:hover { background: var(--inner-bg); }
 
         /* ─── KPI row ─── */
-        .an-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 16px; }
+        .an-kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
         .an-kpi-card {
             background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
             padding: 18px 20px; display: flex; flex-direction: column; gap: 0; min-height: 120px;
@@ -81,7 +81,16 @@
         /* ─── Body: charts + insights ─── */
         .an-body { display: flex; gap: 14px; align-items: flex-start; }
         .an-main { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-        .an-row { display: grid; grid-template-columns: 5fr 3fr 3fr; gap: 14px; }
+        /* minmax(0, …), а не голые fr.
+           Дорожка с одним fr не сжимается ниже содержимого, а содержимое здесь —
+           canvas, которому Chart.js проставляет ширину в пикселях по прошлому
+           замеру. Получается петля: график шире → дорожка шире → карточка шире →
+           график шире. Сетка вылезала за правый край на девяносто пикселей, а
+           .main-content с overflow-x: hidden молча их срезал: правая колонка
+           выглядела обрубленной. Замечено на живом показе 16.08. */
+        .an-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 3fr) minmax(0, 3fr); gap: 14px; }
+        /* Вторая половина той же петли: холст не должен диктовать ширину. */
+        .an-card canvas { max-width: 100%; }
 
         /* ─── Chart card ─── */
         .an-card {
@@ -216,9 +225,9 @@
         .filter-active-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); margin-left: 4px; vertical-align: middle; }
 
         /* ─── Responsive ─── */
-        @media (max-width: 1300px) { .an-row { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 900px)  { .an-kpi-row { grid-template-columns: 1fr 1fr; } .an-body { flex-direction: column; } .an-insights-panel { width: 100%; } }
-        @media (max-width: 600px)  { .an-kpi-row { grid-template-columns: 1fr; } .an-row { grid-template-columns: 1fr; } }
+        @media (max-width: 1300px) { .an-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+        @media (max-width: 900px)  { .an-kpi-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .an-body { flex-direction: column; } .an-insights-panel { width: 100%; } }
+        @media (max-width: 600px)  { .an-kpi-row { grid-template-columns: minmax(0, 1fr); } .an-row { grid-template-columns: minmax(0, 1fr); } }
         @media (max-width: 720px) {
             .an-filters { flex-direction: column; align-items: stretch; gap: 12px; }
             .an-filter-sep { display: none; }
