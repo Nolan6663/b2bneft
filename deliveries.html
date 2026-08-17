@@ -116,30 +116,33 @@
                     <label for="dvTo">Куда</label>
                     <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
                 </div>
+            </div>
+
+            <!-- Позиции груза. Одна строка по умолчанию: станок с ящиком
+                 запчастей раньше приходилось усреднять в один размер, и объём
+                 уезжал. Добавлять места — по кнопке, чтобы форма не пугала
+                 длиной тех, у кого груз однородный. -->
+            <div style="margin-top:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Груз</div>
+                <div id="dvItems"></div>
+                <button type="button" class="btn-secondary" style="font-size:12.5px;height:32px;padding:0 12px;" onclick="addCargoItem()">+ Добавить место</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:12px;">
                 <div>
-                    <label for="dvWeight">Вес места, кг</label>
-                    <input type="number" id="dvWeight" min="0" step="0.1" placeholder="500">
-                </div>
-                <div>
-                    <label for="dvPlaces">Мест</label>
-                    <input type="number" id="dvPlaces" min="1" step="1" value="1">
-                </div>
-                <div>
-                    <label for="dvLength">Длина, м</label>
-                    <input type="number" id="dvLength" min="0" step="0.01" placeholder="1,2">
-                </div>
-                <div>
-                    <label for="dvWidth">Ширина, м</label>
-                    <input type="number" id="dvWidth" min="0" step="0.01" placeholder="0,8">
-                </div>
-                <div>
-                    <label for="dvHeight">Высота, м</label>
-                    <input type="number" id="dvHeight" min="0" step="0.01" placeholder="0,6">
+                    <label for="dvDeclared">Объявленная стоимость, ₽</label>
+                    <input type="number" id="dvDeclared" min="0" step="1000" placeholder="не обязательно">
                 </div>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;color:var(--text-secondary);">
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorFrom" checked style="width:auto;margin:0;"> Забор от адреса отправителя</label>
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorTo" checked style="width:auto;margin:0;"> Доставка до адреса получателя</label>
+            </div>
+            <!-- Честная сноска: часть параметров доезжает не до всех, и молчать
+                 об этом нельзя — иначе расчёт выглядит точнее, чем он есть. -->
+            <div style="margin-top:8px;font-size:11.5px;color:var(--text-muted);">
+                Негабарит, жёсткую упаковку и объявленную стоимость из этих троих учитывает только ПЭК:
+                у Деловых Линий и Возовоза публичный расчёт таких параметров не принимает.
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;">
                 <button type="button" class="btn-primary" id="dvSubmit" onclick="calculateDelivery()">Рассчитать</button>
@@ -204,16 +207,72 @@
             dvSay(`<div style="font-size:13px;color:var(--text-secondary);">${text}</div>`);
         }
 
+        /* Опросный лист: строка на позицию груза. Спрашиваем только то, что
+           доедет до перевозчиков — размеры, вес, количество и два флага ПЭК.
+           Полей ради полей здесь быть не должно: ответ от них не изменится. */
+        let dvItemSeq = 0;
+
+        function addCargoItem(values) {
+            const v = values || {};
+            const id = ++dvItemSeq;
+            const row = document.createElement('div');
+            row.className = 'dv-item';
+            row.dataset.item = id;
+            row.style.cssText = 'border:1px solid var(--inner-border);border-radius:10px;padding:12px;margin-bottom:10px;';
+            row.innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;">
+                    <div><label>Длина, м</label><input type="number" data-f="length" min="0" step="0.01" placeholder="1,2" value="${v.length || ''}"></div>
+                    <div><label>Ширина, м</label><input type="number" data-f="width" min="0" step="0.01" placeholder="0,8" value="${v.width || ''}"></div>
+                    <div><label>Высота, м</label><input type="number" data-f="height" min="0" step="0.01" placeholder="0,6" value="${v.height || ''}"></div>
+                    <div><label>Вес места, кг</label><input type="number" data-f="weight" min="0" step="0.1" placeholder="500" value="${v.weight || ''}"></div>
+                    <div><label>Мест</label><input type="number" data-f="quantity" min="1" step="1" value="${v.quantity || 1}"></div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--text-secondary);">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-f="oversized" style="width:auto;margin:0;"> Негабарит</label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-f="hardPack" style="width:auto;margin:0;"> Жёсткая упаковка</label>
+                    <button type="button" class="dv-item-remove" style="margin-left:auto;background:none;border:none;color:var(--error);font-size:12.5px;font-weight:600;cursor:pointer;">Убрать</button>
+                </div>`;
+            row.querySelector('.dv-item-remove').addEventListener('click', () => {
+                row.remove();
+                syncItemControls();
+            });
+            document.getElementById('dvItems').appendChild(row);
+            syncItemControls();
+        }
+
+        /* Единственную позицию убрать нельзя: пустая форма всё равно не
+           посчитается, а кнопка, которая ломает экран, — не кнопка. */
+        function syncItemControls() {
+            const rows = document.querySelectorAll('#dvItems .dv-item');
+            rows.forEach((row) => {
+                row.querySelector('.dv-item-remove').style.display = rows.length > 1 ? '' : 'none';
+            });
+        }
+
+        function collectItems() {
+            return [...document.querySelectorAll('#dvItems .dv-item')].map((row) => {
+                const f = (name) => row.querySelector(`[data-f="${name}"]`);
+                return {
+                    length: f('length').value,
+                    width: f('width').value,
+                    height: f('height').value,
+                    weight: f('weight').value,
+                    quantity: f('quantity').value || 1,
+                    oversized: f('oversized').checked,
+                    hardPack: f('hardPack').checked,
+                };
+            });
+        }
+
+        addCargoItem();
+
         function dvPayload() {
             const val = (id) => document.getElementById(id).value;
             return {
                 from: val('dvFrom').trim(),
                 to: val('dvTo').trim(),
-                length: val('dvLength'),
-                width: val('dvWidth'),
-                height: val('dvHeight'),
-                weight: val('dvWeight'),
-                places: val('dvPlaces') || 1,
+                items: collectItems(),
+                declaredValue: val('dvDeclared'),
                 doorFrom: document.getElementById('dvDoorFrom').checked,
                 doorTo: document.getElementById('dvDoorTo').checked,
             };

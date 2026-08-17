@@ -2,7 +2,9 @@
 
 const PDFDocument = require('pdfkit');
 const path = require('path');
-const { DISCLAIMER, quoteRows, cargoLabel, doorsLabel, routeLabel } = require('./lib/logistics/quote-doc');
+const {
+  DISCLAIMER, quoteRows, cargoLabel, itemLabels, totalsLabel, scopeNote, doorsLabel, routeLabel,
+} = require('./lib/logistics/quote-doc');
 const FONT_DIR = path.join(__dirname, 'assets', 'fonts', 'pdf');
 const TZ_INK = '#071B2A';
 const TZ_GRAPHITE = '#475569';
@@ -165,7 +167,19 @@ function buildDeliveryQuotesPdf(data, res) {
     doc.moveDown(1);
 
     doc.fontSize(9).fillColor('#111');
-    doc.font('TZ-Bold').text('Груз: ', { continued: true }).font('TZ').text(cargoLabel(data.cargo));
+    const items = itemLabels(data.items);
+    if (items.length) {
+      doc.font('TZ-Bold').text('Груз:');
+      doc.font('TZ');
+      items.forEach((line) => doc.text(line, { indent: 10 }));
+      doc.font('TZ-Bold').text('Всего: ', { continued: true }).font('TZ').text(totalsLabel(data.items));
+    } else {
+      doc.font('TZ-Bold').text('Груз: ', { continued: true }).font('TZ').text(cargoLabel(data.cargo));
+    }
+    if (data.declaredValue) {
+      doc.font('TZ-Bold').text('Объявленная стоимость: ', { continued: true })
+        .font('TZ').text(`${fmtNum(data.declaredValue)} ₽`);
+    }
     doc.font('TZ-Bold').text('Условия: ', { continued: true }).font('TZ').text(doorsLabel(data.doorFrom, data.doorTo));
     doc.moveDown(0.8);
 
@@ -196,6 +210,11 @@ function buildDeliveryQuotesPdf(data, res) {
     }
 
     doc.moveDown(1);
+    const scope = scopeNote(data);
+    if (scope) {
+      doc.fontSize(8).fillColor('#666').text(scope, { width: doc.page.width - 120 });
+      doc.moveDown(0.4);
+    }
     doc.fontSize(8).fillColor('#666').text(DISCLAIMER, { width: doc.page.width - 120, align: 'left' });
   }, { docNo: 'РАСЧЁТ ДОСТАВКИ' });
 }

@@ -17,7 +17,10 @@ const { quoteAll } = require('../lib/logistics');
 const { resolveCity, suggestCities, fillDellinCode, fillVozovozGuid } = require('../lib/logistics/geo');
 const { findCityCode } = require('../lib/logistics/dellin');
 const { findCityGuid } = require('../lib/logistics/vozovoz');
-const { parseCargo, isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
+const {
+    parseCargo, isCargoComplete, cargoToPlaces,
+    parseQuoteItems, itemsToPlaces, parseDeclaredValue,
+} = require('../lib/logistics/cargo');
 const { buildDeliveryQuotesPdf } = require('../export-pdf');
 const { buildQuotesWorkbook } = require('../lib/logistics/quote-xlsx');
 
@@ -83,17 +86,33 @@ function createLogisticsRouter(deps) {
      * угодно. Повторный счёт почти всегда бесплатный: результат перевозчика
      * лежит в logistics_quotes_cache, и выгрузка забирает его оттуда. */
     async function computePublicQuote(body) {
-        // Габариты проверяем тем же модулем, что и КП: те же границы
-        // (20 тонн, 20 метров), тот же разбор запятой в дробных.
-        const cargo = parseCargo({
-            cargoWeight: body.weight,
-            cargoLength: body.length,
-            cargoWidth: body.width,
-            cargoHeight: body.height,
-            cargoPlaces: body.places,
-        });
-        if (!isCargoComplete(cargo)) {
-            return { error: 'Укажите вес и все три габарита одного места', reason: 'no_cargo' };
+        /* Две формы запроса. items — опросный лист: несколько позиций разных
+           габаритов, с негабаритом, жёсткой упаковкой и объявленной
+           стоимостью. Без items читаем прежние поля: так шлют старая вкладка,
+           открытая до выкатки, и любой внешний клиент. */
+        let items;
+        if (Array.isArray(body.items)) {
+            const parsed = parseQuoteItems(body);
+            if (parsed.error) return { error: parsed.error, reason: 'no_cargo' };
+            items = parsed.items;
+        } else {
+            // Габариты проверяем тем же модулем, что и КП: те же границы
+            // (20 тонн, 20 метров), тот же разбор запятой в дробных.
+            const cargo = parseCargo({
+                cargoWeight: body.weight,
+                cargoLength: body.length,
+                cargoWidth: body.width,
+                cargoHeight: body.height,
+                cargoPlaces: body.places,
+            });
+            if (!isCargoComplete(cargo)) {
+                return { error: 'Укажите вес и все три габарита одного места', reason: 'no_cargo' };
+            }
+            items = [{
+                length: cargo.length, width: cargo.width, height: cargo.height,
+                weight: cargo.weight, quantity: cargo.places || 1,
+                oversized: false, hardPack: false,
+            }];
         }
 
         const from = await pointFor(pool, body.from, 'Город отправления');
@@ -114,12 +133,15 @@ function createLogisticsRouter(deps) {
 
         const doorFrom = body.doorFrom !== false;
         const doorTo = body.doorTo !== false;
+        // Объявленная стоимость уходит только к ПЭК — остальные её не примут,
+        // и в ответе это видно: страхование у них считается своё.
+        const declaredValue = parseDeclaredValue(body.declaredValue);
 
         const result = await quoteCarriers(pool, {
             from: from.point,
             to: to.point,
-            places: cargoToPlaces(cargo),
-            insurance: 0,
+            places: itemsToPlaces(items),
+            insurance: declaredValue,
             doorFrom,
             doorTo,
         });
@@ -128,7 +150,8 @@ function createLogisticsRouter(deps) {
             data: {
                 from: { name: from.point.name },
                 to: { name: to.point.name },
-                cargo,
+                items,
+                declaredValue,
                 doorFrom,
                 doorTo,
                 quotes: result.quotes,

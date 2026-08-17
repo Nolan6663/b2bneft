@@ -115,6 +115,21 @@ h1.dv-title {
 @media (max-width: 900px) { .dv-grid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .dv-grid-2 { grid-template-columns: 1fr; } }
 
+/* ── Позиции груза ──────────────────────────────────────────────────── */
+.dv-item { border: 2px solid #E2E8F0; padding: 16px; margin-top: 16px; }
+.dv-item-flags { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 14px; font-size: 13px; color: #475569; }
+.dv-item-flags label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.dv-item-remove { margin-left: auto; background: none; border: none; color: #DC2626; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; }
+.dv-add {
+    margin-top: 14px; padding: 10px 16px;
+    background: transparent; border: 2px dashed #CBD5E1; color: #475569;
+    font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.dv-add:hover { border-color: #FF6A00; color: #071B2A; }
+.dv-scope { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: #94A3B8; max-width: 640px; }
+:root[data-theme="dark"] .dv-item { border-color: #334155; }
+:root[data-theme="dark"] .dv-item-flags { color: #94A3B8; }
+
 .dv-field label {
     display: block; margin-bottom: 7px;
     font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700;
@@ -255,26 +270,15 @@ h1.dv-title {
       </div>
     </div>
 
-    <div class="dv-grid-5">
+    <!-- Позиции груза. Одной строкой — как было; станок с ящиком запчастей
+         раньше приходилось усреднять в один размер, и объём уезжал. -->
+    <div id="dvItems"></div>
+    <button type="button" class="dv-add" id="dvAdd">+ Добавить место</button>
+
+    <div class="dv-grid-2">
       <div class="dv-field">
-        <label for="dvLength">Длина, м</label>
-        <input type="number" id="dvLength" min="0" step="0.01" placeholder="1,2">
-      </div>
-      <div class="dv-field">
-        <label for="dvWidth">Ширина, м</label>
-        <input type="number" id="dvWidth" min="0" step="0.01" placeholder="0,8">
-      </div>
-      <div class="dv-field">
-        <label for="dvHeight">Высота, м</label>
-        <input type="number" id="dvHeight" min="0" step="0.01" placeholder="0,6">
-      </div>
-      <div class="dv-field">
-        <label for="dvWeight">Вес места, кг</label>
-        <input type="number" id="dvWeight" min="0" step="0.1" placeholder="500">
-      </div>
-      <div class="dv-field">
-        <label for="dvPlaces">Мест</label>
-        <input type="number" id="dvPlaces" min="1" step="1" value="1">
+        <label for="dvDeclared">Объявленная стоимость, ₽</label>
+        <input type="number" id="dvDeclared" min="0" step="1000" placeholder="не обязательно">
       </div>
     </div>
 
@@ -282,6 +286,13 @@ h1.dv-title {
       <label><input type="checkbox" id="dvDoorFrom" checked> Забор от адреса отправителя</label>
       <label><input type="checkbox" id="dvDoorTo" checked> Доставка до адреса получателя</label>
     </div>
+
+    <!-- Честная сноска: эти параметры доезжают не до всех, и молчать об этом
+         нельзя — иначе расчёт выглядит точнее, чем он есть. -->
+    <p class="dv-scope">
+      Негабарит, жёсткую упаковку и объявленную стоимость из этих троих учитывает только ПЭК:
+      у Деловых Линий и Возовоза публичный расчёт таких параметров не принимает.
+    </p>
 
     <div class="dv-actions">
       <button type="button" class="dv-submit" id="dvSubmit">Рассчитать</button>
@@ -386,15 +397,70 @@ h1.dv-title {
     function say(html) { $('dvResult').innerHTML = html; }
     function note(text) { say(`<div style="font-size:14px;color:#64748B;">${text}</div>`); }
 
+    /* Опросный лист: строка на позицию груза. Спрашиваем ровно то, что доедет
+       до перевозчиков — размеры, вес, количество и два флага, которые
+       принимает ПЭК. Поля, от которых ответ не меняется, здесь были бы
+       обманом: у Деловых Линий публичный расчёт берёт объём и вес. */
+    let itemSeq = 0;
+
+    function addItem(values) {
+        const v = values || {};
+        itemSeq += 1;
+        const row = document.createElement('div');
+        row.className = 'dv-item';
+        row.innerHTML = `
+            <div class="dv-grid-5">
+              <div class="dv-field"><label>Длина, м</label><input type="number" data-f="length" min="0" step="0.01" placeholder="1,2" value="${v.length || ''}"></div>
+              <div class="dv-field"><label>Ширина, м</label><input type="number" data-f="width" min="0" step="0.01" placeholder="0,8" value="${v.width || ''}"></div>
+              <div class="dv-field"><label>Высота, м</label><input type="number" data-f="height" min="0" step="0.01" placeholder="0,6" value="${v.height || ''}"></div>
+              <div class="dv-field"><label>Вес места, кг</label><input type="number" data-f="weight" min="0" step="0.1" placeholder="500" value="${v.weight || ''}"></div>
+              <div class="dv-field"><label>Мест</label><input type="number" data-f="quantity" min="1" step="1" value="${v.quantity || 1}"></div>
+            </div>
+            <div class="dv-item-flags">
+              <label><input type="checkbox" data-f="oversized"> Негабарит</label>
+              <label><input type="checkbox" data-f="hardPack"> Жёсткая упаковка</label>
+              <button type="button" class="dv-item-remove">Убрать</button>
+            </div>`;
+        row.querySelector('.dv-item-remove').addEventListener('click', () => { row.remove(); syncItems(); });
+        // Enter в новых полях тоже считает — обработчик висит на .dv-calc input,
+        // а он навешивается один раз при загрузке, поэтому дублируем здесь.
+        row.querySelectorAll('input[type="number"]').forEach((input) => {
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') calculate(); });
+        });
+        $('dvItems').appendChild(row);
+        syncItems();
+    }
+
+    /* Единственную позицию убрать нельзя: пустая форма всё равно не
+       посчитается, а кнопка, которая ломает экран, — не кнопка. */
+    function syncItems() {
+        const rows = document.querySelectorAll('#dvItems .dv-item');
+        rows.forEach((row) => {
+            row.querySelector('.dv-item-remove').style.display = rows.length > 1 ? '' : 'none';
+        });
+    }
+
+    function collectItems() {
+        return [...document.querySelectorAll('#dvItems .dv-item')].map((row) => {
+            const f = (name) => row.querySelector(`[data-f="${name}"]`);
+            return {
+                length: f('length').value,
+                width: f('width').value,
+                height: f('height').value,
+                weight: f('weight').value,
+                quantity: f('quantity').value || 1,
+                oversized: f('oversized').checked,
+                hardPack: f('hardPack').checked,
+            };
+        });
+    }
+
     function payloadOf() {
         return {
             from: $('dvFrom').value.trim(),
             to: $('dvTo').value.trim(),
-            length: $('dvLength').value,
-            width: $('dvWidth').value,
-            height: $('dvHeight').value,
-            weight: $('dvWeight').value,
-            places: $('dvPlaces').value || 1,
+            items: collectItems(),
+            declaredValue: $('dvDeclared').value,
             doorFrom: $('dvDoorFrom').checked,
             doorTo: $('dvDoorTo').checked,
         };
@@ -471,6 +537,8 @@ h1.dv-title {
         }
     }
 
+    addItem();
+    $('dvAdd').addEventListener('click', () => addItem());
     $('dvSubmit').addEventListener('click', calculate);
     $('dvPdf').addEventListener('click', (e) => download('pdf', e.currentTarget));
     $('dvXlsx').addEventListener('click', (e) => download('xlsx', e.currentTarget));
