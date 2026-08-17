@@ -141,7 +141,13 @@
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorFrom" checked style="width:auto;margin:0;"> Забор от адреса отправителя</label>
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorTo" checked style="width:auto;margin:0;"> Доставка до адреса получателя</label>
             </div>
-            <button type="button" class="btn-primary" id="dvSubmit" style="margin-top:14px;" onclick="calculateDelivery()">Рассчитать</button>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;">
+                <button type="button" class="btn-primary" id="dvSubmit" onclick="calculateDelivery()">Рассчитать</button>
+                <!-- Появляются после расчёта: пустая выгрузка — это файл с
+                     заголовком и без строк, и объяснять им нечего. -->
+                <button type="button" class="btn-secondary" id="dvPdf" style="display:none;" onclick="downloadQuote('pdf', this)">Скачать PDF</button>
+                <button type="button" class="btn-secondary" id="dvXlsx" style="display:none;" onclick="downloadQuote('xlsx', this)">Скачать Excel</button>
+            </div>
             <div id="dvResult" style="margin-top:14px;"></div>
         </div>
 
@@ -198,9 +204,9 @@
             dvSay(`<div style="font-size:13px;color:var(--text-secondary);">${text}</div>`);
         }
 
-        async function calculateDelivery() {
+        function dvPayload() {
             const val = (id) => document.getElementById(id).value;
-            const payload = {
+            return {
                 from: val('dvFrom').trim(),
                 to: val('dvTo').trim(),
                 length: val('dvLength'),
@@ -211,6 +217,55 @@
                 doorFrom: document.getElementById('dvDoorFrom').checked,
                 doorTo: document.getElementById('dvDoorTo').checked,
             };
+        }
+
+        function dvShowExport(show) {
+            for (const id of ['dvPdf', 'dvXlsx']) {
+                document.getElementById(id).style.display = show ? '' : 'none';
+            }
+        }
+
+        /* Выгрузка расчёта. Скачиваем через fetch, а не ссылкой: параметры
+           уходят POST-ом, а отказ приезжает JSON-ом — его надо показать тостом,
+           а не уронить на диск файлом с текстом ошибки внутри. */
+        async function downloadQuote(kind, btn) {
+            const payload = dvPayload();
+            if (!payload.from || !payload.to) { showToast('Сначала рассчитайте доставку', 'warn'); return; }
+            btn.disabled = true;
+            const was = btn.textContent;
+            btn.textContent = 'Готовим…';
+            try {
+                const res = await fetch(`${SERVER_URL}/logistics/public-quote/export.${kind}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    showToast(data.error || 'Не удалось собрать файл', 'error');
+                    return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `dostavka-${payload.from}-${payload.to}.${kind === 'pdf' ? 'pdf' : 'xlsx'}`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                // Ссылку на blob браузер держит до конца жизни вкладки — на
+                // десятом расчёте это уже мегабайты в памяти.
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            } catch {
+                showToast('Не удалось связаться с сервером', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = was;
+            }
+        }
+
+        async function calculateDelivery() {
+            const payload = dvPayload();
             // Города проверяем до запроса: иначе человек ждёт ответа сервера,
             // чтобы узнать то, что видно сразу.
             if (!payload.from || !payload.to) { dvNote('Укажите город отправления и получения.'); return; }
@@ -226,6 +281,7 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 dvSay(renderDeliveryQuotes(res.ok ? data : { error: data.error }, null, { maxWidth: '100%', variant: 'page' }));
+                dvShowExport(res.ok && Array.isArray(data.quotes) && data.quotes.length > 0);
                 // На телефоне ответ выпадает ниже кнопки, за край экрана: человек
                 // жмёт «Рассчитать» и видит ту же форму. Подводим ответ к глазам.
                 document.getElementById('dvResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

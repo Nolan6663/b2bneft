@@ -2,6 +2,7 @@
 
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const { DISCLAIMER, quoteRows, cargoLabel, doorsLabel, routeLabel } = require('./lib/logistics/quote-doc');
 const FONT_DIR = path.join(__dirname, 'assets', 'fonts', 'pdf');
 const TZ_INK = '#071B2A';
 const TZ_GRAPHITE = '#475569';
@@ -146,6 +147,57 @@ function buildCompareKpPdf(meta, rows, res) {
       doc.text(`Медиана: ${fmtNum(meta.benchmark.median)} ₽    Диапазон: ${fmtNum(meta.benchmark.min)}–${fmtNum(meta.benchmark.max)} ₽`);
     }
   }, { docNo: 'СРАВНЕНИЕ КП' });
+}
+
+/* Расчёт доставки — для папки снабженца.
+ *
+ * Просьба пришла от двух компаний через партнёра: им нужно объяснить своим,
+ * почему из трёх перевозчиков выбран этот. Поэтому в документе есть не только
+ * итоговые цены, но и из чего они сложились, и кто на запрос не ответил —
+ * иначе список выглядит подобранным под ответ.
+ */
+function buildDeliveryQuotesPdf(data, res) {
+  const rows = quoteRows(data.quotes);
+  pipePdf(res, `dostavka-${Date.now()}.pdf`, (doc) => {
+    doc.fontSize(16).fillColor('#1E3A5F').text('Расчёт доставки', { align: 'center' });
+    doc.fontSize(11).fillColor('#666').text(routeLabel(data), { align: 'center' });
+    doc.fontSize(9).fillColor('#888').text(`ТехЗаказ · ${new Date().toLocaleDateString('ru-RU')}`, { align: 'center' });
+    doc.moveDown(1);
+
+    doc.fontSize(9).fillColor('#111');
+    doc.font('TZ-Bold').text('Груз: ', { continued: true }).font('TZ').text(cargoLabel(data.cargo));
+    doc.font('TZ-Bold').text('Условия: ', { continued: true }).font('TZ').text(doorsLabel(data.doorFrom, data.doorTo));
+    doc.moveDown(0.8);
+
+    if (!rows.length) {
+      doc.text('Перевозчики не вернули расчёт по этому маршруту.');
+    }
+
+    rows.forEach((r, i) => {
+      if (i > 0) doc.moveDown(0.5);
+      // Без значков: в JetBrains Mono, которым набирается кириллица, звёздочки
+      // из dingbats нет, и пометка молча исчезала бы из документа.
+      doc.font('TZ-Bold').fillColor(r.cheapest ? '#0d9488' : '#111')
+        .text(`${r.n}. ${r.carrier}${r.cheapest ? ' — дешевле' : ''}`);
+      doc.font('TZ').fillColor('#111');
+      doc.text(`${r.service} · ${r.days}`);
+      if (r.breakdown) doc.fillColor('#666').text(r.breakdown).fillColor('#111');
+      if (r.insurance) doc.fillColor('#666').text(`+ страхование ${fmtNum(r.insurance)} ₽ по расчёту перевозчика`).fillColor('#111');
+      doc.font('TZ-Bold').text(`Итого: ${fmtNum(r.total)} ₽`);
+      doc.font('TZ');
+      if (doc.y > 700) doc.addPage();
+    });
+
+    // Кто не ответил — важная часть обоснования: без неё непонятно, сравнивали
+    // трёх перевозчиков или одного.
+    if (data.failed && data.failed.length) {
+      doc.moveDown(0.8);
+      doc.fillColor('#666').text(`Не ответили на запрос: ${data.failed.join(', ')}.`).fillColor('#111');
+    }
+
+    doc.moveDown(1);
+    doc.fontSize(8).fillColor('#666').text(DISCLAIMER, { width: doc.page.width - 120, align: 'left' });
+  }, { docNo: 'РАСЧЁТ ДОСТАВКИ' });
 }
 
 // ── Договор поставки + спецификация ─────────────────────────────────────────
@@ -418,4 +470,4 @@ function buildContractPdf(data, res) {
   }, { docNo });
 }
 
-module.exports = { buildOrdersPdf, buildProposalsPdf, buildCompareKpPdf, buildContractPdf, rublesInWords };
+module.exports = { buildOrdersPdf, buildProposalsPdf, buildCompareKpPdf, buildContractPdf, buildDeliveryQuotesPdf, rublesInWords };

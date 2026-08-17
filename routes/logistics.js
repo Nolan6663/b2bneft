@@ -18,6 +18,8 @@ const { resolveCity, suggestCities, fillDellinCode, fillVozovozGuid } = require(
 const { findCityCode } = require('../lib/logistics/dellin');
 const { findCityGuid } = require('../lib/logistics/vozovoz');
 const { parseCargo, isCargoComplete, cargoToPlaces } = require('../lib/logistics/cargo');
+const { buildDeliveryQuotesPdf } = require('../export-pdf');
+const { buildQuotesWorkbook } = require('../lib/logistics/quote-xlsx');
 
 function cargoOf(row) {
     return {
@@ -75,51 +77,55 @@ function createLogisticsRouter(deps) {
      * POST, а не GET: расчёт не должен индексироваться как ссылка и собираться
      * ботами обходом параметров. Потолок запросов навешен на путь в server.js.
      */
-    router.post('/public-quote', async (req, res, next) => {
-        try {
-            const body = req.body || {};
-            // Габариты проверяем тем же модулем, что и КП: те же границы
-            // (20 тонн, 20 метров), тот же разбор запятой в дробных.
-            const cargo = parseCargo({
-                cargoWeight: body.weight,
-                cargoLength: body.length,
-                cargoWidth: body.width,
-                cargoHeight: body.height,
-                cargoPlaces: body.places,
-            });
-            if (!isCargoComplete(cargo)) {
-                return res.status(422).json({ error: 'Укажите вес и все три габарита одного места', reason: 'no_cargo' });
-            }
+    /* Сам расчёт вынесен из обработчика: тем же считает выгрузка в PDF и Excel.
+     * Документ обязан повторять экран построчно, а строить его из чисел,
+     * присланных клиентом, нельзя — тогда в бумаге с нашей рамкой окажется что
+     * угодно. Повторный счёт почти всегда бесплатный: результат перевозчика
+     * лежит в logistics_quotes_cache, и выгрузка забирает его оттуда. */
+    async function computePublicQuote(body) {
+        // Габариты проверяем тем же модулем, что и КП: те же границы
+        // (20 тонн, 20 метров), тот же разбор запятой в дробных.
+        const cargo = parseCargo({
+            cargoWeight: body.weight,
+            cargoLength: body.length,
+            cargoWidth: body.width,
+            cargoHeight: body.height,
+            cargoPlaces: body.places,
+        });
+        if (!isCargoComplete(cargo)) {
+            return { error: 'Укажите вес и все три габарита одного места', reason: 'no_cargo' };
+        }
 
-            const from = await pointFor(pool, body.from, 'Город отправления');
-            if (from.error) return res.status(422).json({ error: from.error, reason: 'from_city', candidates: from.candidates });
-            const to = await pointFor(pool, body.to, 'Город получения');
-            if (to.error) return res.status(422).json({ error: to.error, reason: 'to_city', candidates: to.candidates });
+        const from = await pointFor(pool, body.from, 'Город отправления');
+        if (from.error) return { error: from.error, reason: 'from_city', candidates: from.candidates };
+        const to = await pointFor(pool, body.to, 'Город получения');
+        if (to.error) return { error: to.error, reason: 'to_city', candidates: to.candidates };
 
-            if (from.point.id === to.point.id) {
-                return res.status(422).json({ error: 'Города отправления и получения совпадают', reason: 'same_city' });
-            }
+        if (from.point.id === to.point.id) {
+            return { error: 'Города отправления и получения совпадают', reason: 'same_city' };
+        }
 
-            await Promise.all([
-                fillDellinCode(pool, from.point, dellinLookup),
-                fillDellinCode(pool, to.point, dellinLookup),
-                fillVozovozGuid(pool, from.point, vozovozLookup),
-                fillVozovozGuid(pool, to.point, vozovozLookup),
-            ]);
+        await Promise.all([
+            fillDellinCode(pool, from.point, dellinLookup),
+            fillDellinCode(pool, to.point, dellinLookup),
+            fillVozovozGuid(pool, from.point, vozovozLookup),
+            fillVozovozGuid(pool, to.point, vozovozLookup),
+        ]);
 
-            const doorFrom = body.doorFrom !== false;
-            const doorTo = body.doorTo !== false;
+        const doorFrom = body.doorFrom !== false;
+        const doorTo = body.doorTo !== false;
 
-            const result = await quoteCarriers(pool, {
-                from: from.point,
-                to: to.point,
-                places: cargoToPlaces(cargo),
-                insurance: 0,
-                doorFrom,
-                doorTo,
-            });
+        const result = await quoteCarriers(pool, {
+            from: from.point,
+            to: to.point,
+            places: cargoToPlaces(cargo),
+            insurance: 0,
+            doorFrom,
+            doorTo,
+        });
 
-            res.json({
+        return {
+            data: {
                 from: { name: from.point.name },
                 to: { name: to.point.name },
                 cargo,
@@ -127,9 +133,55 @@ function createLogisticsRouter(deps) {
                 doorTo,
                 quotes: result.quotes,
                 failed: result.failed,
-            });
+            },
+        };
+    }
+
+    router.post('/public-quote', async (req, res, next) => {
+        try {
+            const result = await computePublicQuote(req.body || {});
+            if (result.error) {
+                return res.status(422).json({ error: result.error, reason: result.reason, candidates: result.candidates });
+            }
+            res.json(result.data);
         } catch (e) { next(e); }
     });
+
+    /* Выгрузка расчёта — PDF и Excel.
+     *
+     * Просьба пришла от двух компаний: им нужно объяснить внутри своей
+     * компании, почему из трёх перевозчиков выбран этот. Отсюда и состав
+     * документа — не только итоги, но и из чего сложилась цена и кто на запрос
+     * не ответил.
+     *
+     * POST, как и сам расчёт: параметры те же, а GET такую ссылку сделал бы
+     * индексируемой. Ошибку отдаём JSON-ом — фронт скачивает через fetch и
+     * показывает её тостом, а не роняет пустой файл на диск.
+     */
+    async function exportQuote(req, res, next, render) {
+        try {
+            const result = await computePublicQuote(req.body || {});
+            if (result.error) {
+                return res.status(422).json({ error: result.error, reason: result.reason });
+            }
+            if (!result.data.quotes.length) {
+                return res.status(422).json({ error: 'Перевозчики не вернули расчёт — выгружать нечего' });
+            }
+            await render(result.data, res);
+        } catch (e) { next(e); }
+    }
+
+    router.post('/public-quote/export.pdf', (req, res, next) =>
+        exportQuote(req, res, next, async (data) => buildDeliveryQuotesPdf(data, res)));
+
+    router.post('/public-quote/export.xlsx', (req, res, next) =>
+        exportQuote(req, res, next, async (data) => {
+            const wb = buildQuotesWorkbook(data);
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(`dostavka-${Date.now()}.xlsx`)}`);
+            await wb.xlsx.write(res);
+            res.end();
+        }));
 
     router.get('/quote', requireAuth, async (req, res, next) => {
         try {

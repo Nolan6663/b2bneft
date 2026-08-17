@@ -373,7 +373,14 @@ app.get('/api/logistics/cities', guestLookupLimiter);
 // Публичный калькулятор на /dostavka ходит в чужие API перевозчиков, поэтому
 // потолок ниже общего: 20 расчётов за 10 минут с адреса. Честному человеку
 // столько на подбор габаритов хватает с запасом, скрипту — нет.
-app.post('/api/logistics/public-quote', rateLimit({
+// Выгрузка считает то же самое и ходит к тем же перевозчикам (обычно из кэша),
+// поэтому живёт под тем же потолком: путь указан явно, иначе точный маршрут
+// выше на подпути не сработает и выгрузка осталась бы без ограничения вовсе.
+app.post([
+    '/api/logistics/public-quote',
+    '/api/logistics/public-quote/export.pdf',
+    '/api/logistics/public-quote/export.xlsx',
+], rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 20,
     standardHeaders: true,
