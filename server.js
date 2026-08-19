@@ -59,7 +59,7 @@ const createPublicRouter = require('./routes/public');
 const createAnalyticsRouter = require('./routes/analytics');
 const createIntegrationsPush = require('./lib/integrations-push');
 const { fetchEgrulData, evaluateAutoVerification } = require('./lib/egrul-verify');
-const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots } = require('./lib/producer-seo');
+const { shortTitle: buildProducerTitle, metaDescription: buildProducerDescription, ssrProfileHtml: buildProducerSsr, robotsDirective: buildProducerRobots, buildProducerJsonLd } = require('./lib/producer-seo');
 const { categorizeProducer } = require('./lib/producer-categories');
 const { withQuery } = require('./lib/redirect-query');
 const { REGIONS, regionBySlug, regionLabel } = require('./seo/regions-data');
@@ -1190,13 +1190,18 @@ app.get('/p/:id', async (req, res, next) => {
         const desc = buildProducerDescription(row);
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
         const ssr = buildProducerSsr(row, { categories: categorizeProducer(row) });
+        // Подстановка функцией, а не строкой: в строке замены '$&' и '$1' — это
+        // спецсимволы, а сюда приезжают названия компаний из каталога. Одно «$&»
+        // в имени завода — и кусок шаблона размножился бы внутри страницы.
+        const put = (v) => () => v;
         html = html
-            .replace(/<!--META_TITLE-->/g, htmlEscape(title))
-            .replace(/<!--META_DESC-->/g, htmlEscape(desc))
-            .replace(/<!--CANONICAL_URL-->/g, `${base}/p/${id}`)
-            .replace(/<!--META_ROBOTS-->/g, buildProducerRobots(row))
-            .replace(/<!--SSR_PROFILE-->/g, ssr)
-            .replace(/<!--COMPANY_ID-->/g, String(id));
+            .replace(/<!--META_TITLE-->/g, put(htmlEscape(title)))
+            .replace(/<!--META_DESC-->/g, put(htmlEscape(desc)))
+            .replace(/<!--CANONICAL_URL-->/g, put(`${base}/p/${id}`))
+            .replace(/<!--META_ROBOTS-->/g, put(buildProducerRobots(row)))
+            .replace(/<!--SSR_PROFILE-->/g, put(ssr))
+            .replace(/<!--JSONLD-->/g, put(buildProducerJsonLd(row, { id, base })))
+            .replace(/<!--COMPANY_ID-->/g, put(String(id)));
         res.setHeader('Cache-Control', 'public, max-age=300');
         res.type('html').send(html);
     } catch (e) { next(e); }

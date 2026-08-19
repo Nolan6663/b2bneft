@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { shortTitle, metaDescription, ssrProfileHtml, robotsDirective } = require('../../lib/producer-seo');
+const { shortTitle, metaDescription, ssrProfileHtml, robotsDirective, buildProducerJsonLd, displayName } = require('../../lib/producer-seo');
 
 // Реальная строка из каталога: длинное название с правовой формой в капсе — из-за
 // таких title на карточках доходил до 180 знаков и обрезался в выдаче.
@@ -107,4 +107,52 @@ test('серверная разметка: враждебные данные э�
     assert.ok(!html.includes('<img src=x'), 'имя компании попало в разметку как есть');
     assert.ok(!html.includes('<script>alert(2)'), 'продукция попала в разметку как есть');
     assert.match(html, /&lt;img src=x/, 'ожидалось экранирование');
+});
+
+/* Структурированные данные карточек. Две трети сайта — это /p/:id, и до аудита
+   19.08.2026 они были единственным разделом вообще без JSON-LD: у категорий есть
+   CollectionPage и FAQ, у регионов свой блок, а у 4530 карточек не было ничего. */
+
+test('разметка: организация с фактами из каталога, без выдуманных', () => {
+    const data = JSON.parse(buildProducerJsonLd(CLAIMED, { id: 12, base: 'https://texzakaz.ru' }));
+    const org = data['@graph'].find(n => n['@type'] === 'Organization');
+
+    assert.equal(org.url, 'https://texzakaz.ru/p/12');
+    assert.equal(org.address.addressLocality, 'Челябинск');
+    assert.equal(org.taxID, '7451000000');
+    assert.deepEqual(org.knowsAbout, ['токарная обработка', 'фрезерные работы']);
+    // Ни рейтинга, ни телефона, ни логотипа на странице нет — значит и в разметке
+    // их быть не должно: обещанные роботу факты, которых он не найдёт, — санкция.
+    for (const invented of ['aggregateRating', 'telephone', 'logo', 'priceRange', 'review']) {
+        assert.equal(org[invented], undefined, `в разметке появился ${invented}, которого нет на странице`);
+    }
+});
+
+test('разметка: у заглушки из реестра указан источник, у обычной карточки — нет', () => {
+    const stub = JSON.parse(buildProducerJsonLd(GISP, { id: 355, base: 'https://texzakaz.ru' }));
+    const org = stub['@graph'].find(n => n['@type'] === 'Organization');
+    assert.match(org.identifier.name, /Минпромторга/);
+
+    const claimed = JSON.parse(buildProducerJsonLd(CLAIMED, { id: 12, base: 'https://texzakaz.ru' }));
+    assert.equal(claimed['@graph'].find(n => n['@type'] === 'Organization').identifier, undefined);
+});
+
+test('разметка: название с угловыми скобками не разрывает тег скрипта', () => {
+    /* JSON.stringify экранирует по правилам JSON, а не HTML: «</script>» в имени
+       компании прошло бы насквозь и закрыло блок разметки посреди страницы. */
+    const raw = buildProducerJsonLd(
+        { ...CLAIMED, company: 'ООО «Механик</script><img src=x onerror=alert(1)>» & Ко' },
+        { id: 12, base: 'https://texzakaz.ru' }
+    );
+    assert.ok(!/[<>&]/.test(raw), 'в готовой разметке остались символы, способные разорвать страницу');
+    const name = JSON.parse(raw)['@graph'].find(n => n['@type'] === 'Organization').name;
+    assert.match(name, /script/, 'после разбора имя должно остаться прежним — экранирование не должно его портить');
+});
+
+test('разметка: хлебные крошки ведут от главной к карточке', () => {
+    const data = JSON.parse(buildProducerJsonLd(CLAIMED, { id: 12, base: 'https://texzakaz.ru' }));
+    const crumbs = data['@graph'].find(n => n['@type'] === 'BreadcrumbList');
+    assert.deepEqual(crumbs.itemListElement.map(i => i.position), [1, 2, 3]);
+    assert.equal(crumbs.itemListElement[2].name, displayName(CLAIMED), 'последняя крошка — то же имя, что и в H1');
+    assert.equal(crumbs.itemListElement[2].item, undefined, 'у текущей страницы ссылки в крошках быть не должно');
 });

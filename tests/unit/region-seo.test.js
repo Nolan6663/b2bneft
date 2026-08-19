@@ -42,7 +42,22 @@ test('title: с числом предприятий и в пределах дл�
     const title = buildRegionTitle(SVERD, 197);
     assert.match(title, /Свердловской области/);
     assert.match(title, /197/);
-    assert.ok(title.length <= 70, `title ${title.length} знаков — длиннее 70 обрежется в выдаче`);
+    assert.ok(title.length <= 60, `title ${title.length} знаков — длиннее 60 обрежется в выдаче`);
+});
+
+test('title: ни один регион не выходит за 60 знаков, даже с четырёхзначным числом', () => {
+    /* Аудит 19.08.2026: 27 региональных страниц отдавали title на 62–65 знаков.
+       Обрезалось при этом не имя бренда в конце, а «188 предприятий» — то самое,
+       ради чего на страницу кликают. Теперь бренд уходит первым. */
+    for (const r of REGIONS) {
+        const t = buildRegionTitle(r, 1888);
+        assert.ok(t.length <= 60, `${r.slug}: title ${t.length} знаков — «${t}»`);
+        assert.match(t, /1888/, `${r.slug}: из заголовка пропало число предприятий`);
+    }
+});
+
+test('title: короткому региону бренд достаётся', () => {
+    assert.match(buildRegionTitle(regionBySlug('moskva'), 302), /ТехЗаказ$/);
 });
 
 test('description: без выдуманных цифр и не длиннее 160 знаков', () => {

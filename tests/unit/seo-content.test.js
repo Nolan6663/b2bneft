@@ -63,3 +63,25 @@ test('разметка: JSON-LD на лендинге и категориях п
         assert.ok(types.includes('FAQPage'), `${rel}: среди типов нет FAQPage (${types.join(', ') || 'типов не найдено'})`);
     }
 });
+
+/* Аудит 19.08.2026: /zakupki и /map объявляли canonical на собственные адреса
+   с .html, а те отвечают 301 на чистый адрес. Указывать роботу как «главный»
+   тот адрес, который сам себя перенаправляет, — противоречие: сигнал приходится
+   разрешать угадыванием, и склейка страницы может встать не на ту версию. */
+test('canonical: ведёт на живой адрес, а не на .html с редиректом', () => {
+    const files = [
+        ...fs.readdirSync(ROOT).filter(f => f.endsWith('.html')),
+        ...fs.readdirSync(path.join(ROOT, 'zakupki')).filter(f => f.endsWith('.html')).map(f => path.join('zakupki', f)),
+    ];
+    for (const f of files) {
+        const m = read(f).match(/<link\s+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
+        if (!m) continue;
+        assert.ok(!m[1].endsWith('.html'), `${f}: canonical ведёт на ${m[1]} — этот адрес отвечает 301`);
+    }
+});
+
+test('карточка завода: разметка и картинка для мессенджеров на месте', () => {
+    const html = read('supplier-public.html');
+    assert.match(html, /<script type="application\/ld\+json"><!--JSONLD--><\/script>/, 'нет места под структурированные данные');
+    assert.match(html, /og:image/, 'ссылка на завод развернётся в мессенджере без картинки');
+});
