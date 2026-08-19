@@ -39,6 +39,86 @@
             overflow: hidden; margin-top: 4px; width: 80px;
         }
         .progress-fill { height: 100%; background: var(--accent-bright); border-radius: 2px; transition: width .3s; }
+
+        /* ── Форма расчёта ───────────────────────────────────────────────
+           Своих стилей у неё не было вовсе: подписи и поля лежали в сетке
+           как есть, а глобальные правила задают инпуту только рамку и
+           шрифт. Поле оставалось шириной «по умолчанию» и не тянулось на
+           ячейку, подпись вставала сбоку и липла к рамке, а пять коротких
+           числовых полей разъезжались по двум колонкам во всю карточку.
+           Здесь описана сама раскладка: подпись над полем, поле во всю
+           ячейку, числа — одной строкой. */
+        .dv-form { display: flex; flex-direction: column; gap: 20px; }
+        .dv-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .dv-head-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+        .dv-head-sub { font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); margin-top: 4px; max-width: 68ch; }
+        .dv-head-hint { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+        @media (max-width: 900px) { .dv-head-hint { display: none; } }
+
+        /* Ширина блока — по содержимому пяти полей, а не по карточке: иначе
+           рамка груза тянется во весь экран, а поля жмутся к левому краю. */
+        .dv-block { display: flex; flex-direction: column; gap: 10px; max-width: 1120px; }
+        .dv-block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .dv-block-title {
+            font-size: 11.5px; font-weight: 700; letter-spacing: .07em;
+            text-transform: uppercase; color: var(--text-muted);
+        }
+
+        .dv-grid { display: grid; gap: 14px; }
+        /* Поля не тянем во всю карточку: город в поле шириной в пол-экрана выглядит
+           так же нелепо, как вес груза. Ширина поля — подсказка о том, что в него
+           пишут. */
+        .dv-grid-route { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 400px)); }
+        /* auto-fit, а не пять фиксированных колонок: ширина контента своя
+           (сайдбар, свёрнутое меню, планшет), и брейкпоинты по ширине окна тут
+           врут — поля должны переноситься, когда перестали помещаться, а не
+           когда окно стало меньше условных 1180. */
+        .dv-grid-dims  { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 200px)); }
+        /* Стоимость уже, чем поля маршрута: это необязательное число, и на
+           всю колонку оно выглядит важнее, чем есть. */
+        .dv-grid-extra { grid-template-columns: minmax(0, 220px) auto; align-items: end; gap: 12px 28px; }
+
+        .dv-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .dv-field > input { width: 100%; }
+        .dv-field-hint { font-size: 11px; color: var(--text-muted); }
+
+        .dv-place {
+            border: 1px solid var(--inner-border); border-radius: 12px;
+            background: var(--inner-bg); padding: 14px 16px 16px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .dv-place + .dv-place { margin-top: 10px; }
+        .dv-place-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 20px; }
+        .dv-place-n { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--text-secondary); }
+        .dv-place-drop {
+            background: none; border: none; padding: 0; cursor: pointer;
+            font-size: 12.5px; font-weight: 600; color: var(--text-muted);
+        }
+        .dv-place-drop:hover { color: var(--error); }
+
+        .dv-place-foot { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 28px; }
+        .dv-field-qty { width: 140px; flex: none; }
+        .dv-place-foot .dv-checks { padding-bottom: 10px; }
+        .dv-checks { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; }
+        .dv-check {
+            display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+            font-size: 12.5px; color: var(--text-secondary); font-weight: 500;
+        }
+        .dv-check input { width: auto !important; margin: 0; flex-shrink: 0; }
+
+        /* Оговорка не должна читаться как ошибка — отсюда приглушённый цвет и
+           линейка слева вместо красного текста во всю ширину. */
+        .dv-note {
+            font-size: 11.5px; line-height: 1.55; color: var(--text-muted);
+            border-left: 2px solid var(--card-border); padding-left: 12px;
+            /* Строка в 1300 пикселей глазом не читается — её просматривают. */
+            max-width: 78ch;
+        }
+        .dv-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+        @media (max-width: 760px) {
+            .dv-grid-extra { grid-template-columns: 1fr; align-items: stretch; gap: 14px; }
+        }
     </style>
 </head>
 <body>
@@ -102,17 +182,23 @@
              уметь посчитать доставку, а не только показывать чужие.
              Развёрнутым: свёрнутый блок никто не открывает — этот урок мы уже
              прошли на габаритах в форме КП. -->
-        <div class="card" style="margin-bottom:20px;">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
-                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">Рассчитать доставку</span>
-                <span style="font-size:12px;color:var(--text-secondary);">ПЭК, Деловые Линии и Возовоз — по публичным тарифам</span>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:12px;">
+        <div class="card dv-form" style="margin-bottom:20px;">
+            <div class="dv-head">
                 <div>
+                    <div class="dv-head-title">Рассчитать доставку</div>
+                    <!-- Строка про то, что это и что с результатом делать: без неё
+                         экран начинается с полей и человек гадает, куда попал. -->
+                    <div class="dv-head-sub">Цена и срок у трёх перевозчиков за один расчёт, с выгрузкой в PDF и Excel.</div>
+                </div>
+                <span class="dv-head-hint">ПЭК, Деловые Линии и Возовоз — по публичным тарифам</span>
+            </div>
+
+            <div class="dv-grid dv-grid-route">
+                <div class="dv-field">
                     <label for="dvFrom">Откуда</label>
                     <input type="text" id="dvFrom" placeholder="Москва" autocomplete="off">
                 </div>
-                <div>
+                <div class="dv-field">
                     <label for="dvTo">Куда</label>
                     <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
                 </div>
@@ -122,42 +208,48 @@
                  запчастей раньше приходилось усреднять в один размер, и объём
                  уезжал. Добавлять места — по кнопке, чтобы форма не пугала
                  длиной тех, у кого груз однородный. -->
-            <div style="margin-top:14px;">
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Груз</div>
+            <div class="dv-block">
+                <div class="dv-block-head">
+                    <span class="dv-block-title">Груз</span>
+                    <button type="button" class="btn-secondary" style="font-size:12.5px;height:32px;padding:0 12px;" onclick="addCargoItem()">+ Добавить место</button>
+                </div>
                 <div id="dvItems"></div>
-                <button type="button" class="btn-secondary" style="font-size:12.5px;height:32px;padding:0 12px;" onclick="addCargoItem()">+ Добавить место</button>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:12px;">
-                <div>
+            <div class="dv-grid dv-grid-extra">
+                <div class="dv-field">
                     <label for="dvDeclared">Объявленная стоимость, ₽</label>
                     <input type="number" id="dvDeclared" min="0" step="1000" placeholder="не обязательно">
                 </div>
+                <div class="dv-checks">
+                    <label class="dv-check"><input type="checkbox" id="dvDoorFrom" checked> Забор от адреса отправителя</label>
+                    <label class="dv-check"><input type="checkbox" id="dvDoorTo" checked> Доставка до адреса получателя</label>
+                </div>
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:13px;color:var(--text-secondary);">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorFrom" checked style="width:auto;margin:0;"> Забор от адреса отправителя</label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="dvDoorTo" checked style="width:auto;margin:0;"> Доставка до адреса получателя</label>
-            </div>
+
             <!-- Честная сноска: часть параметров доезжает не до всех, и молчать
                  об этом нельзя — иначе расчёт выглядит точнее, чем он есть. -->
-            <div style="margin-top:8px;font-size:11.5px;color:var(--text-muted);">
+            <div class="dv-note">
                 Негабарит, жёсткую упаковку и объявленную стоимость из этих троих учитывает только ПЭК:
                 у Деловых Линий и Возовоза публичный расчёт таких параметров не принимает.
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;">
+
+            <div class="dv-actions">
                 <button type="button" class="btn-primary" id="dvSubmit" onclick="calculateDelivery()">Рассчитать</button>
                 <!-- Появляются после расчёта: пустая выгрузка — это файл с
                      заголовком и без строк, и объяснять им нечего. -->
                 <button type="button" class="btn-secondary" id="dvPdf" style="display:none;" onclick="downloadQuote('pdf', this)">Скачать PDF</button>
                 <button type="button" class="btn-secondary" id="dvXlsx" style="display:none;" onclick="downloadQuote('xlsx', this)">Скачать Excel</button>
             </div>
-            <div id="dvResult" style="margin-top:14px;"></div>
+            <div id="dvResult"></div>
         </div>
 
         <div class="kpi-row" style="margin-bottom:20px;">
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Всего сделок</div></div><div class="kpi-value" id="kpiTotal">—</div></div>
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">В процессе</div></div><div class="kpi-value" id="kpiActive">—</div></div>
-            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Завершено</div></div><div class="kpi-value" id="kpiDone">—</div></div>
+            <!-- Считаются доставки, а подписаны были сделки: на странице
+                 «Доставки» это читалось как чужая цифра из другого раздела. -->
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Всего доставок</div></div><div class="kpi-value" id="kpiTotal">—</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">В работе</div></div><div class="kpi-value" id="kpiActive">—</div></div>
+            <div class="kpi-card"><div class="kpi-card-top"><div class="kpi-label">Доставлено</div></div><div class="kpi-value" id="kpiDone">—</div></div>
         </div>
 
         <div class="card" style="padding:0;overflow:hidden;">
@@ -216,21 +308,31 @@
             const v = values || {};
             const id = ++dvItemSeq;
             const row = document.createElement('div');
-            row.className = 'dv-item';
+            row.className = 'dv-item dv-place';
             row.dataset.item = id;
-            row.style.cssText = 'border:1px solid var(--inner-border);border-radius:10px;padding:12px;margin-bottom:10px;';
+            /* Пять числовых полей в один ряд, подпись над полем. Раньше они
+               лежали в двух колонках во всю карточку: «Длина» и «Ширина»
+               оказывались в разных концах экрана, а справа зияла пустота. */
             row.innerHTML = `
-                <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;">
-                    <div><label>Длина, м</label><input type="number" data-f="length" min="0" step="0.01" placeholder="1,2" value="${v.length || ''}"></div>
-                    <div><label>Ширина, м</label><input type="number" data-f="width" min="0" step="0.01" placeholder="0,8" value="${v.width || ''}"></div>
-                    <div><label>Высота, м</label><input type="number" data-f="height" min="0" step="0.01" placeholder="0,6" value="${v.height || ''}"></div>
-                    <div><label>Вес места, кг</label><input type="number" data-f="weight" min="0" step="0.1" placeholder="500" value="${v.weight || ''}"></div>
-                    <div><label>Мест</label><input type="number" data-f="quantity" min="1" step="1" value="${v.quantity || 1}"></div>
+                <div class="dv-place-head">
+                    <span class="dv-place-n"></span>
+                    <button type="button" class="dv-place-drop dv-item-remove">Убрать место</button>
                 </div>
-                <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--text-secondary);">
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-f="oversized" style="width:auto;margin:0;"> Негабарит</label>
-                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" data-f="hardPack" style="width:auto;margin:0;"> Жёсткая упаковка</label>
-                    <button type="button" class="dv-item-remove" style="margin-left:auto;background:none;border:none;color:var(--error);font-size:12.5px;font-weight:600;cursor:pointer;">Убрать</button>
+                <div class="dv-grid dv-grid-dims">
+                    <div class="dv-field"><label>Длина, м</label><input type="number" data-f="length" min="0" step="0.01" placeholder="1,2" value="${v.length || ''}"></div>
+                    <div class="dv-field"><label>Ширина, м</label><input type="number" data-f="width" min="0" step="0.01" placeholder="0,8" value="${v.width || ''}"></div>
+                    <div class="dv-field"><label>Высота, м</label><input type="number" data-f="height" min="0" step="0.01" placeholder="0,6" value="${v.height || ''}"></div>
+                    <div class="dv-field"><label>Вес места, кг</label><input type="number" data-f="weight" min="0" step="0.1" placeholder="500" value="${v.weight || ''}"></div>
+                </div>
+                <!-- Количество и признаки — не габарит: это множитель и свойства
+                     места. Отдельной строкой, иначе пятое поле в ряду габаритов
+                     переносится само и выглядит как сломанная вёрстка. -->
+                <div class="dv-place-foot">
+                    <div class="dv-field dv-field-qty"><label>Одинаковых мест</label><input type="number" data-f="quantity" min="1" step="1" value="${v.quantity || 1}"></div>
+                    <div class="dv-checks">
+                        <label class="dv-check"><input type="checkbox" data-f="oversized"> Негабарит</label>
+                        <label class="dv-check"><input type="checkbox" data-f="hardPack"> Жёсткая упаковка</label>
+                    </div>
                 </div>`;
             row.querySelector('.dv-item-remove').addEventListener('click', () => {
                 row.remove();
@@ -241,10 +343,13 @@
         }
 
         /* Единственную позицию убрать нельзя: пустая форма всё равно не
-           посчитается, а кнопка, которая ломает экран, — не кнопка. */
+           посчитается, а кнопка, которая ломает экран, — не кнопка.
+           Заодно перенумеровываем: после удаления второго из трёх мест
+           «Место 3» без «Места 2» читается как потерянная строка. */
         function syncItemControls() {
             const rows = document.querySelectorAll('#dvItems .dv-item');
-            rows.forEach((row) => {
+            rows.forEach((row, i) => {
+                row.querySelector('.dv-place-n').textContent = rows.length > 1 ? `Место ${i + 1}` : 'Габариты места';
                 row.querySelector('.dv-item-remove').style.display = rows.length > 1 ? '' : 'none';
             });
         }
