@@ -60,10 +60,15 @@
         // Никто не ответил и никто не посчитал — честно говорим об этом, а не
         // показываем пустую таблицу.
         if (!data.quotes || data.quotes.length === 0) {
-            const who = data.failed && data.failed.length
-                ? `${data.failed.join(', ')} не ответил${data.failed.length > 1 ? 'и' : ''}`
-                : 'Перевозчики не возят по этому маршруту';
-            return `<div style="font-size:12px;color:var(--text-secondary);">${esc(who)}. Попробуйте позже.</div>`;
+            if (data.failed && data.failed.length) {
+                const who = `${data.failed.join(', ')} не ответил${data.failed.length > 1 ? 'и' : ''}`;
+                return `<div style="font-size:12px;color:var(--text-secondary);">${esc(who)}. Попробуйте позже.</div>`;
+            }
+            // Никто не отказал — просто никто не возит. Просить повторить
+            // бессмысленно: со второй попытки справочник не изменится.
+            return '<div style="font-size:12px;color:var(--text-secondary);">'
+                + 'Ни один из перевозчиков не считает этот маршрут — пункта нет в их справочниках. '
+                + 'Попробуйте ближайший крупный город.</div>';
         }
 
         /* Строками, а не таблицей. Таблица из пяти колонок на 390px требует
@@ -136,8 +141,20 @@
       </label>
     </div>`;
 
-        const failed = data.failed && data.failed.length
-            ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Не ответили: ${esc(data.failed.join(', '))}</div>`
+        /* Кого нет в списке и почему.
+           «Не ответили» и «не считают этот маршрут» — разные вещи, и человеку
+           важна вторая: он видел один вариант из трёх и не понимал, отказались
+           остальные или их вообще не спросили. Спрашивать имеет смысл только в
+           первом случае — во втором ждать нечего. */
+        const missing = [];
+        if (data.failed && data.failed.length) {
+            missing.push(`Не ответили: ${esc(data.failed.join(', '))} — попробуйте позже`);
+        }
+        if (data.silent && data.silent.length) {
+            missing.push(`Не считают этот маршрут: ${esc(data.silent.join(', '))} — этого пункта нет в их справочнике`);
+        }
+        const failed = missing.length
+            ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5;">${missing.join('<br>')}</div>`
             : '';
 
         return `

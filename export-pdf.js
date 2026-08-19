@@ -208,6 +208,14 @@ function buildDeliveryQuotesPdf(data, res) {
       doc.moveDown(0.8);
       doc.fillColor('#666').text(`Не ответили на запрос: ${data.failed.join(', ')}.`).fillColor('#111');
     }
+    // «Не считают маршрут» — не то же самое, что «не ответили», и для
+    // обоснования выбора это важнее: значит выбирать было не из кого.
+    if (data.silent && data.silent.length) {
+      doc.moveDown(data.failed && data.failed.length ? 0.2 : 0.8);
+      doc.fillColor('#666')
+        .text(`Не считают этот маршрут: ${data.silent.join(', ')} — пункта нет в их справочнике.`)
+        .fillColor('#111');
+    }
 
     doc.moveDown(1);
     const scope = scopeNote(data);

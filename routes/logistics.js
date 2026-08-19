@@ -156,6 +156,7 @@ function createLogisticsRouter(deps) {
                 doorTo,
                 quotes: result.quotes,
                 failed: result.failed,
+                silent: result.silent,
             },
         };
     }
@@ -272,6 +273,7 @@ function createLogisticsRouter(deps) {
                 doorTo,
                 quotes: result.quotes,
                 failed: result.failed,
+                silent: result.silent,
             });
         } catch (e) { next(e); }
     });
