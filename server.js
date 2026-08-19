@@ -1794,7 +1794,7 @@ app.use('/api/export', createExportRouter(routesDeps));
 app.use('/api/auctions', createAuctionsRouter(routesDeps));
 app.use('/api/reviews', createReviewsRouter(routesDeps));
 app.use('/api/favorites', createFavoritesRouter(routesDeps));
-app.use('/api', createAiRouter({ ...routesDeps, genAI }));
+app.use('/api', createAiRouter(routesDeps));
 app.use('/api', createAdminRouter(routesDeps));
 app.use('/api/notifications', createNotificationsRouter(routesDeps));
 app.use('/api/logistics', createLogisticsRouter(routesDeps));

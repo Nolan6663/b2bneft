@@ -449,7 +449,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" class="catalog-search-input" id="catalogSearch" placeholder="Поиск по названию, продукции, производителю..." oninput="onSearch(this.value)">
                     </div>
-                    <button class="ai-search-btn" id="aiSearchBtn" onclick="aiSearch()" title="Умный поиск с Gemini AI">
+                    <button class="ai-search-btn" id="aiSearchBtn" onclick="aiSearch()" title="Умный подбор производителей по запросу">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         AI-поиск
                     </button>
@@ -554,6 +554,7 @@
         let showCount    = 6;
         let aiMode       = false;
         let aiResults    = [];
+        let aiRanked     = true;   // false — подобрано словами: модель не ответила
         let verifiedOnly = false;
         const _riskCache = {};
 
@@ -794,7 +795,11 @@
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || 'Ошибка AI-поиска');
                 }
-                aiResults = await res.json();
+                // Ответ приезжает объектом: помимо списка в нём написано,
+                // ранжировала ли его модель или это подбор по словам.
+                const data = await res.json();
+                aiResults = Array.isArray(data) ? data : (data.results || []);
+                aiRanked = Array.isArray(data) ? true : data.ranked !== false;
                 aiMode = true;
                 render();
             } catch (e) {
@@ -823,11 +828,11 @@
             if (aiMode) {
                 const banner = `<div class="ai-mode-banner" style="grid-column:1/-1;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    <div>Gemini AI нашёл <b>${aiResults.length} производител${aiResults.length === 1 ? 'я' : aiResults.length < 5 ? 'я' : 'ей'}</b> по вашему запросу</div>
+                    <div>Подобрано <b>${aiResults.length} производител${aiResults.length === 1 ? 'ь' : aiResults.length < 5 ? 'я' : 'ей'}</b> по запросу${aiRanked ? '' : ' — по словам: подбор с объяснением сейчас недоступен'}</div>
                     <button class="ai-mode-exit" onclick="exitAiMode()">✕ Обычный поиск</button>
                 </div>`;
                 if (aiResults.length === 0) {
-                    grid.innerHTML = banner + `<div class="catalog-empty"><p>AI не нашёл подходящих производителей.<br>Попробуйте изменить запрос.</p></div>`;
+                    grid.innerHTML = banner + `<div class="catalog-empty"><p>По этому запросу в каталоге ничего не нашлось.<br>Попробуйте назвать изделие или операцию другими словами.</p></div>`;
                 } else {
                     grid.innerHTML = banner + aiResults.map(p => cardHTML(p, p.aiReason)).join('');
                 }

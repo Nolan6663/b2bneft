@@ -2,80 +2,71 @@
 
 const express = require('express');
 const tzAi = require('../lib/ai-client');
+const { pickCandidates, buildRankingPrompt, applyRanking } = require('../lib/producer-search');
 
 function createAiRouter(deps) {
-    const { pool, requireAuth, rowToCompany, genAI, handleDrawingImageUpload, canAccessOrderDrawing, storage } = deps;
+    const { pool, requireAuth, rowToCompany, handleDrawingImageUpload, canAccessOrderDrawing, storage } = deps;
 
     const router = express.Router();
 
     const aiSearchCache = new Map(); // query → { results, ts }
     const AI_CACHE_TTL = 10 * 60 * 1000; // 10 минут
 
+    /* Умный поиск по каталогу.
+     *
+     * Кандидатов отбирает код (lib/producer-search), модель их ранжирует и
+     * объясняет выбор. До 19.08.2026 было наоборот: в промпт уезжал весь
+     * каталог — около 4500 строк на каждый запрос мимо кэша. Держалось это
+     * только на миллионном окне Gemini и на GigaChat не переносилось вовсе.
+     *
+     * Модель тут — улучшение, а не условие работы. Не настроена, не ответила,
+     * вернула чушь — отдаём то, что нашли словами, и честно помечаем ranked:false.
+     * Пустой экран с красной плашкой вместо десятка подходящих заводов — худший
+     * из возможных ответов на живой запрос снабженца.
+     */
     router.post('/ai-search', requireAuth, async (req, res, next) => {
         try {
-            if (!genAI) return res.status(503).json({ error: 'AI не настроен: добавьте GEMINI_API_KEY в .env' });
-            const { query } = req.body;
-            if (!query || !query.trim()) return res.status(400).json({ error: 'query required' });
+            const query = String((req.body && req.body.query) || '').trim();
+            if (!query) return res.status(400).json({ error: 'query required' });
 
-            const cacheKey = query.trim().toLowerCase();
+            const cacheKey = query.toLowerCase();
             const cached = aiSearchCache.get(cacheKey);
-            if (cached && Date.now() - cached.ts < AI_CACHE_TTL) return res.json(cached.results);
+            if (cached && Date.now() - cached.ts < AI_CACHE_TTL) return res.json(cached.payload);
 
-            const { rows } = await pool.query(`SELECT * FROM companies WHERE role = 'producer'`);
-            const producers = rows.map(rowToCompany);
+            const { rows } = await pool.query(
+                `SELECT * FROM companies WHERE role = 'producer' AND status <> 'Отклонено'`
+            );
+            const candidates = pickCandidates(rows.map(rowToCompany), query);
 
-            const catalog = producers.map((p, i) =>
-                `[${i}] ${p.company} | ${p.city || '—'} | ${p.specialization || '—'} | Возможности: ${(p.capabilities || []).join(', ') || '—'} | ${p.about || ''}`
-            ).join('\n');
-
-            const prompt = `Ты — ассистент B2B платформы прямых закупок ТехЗаказ (Россия).
-Пользователь ищет: "${query.trim()}"
-
-Каталог производителей (формат: [индекс] название | город | специализация | возможности | описание):
-${catalog}
-
-Верни JSON-массив с 1–6 наиболее подходящими производителями.
-Для каждого: index (число из каталога) и reason (1–2 предложения на русском почему подходит).
-Отвечай ТОЛЬКО валидным JSON без markdown. Пример: [{"index":0,"reason":"..."}]`;
-
-            const model = genAI.getGenerativeModel({
-                model: 'gemini-2.0-flash-lite',
-                safetySettings: [
-                    { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
-                    { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
-                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                ],
-            });
-            const result = await model.generateContent(prompt);
-
-            let rawText;
-            try { rawText = result.response.text(); }
-            catch (textErr) {
-                console.error('[ai-search] response.text() failed:', textErr.message);
-                return res.status(500).json({ error: 'Gemini заблокировал ответ. Уточните запрос.' });
+            // Ни одного совпадения по словам — звать модель незачем: в каталоге
+            // этого нет, и придумать его она может только выдумав.
+            if (!candidates.length) {
+                const payload = { results: [], ranked: true };
+                aiSearchCache.set(cacheKey, { payload, ts: Date.now() });
+                return res.json(payload);
             }
-            const text = rawText.trim().replace(/^```json|^```|```$/gm, '').trim();
 
-            let matches;
-            try { matches = JSON.parse(text); }
-            catch { return res.status(500).json({ error: 'Не удалось разобрать ответ AI. Попробуйте ещё раз.' }); }
-            if (!Array.isArray(matches)) return res.json([]);
+            const byWords = candidates.slice(0, 6).map(c => ({ ...c.producer, aiReason: null }));
+            if (!tzAi.isTzAiConfigured()) return res.json({ results: byWords, ranked: false });
 
-            const found = matches
-                .filter(m => Number.isInteger(m.index) && m.index >= 0 && m.index < producers.length)
-                .map(m => ({ ...producers[m.index], aiReason: m.reason }));
+            let payload;
+            try {
+                const { system, user } = buildRankingPrompt(query, candidates);
+                const text = await tzAi.chatCompletion({ system, user, temperature: 0.2, maxTokens: 900 });
+                const ranked = applyRanking(candidates, tzAi.parseJsonFromLlm(text));
+                payload = ranked.length ? { results: ranked, ranked: true } : { results: byWords, ranked: false };
+            } catch (e) {
+                console.error('[ai-search] модель не ответила:', e.message);
+                payload = { results: byWords, ranked: false };
+            }
 
-            aiSearchCache.set(cacheKey, { results: found, ts: Date.now() });
-            res.json(found);
+            // Кэшируем только удавшийся разбор: иначе минутный сбой модели
+            // залипает на десять минут и выглядит как «поиск сломался».
+            if (payload.ranked) aiSearchCache.set(cacheKey, { payload, ts: Date.now() });
+            res.json(payload);
         } catch (e) {
-            console.error('[ai-search error]', e.message, e.status || '', e.stack || '');
-            const msg = e.message || '';
-            if (msg.includes('API key') || msg.includes('API_KEY') || e.status === 400)
-                return res.status(400).json({ error: 'Неверный GEMINI_API_KEY. Проверьте ключ.' });
-            if (e.status === 429 || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED'))
-                return res.status(429).json({ error: 'Превышен лимит запросов Gemini. Попробуйте позже.' });
-            return res.status(500).json({ error: `AI ошибка: ${msg} (status: ${e.status || 'n/a'})` });
+            console.error('[ai-search error]', e.message);
+            next(e);
         }
     });
 
