@@ -138,3 +138,43 @@ test('наплавка находит сварочные производств�
     const shop = { specialization: 'Восстановление валов наплавкой', products: '', about: '' };
     assert.ok(producerHasOperation(shop, WELD), 'наплавка не попала ни в одну операцию');
 });
+
+/* Лазерная резка (21.08.2026): 166 000 показов — самый крупный запрос ядра, а
+   предприятий двое. Прежнее правило прятало такую страницу в noindex, то есть
+   закрывало дверь ровно перед тем заказчиком, которого мы ищем. */
+
+const { isOperationIndexable } = require('../../lib/equipment-seo');
+const LASER = operationBySlug('lazernaya-rezka');
+
+test('страница с разбором индексируется даже при коротком списке заводов', () => {
+    assert.ok(LASER.processes && LASER.processes.length, 'у лазерной резки нет разбора');
+    assert.equal(buildOperationRobots(2, LASER), 'index, follow');
+    assert.ok(isOperationIndexable(LASER, 2));
+});
+
+test('страница без разбора и без заводов по-прежнему прячется', () => {
+    const bare = operationBySlug('plazmennaya-rezka');
+    assert.equal(buildOperationRobots(1, bare), 'noindex, follow');
+    assert.ok(!isOperationIndexable(bare, 1));
+    // А с полным списком — открывается, как и раньше.
+    assert.equal(buildOperationRobots(MIN_INDEXABLE, bare), 'index, follow');
+});
+
+test('заголовок при коротком списке говорит про услугу, а не про размер каталога', () => {
+    const thin = buildOperationTitle(LASER, 2);
+    assert.ok(!/предприяти/.test(thin), `в заголовке осталось число заводов: «${thin}»`);
+    assert.ok(thin.length <= 60, `${thin.length} знаков`);
+    assert.match(thin, /Лазерная резка/);
+    // Когда заводов наберётся, возвращается обычный заголовок с числом.
+    assert.match(buildOperationTitle(LASER, 12), /12 предприятий/);
+    assert.ok(buildOperationDescription(LASER, 2).length <= 160);
+});
+
+test('лазерная резка честно отказывает неметаллу', () => {
+    /* «Лазерная резка фанеры» — 8 786 показов в ядре, но это CO₂ и другие
+       исполнители. Обещать то, чего на площадке нет, — верный способ получить
+       отказ от заказчика уже после регистрации. */
+    const html = buildOperationContent(LASER);
+    assert.match(html, /фанер/i);
+    assert.match(html, /металл/i);
+});

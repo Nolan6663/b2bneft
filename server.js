@@ -72,6 +72,7 @@ const {
     buildOperationJsonLd,
     buildOperationContent,
     buildOperationFaqJsonLd,
+    isOperationIndexable,
     MIN_INDEXABLE: OP_MIN_INDEXABLE,
 } = require('./lib/equipment-seo');
 const {
@@ -1036,7 +1037,7 @@ app.get('/oborudovanie/:slug', async (req, res, next) => {
         html = html
             .replace(/<!--META_TITLE-->/g, htmlEscape(buildOperationTitle(op, producers.length)))
             .replace(/<!--META_DESC-->/g, htmlEscape(buildOperationDescription(op, producers.length)))
-            .replace(/<!--META_ROBOTS-->/g, buildOperationRobots(producers.length))
+            .replace(/<!--META_ROBOTS-->/g, buildOperationRobots(producers.length, op))
             .replace(/<!--CANONICAL_URL-->/g, `${base}/oborudovanie/${op.slug}`)
             .replace(/<!--JSON_LD-->/g, buildOperationJsonLd(op, producers.length, base))
             .replace(/<!--OP_NAME-->/g, htmlEscape(op.name))
@@ -1147,7 +1148,9 @@ app.get('/sitemap.xml', async (req, res, next) => {
         const equipProducers = await loadEquipmentProducers();
         for (const op of OPERATIONS) {
             const n = equipProducers.filter(p => producerHasOperation(p, op)).length;
-            if (n < OP_MIN_INDEXABLE) continue;
+            // Тем же правилом, что и мета-тег на самой странице: иначе карта
+            // сайта и страница скажут роботу разное про один адрес.
+            if (!isOperationIndexable(op, n)) continue;
             pages.push({ url: `/oborudovanie/${op.slug}`, priority: '0.6', changefreq: 'weekly' });
         }
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
