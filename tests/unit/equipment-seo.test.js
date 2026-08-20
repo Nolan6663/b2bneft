@@ -84,3 +84,57 @@ test('JSON-LD: разбирается и несёт число позиций', 
     assert.match(parsed.url, /\/oborudovanie\/svarka$/);
     assert.equal(parsed.breadcrumb.itemListElement.length, 3);
 });
+
+/* Разбор процессов на странице операции (21.08.2026).
+
+   Семантика показала, что покрытия — второй кластер спроса после резки:
+   цинкование, наплавка, порошковая окраска, хромирование и анодирование дают
+   около 155 000 показов. Разбивать их на пять страниц оказалось рано —
+   покрытия заявили 17 предприятий на весь каталог, — поэтому спрос забирает
+   одна страница с разбором всех процессов. */
+
+const { buildOperationContent, buildOperationFaqJsonLd } = require('../../lib/equipment-seo');
+const COAT = operationBySlug('pokrytiya');
+
+test('покрытия: на странице разобраны все процессы из спроса', () => {
+    const html = buildOperationContent(COAT);
+    for (const word of ['Горячее цинкование', 'Гальваническое', 'Хромирование', 'Анодирование', 'Порошковая окраска', 'Наплавка']) {
+        assert.ok(html.includes(word), `в разборе нет процесса «${word}»`);
+    }
+    assert.match(html, /Что указать в заказе/);
+    assert.match(html, /ГОСТ/, 'без ссылки на стандарт разбор бесполезен для заявки');
+    assert.ok(html.length > 2000, `разбор в ${html.length} знаков — это снова тонкая страница`);
+});
+
+test('операция без разбора не даёт ни пустых заголовков, ни пустой разметки', () => {
+    // У большинства операций разбора пока нет, и это нормально: пустой блок
+    // «Частые вопросы» без вопросов хуже, чем его отсутствие.
+    const plain = operationBySlug('tokarka');
+    assert.equal(buildOperationContent(plain), '');
+    assert.equal(buildOperationFaqJsonLd(plain), '');
+});
+
+test('разметка вопросов собирается и не может разорвать тег скрипта', () => {
+    const raw = buildOperationFaqJsonLd(COAT);
+    assert.ok(!/[<>&]/.test(raw), 'в готовой разметке остались символы, способные закрыть <script>');
+    const data = JSON.parse(raw);
+    assert.equal(data['@type'], 'FAQPage');
+    assert.equal(data.mainEntity.length, COAT.faq.length);
+    assert.equal(data.mainEntity[0]['@type'], 'Question');
+});
+
+test('шаблон операции знает, куда класть разбор и разметку вопросов', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const tpl = fs.readFileSync(path.join(__dirname, '..', '..', 'zakupki', 'oborudovanie-operation.html'), 'utf8');
+    assert.match(tpl, /<!--OP_CONTENT-->/);
+    assert.match(tpl, /<!--FAQ_LD-->/);
+});
+
+test('наплавка находит сварочные производства', () => {
+    /* 30 000 показов в семантике, а в матчинге её не было ни у одной операции:
+       завод, который пишет «наплавка» без слова «сварка», выпадал из каталога
+       операций совсем. */
+    const shop = { specialization: 'Восстановление валов наплавкой', products: '', about: '' };
+    assert.ok(producerHasOperation(shop, WELD), 'наплавка не попала ни в одну операцию');
+});

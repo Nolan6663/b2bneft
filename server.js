@@ -70,6 +70,8 @@ const {
     buildOperationRobots,
     buildOperationSsr,
     buildOperationJsonLd,
+    buildOperationContent,
+    buildOperationFaqJsonLd,
     MIN_INDEXABLE: OP_MIN_INDEXABLE,
 } = require('./lib/equipment-seo');
 const {
@@ -1041,8 +1043,13 @@ app.get('/oborudovanie/:slug', async (req, res, next) => {
             .replace(/<!--OP_LEAD-->/g, htmlEscape(op.lead))
             .replace(/<!--OP_STATS-->/g, statsHtml)
             .replace(/<!--OP_NAV-->/g, operationNav(op.slug))
-            .replace(/<!--OP_BODY-->/g, buildOperationSsr(op, producers.slice(0, 60)))
-            .replace(/<!--OP_REGIONS-->/g, regionLinksHtml());
+            .replace(/<!--OP_BODY-->/g, () => buildOperationSsr(op, producers.slice(0, 60)))
+            .replace(/<!--OP_CONTENT-->/g, () => buildOperationContent(op))
+            .replace(/<!--FAQ_LD-->/g, () => {
+                const faq = buildOperationFaqJsonLd(op);
+                return faq ? `<script type="application/ld+json">${faq}</script>` : '';
+            })
+            .replace(/<!--OP_REGIONS-->/g, () => regionLinksHtml());
 
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.type('html').send(html);
