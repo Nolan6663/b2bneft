@@ -112,3 +112,21 @@ test('когда не отвечает никто, это сказано пря�
     const alert = formatCarrierAlert(results, ['Мёртвый']);
     assert.match(alert.text, /Нормально не отвечает никто/);
 });
+
+test('публичная страница доставки не обещает меньше перевозчиков, чем считает', () => {
+    /* Описание /dostavka пережило подключение третьего перевозчика и пять дней
+       обещало двоих: страница считала по ПЭК, Деловым и Возовозу, а в выдаче
+       стояло «ПЭК и Деловые Линии». Такое расхождение живёт долго, потому что
+       глазами его на странице не видно — оно только в мета-теге. */
+    const fs = require('fs');
+    const path = require('path');
+    const { CARRIERS } = require('../../lib/logistics');
+    const html = fs.readFileSync(path.join(__dirname, '..', '..', 'dostavka.html'), 'utf8');
+    const meta = [...html.matchAll(/<meta[^>]+(?:name="description"|property="og:description")[^>]+content="([^"]+)"/g)].map(m => m[1]);
+    assert.ok(meta.length >= 2, 'не нашлись description и og:description');
+    for (const text of meta) {
+        for (const carrier of CARRIERS) {
+            assert.ok(text.includes(carrier.CARRIER_NAME), `в описании нет перевозчика «${carrier.CARRIER_NAME}»: ${text}`);
+        }
+    }
+});
