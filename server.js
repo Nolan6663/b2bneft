@@ -373,6 +373,18 @@ app.post('/api/public/match-preview', guestLookupLimiter);
 app.get('/api/public/company-by-inn', guestLookupLimiter);
 // Подсказки городов нужны в гостевом мастере завода, до регистрации.
 app.get('/api/logistics/cities', guestLookupLimiter);
+/* Подсказки адресов бьют по чужой квоте: 10 000 в сутки на весь аккаунт.
+   Потолок выше городского, потому что набор одного адреса — это несколько
+   запросов подряд, а на расчёт их два. Но заметно ниже общего: выжечь
+   суточную квоту с одного адреса не должно получиться. */
+const addressSuggestLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Слишком много подсказок подряд. Впишите адрес руками.' },
+});
+app.get('/api/logistics/addresses', addressSuggestLimiter);
 // Публичный калькулятор на /dostavka ходит в чужие API перевозчиков, поэтому
 // потолок ниже общего: 20 расчётов за 10 минут с адреса. Честному человеку
 // столько на подбор габаритов хватает с запасом, скрипту — нет.

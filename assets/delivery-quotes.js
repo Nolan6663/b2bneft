@@ -116,8 +116,12 @@
     </div>`;
         }).join('');
 
+        /* Показываем то, что человек ввёл: выбран адрес — значит адрес, иначе
+           город. Без этого он вводит улицу с домом, а в ответе видит «Москва»
+           и не понимает, учли его адрес или нет. */
+        const side = (p) => (p && String(p.address || '').trim()) || (p && p.name) || '';
         const route = data.from && data.to
-            ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">${esc(data.from.name)} → ${esc(data.to.name)}</div>`
+            ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;line-height:1.45;">${esc(side(data.from))} → ${esc(side(data.to))}</div>`
             : '';
 
         /* Забор и доставка включены по умолчанию, но их можно снять: завод нередко

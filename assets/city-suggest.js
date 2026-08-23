@@ -154,4 +154,101 @@
     }
 
     window.attachCitySuggest = attachCitySuggest;
+    /* Подсказки полного адреса — для расчёта доставки.
+     *
+     * Тот же механизм, что и у городов, отличаются источник и то, что
+     * запоминается при выборе. Город из выбранного адреса кладётся в
+     * dataset.city: расчёт по-прежнему идёт по городу, потому что перевозчики
+     * считают забор и доставку по городской зоне, а не по расстоянию до точки.
+     * Сам адрес едет отдельным полем в заявку и в документы.
+     *
+     * Подсказок нет (ключ не настроен, сервис не ответил) — поле остаётся
+     * обычным текстовым и расчёт по городу работает как раньше.
+     */
+    function attachAddressSuggest(input, options) {
+        if (!input || input.dataset.addressSuggest === "1") return;
+        input.dataset.addressSuggest = "1";
+        input.setAttribute("autocomplete", "off");
+
+        const opts = options || {};
+        const wrap = document.createElement("div");
+        wrap.style.position = "relative";
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+
+        const list = buildDropdown();
+        wrap.appendChild(list);
+
+        let items = [];
+        let active = -1;
+        let timer = null;
+        let controller = null;
+
+        function close() { list.style.display = "none"; active = -1; }
+
+        function paint() {
+            list.innerHTML = items.map((a, i) => {
+                const bg = i === active ? "background:var(--inner-bg, #f1f4f8);" : "";
+                const hint = a.region && !a.value.includes(a.region)
+                    ? " <span style=\"color:var(--text-muted,#8b95a5);\">" + escapeHtml(a.region) + "</span>"
+                    : "";
+                return "<div data-i=\"" + i + "\" style=\"padding:7px 10px;cursor:pointer;font-size:13px;line-height:1.35;" + bg + "\">" + escapeHtml(a.value) + hint + "</div>";
+            }).join("");
+            list.style.display = items.length ? "block" : "none";
+        }
+
+        function pick(i) {
+            const a = items[i];
+            if (!a) return;
+            input.value = a.value;
+            input.dataset.city = a.city || "";
+            close();
+            if (typeof opts.onPick === "function") opts.onPick(a);
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        async function search(query) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+            try {
+                const res = await fetch(apiBase() + "/logistics/addresses?q=" + encodeURIComponent(query), {
+                    credentials: "include",
+                    signal: controller.signal,
+                });
+                if (!res.ok) { items = []; close(); return; }
+                items = await res.json();
+                active = -1;
+                paint();
+            } catch { /* отменённый или неудавшийся запрос — просто без списка */ }
+        }
+
+        input.addEventListener("input", () => {
+            // Правка руками отменяет ранее выбранный адрес: иначе в расчёт
+            // уедет город от прошлого выбора, а в документ — новый текст.
+            delete input.dataset.city;
+            const query = input.value.trim();
+            clearTimeout(timer);
+            if (query.length < 3) { items = []; close(); return; }
+            timer = setTimeout(() => search(query), DEBOUNCE_MS);
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (list.style.display === "none" || !items.length) return;
+            if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, items.length - 1); paint(); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); paint(); }
+            else if (e.key === "Enter" && active >= 0) { e.preventDefault(); pick(active); }
+            else if (e.key === "Escape") close();
+        });
+
+        // Тот же приём, что и у городов: mousedown не даёт полю потерять фокус,
+        // поэтому список доживает до click и жест остаётся целым.
+        list.addEventListener("mousedown", (e) => { if (e.target.closest("[data-i]")) e.preventDefault(); });
+        list.addEventListener("click", (e) => {
+            const target = e.target.closest("[data-i]");
+            if (target) pick(Number(target.dataset.i));
+        });
+        input.addEventListener("blur", () => setTimeout(close, 120));
+    }
+
+    window.attachAddressSuggest = attachAddressSuggest;
 })();

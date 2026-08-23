@@ -262,11 +262,11 @@ h1.dv-title {
     <div class="dv-grid-2">
       <div class="dv-field">
         <label for="dvFrom">Откуда</label>
-        <input type="text" id="dvFrom" placeholder="Москва" autocomplete="off">
+        <input type="text" id="dvFrom" placeholder="Москва, Варшавское шоссе, 132" autocomplete="off">
       </div>
       <div class="dv-field">
         <label for="dvTo">Куда</label>
-        <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
+        <input type="text" id="dvTo" placeholder="Екатеринбург, Малышева, 51" autocomplete="off">
       </div>
     </div>
 
@@ -382,7 +382,7 @@ h1.dv-title {
   </div>
 </section>
 
-<script src="/assets/city-suggest.js?v=2"></script>
+<script src="/assets/city-suggest.js?v=3"></script>
 <script src="/assets/delivery-quotes.js?v=2"></script>
 <script>
 (function () {
@@ -391,8 +391,10 @@ h1.dv-title {
     const isLocal = window.location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1';
     const API = isLocal ? 'http://localhost:5000/api' : '/api';
 
-    attachCitySuggest($('dvFrom'));
-    attachCitySuggest($('dvTo'));
+    // Адрес, а не только город: расчёт всё равно идёт по городу, но в заявку
+    // и в документы уезжает точный адрес отгрузки.
+    attachAddressSuggest($('dvFrom'));
+    attachAddressSuggest($('dvTo'));
 
     function say(html) { $('dvResult').innerHTML = html; }
     function note(text) { say(`<div style="font-size:14px;color:#64748B;">${text}</div>`); }
@@ -455,10 +457,21 @@ h1.dv-title {
         });
     }
 
+    /* Поле хранит адрес, а расчёту нужен город: при выборе из подсказки он
+       лежит в dataset.city. Напечатали руками — считаем текст городом, как и
+       до появления подсказок. */
+    const cityOf = (el) => (el.dataset.city || el.value).trim();
+    const addressOf = (el) => (el.dataset.city ? el.value.trim() : '');
+
     function payloadOf() {
         return {
-            from: $('dvFrom').value.trim(),
-            to: $('dvTo').value.trim(),
+            // Город для расчёта берём из выбранного адреса, а сам адрес шлём
+            // отдельно. Человек мог и просто напечатать город — тогда всё как
+            // раньше, а адреса в документах не будет.
+            from: cityOf($('dvFrom')),
+            to: cityOf($('dvTo')),
+            fromAddress: addressOf($('dvFrom')),
+            toAddress: addressOf($('dvTo')),
             items: collectItems(),
             declaredValue: $('dvDeclared').value,
             doorFrom: $('dvDoorFrom').checked,

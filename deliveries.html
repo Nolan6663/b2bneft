@@ -196,11 +196,11 @@
             <div class="dv-grid dv-grid-route">
                 <div class="dv-field">
                     <label for="dvFrom">Откуда</label>
-                    <input type="text" id="dvFrom" placeholder="Москва" autocomplete="off">
+                    <input type="text" id="dvFrom" placeholder="Москва, Варшавское шоссе, 132" autocomplete="off">
                 </div>
                 <div class="dv-field">
                     <label for="dvTo">Куда</label>
-                    <input type="text" id="dvTo" placeholder="Екатеринбург" autocomplete="off">
+                    <input type="text" id="dvTo" placeholder="Екатеринбург, Малышева, 51" autocomplete="off">
                 </div>
             </div>
 
@@ -282,7 +282,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="assets/app.js?v=6"></script>
     <script src="assets/ui-animations.js"></script>
-    <script src="assets/city-suggest.js?v=2"></script>
+    <script src="assets/city-suggest.js?v=3"></script>
     <script src="assets/delivery-quotes.js?v=2"></script>
     <script>
         authGuard(null);
@@ -291,8 +291,10 @@
            данных он не касается вовсе — на входе город и коробка, на выходе
            чужие тарифы. Своего заводить незачем, а потолок в 20 расчётов за
            10 минут честному человеку на подбор габаритов хватает. */
-        attachCitySuggest(document.getElementById('dvFrom'));
-        attachCitySuggest(document.getElementById('dvTo'));
+        // Адрес, а не только город: считается всё равно по городу, но в
+        // документы уезжает точный адрес отгрузки.
+        attachAddressSuggest(document.getElementById('dvFrom'));
+        attachAddressSuggest(document.getElementById('dvTo'));
 
         function dvSay(html) { document.getElementById('dvResult').innerHTML = html; }
         function dvNote(text) {
@@ -373,9 +375,17 @@
 
         function dvPayload() {
             const val = (id) => document.getElementById(id).value;
+            /* В поле лежит адрес, а расчёту нужен город: при выборе из подсказки
+               он сохранён в dataset.city. Напечатали руками — считаем текст
+               городом, как было до подсказок. */
+            const el = (id) => document.getElementById(id);
+            const cityOf = (id) => (el(id).dataset.city || el(id).value).trim();
+            const addressOf = (id) => (el(id).dataset.city ? el(id).value.trim() : '');
             return {
-                from: val('dvFrom').trim(),
-                to: val('dvTo').trim(),
+                from: cityOf('dvFrom'),
+                to: cityOf('dvTo'),
+                fromAddress: addressOf('dvFrom'),
+                toAddress: addressOf('dvTo'),
                 items: collectItems(),
                 declaredValue: val('dvDeclared'),
                 doorFrom: document.getElementById('dvDoorFrom').checked,

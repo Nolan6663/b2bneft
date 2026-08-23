@@ -15,6 +15,7 @@
 const express = require('express');
 const { quoteAll } = require('../lib/logistics');
 const { resolveCity, suggestCities, fillDellinCode, fillVozovozGuid } = require('../lib/logistics/geo');
+const dadata = require('../lib/logistics/dadata');
 const { findCityCode } = require('../lib/logistics/dellin');
 const { findCityGuid } = require('../lib/logistics/vozovoz');
 const {
@@ -68,6 +69,30 @@ function createLogisticsRouter(deps) {
             const found = await suggestCities(pool, req.query.q || '', 10);
             res.json(found.map((c) => ({ id: c.id, name: c.name, qualifier: c.qualifier })));
         } catch (e) { next(e); }
+    });
+
+    /* Подсказки адресов для расчёта доставки.
+     *
+     * Ходит в DaData нашим ключом и отдаёт только то, что нужно расчёту:
+     * строку адреса и город из неё. Ключ на клиент не уезжает — квота общая на
+     * аккаунт (10 000 подсказок в сутки), и ключ в исходниках страницы любой
+     * желающий выжигает за вечер.
+     *
+     * Ключа нет — отвечаем пустым списком, а не ошибкой: поле остаётся
+     * обычным текстовым, человек допишет адрес руками, расчёт по городу
+     * работает как работал. Подсказки — удобство, а не условие.
+     */
+    router.get('/addresses', optionalAuth, async (req, res, next) => {
+        try {
+            if (!dadata.isConfigured()) return res.json([]);
+            const found = await dadata.suggestAddress(req.query.q || '', 6);
+            res.json(found);
+        } catch (e) {
+            // Чужой сервис лёг или ответил отказом — это не повод ронять форму
+            // расчёта. Логируем и отдаём пустоту.
+            console.error('[dadata] подсказки недоступны:', e.message);
+            res.json([]);
+        }
     });
 
     /* Публичный расчёт по произвольному маршруту — для страницы /dostavka.
@@ -146,10 +171,15 @@ function createLogisticsRouter(deps) {
             doorTo,
         });
 
+        /* Полный адрес не участвует в расчёте — все трое считают забор и
+           доставку по городу. Но он едет в ответ и в документы: снабженцу
+           обоснование нужно с адресом склада, а не с одним названием города. */
+        const addressOf = (v) => String(v || '').replace(/s+/g, ' ').trim().slice(0, 250);
+
         return {
             data: {
-                from: { name: from.point.name },
-                to: { name: to.point.name },
+                from: { name: from.point.name, address: addressOf(body.fromAddress) },
+                to: { name: to.point.name, address: addressOf(body.toAddress) },
                 items,
                 declaredValue,
                 doorFrom,
