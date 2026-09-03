@@ -9,6 +9,17 @@ const { createVkPoster } = require('../../lib/vk-poster');
    в посте есть ссылка на страницу заявки, а сбой ВК не роняет запись
    навсегда — она возвращается в очередь до исчерпания попыток. */
 
+/* Дедлайн живой заявки считается от сегодняшнего дня и датой не называется.
+ *
+ * Стояло «2026-09-01», и это тихо перевело зелёные тесты в красные, когда день
+ * прошёл: skipReason честно счёл закупку просроченной, tick перестал ходить к
+ * ВК, и четыре теста легли разом — 24 августа сборка была зелёной, 3 сентября
+ * та же сборка на том же коде упала. Мина срабатывает не в момент правки, а
+ * когда никто её не ждёт, и выглядит как поломка того, что правили последним.
+ * Проверка на просроченный дедлайн живёт ниже и берёт даты так же — от «сейчас».
+ */
+const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+
 function fakePool(rows = []) {
     const calls = [];
     return {
@@ -17,7 +28,7 @@ function fakePool(rows = []) {
             calls.push({ sql: sql.replace(/\s+/g, ' ').trim(), params });
             if (/SELECT id, order_id, attempts FROM vk_posts/i.test(sql)) return { rows };
             if (/SELECT \* FROM orders WHERE id/i.test(sql)) {
-                return { rows: [{ id: 5, title: 'Манжеты', category: 'РТИ', quantity: 200, deadline: '2026-09-01', description: 'полиуретан, ГОСТ' }] };
+                return { rows: [{ id: 5, title: 'Манжеты', category: 'РТИ', quantity: 200, deadline: inDays(30), description: 'полиуретан, ГОСТ' }] };
             }
             return { rows: [] };
         },
@@ -135,11 +146,12 @@ test('пропущенная закупка помечается skipped, к В�
     const restore = env({ VK_AUTOPOST_ENABLED: '1', VK_ACCESS_TOKEN: 'x', VK_GROUP_ID: '1' });
     try {
         const pool = fakePool([{ id: 1, order_id: 5, attempts: 0 }]);
-        /* закупка из fakePool закрыта дедлайном 2026-09-01 в прошлом или статусом */
+        /* Здесь закупка закрыта статусом, а не дедлайном: дедлайн намеренно в
+           будущем, чтобы тест проверял именно проверку статуса. */
         pool.query = (sql, params) => {
             pool.calls.push({ sql: sql.replace(/\s+/g, ' ').trim(), params });
             if (/SELECT id, order_id, attempts FROM vk_posts/i.test(sql)) return Promise.resolve({ rows: [{ id: 1, order_id: 5, attempts: 0 }] });
-            if (/SELECT \* FROM orders WHERE id/i.test(sql)) return Promise.resolve({ rows: [{ id: 5, title: 'Манжеты', status: 'Закрыта', deadline: '2027-01-01' }] });
+            if (/SELECT \* FROM orders WHERE id/i.test(sql)) return Promise.resolve({ rows: [{ id: 5, title: 'Манжеты', status: 'Закрыта', deadline: inDays(120) }] });
             return Promise.resolve({ rows: [] });
         };
         let called = false;
