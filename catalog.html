@@ -555,6 +555,7 @@
         let aiMode       = false;
         let aiResults    = [];
         let aiRanked     = true;   // false — подобрано словами: модель не ответила
+        let aiSearchId   = null;   // номер строки в журнале поиска: по нему дописывается исход
         let verifiedOnly = false;
         const _riskCache = {};
 
@@ -800,6 +801,7 @@
                 const data = await res.json();
                 aiResults = Array.isArray(data) ? data : (data.results || []);
                 aiRanked = Array.isArray(data) ? true : data.ranked !== false;
+                aiSearchId = Array.isArray(data) ? null : (data.searchId || null);
                 aiMode = true;
                 render();
             } catch (e) {
@@ -813,6 +815,7 @@
         function exitAiMode() {
             aiMode = false;
             aiResults = [];
+            aiSearchId = null;
             render();
         }
 
@@ -832,7 +835,14 @@
                     <button class="ai-mode-exit" onclick="exitAiMode()">✕ Обычный поиск</button>
                 </div>`;
                 if (aiResults.length === 0) {
-                    grid.innerHTML = banner + `<div class="catalog-empty"><p>По этому запросу в каталоге ничего не нашлось.<br>Попробуйте назвать изделие или операцию другими словами.</p></div>`;
+                    /* Пустая выдача — не тупик, а заявка (ТЗ, 8.2). Того, чего
+                       нет в каталоге, у нас может не быть в профилях, а не в
+                       стране: закупка находит завод там, где поиск не нашёл. */
+                    const query = (document.getElementById('catalogSearch').value || '').trim();
+                    grid.innerHTML = banner + `<div class="catalog-empty">
+                        <p>По этому запросу в каталоге ничего не нашлось.<br>Попробуйте назвать изделие или операцию другими словами — или разместите закупку, и заводы откликнутся сами.</p>
+                        <a class="btn-primary" href="index.html?create=1&title=${encodeURIComponent(query)}">Разместить закупку</a>
+                    </div>`;
                 } else {
                     grid.innerHTML = banner + aiResults.map(p => cardHTML(p, p.aiReason)).join('');
                 }
@@ -1255,6 +1265,16 @@
         const RECENT_KEY = 'catalog_recent_v1';
 
         function trackRecentProducer(id) {
+            /* Открытая из умного поиска карточка — это ответ на вопрос, нашёл ли
+               человек нужное. Пишется одним запросом без ожидания: журнал поиска
+               не должен задерживать переход в профиль. */
+            if (aiMode && aiSearchId) {
+                apiFetch(`${SERVER_URL}/search-log/${aiSearchId}/outcome`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clickedEntity: `company:${id}` }),
+                }).catch(() => {});
+            }
             const p = allProducers.find(x => x.id === id);
             if (!p) return;
             let list = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');

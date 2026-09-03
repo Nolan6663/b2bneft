@@ -85,6 +85,7 @@ const {
     plural: regionPlural,
     MIN_INDEXABLE,
 } = require('./lib/region-seo');
+const { renderSitemap, latest } = require('./lib/sitemap');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -960,12 +961,15 @@ async function loadEquipmentProducers() {
     if (_equipCache.producers && Date.now() - _equipCache.ts < EQUIP_TTL_MS) return _equipCache.producers;
     const { rows } = await pool.query(
         `SELECT id, company, city, specialization, products, about, equipment, capabilities,
-                verified_by_platform, claimed
+                verified_by_platform, claimed, updated_at
            FROM companies
           WHERE role = 'producer' AND status <> 'Отклонено'
           ORDER BY verified_by_platform DESC, claimed DESC, company ASC`
     );
-    const producers = rows.map(rowToCompany);
+    /* updated_at несём рядом с моделью компании, а не внутри неё: rowToCompany
+       описывает то, что видно на странице, а дата изменения нужна только карте
+       сайта. */
+    const producers = rows.map(row => ({ ...rowToCompany(row), updatedAt: row.updated_at }));
     _equipCache = { ts: Date.now(), producers };
     return producers;
 }
@@ -1128,7 +1132,9 @@ app.get('/robots.txt', (req, res) => {
 app.get('/sitemap.xml', async (req, res, next) => {
     try {
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
-        const today = new Date().toISOString().slice(0, 10);
+        /* Статические страницы идут без lastmod — их содержимое меняет деплой, а
+           не данные, и даты изменения у нас на них нет. Подробнее о правиле —
+           в шапке lib/sitemap.js. */
         const pages = [
             { url: '/',                    priority: '1.0', changefreq: 'weekly' },
             { url: '/zakupki',             priority: '0.9', changefreq: 'hourly' },
@@ -1142,35 +1148,55 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/privacy',             priority: '0.3', changefreq: 'yearly' },
             { url: '/terms',               priority: '0.3', changefreq: 'yearly' },
         ];
+        // Лента закупок — единственная из статических, у которой дата настоящая:
+        // страница целиком состоит из заявок, и меняется она с последней из них.
+        const { rows: [lastOrder] } = await pool.query('SELECT MAX(created_at) AS at FROM orders');
+        const zakupki = pages.find(p => p.url === '/zakupki');
+        if (lastOrder && lastOrder.at) zakupki.lastmod = lastOrder.at;
+
         // Регионы: страница отдаёт noindex, пока предприятий меньше MIN_INDEXABLE,
         // поэтому в карту идут только те, где каталог реально что-то показывает.
         const { rows: regionRows } = await pool.query(
-            `SELECT city, COUNT(*)::int AS n FROM companies
+            `SELECT city, COUNT(*)::int AS n, MAX(updated_at) AS updated FROM companies
               WHERE role = 'producer' AND status <> 'Отклонено' AND city = ANY($1)
               GROUP BY city`,
             [REGIONS.map(r => r.name)]
         );
-        const regionCounts = new Map(regionRows.map(r => [r.city, r.n]));
+        const regionStats = new Map(regionRows.map(r => [r.city, r]));
         for (const r of REGIONS) {
-            if ((regionCounts.get(r.name) || 0) < MIN_INDEXABLE) continue;
-            pages.push({ url: `/zakupki/region/${r.slug}`, priority: '0.7', changefreq: 'weekly' });
+            const stat = regionStats.get(r.name);
+            if (!stat || stat.n < MIN_INDEXABLE) continue;
+            pages.push({
+                url: `/zakupki/region/${r.slug}`, priority: '0.7', changefreq: 'weekly',
+                lastmod: stat.updated,
+            });
         }
         // Операции: та же логика — в карту идут только непустые страницы.
-        pages.push({ url: '/oborudovanie', priority: '0.8', changefreq: 'weekly' });
         const equipProducers = await loadEquipmentProducers();
+        pages.push({
+            url: '/oborudovanie', priority: '0.8', changefreq: 'weekly',
+            lastmod: latest(equipProducers.map(p => p.updatedAt)),
+        });
         for (const op of OPERATIONS) {
-            const n = equipProducers.filter(p => producerHasOperation(p, op)).length;
+            const matched = equipProducers.filter(p => producerHasOperation(p, op));
             // Тем же правилом, что и мета-тег на самой странице: иначе карта
             // сайта и страница скажут роботу разное про один адрес.
-            if (!isOperationIndexable(op, n)) continue;
-            pages.push({ url: `/oborudovanie/${op.slug}`, priority: '0.6', changefreq: 'weekly' });
+            if (!isOperationIndexable(op, matched.length)) continue;
+            pages.push({
+                url: `/oborudovanie/${op.slug}`, priority: '0.6', changefreq: 'weekly',
+                lastmod: latest(matched.map(p => p.updatedAt)),
+            });
         }
+        // Карта строится из того же каталога, что и страницы операций.
+        const mapPage = pages.find(p => p.url === '/map');
+        mapPage.lastmod = latest(equipProducers.map(p => p.updatedAt));
+
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
         // индексируем (4286 страниц «завод + продукция + город» — органический канал).
         // Карточки без единого факта, кроме названия, исключаем: сама страница отдаёт
         // им noindex (lib/producer-seo), звать на них робота картой сайта — противоречие.
         const { rows: suppliers } = await pool.query(`
-            SELECT id, verified_by_platform, claimed FROM companies
+            SELECT id, verified_by_platform, claimed, updated_at FROM companies
             WHERE role = 'producer' AND status <> 'Отклонено'
               AND (COALESCE(products, '') <> '' OR COALESCE(specialization, '') <> '' OR COALESCE(about, '') <> '')
             ORDER BY verified_by_platform DESC, claimed DESC, id ASC
@@ -1181,14 +1207,12 @@ app.get('/sitemap.xml', async (req, res, next) => {
                 url: `/p/${s.id}`,
                 priority: s.verified_by_platform ? '0.6' : (s.claimed ? '0.5' : '0.4'),
                 changefreq: s.claimed ? 'weekly' : 'monthly',
+                lastmod: s.updated_at,
             });
         }
         res.setHeader('Cache-Control', 'public, max-age=3600');
-        const urls = pages.map(p =>
-            `  <url>\n    <loc>${base}${p.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
-        ).join('\n');
         res.type('application/xml');
-        res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+        res.send(renderSitemap(base, pages));
     } catch (e) { next(e); }
 });
 

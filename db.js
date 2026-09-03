@@ -468,6 +468,101 @@ async function initDb() {
         console.warn('[db] индексы не построены:', e.message);
     }
 
+    /* Дата изменения карточки завода — для lastmod в карте сайта.
+     *
+     * До сих пор такой даты у нас не было вовсе, и sitemap проставлял всем 4500
+     * адресам сегодняшнее число. То есть каждый день мы сообщали роботу, что
+     * обновился весь сайт целиком, — и обесценивали сигнал там, где страница
+     * действительно менялась.
+     *
+     * Колонка добавляется пустой намеренно: DEFAULT в ADD COLUMN проставил бы
+     * всем существующим строкам одну и ту же дату, то есть ту же ложь, только
+     * один раз. Пустое значение означает «когда менялась — неизвестно», и такой
+     * адрес уезжает в карту сайта без lastmod. DEFAULT ставится отдельно, уже
+     * для новых записей.
+     */
+    await pool.query(`
+        ALTER TABLE companies ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
+        ALTER TABLE companies ALTER COLUMN updated_at SET DEFAULT NOW();
+    `);
+
+    /* Проставляет дату триггер, а не код приложения.
+     *
+     * Писать в companies умеют полтора десятка мест — правка профиля, фото,
+     * верификация, привязка профиля при регистрации, импорт реестра, обогащение,
+     * рассылка. Дописать `updated_at = NOW()` в каждое означало бы забыть его в
+     * следующем: расходится такое молча, а видно становится через месяцы и по
+     * выдаче. Триггер ловит и то, что меняет базу мимо процесса, — импорт и psql
+     * руками.
+     *
+     * Служебные колонки из сравнения исключены: геокодирование, счётчики
+     * рассылки и банковские реквизиты содержимое публичной карточки не меняют, а
+     * фоновый проход по координатам иначе «обновил» бы разом весь каталог.
+     * Сравнение идёт вычитанием ключей из jsonb, а не перечислением полей: новая
+     * колонка по умолчанию считается содержательной, и это верная сторона для
+     * ошибки — лучше лишний раз позвать робота, чем скрыть правку.
+     */
+    try {
+        await pool.query(`
+            CREATE OR REPLACE FUNCTION companies_touch_updated_at() RETURNS trigger AS $fn$
+            DECLARE
+                service TEXT[] := ARRAY[
+                    'updated_at', 'lat', 'lng', 'last_invited_at', 'invites_sent',
+                    'invite_optout', 'contact_email', 'verified_egrul', 'egrul_verified_at',
+                    'kpp', 'legal_address', 'bank_name', 'bank_account', 'bank_bik',
+                    'bank_corr', 'tax_system'
+                ];
+            BEGIN
+                IF (to_jsonb(NEW) - service) IS DISTINCT FROM (to_jsonb(OLD) - service) THEN
+                    NEW.updated_at := NOW();
+                END IF;
+                RETURN NEW;
+            END;
+            $fn$ LANGUAGE plpgsql;
+        `);
+        await pool.query('DROP TRIGGER IF EXISTS companies_touch ON companies');
+        await pool.query(`
+            CREATE TRIGGER companies_touch BEFORE UPDATE ON companies
+            FOR EACH ROW EXECUTE PROCEDURE companies_touch_updated_at()
+        `);
+    } catch (e) {
+        // Без триггера карточки уедут в карту сайта без lastmod — это хуже, чем
+        // точная дата, но лучше, чем упавший старт процесса.
+        console.warn('[db] триггер даты изменения не создан:', e.message);
+    }
+
+    /* Внутренний поиск: что искали и чем это кончилось.
+     *
+     * Состав полей — из ТЗ маркетологов (раздел 8.1): без клика и конверсии
+     * запрос показывает только спрос, но не говорит, нашёл ли человек нужное.
+     * Хранится псевдонимный ключ сессии, а не пользователь: связывать поисковые
+     * фразы с личностью нам незачем, а по ФЗ-152 — ещё и лишний риск.
+     */
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS search_queries (
+            id               SERIAL      PRIMARY KEY,
+            query_raw        TEXT        NOT NULL,
+            query_normalized TEXT        NOT NULL,
+            role             TEXT        NOT NULL DEFAULT 'unknown',
+            region           TEXT        NOT NULL DEFAULT '',
+            results_count    INTEGER     NOT NULL DEFAULT 0,
+            result_groups    JSONB       NOT NULL DEFAULT '{}',
+            clicked_entity   TEXT,
+            conversion       TEXT,
+            session_key      TEXT        NOT NULL DEFAULT '',
+            created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+    `);
+    try {
+        await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_search_queries_normalized ON search_queries (query_normalized);
+            CREATE INDEX IF NOT EXISTS idx_search_queries_created ON search_queries (created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_search_queries_zero ON search_queries (query_normalized) WHERE results_count = 0;
+        `);
+    } catch (e) {
+        console.warn('[db] индексы поисковых запросов не построены:', e.message);
+    }
+
     await pool.query(`
         UPDATE users u SET email_verified = true
         WHERE email_verified = false

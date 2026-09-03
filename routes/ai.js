@@ -3,6 +3,7 @@
 const express = require('express');
 const tzAi = require('../lib/ai-client');
 const { pickCandidates, buildRankingPrompt, applyRanking } = require('../lib/producer-search');
+const { logSearch, recordOutcome } = require('../lib/search-log');
 
 function createAiRouter(deps) {
     const { pool, requireAuth, rowToCompany, handleDrawingImageUpload, canAccessOrderDrawing, storage } = deps;
@@ -29,9 +30,30 @@ function createAiRouter(deps) {
             const query = String((req.body && req.body.query) || '').trim();
             if (!query) return res.status(400).json({ error: 'query required' });
 
+            /* Журнал внутреннего поиска (ТЗ, раздел 8.1). Пишется на каждом
+               выходе, включая попадание в кэш: кэш экономит вызов модели, а не
+               факт того, что человек искал. searchId уезжает клиенту, чтобы
+               потом дописать исход — открыл карточку или ушёл ни с чем.
+               Группа результатов пока одна: поиск ходит по каталогу компаний. */
+            const respond = async (payload) => {
+                const found = (payload.results || []).length;
+                const searchId = await logSearch(pool, {
+                    queryRaw: query,
+                    user: req.user,
+                    resultsCount: found,
+                    resultGroups: { companies: found },
+                });
+                /* Нулевая выдача — сигнал редакции (ТЗ, 8.2): спрос есть, а в
+                   каталоге его нет. Пока это строка в логе и строка в базе под
+                   отдельным индексом; читаемая панель спроса — это 13.3, и она
+                   осмысленна тогда, когда таких строк наберётся на разбор. */
+                if (!found) console.warn(`[search] нулевая выдача: "${query}"`);
+                res.json({ ...payload, searchId });
+            };
+
             const cacheKey = query.toLowerCase();
             const cached = aiSearchCache.get(cacheKey);
-            if (cached && Date.now() - cached.ts < AI_CACHE_TTL) return res.json(cached.payload);
+            if (cached && Date.now() - cached.ts < AI_CACHE_TTL) return respond(cached.payload);
 
             const { rows } = await pool.query(
                 `SELECT * FROM companies WHERE role = 'producer' AND status <> 'Отклонено'`
@@ -43,11 +65,11 @@ function createAiRouter(deps) {
             if (!candidates.length) {
                 const payload = { results: [], ranked: true };
                 aiSearchCache.set(cacheKey, { payload, ts: Date.now() });
-                return res.json(payload);
+                return respond(payload);
             }
 
             const byWords = candidates.slice(0, 6).map(c => ({ ...c.producer, aiReason: null }));
-            if (!tzAi.isTzAiConfigured()) return res.json({ results: byWords, ranked: false });
+            if (!tzAi.isTzAiConfigured()) return respond({ results: byWords, ranked: false });
 
             let payload;
             try {
@@ -63,11 +85,25 @@ function createAiRouter(deps) {
             // Кэшируем только удавшийся разбор: иначе минутный сбой модели
             // залипает на десять минут и выглядит как «поиск сломался».
             if (payload.ranked) aiSearchCache.set(cacheKey, { payload, ts: Date.now() });
-            res.json(payload);
+            await respond(payload);
         } catch (e) {
             console.error('[ai-search error]', e.message);
             next(e);
         }
+    });
+
+    /* Исход поиска: какую карточку открыли из выдачи (ТЗ, 8.1 — clicked_entity).
+       Без этого журнал показывает спрос, но не отвечает на главный вопрос —
+       нашёл ли человек то, что искал. Ответ всегда 204: промах по чужой или
+       протухшей строке для клиента не ошибка, а его дело — поиск, а не журнал. */
+    router.post('/search-log/:id/outcome', requireAuth, async (req, res) => {
+        await recordOutcome(pool, {
+            id: req.params.id,
+            user: req.user,
+            clickedEntity: req.body && req.body.clickedEntity,
+            conversion: req.body && req.body.conversion,
+        });
+        res.status(204).end();
     });
 
     router.post('/ai/generate-tz', requireAuth, async (req, res, next) => {

@@ -613,6 +613,12 @@
             const params = new URLSearchParams(location.search);
             if (params.get('create') === '1') {
                 openModal();
+                /* Название переносится из запроса, по которому в каталоге ничего
+                   не нашлось: человек уже сформулировал, что ему нужно, и
+                   заставлять его печатать это второй раз — верный способ
+                   потерять заявку на ровном месте. */
+                const title = (params.get('title') || '').trim().slice(0, 200);
+                if (title) document.getElementById('orderName').value = title;
                 history.replaceState(null, '', location.pathname);
             }
         });
