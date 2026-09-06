@@ -12,6 +12,7 @@
     "sync:logistics-cities": "node scripts/sync-logistics-cities.js",
     "audit:cities": "node scripts/audit-company-cities.js",
     "backfill:cities": "node scripts/backfill-cities.js",
+    "audit:topics": "node scripts/audit-catalog-topics.js",
     "sync:legal": "node scripts/sync-legal.js",
     "sync:categories": "node scripts/sync-category-pages.js",
     "test:e2e": "playwright test",
