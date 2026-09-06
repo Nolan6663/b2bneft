@@ -1221,7 +1221,7 @@ app.get('/p/:id', async (req, res, next) => {
         const id = Number(req.params.id);
         const { rows: [row] } = await pool.query(
             // inn нужен серверной разметке: по нему строится ссылка «присоединить профиль»
-            "SELECT company, inn, specialization, city, about, products, claimed, source, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
+            "SELECT company, inn, specialization, city, town, about, products, claimed, source, verified_by_platform FROM companies WHERE id = $1 AND role = 'producer'",
             [id]
         );
         if (!row) {
@@ -1232,10 +1232,13 @@ app.get('/p/:id', async (req, res, next) => {
         let html = fs.readFileSync(filePath, 'utf8');
         // Заголовок и описание собираются в lib/producer-seo: прежние доходили до 180
         // знаков и обрезались в выдаче, а профиль робот видел как «Загрузка профиля…».
-        const title = buildProducerTitle(row);
+        // Категории считаются один раз: их видит и заголовок (там из них берётся
+        // занятие вместо общего слова «производитель»), и серверная разметка.
+        const categories = categorizeProducer(row);
+        const title = buildProducerTitle(row, { categories });
         const desc = buildProducerDescription(row);
         const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
-        const ssr = buildProducerSsr(row, { categories: categorizeProducer(row) });
+        const ssr = buildProducerSsr(row, { categories });
         // Подстановка функцией, а не строкой: в строке замены '$&' и '$1' — это
         // спецсимволы, а сюда приезжают названия компаний из каталога. Одно «$&»
         // в имени завода — и кусок шаблона размножился бы внутри страницы.
