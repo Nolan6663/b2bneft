@@ -226,3 +226,54 @@ test('разметка не обещает город, которого мы н�
     assert.equal(org.address.addressLocality, 'Удмуртская Республика');
     assert.equal(org.address.addressRegion, undefined, 'выдумывать разбивку на город и регион нельзя');
 });
+
+/* ИП — это физлицо: его название в реестре есть ФИО живого человека. Данные из
+ * ЕГРИП открытые, но печатать имя целиком в заголовке выдачи и в разметке —
+ * другое дело, чем строка в реестре. */
+
+const SOLE_TRADER = {
+    id: 810,
+    company: 'ИП НИКОЛЕНКО АНДРЕЙ ФЁДОРОВИЧ',
+    city: 'Москва',
+    specialization: 'Механическая обработка',
+    products: 'токарные работы; фрезерные работы',
+    about: '',
+    inn: '770100000000',
+    claimed: false,
+    source: 'gisp-pp719',
+    verified_by_platform: false,
+};
+
+test('предприниматель: в заголовке фамилия с инициалами, а не полное ФИО', () => {
+    const t = shortTitle(SOLE_TRADER);
+    assert.match(t, /ИП Николенко А\. Ф\./);
+    assert.doesNotMatch(t, /АНДРЕЙ|Андрей/, 'имя и отчество целиком в выдачу не идут');
+});
+
+test('предприниматель: полное ФИО не публикуется как синоним в разметке', () => {
+    const html = ssrProfileHtml(SOLE_TRADER);
+    assert.doesNotMatch(html, /Полное наименование/);
+    const ld = JSON.parse(buildProducerJsonLd(SOLE_TRADER, { id: 810, base: 'https://texzakaz.ru' })
+        .replace(/\u003c/g, '<').replace(/\u003e/g, '>').replace(/\u0026/g, '&'));
+    assert.equal(ld['@graph'][0].alternateName, undefined);
+});
+
+test('предприниматель без имени не даёт пустую карточку', () => {
+    assert.match(displayName({ company: 'ИП' }), /предприниматель/i);
+});
+
+/* Пустая карточка — та самая «малоценная страница», которой Яндекс объясняет,
+ * почему в поиске 715 наших адресов из 4584. Операции собираются из того, что
+ * уже лежит в профиле, и дают и содержание, и ссылки в разделы. */
+
+test('карточка показывает заявленные работы и ведёт на их страницы', () => {
+    const html = ssrProfileHtml({ ...CLAIMED, specialization: 'Токарные и фрезерные работы, сварка металлоконструкций' });
+    assert.match(html, /Какие работы заявляет/);
+    assert.match(html, /href="\/oborudovanie\/tokarka"/, 'ссылка ведёт на страницу операции');
+    assert.match(html, /заявляет/, 'формулировка не утверждает за завод больше, чем он подтвердил');
+});
+
+test('нет совпадений по операциям — блока нет, пустых заголовков не рисуем', () => {
+    const html = ssrProfileHtml({ company: 'ООО Тихое', city: 'Тула', specialization: '', products: '', about: '' });
+    assert.doesNotMatch(html, /Какие работы заявляет/);
+});
