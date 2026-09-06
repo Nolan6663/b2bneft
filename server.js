@@ -86,6 +86,7 @@ const {
     MIN_INDEXABLE,
 } = require('./lib/region-seo');
 const { renderSitemap, latest } = require('./lib/sitemap');
+const catalogSeo = require('./lib/catalog-seo');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -960,16 +961,16 @@ const EQUIP_TTL_MS = 3600 * 1000;
 async function loadEquipmentProducers() {
     if (_equipCache.producers && Date.now() - _equipCache.ts < EQUIP_TTL_MS) return _equipCache.producers;
     const { rows } = await pool.query(
-        `SELECT id, company, city, specialization, products, about, equipment, capabilities,
+        `SELECT id, company, city, town, specialization, products, about, equipment, capabilities,
                 verified_by_platform, claimed, updated_at
            FROM companies
           WHERE role = 'producer' AND status <> 'Отклонено'
           ORDER BY verified_by_platform DESC, claimed DESC, company ASC`
     );
-    /* updated_at несём рядом с моделью компании, а не внутри неё: rowToCompany
-       описывает то, что видно на странице, а дата изменения нужна только карте
-       сайта. */
-    const producers = rows.map(row => ({ ...rowToCompany(row), updatedAt: row.updated_at }));
+    /* updated_at и town несём рядом с моделью компании, а не внутри неё:
+       rowToCompany описывает то, что видно в кабинете, а дата изменения нужна
+       карте сайта, город — заголовкам и каталогу. */
+    const producers = rows.map(row => ({ ...rowToCompany(row), updatedAt: row.updated_at, town: row.town }));
     _equipCache = { ts: Date.now(), producers };
     return producers;
 }
@@ -1073,6 +1074,77 @@ app.get('/oborudovanie/:slug', async (req, res, next) => {
     } catch (e) { next(e); }
 });
 
+/* ── Каталог предприятий: /proizvoditeli ─────────────────────────────────────
+ *
+ * Единственная страница, с которой можно дойти до любой карточки завода
+ * обычными ссылками. До неё таких путей не было: на главной и на карте ссылок
+ * на карточки ноль (карту рисует JavaScript), региональная страница и страница
+ * операции показывают по шестьдесят. Из 4531 карточки по ссылкам достижимо
+ * около полутора тысяч — и ровно столько Яндекс и взял в поиск, а остальные
+ * знает только из карты сайта и не берёт.
+ */
+async function renderProducersCatalog(res, page) {
+    const producers = catalogSeo.sortForCatalog((await loadEquipmentProducers()).filter(catalogSeo.isListable));
+    const total = producers.length;
+    const pages = catalogSeo.pageCount(total);
+    if (page > pages) {
+        res.status(404);
+        return res.sendFile(path.join(__dirname, '404.html'));
+    }
+
+    const slice = producers.slice((page - 1) * catalogSeo.PAGE_SIZE, page * catalogSeo.PAGE_SIZE);
+    const base = (process.env.APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+    const verified = producers.filter(p => p.verifiedByPlatform).length;
+    const claimed = producers.filter(p => p.claimed).length;
+
+    const stats = [
+        `<div class="zr-stat"><b>${total}</b><span>${catalogSeo.plural(total, 'предприятие', 'предприятия', 'предприятий')} в каталоге</span></div>`,
+        claimed ? `<div class="zr-stat"><b>${claimed}</b><span>с заполненным профилем</span></div>` : '',
+        verified ? `<div class="zr-stat"><b>${verified}</b><span>проверено платформой</span></div>` : '',
+    ].filter(Boolean).join('\n      ');
+
+    const lead = page > 1
+        ? `Страница ${page} из ${pages}. Предприятия перечислены по алфавиту: профили из реестра Минпромторга и компании, которые сами завели профиль на площадке.`
+        : `Полный список предприятий площадки: производства из реестра Минпромторга по постановлению № 719 и компании, заполнившие профиль сами. Карточка открывается без регистрации, закупка размещается по чертежу или техническому заданию.`;
+
+    const pager = catalogSeo.buildPager(page, pages);
+    const body = `    <h2 class="zr-h2">${page > 1 ? `Предприятия, страница ${page}` : 'Предприятия'}</h2>\n    <ul class="zr-cards">\n${catalogSeo.buildCards(slice)}\n    </ul>\n    ${pager}\n`;
+
+    const html = fs.readFileSync(path.join(__dirname, 'zakupki', 'producers.html'), 'utf8')
+        .replace(/<!--META_TITLE-->/g, htmlEscape(catalogSeo.buildTitle(page, total)))
+        .replace(/<!--META_DESC-->/g, htmlEscape(catalogSeo.buildDescription(page, total, pages)))
+        .replace(/<!--META_ROBOTS-->/g, 'index, follow')
+        .replace(/<!--CANONICAL_URL-->/g, `${base}${catalogSeo.pageUrl(page)}`)
+        .replace(/<!--JSON_LD-->/g, catalogSeo.buildJsonLd(slice, { page, pages, base }))
+        .replace(/<!--CAT_CRUMB-->/g, page > 1 ? `Производители, страница ${page}` : 'Производители')
+        .replace(/<!--CAT_H1-->/g, page > 1 ? `Производители России — страница ${page}` : 'Каталог производителей России')
+        .replace(/<!--CAT_LEAD-->/g, htmlEscape(lead))
+        .replace(/<!--CAT_STATS-->/g, stats)
+        .replace(/<!--CAT_BODY-->/g, body)
+        .replace(/<!--CAT_REGIONS-->/g, regionLinksHtml(16));
+
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type('html').send(html);
+}
+
+app.get('/proizvoditeli', async (req, res, next) => {
+    try { await renderProducersCatalog(res, 1); } catch (e) { next(e); }
+});
+
+app.get('/proizvoditeli/:page', async (req, res, next) => {
+    try {
+        const page = Number(req.params.page);
+        if (!/^\d+$/.test(req.params.page) || !Number.isInteger(page) || page < 1) {
+            res.status(404);
+            return res.sendFile(path.join(__dirname, '404.html'));
+        }
+        // Первая страница живёт по корню: иначе тот же список стоит под двумя
+        // адресами, и склеивать их придётся уже в выдаче.
+        if (page === 1) return res.redirect(301, '/proizvoditeli');
+        await renderProducersCatalog(res, page);
+    } catch (e) { next(e); }
+});
+
 app.get('/favicon.ico', (req, res) => {
     res.redirect(301, '/favicon.svg');
 });
@@ -1107,6 +1179,7 @@ app.get('/robots.txt', (req, res) => {
         'Allow: /zakupki/region/\n' +
         'Allow: /oborudovanie\n' +
         'Allow: /map\n' +
+        'Allow: /proizvoditeli\n' +
         'Allow: /dlya-postavshchikov\n' +
         'Allow: /dostavka\n' +
         'Allow: /p/\n' +
@@ -1190,6 +1263,21 @@ app.get('/sitemap.xml', async (req, res, next) => {
         // Карта строится из того же каталога, что и страницы операций.
         const mapPage = pages.find(p => p.url === '/map');
         mapPage.lastmod = latest(equipProducers.map(p => p.updatedAt));
+
+        /* Страницы каталога. Они и есть путь робота к карточкам: карта сайта
+           только заявляет адреса, а ходит он по ссылкам, и до появления этих
+           страниц три тысячи карточек не имели ни одной ссылки на сайте. */
+        const listable = catalogSeo.sortForCatalog(equipProducers.filter(catalogSeo.isListable));
+        const catalogPages = catalogSeo.pageCount(listable.length);
+        for (let n = 1; n <= catalogPages; n++) {
+            const slice = listable.slice((n - 1) * catalogSeo.PAGE_SIZE, n * catalogSeo.PAGE_SIZE);
+            pages.push({
+                url: catalogSeo.pageUrl(n),
+                priority: n === 1 ? '0.8' : '0.5',
+                changefreq: 'weekly',
+                lastmod: latest(slice.map(p => p.updatedAt)),
+            });
+        }
 
         // Все производители: верифицированные приоритетнее, заглушки реестра тоже
         // индексируем (4286 страниц «завод + продукция + город» — органический канал).
