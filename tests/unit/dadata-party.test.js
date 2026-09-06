@@ -73,3 +73,21 @@ test('ответ справочника разбирается целиком, �
         if (prev === undefined) delete process.env.DADATA_API_KEY; else process.env.DADATA_API_KEY = prev;
     }
 });
+
+/* Живой ответ из прогона по каталогу: у завода в Рязанской области в поле
+ * settlement приехало «Автодорога Рязань-Спасск (с Дубровичи)». Формально это
+ * населённый пункт, фактически — описание участка трассы, и в заголовке выдачи
+ * оно читается как поломка. Когда мы не уверены, что перед нами город, честнее
+ * не знать города вовсе — тот же вывод, что и с промзоной Зеленограда. */
+
+test('описание участка трассы городом не считается', () => {
+    assert.equal(pickTown({ data: { city: null, settlement: 'Автодорога Рязань-Спасск (с Дубровичи)', region: 'Рязанская' } }), '');
+    assert.equal(pickTown({ data: { city: null, settlement: 'Территория промзона Северная', region: 'Тульская' } }), '');
+    assert.equal(pickTown({ data: { city: null, settlement: 'СНТ Ромашка', region: 'Московская' } }), '');
+});
+
+test('обычные названия фильтр не задевает', () => {
+    assert.equal(pickTown({ data: { city: 'Старая Русса', settlement: null, region: 'Новгородская' } }), 'Старая Русса');
+    assert.equal(pickTown({ data: { city: null, settlement: 'Индустриальный', region: 'Кировская' } }), 'Индустриальный');
+    assert.equal(pickTown({ data: { city: 'Нефтеюганск', settlement: null, region: 'Ханты-Мансийский' } }), 'Нефтеюганск');
+});
