@@ -2,9 +2,14 @@
 require('dotenv').config();
 const Sentry = require('@sentry/node');
 if (process.env.SENTRY_DSN) {
+    const { scrubEvent } = require('./lib/sentry-scrub');
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
         environment: process.env.NODE_ENV || 'development',
+        // Sentry — сервис за пределами РФ. Тело запроса, заголовки и контакты в
+        // отчёт не уходят: см. lib/sentry-scrub.js.
+        sendDefaultPii: false,
+        beforeSend: scrubEvent,
     });
 }
 const express = require('express');

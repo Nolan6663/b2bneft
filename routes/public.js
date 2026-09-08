@@ -4,6 +4,19 @@ const express = require('express');
 const { categorizeProducer } = require('../lib/producer-categories');
 const companiesCache = require('../lib/companies-cache');
 const tzAi = require('../lib/ai-client');
+const { isSoleTrader, publicCompanyName } = require('../lib/personal-data');
+
+/* Карточка ИП, которую мы завели сами из реестра и владелец её не забрал,
+   покидает платформу без полного ФИО и без телефона: наименование ИП — это имя
+   физического лица, а открытость ЕГРИП/ГИСП не заменяет согласия на
+   распространение персональных данных (152-ФЗ, ст. 10.1). Мета-теги карточек
+   /p/:id так делают давно (lib/producer-seo.js), а JSON отдавал строку целиком —
+   закрываем тот же адрес с другой стороны.
+   Забрал карточку — данные его собственные, показываем как есть. */
+function maskSoleTrader(c) {
+    if (!c || c.claimed === true || !isSoleTrader(c)) return c;
+    return { ...c, company: publicCompanyName(c), phone: '' };
+}
 
 function createPublicRouter(deps) {
     const {
@@ -156,7 +169,7 @@ function createPublicRouter(deps) {
                   AND free_capacity != 'null'
                 ORDER BY company ASC
             `);
-            const list = rows.map(rowToCompany).map(c => ({
+            const list = rows.map(rowToCompany).map(maskSoleTrader).map(c => ({
                 id: c.id, company: c.company, city: c.city, specialization: c.specialization,
                 status: c.status, verifiedByPlatform: c.verifiedByPlatform,
                 verifiedEgrul: c.verifiedEgrul,
@@ -185,7 +198,7 @@ function createPublicRouter(deps) {
                 WHERE role = 'producer'
                 ORDER BY verified_by_platform DESC, verified_egrul DESC, company ASC
             `);
-            res.json(companiesCache.set('catalog', rows.map(rowToCompany)));
+            res.json(companiesCache.set('catalog', rows.map(rowToCompany).map(maskSoleTrader)));
         } catch (e) { next(e); }
     });
     
@@ -277,7 +290,7 @@ function createPublicRouter(deps) {
                 [id]
             );
             if (!row) return res.status(404).json({ error: 'Поставщик не найден' });
-            const c = await enrichCompany(rowToCompany(row), null);
+            const c = maskSoleTrader(await enrichCompany(rowToCompany(row), null));
             const { rows: reviews } = await pool.query(
                 `SELECT from_company, score, text, created_at FROM reviews
                  WHERE to_company = $1 ORDER BY created_at DESC LIMIT 12`,
@@ -340,7 +353,7 @@ function createPublicRouter(deps) {
 
         const byCategory = new Map();
         for (const row of rows) {
-            const producer = rowToCompany(row);
+            const producer = maskSoleTrader(rowToCompany(row));
             const card = {
                 id: producer.id,
                 company: producer.company,
@@ -522,7 +535,10 @@ function createPublicRouter(deps) {
                 found: true,
                 company: {
                     id: row.id,
-                    company: row.company,
+                    // Мастер /zavod показывает карточку до входа, по одному ИНН:
+                    // отдавать по нему полное ФИО предпринимателя нельзя. Фамилии
+                    // с инициалами хватает, чтобы владелец узнал свою карточку.
+                    company: publicCompanyName(row),
                     city: row.city || '',
                     products: String(row.products || '').slice(0, 400),
                     specialization: row.specialization || '',

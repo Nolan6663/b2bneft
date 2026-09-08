@@ -91,18 +91,39 @@
     <div class="tz-footer-copy">© 2026 ТехЗаказ</div>
   </div>
   <div class="tz-cookie" id="tzCookie" hidden>
-    <span>Мы используем cookie, чтобы сайт работал и чтобы понимать, как им пользуются. Подробнее — в <a href="/privacy">политике</a>.</span>
-    <button type="button" onclick="tzCookieAccept()">Понятно</button>
+    <span>Технические cookie нужны для входа в кабинет и работают всегда. Аналитические — Яндекс Метрика, включая запись сессии, — только с вашего согласия. Подробнее в <a href="/privacy">политике</a>.</span>
+    <span class="tz-cookie-actions">
+      <button type="button" class="tz-cookie-secondary" onclick="tzCookieDecline()">Только необходимые</button>
+      <button type="button" onclick="tzCookieAccept()">Принять</button>
+    </span>
   </div>
+  <!-- Правила согласия общие для всех страниц; на страницах со счётчиком файл
+       уже подключён в <head>, повторная загрузка ничего не делает. -->
+  <script src="/assets/analytics-consent.js"></script>
   <script>
+    /* Плашка спрашивает только тех, кто ещё не отвечал; ответ хранится в
+       tzCookieConsent. Прежний ключ tzCookieAck намеренно не читаем: его
+       выставляла плашка с единственной кнопкой «Понятно», согласия она не
+       спрашивала, и засчитать её задним числом нельзя — поэтому у прежних
+       посетителей выбор появится ещё раз. */
     (function () {
-      try {
-        if (!localStorage.getItem('tzCookieAck')) document.getElementById('tzCookie').hidden = false;
-      } catch (e) { /* приватный режим — плашку не показываем */ }
+      if (!window.tzAnalytics || window.tzAnalytics.answered()) return;
+      var el = document.getElementById('tzCookie');
+      if (el) el.hidden = false;
     })();
+    function tzCookieHide() {
+      var el = document.getElementById('tzCookie');
+      if (el) el.hidden = true;
+    }
     function tzCookieAccept() {
-      try { localStorage.setItem('tzCookieAck', '1'); } catch (e) { /* см. выше */ }
-      document.getElementById('tzCookie').hidden = true;
+      // grant() сам запускает отложенный код счётчика — на этой же странице,
+      // без перезагрузки.
+      if (window.tzAnalytics) window.tzAnalytics.grant();
+      tzCookieHide();
+    }
+    function tzCookieDecline() {
+      if (window.tzAnalytics) window.tzAnalytics.decline();
+      tzCookieHide();
     }
   </script>
   <style>
@@ -141,6 +162,11 @@
     .tz-cookie a { color: var(--accent-bright, #FF6A00); }
     .tz-cookie button { height: 34px; padding: 0 16px; border-radius: 3px; border: 1px solid var(--accent-bright, #FF6A00); background: var(--accent-bright, #FF6A00); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
     .tz-cookie button:active { transform: translate(1px, 1px); }
+    /* Отказ — равноправная кнопка, а не мелкая ссылка в углу: выбор должен
+       читаться как выбор. Отличается только заливкой, размер тот же. */
+    .tz-cookie-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .tz-cookie button.tz-cookie-secondary { background: transparent; color: var(--text-secondary, #64748B); border-color: var(--inner-border, #E2E8F0); font-weight: 600; }
+    :root:not([data-theme="dark"]) .tz-cookie button.tz-cookie-secondary { color: #64748B; }
     @media (max-width: 720px) { .tz-footer { padding: 22px 16px; } }
   </style>
 </footer>

@@ -6,6 +6,7 @@
 // поля, source и название не трогаем (ГИСП-обогащение не затирается).
 const fs = require('fs');
 const path = require('path');
+const { isSoleTraderName } = require('../lib/personal-data');
 
 const DEFAULT_SOURCE = 'gisp-pp719';
 
@@ -63,8 +64,17 @@ async function run() {
     const srcIdx = args.indexOf('--source');
     const source = srcIdx >= 0 ? String(args[srcIdx + 1] || '').trim() : DEFAULT_SOURCE;
     if (!file || !source) { console.error('usage: node scripts/import-registry.js <file.json|csv> [--dry-run] [--source name]'); process.exit(1); }
-    const rows = parseRegistryFile(path.resolve(file));
-    console.log(`Распознано записей: ${rows.length} (source='${source}')`);
+    const all = parseRegistryFile(path.resolve(file));
+    // Наименование ИП в реестре — это ФИО живого человека, а карточка каталога
+    // публикуется в открытом доступе. Открытость ЕГРИП/ГИСП не заменяет согласия
+    // на распространение персональных данных (152-ФЗ, ст. 10.1), поэтому такие
+    // строки в каталог не заводим вовсе — фильтруем на входе, а не прячем потом.
+    const rows = all.filter(r => !isSoleTraderName(r.company));
+    const skippedSoleTraders = all.length - rows.length;
+    console.log(`Распознано записей: ${all.length} (source='${source}')`);
+    if (skippedSoleTraders) {
+        console.log(`Пропущено ИП (персональные данные, не публикуем): ${skippedSoleTraders}`);
+    }
     if (dryRun) {
         rows.slice(0, 5).forEach(r => console.log(' ', r.inn, r.company, '·', r.city, r.email ? '· ' + r.email : ''));
         console.log('(dry-run: БД не тронута)');
