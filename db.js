@@ -2,6 +2,7 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 const crypto = require('crypto');
+const { initCatalog } = require('./lib/catalog-schema');
 
 // Return bigint columns as JS numbers, not strings
 require('pg').types.setTypeParser(20, parseInt);
@@ -614,6 +615,11 @@ async function initDb() {
             ['Фланец стальной ГОСТ', 'Металл', 'Активный', 0, '28.05.2026']
         );
     }
+
+    // Справочники SEO-архитектуры (услуги, изделия, реестр посадочных). Вынесены
+    // в отдельный модуль: initDb и без них длинная, а модель ещё будет расти по
+    // мере расширения кластеров.
+    await initCatalog(pool);
 
     console.log('✓ База данных готова');
 }
