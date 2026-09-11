@@ -89,8 +89,10 @@ const {
     esc: regionEsc,
     plural: regionPlural,
     MIN_INDEXABLE,
+    isRegionIndexable,
 } = require('./lib/region-seo');
 const { renderSitemap, latest } = require('./lib/sitemap');
+const { INDEXABLE_STATUS } = require('./lib/catalog-schema');
 const catalogSeo = require('./lib/catalog-seo');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
@@ -1232,8 +1234,10 @@ app.get('/sitemap.xml', async (req, res, next) => {
         const zakupki = pages.find(p => p.url === '/zakupki');
         if (lastOrder && lastOrder.at) zakupki.lastmod = lastOrder.at;
 
-        // Регионы: страница отдаёт noindex, пока предприятий меньше MIN_INDEXABLE,
+        // Регионы: страница отдаёт noindex, пока предприятий меньше порога,
         // поэтому в карту идут только те, где каталог реально что-то показывает.
+        // Порог спрашиваем тем же предикатом, что и мета-тег: значение живёт в
+        // настройке threshold.geo.supply и может измениться без релиза.
         const { rows: regionRows } = await pool.query(
             `SELECT city, COUNT(*)::int AS n, MAX(updated_at) AS updated FROM companies
               WHERE role = 'producer' AND status <> 'Отклонено' AND city = ANY($1)
@@ -1243,7 +1247,7 @@ app.get('/sitemap.xml', async (req, res, next) => {
         const regionStats = new Map(regionRows.map(r => [r.city, r]));
         for (const r of REGIONS) {
             const stat = regionStats.get(r.name);
-            if (!stat || stat.n < MIN_INDEXABLE) continue;
+            if (!stat || !isRegionIndexable(stat.n)) continue;
             pages.push({
                 url: `/zakupki/region/${r.slug}`, priority: '0.7', changefreq: 'weekly',
                 lastmod: stat.updated,
@@ -1303,6 +1307,25 @@ app.get('/sitemap.xml', async (req, res, next) => {
                 lastmod: s.updated_at,
             });
         }
+        /* Посадочные страницы из реестра (услуги, изделия, каталоги подрядчиков,
+           хабы заказов). Условие одно и жёсткое: статус published_index. Ни
+           «страница существует», ни «она открыта пользователям» права на карту
+           сайта не дают — «Краулинговый бюджет» §9 и §2.2.
+
+           Фильтр стоит в SQL, а не в JS, намеренно: так черновики и noindex не
+           попадут в карту даже при ошибке в коде выше — из базы они не выедут. */
+        const { rows: landings } = await pool.query(
+            `SELECT url, updated_at FROM landing_pages
+              WHERE status = $1 AND url <> ''
+              ORDER BY url`,
+            [INDEXABLE_STATUS]
+        );
+        for (const l of landings) {
+            pages.push({
+                url: l.url, priority: '0.7', changefreq: 'weekly', lastmod: l.updated_at,
+            });
+        }
+
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.type('application/xml');
         res.send(renderSitemap(base, pages));

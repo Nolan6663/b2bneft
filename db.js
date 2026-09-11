@@ -3,6 +3,7 @@ require('dotenv').config();
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const { initCatalog } = require('./lib/catalog-schema');
+const { initSettings } = require('./lib/catalog-settings');
 
 // Return bigint columns as JS numbers, not strings
 require('pg').types.setTypeParser(20, parseInt);
@@ -620,6 +621,10 @@ async function initDb() {
     // в отдельный модуль: initDb и без них длинная, а модель ещё будет расти по
     // мере расширения кластеров.
     await initCatalog(pool);
+    // Пороги индексации читаются синхронно во время отрисовки страниц, поэтому
+    // их значения поднимаются в память один раз при старте (lib/catalog-settings).
+    const settingsCount = await initSettings(pool);
+    console.log(`✓ Настройки каталога: ${settingsCount}`);
 
     console.log('✓ База данных готова');
 }
