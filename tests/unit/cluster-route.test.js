@@ -20,7 +20,8 @@ function poolFor(landing, { companies = [], related = [], orders = [] } = {}) {
         { match: /FROM services e[\s\S]*LEFT JOIN landing_pages/i, rows: landing === undefined ? [] : [{ ...ENTITY, ...landing }] },
         { match: /FROM company_services l/i, rows: companies },
         { match: /FROM service_products sp/i, rows: related },
-        { match: /FROM orders/i, rows: orders },
+        // Закупки берутся по связям со справочником, а не поиском по заголовку.
+        { match: /FROM order_services l/i, rows: orders },
     ]);
 }
 
@@ -103,7 +104,7 @@ test('изделия обслуживаются тем же механизмом
         { match: /FROM products e[\s\S]*LEFT JOIN landing_pages/i, rows: [{ id: 2, slug: 'valy', name: 'Валы', description: '', status: 'published_index', redirect_to: '' }] },
         { match: /FROM company_products l/i, rows: [] },
         { match: /FROM service_products sp/i, rows: [] },
-        { match: /FROM orders/i, rows: [] },
+        { match: /FROM order_products l/i, rows: [] },
     ]);
     await withRoute(pool, async (app) => {
         const res = await app.request('/izdeliya/valy');

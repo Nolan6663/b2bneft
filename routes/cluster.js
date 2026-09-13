@@ -95,17 +95,19 @@ function createClusterRouter(deps) {
         return rows;
     }
 
-    /** Открытые закупки по названию сущности. Подбор грубый — по вхождению в
-     *  заголовок и категорию: связи «заказ ↔ справочник» пока нет, она появится
-     *  вместе с формой размещения из ТЗ §6.8. */
-    async function loadOrders(name) {
+    /** Открытые закупки по теме — по связям со справочником, которые
+     *  проставляются при создании заявки (lib/order-linking). */
+    async function loadOrders(kind, entityId) {
+        const linkTable = kind === 'service' ? 'order_services' : 'order_products';
+        const column = kind === 'service' ? 'service_id' : 'product_id';
         const { rows } = await pool.query(`
-            SELECT id, title, deadline FROM orders
-             WHERE status = 'Активный'
-               AND (title ILIKE $1 OR category ILIKE $1)
-             ORDER BY created_at DESC
+            SELECT o.id, o.title, o.deadline
+              FROM ${linkTable} l
+              JOIN orders o ON o.id = l.order_id
+             WHERE l.${column} = $1 AND o.status = 'Активный'
+             ORDER BY o.created_at DESC
              LIMIT ${ORDER_LIMIT}
-        `, [`%${name}%`]);
+        `, [entityId]);
         return rows;
     }
 
@@ -142,7 +144,7 @@ function createClusterRouter(deps) {
                 const [companies, entities, orders] = await Promise.all([
                     loadCompanies(kind, row.id),
                     loadRelated(kind, row.id),
-                    loadOrders(row.name),
+                    loadOrders(kind, row.id),
                 ]);
 
                 const page = {
@@ -208,25 +210,35 @@ function createClusterRouter(deps) {
         return row || null;
     }
 
-    /* Открытые заказы и свежие за окно — одним запросом: второе число решает,
-       звать ли робота, и считать его отдельным походом в базу незачем. */
-    async function loadHubOrders(name, windowDays) {
+    /* Открытые заказы хаба — по связям со справочником, а не по вхождению
+       названия в заголовок. Поиск подстроки давал «вальцовку» в ответ на «вал»
+       и «нарезку резьбы» в ответ на «резку»: исполнитель приходил из поиска за
+       одним, а видел другое. Связи проставляются при создании заявки
+       (lib/order-linking).
+
+       Свежие за окно считаются тем же запросом: это число решает, звать ли
+       робота, и отдельный поход в базу за ним не нужен. */
+    async function loadHubOrders(kind, entityId, windowDays) {
+        const linkTable = kind === 'service' ? 'order_services' : 'order_products';
+        const column = kind === 'service' ? 'service_id' : 'product_id';
         const { rows } = await pool.query(`
-            SELECT id, title, category, quantity, deadline, created_at,
-                   (drawing IS NOT NULL AND drawing <> '') AS has_drawing,
+            SELECT o.id, o.title, o.category, o.quantity, o.deadline, o.material,
+                   o.production_type, o.created_at,
+                   (o.drawing IS NOT NULL AND o.drawing <> '') AS has_drawing,
                    -- Тип параметра задаём явно: у $2 без приведения Postgres не
                    -- может вывести тип для конкатенации и падает на разборе
                    -- запроса. Умножение на интервал и читается яснее склейки строк.
-                   (created_at > NOW() - ($2::int * INTERVAL '1 day')) AS is_fresh
-              FROM orders
-             WHERE status = 'Активный'
-               AND (title ILIKE $1 OR category ILIKE $1)
-             ORDER BY created_at DESC
+                   (o.created_at > NOW() - ($2::int * INTERVAL '1 day')) AS is_fresh
+              FROM ${linkTable} l
+              JOIN orders o ON o.id = l.order_id
+             WHERE l.${column} = $1 AND o.status = 'Активный'
+             ORDER BY o.created_at DESC
              LIMIT 50
-        `, [`%${name}%`, Number(windowDays)]);
+        `, [entityId, Number(windowDays)]);
         return rows.map(r => ({
             id: r.id, title: r.title, category: r.category, quantity: r.quantity,
-            deadline: r.deadline, hasDrawing: r.has_drawing, isFresh: r.is_fresh,
+            deadline: r.deadline, material: r.material, productionType: r.production_type,
+            hasDrawing: r.has_drawing, isFresh: r.is_fresh,
         }));
     }
 
@@ -258,7 +270,7 @@ function createClusterRouter(deps) {
 
             const entity = { id: row.id, slug: row.slug, name: row.name };
             const { windowDays } = hub.supplyRule();
-            const orders = await loadHubOrders(row.name, windowDays);
+            const orders = await loadHubOrders(row.kind, row.id, windowDays);
             const fresh = orders.filter(o => o.isFresh).length;
 
             // Статус редактора ужесточается живым наполнением, но не смягчается:

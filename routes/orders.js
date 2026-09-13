@@ -2,6 +2,7 @@
 
 const express = require('express');
 const { sendHttpError } = require('../lib/http-errors');
+const { linkOrder } = require('../lib/order-linking');
 
 module.exports = function createOrdersRouter(deps) {
     const {
@@ -290,8 +291,16 @@ module.exports = function createOrdersRouter(deps) {
 
     router.post('/', requireAuth, requireRole('customer'), allowFirstOrderWithoutVerification, handleDrawingUpload, async (req, res, next) => {
         try {
-            const { title, category, deadline, quantity, description } = req.body;
+            const { title, category, deadline, quantity, description, productionType, material } = req.body;
             if (!title || !category || !deadline) return res.status(400).json({ error: 'Заполните все поля заявки' });
+
+            /* Тип производства и материал (ТЗ §6.8) необязательны: заказчик
+               часто их не знает, и требовать — значит терять заявку. Тип
+               сверяем со списком, а не пишем что прислали: это поле показывается
+               исполнителю как факт о заказе. */
+            const PRODUCTION_TYPES = ['Единичное', 'Партия', 'Серия'];
+            const prodType = PRODUCTION_TYPES.includes(productionType) ? productionType : '';
+            const materialText = String(material || '').trim().slice(0, 200);
 
             // Пока email не подтверждён, наружу ничего не шлём: письма и инвайты
             // ждут подтверждения (их отпускает flushPendingOutbound в routes/auth.js).
@@ -303,12 +312,24 @@ module.exports = function createOrdersRouter(deps) {
             const drawing = files.length ? JSON.stringify(files[0]) : null;
             const attachments = files.length ? JSON.stringify(files) : null;
             const { rows: [newRow] } = await pool.query(
-                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing,attachments,outbound_pending) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
+                'INSERT INTO orders (title,category,deadline,quantity,description,company,drawing,attachments,outbound_pending,production_type,material) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
                 [title, category, deadline, quantity ? Number(quantity) : null,
-                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing, attachments, !allowOutbound]
+                 description ? String(description).slice(0, 1000) : '', req.user.company, drawing, attachments, !allowOutbound,
+                 prodType, materialText]
             );
             const newOrder = rowToOrder(newRow);
             await logOrderEvent(newOrder.id, 'created', 'Закупка опубликована', newOrder.category || '', req.user.company);
+
+            /* Привязка к справочнику услуг и изделий: по ней собираются
+               тематические хабы /zakazy и блок «открытые закупки» на страницах
+               кластера. Разбор не должен ронять публикацию — заявка важнее
+               связей, и заказчик не обязан страдать из-за нашего разбора
+               текста, поэтому ошибка только пишется в лог. */
+            try {
+                await linkOrder(pool, newRow);
+            } catch (e) {
+                console.error('order-linking: не удалось связать заявку', newOrder.id, e.message);
+            }
 
             const MATCH_NOTIFY_THRESHOLD = 50;
             const HOT_MATCH_THRESHOLD = 70;

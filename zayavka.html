@@ -103,6 +103,26 @@
             </div>
         </div>
 
+        <!-- Тип производства и материал заметно меняют круг подходящих
+             исполнителей: единичная деталь и серия на 10 000 штук делаются на
+             разном оборудовании. Заводу это важно понять из карточки, а не
+             после переписки. Требование ТЗ §6.8. -->
+        <div class="ob-row">
+            <div class="ob-field">
+                <label class="ob-label" for="productionType">Тип производства</label>
+                <select class="ob-input" id="productionType" data-hint="productionType">
+                    <option value="">Не указано</option>
+                    <option value="Единичное">Единичное — одна деталь или образец</option>
+                    <option value="Партия">Партия — до нескольких сотен</option>
+                    <option value="Серия">Серия — регулярные поставки</option>
+                </select>
+            </div>
+            <div class="ob-field">
+                <label class="ob-label" for="material">Материал</label>
+                <input class="ob-input" id="material" data-hint="material" type="text" placeholder="Сталь 45, нержавейка AISI 304…">
+            </div>
+        </div>
+
         <div class="ob-row">
             <div class="ob-field">
                 <label class="ob-label" for="deadline">Срок поставки</label>
@@ -202,6 +222,8 @@
         if (d.description) $('description').value = d.description;
         if (d.category) $('category').value = d.category;
         if (d.quantity) $('quantity').value = d.quantity;
+        if (d.productionType) $('productionType').value = d.productionType;
+        if (d.material) $('material').value = d.material;
         if (d.deadline) $('deadline').value = d.deadline;
         if (d.city) $('city').value = d.city;
         if (Array.isArray(d.checklist)) renderChecklist(d.checklist);
@@ -223,6 +245,8 @@
             description: $('description').value.trim(),
             category: $('category').value,
             quantity: $('quantity').value,
+            productionType: $('productionType').value,
+            material: $('material').value.trim(),
             deadline: $('deadline').value,
             city: $('city').value.trim(),
         };
@@ -345,6 +369,8 @@
             fd.append('category', d.category || 'Прочее');
             fd.append('deadline', d.deadline);
             if (d.quantity) fd.append('quantity', d.quantity);
+            if (d.productionType) fd.append('productionType', d.productionType);
+            if (d.material) fd.append('material', d.material);
             fd.append('description', [d.description, d.city ? 'Город поставки: ' + d.city : ''].filter(Boolean).join('\n\n'));
             if (drawingFile) fd.append('drawing', drawingFile);
             await W.postForm('/api/orders', fd);
