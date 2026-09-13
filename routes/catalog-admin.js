@@ -54,6 +54,27 @@ const KINDS = {
 
 const STATUSES = ['draft', 'published', 'archived'];
 const NAME_MAX = 200;
+const SYNONYM_MAX = 40;
+
+/** Синонимы из тела запроса: массив непустых строк без повторов.
+ *  Ограничение по количеству нужно, чтобы редактор случайной вставкой не
+ *  превратил список в текст: каждый синоним — отдельный вариант разбора в
+ *  lib/catalog-match, и сотня мусорных строк замедлит сопоставление и
+ *  нахватает ложных связей.
+ *  Возвращает null, если поле вообще не передано, — так правка одного лишь
+ *  названия не стирает уже заведённые синонимы. */
+function parseSynonyms(value) {
+    if (!Array.isArray(value)) return null;
+    const out = [];
+    for (const raw of value) {
+        const s = String(raw == null ? '' : raw).trim().slice(0, NAME_MAX);
+        if (s && !out.includes(s)) out.push(s);
+    }
+    if (out.length > SYNONYM_MAX) {
+        throw Object.assign(new Error(`Синонимов не больше ${SYNONYM_MAX}`), { status: 400 });
+    }
+    return out;
+}
 
 function createCatalogAdminRouter(deps) {
     const { pool, requireAuth, requireRole, withTransaction } = deps;
@@ -107,7 +128,7 @@ function createCatalogAdminRouter(deps) {
         if (!kind) return badKind(res);
         try {
             const { rows } = await pool.query(`
-                SELECT e.id, e.slug, e.name, e.parent_id, e.description, e.status,
+                SELECT e.id, e.slug, e.name, e.parent_id, e.description, e.status, e.synonyms,
                        e.created_at, e.updated_at,
                        (SELECT COUNT(*)::int FROM ${kind.table} c WHERE c.parent_id = e.id) AS children,
                        (SELECT COUNT(*)::int FROM ${kind.linkTable} l WHERE l.${kind.linkColumn} = e.id) AS companies,
@@ -118,7 +139,7 @@ function createCatalogAdminRouter(deps) {
             `);
             res.json(rows.map(r => ({
                 id: r.id, slug: r.slug, name: r.name, parentId: r.parent_id,
-                description: r.description, status: r.status,
+                description: r.description, status: r.status, synonyms: r.synonyms || [],
                 children: r.children, companies: r.companies,
                 linked: r.linked, landings: r.landings,
                 createdAt: r.created_at, updatedAt: r.updated_at,
@@ -146,12 +167,14 @@ function createCatalogAdminRouter(deps) {
             const status = STATUSES.includes(req.body?.status) ? req.body.status : 'draft';
             const slug = await resolveSlug(kind, req.body || {}, name);
 
+            const synonyms = parseSynonyms(req.body?.synonyms) || [];
             const { rows: [row] } = await pool.query(
-                `INSERT INTO ${kind.table} (slug, name, parent_id, description, status)
-                 VALUES ($1, $2, $3, $4, $5) RETURNING id, slug, name, parent_id, status`,
-                [slug, name, parentId, String(req.body?.description || '').trim(), status]
+                `INSERT INTO ${kind.table} (slug, name, parent_id, description, status, synonyms)
+                 VALUES ($1, $2, $3, $4, $5, $6)
+              RETURNING id, slug, name, parent_id, status, synonyms`,
+                [slug, name, parentId, String(req.body?.description || '').trim(), status, JSON.stringify(synonyms)]
             );
-            res.status(201).json({ id: row.id, slug: row.slug, name: row.name, parentId: row.parent_id, status: row.status });
+            res.status(201).json({ id: row.id, slug: row.slug, name: row.name, parentId: row.parent_id, status: row.status, synonyms: row.synonyms || [] });
         } catch (e) {
             if (e.status) return res.status(e.status).json({ error: e.message });
             next(e);
@@ -201,15 +224,21 @@ function createCatalogAdminRouter(deps) {
                 ? current.description
                 : String(req.body.description || '').trim();
 
+            // COALESCE: поле, которого не было в запросе, остаётся прежним.
+            // Иначе правка одного названия молча стирала бы синонимы.
+            const synonyms = req.body?.synonyms === undefined ? null : parseSynonyms(req.body.synonyms);
             const { rows: [row] } = await pool.query(
                 `UPDATE ${kind.table}
                     SET name = $1, slug = $2, parent_id = $3, description = $4,
-                        status = $5, updated_at = NOW()
-                  WHERE id = $6
-              RETURNING id, slug, name, parent_id, status`,
-                [name, slug, parentId, description, status, id]
+                        status = $5, synonyms = COALESCE($6::jsonb, synonyms), updated_at = NOW()
+                  WHERE id = $7
+              RETURNING id, slug, name, parent_id, status, synonyms`,
+                [name, slug, parentId, description, status, synonyms ? JSON.stringify(synonyms) : null, id]
             );
-            res.json({ id: row.id, slug: row.slug, name: row.name, parentId: row.parent_id, status: row.status });
+            res.json({
+                id: row.id, slug: row.slug, name: row.name,
+                parentId: row.parent_id, status: row.status, synonyms: row.synonyms || [],
+            });
         } catch (e) {
             if (e.status) return res.status(e.status).json({ error: e.message });
             next(e);
