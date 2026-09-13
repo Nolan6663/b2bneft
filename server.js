@@ -43,6 +43,7 @@ const createCompaniesRouter = require('./routes/companies');
 const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
 const { createCatalogAdminRouter } = require('./routes/catalog-admin');
+const { createClusterRouter } = require('./routes/cluster');
 const createDealsRouter = require('./routes/deals');
 const createAuctionsRouter = require('./routes/auctions');
 const createReviewsRouter = require('./routes/reviews');
@@ -1957,6 +1958,9 @@ app.use('/api/companies', createCompaniesRouter(routesDeps));
 // Справочники услуг и изделий (ТЗ §13.1). Отдельным префиксом, чтобы не мешать
 // публичному /api/catalog — тот отдаёт каталог компаний и правится не админом.
 app.use('/api/admin/catalog', createCatalogAdminRouter(routesDeps));
+// Страницы кластера монтируются в корень: адреса /uslugi/… и /izdeliya/…
+// заданы ТЗ §3.1 и префикса не имеют.
+app.use('/', createClusterRouter(routesDeps));
 app.use('/api/messages', createMessagesRouter(routesDeps));
 app.use('/api/deals', createDealsRouter(routesDeps));
 app.use('/api/export', createExportRouter(routesDeps));
