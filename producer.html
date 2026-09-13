@@ -1175,6 +1175,15 @@
                     const created = await response.json().catch(() => null);
                     closeRespondModal(); priceInput.value = ''; daysInput.value = '';
                     if (typeof markOnboardingStep === 'function') markOnboardingStep('proposal');
+                    // ТЗ §12.1: отклик исполнителя. source_page отличает отклик из
+                    // ленты заказов от отклика по прямому приглашению — конверсия
+                    // у них разная, и смешивать их в одной цифре бессмысленно.
+                    if (window.tzEvent) {
+                        window.tzEvent('order_response', {
+                            order_id: currentOrderId,
+                            source_page: 'producer_feed',
+                        });
+                    }
                     loadOrdersForProducers(); loadMyProposals();
                     // Габариты — вторым шагом, когда КП уже ушло. Не спросить не
                     // можем: без них расчёта доставки не будет ни у кого.

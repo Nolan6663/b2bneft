@@ -263,7 +263,17 @@
         try {
             const fd = new FormData();
             fd.append('drawing', drawingFile);
+            // ТЗ §12.1: начало и успех загрузки — разные события. Разрыв между
+            // ними показывает, на каких файлах разбор отваливается.
+            const fileType = (drawingFile.name.split('.').pop() || '').toLowerCase();
+            if (window.tzEvent) window.tzEvent('drawing_upload_start', { page_type: 'order_wizard', file_type: fileType });
             const out = await W.postForm('/api/public/analyze-drawing', fd);
+            if (window.tzEvent) {
+                window.tzEvent('drawing_upload_success', {
+                    file_type: fileType,
+                    file_size_bucket: window.tzEvent.sizeBucket(drawingFile.size),
+                });
+            }
             const c = out.card || {};
             const lines = [
                 c.part ? 'Деталь: ' + c.part : '',
@@ -374,7 +384,17 @@
             fd.append('description', [d.description, d.city ? 'Город поставки: ' + d.city : ''].filter(Boolean).join('\n\n'));
             if (drawingFile) fd.append('drawing', drawingFile);
             await W.postForm('/api/orders', fd);
+            // Прежняя цель остаётся: она уже настроена в интерфейсе Метрики и
+            // собирает статистику, переименование обнулило бы накопленное.
+            // Событие из ТЗ §12.1 идёт рядом, с параметрами.
             W.goal('onboarding_order_published');
+            if (window.tzEvent) {
+                window.tzEvent('order_created', {
+                    category: d.category || 'Прочее',
+                    region: d.city || '',
+                    production_type: d.productionType || '',
+                });
+            }
             W.clearDraft();
             window.location.href = '/index?published=1';
         } catch (err) {
@@ -424,6 +444,9 @@
   <!-- Правила согласия общие для всех страниц; на страницах со счётчиком файл
        уже подключён в <head>, повторная загрузка ничего не делает. -->
   <script src="/assets/analytics-consent.js"></script>
+  <!-- Слой обязательных событий ТЗ §12.1. Грузится после согласия: сам по себе
+       он ничего не отправляет, только даёт странице функцию tzEvent. -->
+  <script src="/assets/analytics-events.js"></script>
   <script>
     /* Плашка спрашивает только тех, кто ещё не отвечал; ответ хранится в
        tzCookieConsent. Прежний ключ tzCookieAck намеренно не читаем: его

@@ -175,7 +175,10 @@ function createClusterRouter(deps) {
                     .replace(/<!--PAGE_H1-->/g, esc(buildH1(page)))
                     .replace(/<!--PAGE_LEAD-->/g, esc(lead))
                     .replace(/<!--PAGE_STATS-->/g, stats)
-                    .replace(/<!--PAGE_BODY-->/g, buildBody(page));
+                    .replace(/<!--PAGE_BODY-->/g, buildBody(page))
+                    .replace(/<!--EV_PAGE_TYPE-->/g, kind)
+                    .replace(/<!--EV_ENTITY_ID-->/g, String(entity.id))
+                    .replace(/<!--EV_INTENT-->/g, 'customer');
 
                 // Неиндексируемую страницу не кэшируем надолго: она в этом
                 // состоянии временно, и редактор должен увидеть правку сразу.
@@ -297,7 +300,10 @@ function createClusterRouter(deps) {
                 .replace(/<!--PAGE_H1-->/g, esc(hub.buildH1(entity)))
                 .replace(/<!--PAGE_LEAD-->/g, esc(lead))
                 .replace(/<!--PAGE_STATS-->/g, hub.buildStats(orders.length, fresh))
-                .replace(/<!--PAGE_BODY-->/g, hub.buildBody(entity, orders, related));
+                .replace(/<!--PAGE_BODY-->/g, hub.buildBody(entity, orders, related))
+                .replace(/<!--EV_PAGE_TYPE-->/g, 'order_hub')
+                .replace(/<!--EV_ENTITY_ID-->/g, String(entity.id))
+                .replace(/<!--EV_INTENT-->/g, 'executor');
 
             // Лента заказов живёт быстрее каталога: час кэша здесь означал бы,
             // что исполнитель видит вчерашнюю картину.

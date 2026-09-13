@@ -64,6 +64,43 @@
   </section>
 </main>
 
+<script>
+  /* События страницы кластера — ТЗ §12.1. Слой tzEvent приходит из футера и
+     сам проверяет согласие, поэтому здесь проверок нет: до согласия вызовы
+     просто ничего не делают. Параметры подставляет сервер. */
+  /* Ждём DOMContentLoaded: слой tzEvent подключается в футере, то есть ниже по
+     документу, и в момент выполнения этого блока его ещё не существует. Без
+     ожидания landing_view не отправлялся бы никогда — молча, без ошибки. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var page = { page_type: '<!--EV_PAGE_TYPE-->', entity_id: '<!--EV_ENTITY_ID-->', intent: '<!--EV_INTENT-->' };
+
+    function fire(name, extra) {
+      if (typeof window.tzEvent !== 'function') return;
+      var params = {};
+      for (var k in page) params[k] = page[k];
+      for (var e in (extra || {})) params[e] = extra[e];
+      window.tzEvent(name, params);
+    }
+
+    // Просмотр посадочной. source — откуда пришли: для разбора воронки важнее
+    // точного реферера, который всё равно режут браузеры.
+    fire('landing_view', { source: document.referrer ? 'referral' : 'direct' });
+
+    // Клик по основному призыву. position отличает шапку от подвала: один и
+    // тот же текст кнопки работает в этих местах по-разному.
+    document.querySelectorAll('.zc-cta').forEach(function (el) {
+      el.addEventListener('click', function () {
+        fire('primary_cta_click', { cta: (el.textContent || '').trim(), position: 'header' });
+      });
+    });
+    document.querySelectorAll('.zr-more a, .zr-empty a').forEach(function (el) {
+      el.addEventListener('click', function () {
+        fire('primary_cta_click', { cta: (el.textContent || '').trim(), position: 'body' });
+      });
+    });
+  });
+</script>
+
 <!-- legal-footer:start -->
 <footer class="tz-footer">
   <div class="tz-footer-inner">
@@ -89,6 +126,9 @@
   <!-- Правила согласия общие для всех страниц; на страницах со счётчиком файл
        уже подключён в <head>, повторная загрузка ничего не делает. -->
   <script src="/assets/analytics-consent.js"></script>
+  <!-- Слой обязательных событий ТЗ §12.1. Грузится после согласия: сам по себе
+       он ничего не отправляет, только даёт странице функцию tzEvent. -->
+  <script src="/assets/analytics-events.js"></script>
   <script>
     /* Плашка спрашивает только тех, кто ещё не отвечал; ответ хранится в
        tzCookieConsent. Прежний ключ tzCookieAck намеренно не читаем: его

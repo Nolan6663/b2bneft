@@ -857,6 +857,26 @@
             document.getElementById('catalogCount').textContent =
                 n === 0 ? 'Не найдено' : `Найдено: ${n} производител${n === 1 ? 'ь' : n < 5 ? 'я' : 'ей'}`;
 
+            /* ТЗ §12.1: фильтр каталога вместе с числом результатов. Именно
+               results_count здесь главное — фильтры, стабильно дающие ноль,
+               показывают дыры в наполнении каталога, а не интерес посетителя.
+               Событие шлём только когда фильтр действительно выбран: перерисовка
+               пустого каталога о предпочтениях ничего не сообщает. */
+            if (window.tzEvent) {
+                const p = currentSearchParams();
+                const active = [
+                    p.chip && ['chip', p.chip],
+                    p.region && ['region', p.region],
+                    p.verifiedOnly && ['verified', 'true'],
+                    (p.categories || []).length && ['category', p.categories.join(',')],
+                    (p.specs || []).length && ['spec', p.specs.join(',')],
+                    (p.certs || []).length && ['cert', p.certs.join(',')],
+                ].filter(Boolean);
+                for (const [name, value] of active) {
+                    window.tzEvent('company_filter', { filter_name: name, value: String(value).slice(0, 100), results_count: n });
+                }
+            }
+
 
             if (n === 0) {
                 grid.innerHTML = `<div class="catalog-empty">
@@ -1056,6 +1076,14 @@
                     showToast('Максимум 4 поставщика для сравнения', 'warn'); return;
                 }
                 compareList.push(p);
+                // ТЗ §12.1: событие про сравнение отправляем на добавление, а не
+                // на удаление — интерес показывает набор списка, а не его разбор.
+                if (window.tzEvent) {
+                    window.tzEvent('company_compare', {
+                        company_count: compareList.length,
+                        topic: p.specialization || p.city || '',
+                    });
+                }
             }
             renderComparePanel();
             // Update all compare buttons in the grid

@@ -46,7 +46,17 @@
             el.classList.toggle('is-current', i === current);
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Прежняя цель сохраняется — она настроена в Метрике и собирает данные.
         goal('onboarding_step_' + current);
+        // Событие из ТЗ §12.1 идёт рядом и несёт параметры, по которым строится
+        // воронка: без номера шага в параметре пришлось бы заводить отдельную
+        // цель на каждый шаг, как сделано выше.
+        if (typeof window.tzEvent === 'function') {
+            window.tzEvent('order_step_complete', {
+                step: current,
+                role: (window.__tzRole || 'customer'),
+            });
+        }
     }
 
     function setBusy(btn, busy, busyText) {
