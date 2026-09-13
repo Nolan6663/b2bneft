@@ -214,13 +214,16 @@ function createClusterRouter(deps) {
         const { rows } = await pool.query(`
             SELECT id, title, category, quantity, deadline, created_at,
                    (drawing IS NOT NULL AND drawing <> '') AS has_drawing,
-                   (created_at > NOW() - ($2 || ' days')::interval) AS is_fresh
+                   -- Тип параметра задаём явно: у $2 без приведения Postgres не
+                   -- может вывести тип для конкатенации и падает на разборе
+                   -- запроса. Умножение на интервал и читается яснее склейки строк.
+                   (created_at > NOW() - ($2::int * INTERVAL '1 day')) AS is_fresh
               FROM orders
              WHERE status = 'Активный'
                AND (title ILIKE $1 OR category ILIKE $1)
              ORDER BY created_at DESC
              LIMIT 50
-        `, [`%${name}%`, String(windowDays)]);
+        `, [`%${name}%`, Number(windowDays)]);
         return rows.map(r => ({
             id: r.id, title: r.title, category: r.category, quantity: r.quantity,
             deadline: r.deadline, hasDrawing: r.has_drawing, isFresh: r.is_fresh,
