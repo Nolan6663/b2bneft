@@ -42,6 +42,7 @@ const createCompanyEnricher = require('./lib/company-enrich');
 const createCompaniesRouter = require('./routes/companies');
 const { createTopSuppliersRouter } = require('./routes/companies');
 const createMessagesRouter = require('./routes/messages');
+const { createCatalogAdminRouter } = require('./routes/catalog-admin');
 const createDealsRouter = require('./routes/deals');
 const createAuctionsRouter = require('./routes/auctions');
 const createReviewsRouter = require('./routes/reviews');
@@ -1953,6 +1954,9 @@ app.use('/api/proposals', createProposalsRouter(routesDeps));
 app.use('/api/order-proposals', createOrderProposalsRouter(routesDeps));
 app.use('/api/top-suppliers', createTopSuppliersRouter(routesDeps));
 app.use('/api/companies', createCompaniesRouter(routesDeps));
+// Справочники услуг и изделий (ТЗ §13.1). Отдельным префиксом, чтобы не мешать
+// публичному /api/catalog — тот отдаёт каталог компаний и правится не админом.
+app.use('/api/admin/catalog', createCatalogAdminRouter(routesDeps));
 app.use('/api/messages', createMessagesRouter(routesDeps));
 app.use('/api/deals', createDealsRouter(routesDeps));
 app.use('/api/export', createExportRouter(routesDeps));
