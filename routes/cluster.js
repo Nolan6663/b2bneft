@@ -21,6 +21,7 @@ const {
     buildBody, buildJsonLd, esc, plural, KINDS,
 } = require('../lib/cluster-seo');
 const { INDEXABLE_STATUS } = require('../lib/catalog-schema');
+const hub = require('../lib/orders-hub');
 
 /* Сколько исполнителей показываем на странице. Больше двадцати — это уже
    каталог, и ему место в отдельном разделе, а не в подвале страницы услуги. */
@@ -162,6 +163,7 @@ function createClusterRouter(deps) {
                     : `Разместите чертёж или техническое задание — предложения придут напрямую от производств, без посредников и тендерных процедур.`;
 
                 const html = template()
+                    .replace(/<!--HEADER_CTA-->/g, 'Разместить закупку')
                     .replace(/<!--META_TITLE-->/g, htmlEscape(buildTitle(page)))
                     .replace(/<!--META_DESC-->/g, htmlEscape(buildDescription(page)))
                     .replace(/<!--META_ROBOTS-->/g, verdict.robots)
@@ -181,6 +183,114 @@ function createClusterRouter(deps) {
             } catch (e) { next(e); }
         });
     }
+
+    // ─────────────────── Хаб заказов ───────────────────
+    // Единственная страница кластера для исполнителя. Slug может принадлежать
+    // и услуге, и изделию: заказы ищут и «на токарную обработку», и «на валы».
+
+    async function loadHubEntity(slug) {
+        const { rows: [row] } = await pool.query(`
+            SELECT e.id, e.slug, e.name, 'service' AS kind,
+                   lp.status, lp.title, lp.description AS lp_description,
+                   lp.h1, lp.intro, lp.redirect_to
+              FROM services e
+              LEFT JOIN landing_pages lp ON lp.service_id = e.id AND lp.page_type = 'order'
+             WHERE e.slug = $1
+             UNION ALL
+            SELECT e.id, e.slug, e.name, 'product' AS kind,
+                   lp.status, lp.title, lp.description AS lp_description,
+                   lp.h1, lp.intro, lp.redirect_to
+              FROM products e
+              LEFT JOIN landing_pages lp ON lp.product_id = e.id AND lp.page_type = 'order'
+             WHERE e.slug = $1
+             LIMIT 1
+        `, [slug]);
+        return row || null;
+    }
+
+    /* Открытые заказы и свежие за окно — одним запросом: второе число решает,
+       звать ли робота, и считать его отдельным походом в базу незачем. */
+    async function loadHubOrders(name, windowDays) {
+        const { rows } = await pool.query(`
+            SELECT id, title, category, quantity, deadline, created_at,
+                   (drawing IS NOT NULL AND drawing <> '') AS has_drawing,
+                   (created_at > NOW() - ($2 || ' days')::interval) AS is_fresh
+              FROM orders
+             WHERE status = 'Активный'
+               AND (title ILIKE $1 OR category ILIKE $1)
+             ORDER BY created_at DESC
+             LIMIT 50
+        `, [`%${name}%`, String(windowDays)]);
+        return rows.map(r => ({
+            id: r.id, title: r.title, category: r.category, quantity: r.quantity,
+            deadline: r.deadline, hasDrawing: r.has_drawing, isFresh: r.is_fresh,
+        }));
+    }
+
+    router.get('/zakazy/:slug', async (req, res, next) => {
+        try {
+            const row = await loadHubEntity(String(req.params.slug || ''));
+            if (!row) {
+                res.status(404);
+                return res.sendFile(path.join(__dirname, '..', '404.html'));
+            }
+
+            const landing = row.status ? {
+                status: row.status, title: row.title, description: row.lp_description,
+                h1: row.h1, intro: row.intro, redirect_to: row.redirect_to,
+            } : null;
+
+            const verdict = responseFor(landing);
+            if (verdict.status === 301) return res.redirect(301, verdict.location);
+            if (verdict.status === 410) {
+                res.status(410);
+                return res.type('html').send('<!doctype html><meta charset="utf-8">'
+                    + '<title>Страница удалена — ТехЗаказ</title>'
+                    + '<p>Эта страница удалена. <a href="/zakupki">Перейти к закупкам</a>.</p>');
+            }
+            if (verdict.status !== 200) {
+                res.status(verdict.status);
+                return res.sendFile(path.join(__dirname, '..', '404.html'));
+            }
+
+            const entity = { id: row.id, slug: row.slug, name: row.name };
+            const { windowDays } = hub.supplyRule();
+            const orders = await loadHubOrders(row.name, windowDays);
+            const fresh = orders.filter(o => o.isFresh).length;
+
+            // Статус редактора ужесточается живым наполнением, но не смягчается:
+            // пустой хаб закрывается сам, закрытый редактором не открывается.
+            const robots = hub.robotsForHub(landing, fresh);
+
+            const base = String(APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+            const related = row.kind === 'service'
+                ? { href: `/uslugi/${entity.slug}`, title: entity.name }
+                : { href: `/izdeliya/${entity.slug}`, title: entity.name };
+
+            const lead = landing && landing.intro
+                ? landing.intro
+                : 'Заявки от заказчиков напрямую: без тендерных процедур, посредников и платы за участие.';
+
+            const html = template()
+                .replace(/<!--HEADER_CTA-->/g, 'Заполнить профиль')
+                .replace(/<!--META_TITLE-->/g, htmlEscape(hub.buildTitle(entity, orders.length)))
+                .replace(/<!--META_DESC-->/g, htmlEscape(hub.buildDescription(entity, orders.length, fresh)))
+                .replace(/<!--META_ROBOTS-->/g, robots)
+                .replace(/<!--CANONICAL_URL-->/g, `${base}${hub.ROOT}/${entity.slug}`)
+                .replace(/<!--JSON_LD-->/g, hub.buildJsonLd(entity, orders, base))
+                .replace(/<!--BREADCRUMB-->/g, hub.buildBreadcrumb(entity))
+                .replace(/<!--PAGE_H1-->/g, esc(hub.buildH1(entity)))
+                .replace(/<!--PAGE_LEAD-->/g, esc(lead))
+                .replace(/<!--PAGE_STATS-->/g, hub.buildStats(orders.length, fresh))
+                .replace(/<!--PAGE_BODY-->/g, hub.buildBody(entity, orders, related));
+
+            // Лента заказов живёт быстрее каталога: час кэша здесь означал бы,
+            // что исполнитель видит вчерашнюю картину.
+            res.setHeader('Cache-Control', robots.startsWith('index')
+                ? 'public, max-age=300' : 'private, max-age=0, must-revalidate');
+            res.type('html').send(html);
+        } catch (e) { next(e); }
+    });
 
     return router;
 }
