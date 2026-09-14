@@ -804,6 +804,17 @@
                 aiSearchId = Array.isArray(data) ? null : (data.searchId || null);
                 aiMode = true;
                 render();
+                /* ТЗ §12.1. Фразу отправляем нормализованной — той же, по которой
+                   она ложится в журнал поиска и попадает в панель спроса. Сырую
+                   строку человека в аналитику слать незачем: там бывают и
+                   контакты, и всё что угодно. */
+                if (window.tzEvent) {
+                    window.tzEvent('search_submit', {
+                        query_normalized: query.toLowerCase().replace(/ё/g, 'е').replace(/[^\wа-я0-9]+/gi, ' ').trim().slice(0, 100),
+                        role: 'customer',
+                        results_count: aiResults.length,
+                    });
+                }
             } catch (e) {
                 showToast(e.message || 'Ошибка AI-поиска', 'error');
             } finally {
@@ -1302,6 +1313,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clickedEntity: `company:${id}` }),
                 }).catch(() => {});
+                /* ТЗ §12.1: позиция в выдаче важнее самого клика — она говорит,
+                   попал ли нужный результат наверх или человеку пришлось
+                   пролистывать. */
+                if (window.tzEvent) {
+                    const position = aiResults.findIndex(x => x.id === id) + 1;
+                    window.tzEvent('search_result_click', { result_type: 'company', position: position || null });
+                }
             }
             const p = allProducers.find(x => x.id === id);
             if (!p) return;

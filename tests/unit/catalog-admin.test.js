@@ -203,3 +203,81 @@ test('повторная связь не ломается об уникальн�
         assert.match(insert.sql, /ON CONFLICT DO NOTHING/i);
     });
 });
+
+// ─────────────────── Посадочные страницы ───────────────────
+
+/* Управление статусом — то место, где проверка перед индексацией перестаёт
+   быть украшением. Раньше похожий механизм (robotsFor) был написан и месяц
+   лежал без вызова; здесь тесты сторожат, что он действительно применяется. */
+
+const LANDING = {
+    id: 3, system_key: 'service:customer:tokarnaya-obrabotka', url: '/uslugi/tokarnaya-obrabotka',
+    page_type: 'service', intent: 'customer', status: 'draft', service_id: 1, product_id: null,
+    demand_hits: 0, supply_count: 0,
+};
+
+test('из черновика нельзя открыть страницу сразу в индекс', async () => {
+    await withRouter([
+        { match: /SELECT \* FROM landing_pages WHERE id/i, rows: [LANDING] },
+    ], async ({ request, pool }) => {
+        const res = await request('/landings/3/status', { method: 'PATCH', body: { status: 'published_index' } });
+        assert.equal(res.status, 409);
+        assert.match(res.json.error, /Сначала опубликуйте с noindex/);
+        assert.ok(!pool.calls.some(c => /UPDATE landing_pages/i.test(c.sql)), 'статус меняться не должен');
+    });
+});
+
+test('открытие в индекс без предложения отклоняется с разбором причин', async () => {
+    await withRouter([
+        { match: /SELECT \* FROM landing_pages WHERE id/i, rows: [{ ...LANDING, status: 'published_noindex' }] },
+        { match: /FROM company_services WHERE service_id/i, rows: [{ n: 1 }] },
+        { match: /WHERE system_key = \$1 AND id <> \$2/i, rows: [] },
+        { match: /WHERE url = \$1 AND id <> \$2/i, rows: [] },
+    ], async ({ request, pool }) => {
+        const res = await request('/landings/3/status', { method: 'PATCH', body: { status: 'published_index' } });
+        assert.equal(res.status, 409);
+        assert.match(res.json.error, /не прошла проверку/i);
+        assert.ok(res.json.blocking.some(c => /предложения/i.test(c.title)), 'причина названа');
+        assert.ok(!pool.calls.some(c => /UPDATE landing_pages/i.test(c.sql)));
+    });
+});
+
+test('страница с достаточным наполнением открывается', async () => {
+    await withRouter([
+        { match: /SELECT \* FROM landing_pages WHERE id/i, rows: [{ ...LANDING, status: 'published_noindex' }] },
+        { match: /FROM company_services WHERE service_id/i, rows: [{ n: 12 }] },
+        { match: /WHERE system_key = \$1 AND id <> \$2/i, rows: [] },
+        { match: /WHERE url = \$1 AND id <> \$2/i, rows: [] },
+        { match: /UPDATE landing_pages/i, rows: [{ id: 3, url: LANDING.url, status: 'published_index', indexed_at: '2026-09-14' }] },
+    ], async ({ request }) => {
+        const res = await request('/landings/3/status', { method: 'PATCH', body: { status: 'published_index' } });
+        assert.equal(res.status, 200);
+        assert.equal(res.json.status, 'published_index');
+    });
+});
+
+test('дубль системного ключа не пускает в индекс', async () => {
+    // Две страницы на один интент — та самая каннибализация из ТЗ §2.2.
+    await withRouter([
+        { match: /SELECT \* FROM landing_pages WHERE id/i, rows: [{ ...LANDING, status: 'published_noindex' }] },
+        { match: /FROM company_services WHERE service_id/i, rows: [{ n: 30 }] },
+        { match: /WHERE system_key = \$1 AND id <> \$2/i, rows: [{ url: '/uslugi/tokarka' }] },
+        { match: /WHERE url = \$1 AND id <> \$2/i, rows: [] },
+    ], async ({ request }) => {
+        const res = await request('/landings/3/status', { method: 'PATCH', body: { status: 'published_index' } });
+        assert.equal(res.status, 409);
+        assert.ok(res.json.blocking.some(c => /ключ/i.test(c.title)));
+    });
+});
+
+test('закрыть страницу можно всегда, проверка наполнения не мешает', async () => {
+    // Запрещать уборку бессмысленно: проверка стоит только на входе в индекс.
+    await withRouter([
+        { match: /SELECT \* FROM landing_pages WHERE id/i, rows: [{ ...LANDING, status: 'published_index' }] },
+        { match: /UPDATE landing_pages/i, rows: [{ id: 3, url: LANDING.url, status: 'published_noindex', indexed_at: null }] },
+    ], async ({ request, pool }) => {
+        const res = await request('/landings/3/status', { method: 'PATCH', body: { status: 'published_noindex' } });
+        assert.equal(res.status, 200);
+        assert.ok(!pool.calls.some(c => /FROM company_services/i.test(c.sql)), 'наполнение при закрытии не считаем');
+    });
+});

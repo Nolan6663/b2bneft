@@ -27,6 +27,8 @@
 
 const express = require('express');
 const { toSlug, uniqueSlug, isValidSlug } = require('../lib/slug');
+const { evaluate, canTransition } = require('../lib/index-gate');
+const { INDEXABLE_STATUS } = require('../lib/catalog-schema');
 
 /** Белый список: вид справочника → таблица и колонка связи с компанией. */
 const KINDS = {
@@ -411,6 +413,114 @@ function createCatalogAdminRouter(deps) {
                 [serviceId, productId]
             );
             res.json({ unlinked: rowCount > 0 });
+        } catch (e) { next(e); }
+    });
+
+    // ─────────────────── Посадочные страницы ───────────────────
+    // Реестр посадочных правится отсюда же: заводить сущность и открывать её
+    // страницу — разные решения, и второе проходит проверку перед индексацией.
+
+    router.get('/landings', ...admin, async (req, res, next) => {
+        try {
+            const { rows } = await pool.query(`
+                SELECT lp.id, lp.system_key, lp.url, lp.page_type, lp.intent, lp.status,
+                       lp.title, lp.h1, lp.demand_hits, lp.supply_count, lp.index_note,
+                       lp.indexed_at, lp.updated_at,
+                       COALESCE(s.name, p.name) AS entity_name
+                  FROM landing_pages lp
+                  LEFT JOIN services s ON s.id = lp.service_id
+                  LEFT JOIN products p ON p.id = lp.product_id
+                 ORDER BY lp.page_type, lp.url
+            `);
+            res.json(rows.map(r => ({
+                id: r.id, systemKey: r.system_key, url: r.url, pageType: r.page_type,
+                intent: r.intent, status: r.status, title: r.title, h1: r.h1,
+                entity: r.entity_name, demand: r.demand_hits, supply: r.supply_count,
+                note: r.index_note, indexedAt: r.indexed_at, updatedAt: r.updated_at,
+            })));
+        } catch (e) { next(e); }
+    });
+
+    /** Готовность страницы к индексации — тот же расчёт, что и при смене
+     *  статуса. Отдельная ручка нужна, чтобы редактор видел список условий до
+     *  того, как нажмёт кнопку, а не узнавал об отказе после. */
+    async function readiness(landing) {
+        const facts = { demand: landing.demand_hits, hasUniqueContent: true };
+
+        // Предложение считаем по фактическим связям — тем же, по которым
+        // страница потом покажет карточки.
+        if (landing.service_id) {
+            const { rows: [c] } = await pool.query(
+                'SELECT COUNT(*)::int AS n FROM company_services WHERE service_id = $1', [landing.service_id]);
+            facts.supply = c.n;
+        } else if (landing.product_id) {
+            const { rows: [c] } = await pool.query(
+                'SELECT COUNT(*)::int AS n FROM company_products WHERE product_id = $1', [landing.product_id]);
+            facts.supply = c.n;
+        } else {
+            facts.supply = landing.supply_count || 0;
+        }
+
+        const { rows: dupKey } = await pool.query(
+            'SELECT url FROM landing_pages WHERE system_key = $1 AND id <> $2 LIMIT 1',
+            [landing.system_key, landing.id]);
+        if (dupKey.length) facts.duplicateKey = dupKey[0].url;
+
+        const { rows: dupUrl } = await pool.query(
+            'SELECT system_key FROM landing_pages WHERE url = $1 AND id <> $2 LIMIT 1',
+            [landing.url, landing.id]);
+        if (dupUrl.length) facts.duplicateUrl = dupUrl[0].system_key;
+
+        return { facts, result: evaluate(landing, facts) };
+    }
+
+    router.get('/landings/:id/readiness', ...admin, async (req, res, next) => {
+        const id = parseId(req.params.id);
+        if (!id) return res.status(400).json({ error: 'Некорректный идентификатор' });
+        try {
+            const { rows: [landing] } = await pool.query('SELECT * FROM landing_pages WHERE id = $1', [id]);
+            if (!landing) return res.status(404).json({ error: 'Посадочная страница не найдена' });
+            const { facts, result } = await readiness(landing);
+            res.json({ status: landing.status, supply: facts.supply, ...result });
+        } catch (e) { next(e); }
+    });
+
+    router.patch('/landings/:id/status', ...admin, async (req, res, next) => {
+        const id = parseId(req.params.id);
+        if (!id) return res.status(400).json({ error: 'Некорректный идентификатор' });
+        const next_ = String(req.body?.status || '');
+        try {
+            const { rows: [landing] } = await pool.query('SELECT * FROM landing_pages WHERE id = $1', [id]);
+            if (!landing) return res.status(404).json({ error: 'Посадочная страница не найдена' });
+
+            const move = canTransition(landing.status, next_);
+            if (!move.allowed) return res.status(409).json({ error: move.why });
+
+            /* Проверка наполнения — только на входе в индекс. Закрыть страницу
+               или отправить в архив можно всегда: запрещать уборку бессмысленно,
+               а вот открывать непроверенное нельзя («Краулинговый бюджет» §12). */
+            if (next_ === INDEXABLE_STATUS) {
+                const { result } = await readiness(landing);
+                if (!result.ready) {
+                    return res.status(409).json({
+                        error: 'Страница не прошла проверку перед индексацией',
+                        blocking: result.blocking,
+                        warnings: result.warnings,
+                    });
+                }
+            }
+
+            const { rows: [row] } = await pool.query(
+                `UPDATE landing_pages
+                    SET status = $1,
+                        indexed_at = CASE WHEN $1 = $3 THEN NOW() ELSE indexed_at END,
+                        index_note = COALESCE($4, index_note),
+                        updated_at = NOW()
+                  WHERE id = $2
+              RETURNING id, url, status, indexed_at`,
+                [next_, id, INDEXABLE_STATUS, req.body?.note ? String(req.body.note).slice(0, 500) : null]
+            );
+            res.json({ id: row.id, url: row.url, status: row.status, indexedAt: row.indexed_at });
         } catch (e) { next(e); }
     });
 
