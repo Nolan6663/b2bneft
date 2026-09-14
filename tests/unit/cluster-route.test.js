@@ -22,6 +22,8 @@ function poolFor(landing, { companies = [], related = [], orders = [] } = {}) {
         { match: /FROM service_products sp/i, rows: related },
         // Закупки берутся по связям со справочником, а не поиском по заголовку.
         { match: /FROM order_services l/i, rows: orders },
+        // Кейсы по теме — ТЗ §9.3.
+        { match: /FROM case_services cs/i, rows: [] },
     ]);
 }
 
@@ -105,6 +107,7 @@ test('изделия обслуживаются тем же механизмом
         { match: /FROM company_products l/i, rows: [] },
         { match: /FROM service_products sp/i, rows: [] },
         { match: /FROM order_products l/i, rows: [] },
+        { match: /FROM cases c[\s\S]*WHERE c\.product_id/i, rows: [] },
     ]);
     await withRoute(pool, async (app) => {
         const res = await app.request('/izdeliya/valy');

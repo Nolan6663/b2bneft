@@ -45,6 +45,7 @@ const createMessagesRouter = require('./routes/messages');
 const { createCatalogAdminRouter } = require('./routes/catalog-admin');
 const { createClusterRouter } = require('./routes/cluster');
 const { createSearchDemandRouter } = require('./routes/search-demand');
+const { createCasesRouter } = require('./routes/cases');
 const createDealsRouter = require('./routes/deals');
 const createAuctionsRouter = require('./routes/auctions');
 const createReviewsRouter = require('./routes/reviews');
@@ -1329,6 +1330,19 @@ app.get('/sitemap.xml', async (req, res, next) => {
             });
         }
 
+        /* Опубликованные кейсы. Их адреса живут отдельно от реестра посадочных:
+           кейс заводит исполнитель, а не редактор, и проходит он не проверку
+           индексации, а модерацию (ТЗ §9.4). Условие одно — статус published,
+           то же, по которому страница кейса отдаётся посетителю. */
+        const { rows: cases } = await pool.query(
+            `SELECT slug, updated_at FROM cases WHERE status = 'published' ORDER BY published_at DESC LIMIT 5000`
+        );
+        for (const c of cases) {
+            pages.push({
+                url: `/keisy/${c.slug}`, priority: '0.5', changefreq: 'monthly', lastmod: c.updated_at,
+            });
+        }
+
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.type('application/xml');
         res.send(renderSitemap(base, pages));
@@ -1960,6 +1974,7 @@ app.use('/api/companies', createCompaniesRouter(routesDeps));
 // публичному /api/catalog — тот отдаёт каталог компаний и правится не админом.
 app.use('/api/admin/catalog', createCatalogAdminRouter(routesDeps));
 app.use('/api/admin/demand', createSearchDemandRouter(routesDeps));
+app.use('/api/cases', createCasesRouter(routesDeps));
 // Страницы кластера монтируются в корень: адреса /uslugi/… и /izdeliya/…
 // заданы ТЗ §3.1 и префикса не имеют.
 app.use('/', createClusterRouter(routesDeps));

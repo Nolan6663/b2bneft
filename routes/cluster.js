@@ -22,6 +22,7 @@ const {
 } = require('../lib/cluster-seo');
 const { INDEXABLE_STATUS } = require('../lib/catalog-schema');
 const hub = require('../lib/orders-hub');
+const caseSeo = require('../lib/case-seo');
 
 /* Сколько исполнителей показываем на странице. Больше двадцати — это уже
    каталог, и ему место в отдельном разделе, а не в подвале страницы услуги. */
@@ -111,6 +112,27 @@ function createClusterRouter(deps) {
         return rows;
     }
 
+    /** Опубликованные кейсы по теме. ТЗ §9.3 требует выводить их на страницах
+     *  услуг и изделий: именно там кейс работает — подтверждает, что кто-то
+     *  такое уже делал, ровно в момент выбора исполнителя. */
+    async function loadCases(kind, entityId) {
+        const { rows } = kind === 'service'
+            ? await pool.query(`
+                SELECT c.slug, c.title, comp.company AS company_name
+                  FROM case_services cs
+                  JOIN cases c ON c.id = cs.case_id
+                  JOIN companies comp ON comp.id = c.company_id
+                 WHERE cs.service_id = $1 AND c.status = 'published'
+                 ORDER BY c.published_at DESC LIMIT 6`, [entityId])
+            : await pool.query(`
+                SELECT c.slug, c.title, comp.company AS company_name
+                  FROM cases c
+                  JOIN companies comp ON comp.id = c.company_id
+                 WHERE c.product_id = $1 AND c.status = 'published'
+                 ORDER BY c.published_at DESC LIMIT 6`, [entityId]);
+        return rows.map(r => ({ slug: r.slug, title: r.title, company: r.company_name }));
+    }
+
     for (const [root, kind] of Object.entries(KIND_BY_ROOT)) {
         router.get(`/${root}/:slug`, async (req, res, next) => {
             try {
@@ -141,15 +163,16 @@ function createClusterRouter(deps) {
                 }
 
                 const entity = { id: row.id, slug: row.slug, name: row.name, description: row.description };
-                const [companies, entities, orders] = await Promise.all([
+                const [companies, entities, orders, cases] = await Promise.all([
                     loadCompanies(kind, row.id),
                     loadRelated(kind, row.id),
                     loadOrders(kind, row.id),
+                    loadCases(kind, row.id),
                 ]);
 
                 const page = {
                     kind, entity, landing,
-                    related: { companies, entities, orders },
+                    related: { companies, entities, orders, cases },
                     counts: { companies: companies.length, orders: orders.length },
                 };
 
@@ -188,6 +211,63 @@ function createClusterRouter(deps) {
             } catch (e) { next(e); }
         });
     }
+
+    // ─────────────────── Страница кейса ───────────────────
+    // ТЗ §3.6: один опубликованный кейс — один канонический адрес. Кейс
+    // показывается на страницах услуг и изделий, но живёт по одному URL и под
+    // разными категориями не дублируется.
+    router.get('/keisy/:slug', async (req, res, next) => {
+        try {
+            const { rows: [c] } = await pool.query(
+                `SELECT c.*, comp.company AS company_name, p.name AS product_name
+                   FROM cases c
+                   JOIN companies comp ON comp.id = c.company_id
+                   LEFT JOIN products p ON p.id = c.product_id
+                  WHERE c.slug = $1`,
+                [String(req.params.slug || '')]
+            );
+
+            /* Неопубликованный кейс для постороннего не существует. 404 здесь
+               честнее 403: мы не раскрываем даже факта, что у предприятия есть
+               черновик с таким адресом. */
+            if (!c || c.status !== 'published') {
+                res.status(404);
+                return res.sendFile(path.join(__dirname, '..', '404.html'));
+            }
+
+            const { rows: services } = await pool.query(
+                `SELECT s.name, s.slug FROM case_services cs
+                   JOIN services s ON s.id = cs.service_id
+                  WHERE cs.case_id = $1 ORDER BY s.name`,
+                [c.id]
+            );
+
+            /* Счётчик просмотров — обещанная исполнителю отдача от кейса
+               (ТЗ §9.3). Пишем без ожидания: страница не должна ждать запись,
+               а потеря одного просмотра при сбое ничего не решает. */
+            pool.query('UPDATE cases SET views = views + 1 WHERE id = $1', [c.id]).catch(() => {});
+
+            const base = String(APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+            const html = template()
+                .replace(/<!--HEADER_CTA-->/g, 'Разместить закупку')
+                .replace(/<!--META_TITLE-->/g, htmlEscape(caseSeo.buildTitle(c)))
+                .replace(/<!--META_DESC-->/g, htmlEscape(caseSeo.buildDescription(c)))
+                .replace(/<!--META_ROBOTS-->/g, 'index, follow')
+                .replace(/<!--CANONICAL_URL-->/g, `${base}/keisy/${c.slug}`)
+                .replace(/<!--JSON_LD-->/g, caseSeo.buildJsonLd(c, services, base))
+                .replace(/<!--BREADCRUMB-->/g, caseSeo.buildBreadcrumb(c))
+                .replace(/<!--PAGE_H1-->/g, esc(c.title))
+                .replace(/<!--PAGE_LEAD-->/g, esc(caseSeo.buildLead(c)))
+                .replace(/<!--PAGE_STATS-->/g, caseSeo.buildStats(c))
+                .replace(/<!--PAGE_BODY-->/g, caseSeo.buildBody(c, services))
+                .replace(/<!--EV_PAGE_TYPE-->/g, 'case')
+                .replace(/<!--EV_ENTITY_ID-->/g, String(c.id))
+                .replace(/<!--EV_INTENT-->/g, 'customer');
+
+            res.setHeader('Cache-Control', 'public, max-age=1800');
+            res.type('html').send(html);
+        } catch (e) { next(e); }
+    });
 
     // ─────────────────── Хаб заказов ───────────────────
     // Единственная страница кластера для исполнителя. Slug может принадлежать
