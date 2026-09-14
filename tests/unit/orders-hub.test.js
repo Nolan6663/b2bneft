@@ -87,8 +87,27 @@ test('пустой хаб не обещает несуществующих за�
     const html = hub.buildBody(SERVICE, [], null);
     assert.match(html, /открытых заказов нет/i);
     assert.ok(!/скоро появятся|ожидаются|в ближайшее время/i.test(html), html);
-    assert.match(html, /Подпишитесь/, 'вместо обещаний — действие');
+    assert.match(html, /Подписаться на новые заказы/, 'вместо обещаний — действие');
     assert.match(html, /Заполните профиль/);
+});
+
+test('кнопка подписки настоящая, а не ссылка на регистрацию', () => {
+    /* До появления lib/order-subscriptions здесь стояла ссылка на /login,
+       то есть обещание подписки, которой в платформе не было. Тот же §6.6
+       запрещает и это — обещать несуществующее. */
+    const html = hub.buildBody({ ...SERVICE, kind: 'service' }, [], null);
+    assert.match(html, /<button[^>]*class="zr-subscribe"/, 'должна быть кнопка, а не ссылка');
+    assert.match(html, /data-service-id="1"/, 'кнопка знает тему подписки');
+    // Само слово «Подписаться» должно жить внутри button, а не внутри ссылки:
+    // раньше оно стояло в <a href="/login">, то есть подписка была обещанием.
+    assert.match(html, /<button[^>]*class="zr-subscribe"[^>]*>Подписаться на новые заказы<\/button>/);
+    assert.ok(!/<a[^>]*>Подписаться/.test(html), 'подписка не должна быть ссылкой');
+});
+
+test('кнопка подписки на изделие отличается от услуги', () => {
+    const html = hub.buildBody({ id: 4, slug: 'valy', name: 'Валы', kind: 'product' }, [], null);
+    assert.match(html, /data-product-id="4"/);
+    assert.ok(!html.includes('data-service-id'));
 });
 
 test('карточка заказа не называет заказчика', () => {

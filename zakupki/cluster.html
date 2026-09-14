@@ -98,6 +98,39 @@
         fire('primary_cta_click', { cta: (el.textContent || '').trim(), position: 'body' });
       });
     });
+
+    /* Подписка на заказы по теме — ТЗ §6.6. Неавторизованного отправляем
+       регистрироваться, запомнив тему: возвращать его на пустую форму и
+       заставлять искать страницу заново — верный способ его потерять. */
+    document.querySelectorAll('.zr-subscribe').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var body = {};
+        if (btn.dataset.serviceId) body.serviceId = Number(btn.dataset.serviceId);
+        if (btn.dataset.productId) body.productId = Number(btn.dataset.productId);
+        btn.disabled = true;
+        try {
+          var res = await fetch('/api/subscriptions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(body),
+          });
+          if (res.status === 401 || res.status === 403) {
+            try { sessionStorage.setItem('tzSubscribeAfterLogin', location.pathname); } catch (e) {}
+            location.href = '/login#register';
+            return;
+          }
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) { btn.textContent = data.error || 'Не получилось'; btn.disabled = false; return; }
+          btn.textContent = 'Подписка оформлена';
+          // Событие приходит с сервера: он знает, на что именно подписались.
+          if (window.tzEvent && data.analytics) window.tzEvent(data.analytics.event, data.analytics.params);
+        } catch (e) {
+          btn.textContent = 'Сеть недоступна';
+          btn.disabled = false;
+        }
+      });
+    });
   });
 </script>
 

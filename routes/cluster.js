@@ -351,7 +351,9 @@ function createClusterRouter(deps) {
                 return res.sendFile(path.join(__dirname, '..', '404.html'));
             }
 
-            const entity = { id: row.id, slug: row.slug, name: row.name };
+            // kind нужен пустому состоянию: кнопка подписки должна знать,
+            // на услугу подписываются или на изделие.
+            const entity = { id: row.id, slug: row.slug, name: row.name, kind: row.kind };
             const { windowDays } = hub.supplyRule();
             const orders = await loadHubOrders(row.kind, row.id, windowDays);
             const fresh = orders.filter(o => o.isFresh).length;

@@ -46,6 +46,7 @@ const { createCatalogAdminRouter } = require('./routes/catalog-admin');
 const { createClusterRouter } = require('./routes/cluster');
 const { createSearchDemandRouter } = require('./routes/search-demand');
 const { createCasesRouter } = require('./routes/cases');
+const { createSubscriptionsRouter } = require('./routes/subscriptions');
 const createDealsRouter = require('./routes/deals');
 const createAuctionsRouter = require('./routes/auctions');
 const createReviewsRouter = require('./routes/reviews');
@@ -1975,6 +1976,7 @@ app.use('/api/companies', createCompaniesRouter(routesDeps));
 app.use('/api/admin/catalog', createCatalogAdminRouter(routesDeps));
 app.use('/api/admin/demand', createSearchDemandRouter(routesDeps));
 app.use('/api/cases', createCasesRouter(routesDeps));
+app.use('/api/subscriptions', createSubscriptionsRouter(routesDeps));
 // Страницы кластера монтируются в корень: адреса /uslugi/… и /izdeliya/…
 // заданы ТЗ §3.1 и префикса не имеют.
 app.use('/', createClusterRouter(routesDeps));

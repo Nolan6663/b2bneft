@@ -3,6 +3,7 @@
 const express = require('express');
 const { sendHttpError } = require('../lib/http-errors');
 const { linkOrder } = require('../lib/order-linking');
+const { matchSubscribers, isQuiet, notificationText } = require('../lib/order-subscriptions');
 
 module.exports = function createOrdersRouter(deps) {
     const {
@@ -289,6 +290,51 @@ module.exports = function createOrdersRouter(deps) {
         } catch (e) { next(e); }
     });
 
+    /* Уведомление подписчиков о новой заявке — ТЗ §6.6.
+     *
+     * Совпадение считается по тем же связям, по которым заявка попадает в хаб
+     * заказов: если она там показывается, подписчик этой темы должен о ней
+     * узнать, и наоборот. Отдельное правило для одного и того же вопроса
+     * неизбежно разъехалось бы с первым же изменением.
+     *
+     * Тишина в час на подписку — не оптимизация, а забота о читателе: заявки
+     * приходят пачками, и десять писем подряд превращают полезное уведомление
+     * в причину отписаться. */
+    async function notifySubscribers(orderRow) {
+        const { rows: links } = await pool.query(
+            `SELECT 'service' AS kind, service_id AS id FROM order_services WHERE order_id = $1
+             UNION ALL
+             SELECT 'product', product_id FROM order_products WHERE order_id = $1`,
+            [orderRow.id]
+        );
+        if (!links.length) return;
+
+        const services = links.filter(l => l.kind === 'service').map(l => l.id);
+        const products = links.filter(l => l.kind === 'product').map(l => l.id);
+
+        const { rows: subs } = await pool.query(`
+            SELECT sub.id, sub.company, sub.service_id, sub.product_id, sub.region,
+                   sub.channel, sub.last_sent_at, COALESCE(s.name, p.name) AS topic
+              FROM order_subscriptions sub
+              LEFT JOIN services s ON s.id = sub.service_id
+              LEFT JOIN products p ON p.id = sub.product_id
+             WHERE sub.service_id = ANY($1::int[]) OR sub.product_id = ANY($2::int[])
+        `, [services, products]);
+
+        const matched = matchSubscribers(subs, { services, products });
+        for (const sub of matched) {
+            if (isQuiet(sub)) continue;
+            // Заказчику своя же заявка не нужна.
+            if (sub.company === orderRow.company) continue;
+            try {
+                await addNotification(sub.company, notificationText(orderRow, sub.topic));
+                await pool.query('UPDATE order_subscriptions SET last_sent_at = NOW() WHERE id = $1', [sub.id]);
+            } catch (e) {
+                console.error('order-subscriptions: не удалось уведомить', sub.company, e.message);
+            }
+        }
+    }
+
     router.post('/', requireAuth, requireRole('customer'), allowFirstOrderWithoutVerification, handleDrawingUpload, async (req, res, next) => {
         try {
             const { title, category, deadline, quantity, description, productionType, material } = req.body;
@@ -327,6 +373,7 @@ module.exports = function createOrdersRouter(deps) {
                текста, поэтому ошибка только пишется в лог. */
             try {
                 await linkOrder(pool, newRow);
+                await notifySubscribers(newRow);
             } catch (e) {
                 console.error('order-linking: не удалось связать заявку', newOrder.id, e.message);
             }
