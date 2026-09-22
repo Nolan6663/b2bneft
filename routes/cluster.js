@@ -22,7 +22,10 @@ const {
 } = require('../lib/cluster-seo');
 const { INDEXABLE_STATUS } = require('../lib/catalog-schema');
 const hub = require('../lib/orders-hub');
+const contractors = require('../lib/contractors-seo');
 const caseSeo = require('../lib/case-seo');
+const { REGIONS } = require('../seo/regions-data');
+const { isRegionIndexable } = require('../lib/region-seo');
 
 /* Сколько исполнителей показываем на странице. Больше двадцати — это уже
    каталог, и ему место в отдельном разделе, а не в подвале страницы услуги. */
@@ -62,18 +65,36 @@ function createClusterRouter(deps) {
         const column = kind === 'service' ? 'service_id' : 'product_id';
         const { rows } = await pool.query(`
             SELECT c.id, c.company, c.city, c.specialization, c.products,
-                   c.verified_by_platform, c.claimed
+                   c.verified_by_platform, c.claimed,
+                   -- Всего по теме, а не в выдаче: это число решает, показывать
+                   -- ли ссылку на полный каталог подрядчиков.
+                   COUNT(*) OVER ()::int AS total
               FROM ${linkTable} l
               JOIN companies c ON c.id = l.company_id
              WHERE l.${column} = $1 AND c.status <> 'Отклонено'
              ORDER BY c.verified_by_platform DESC, c.claimed DESC, c.company
              LIMIT ${COMPANY_LIMIT}
         `, [entityId]);
-        return rows.map(r => ({
+        const companies = rows.map(r => ({
             id: r.id, company: r.company, city: r.city,
             specialization: r.specialization, products: r.products,
             verifiedByPlatform: r.verified_by_platform, claimed: r.claimed,
         }));
+        companies.total = rows.length ? rows[0].total : 0;
+        return companies;
+    }
+
+    /** Есть ли у темы открытый каталог подрядчиков. Ссылку ставим только на
+     *  индексируемую страницу: увести читателя в noindex-контур — значит
+     *  потратить на него обход и ничего не получить взамен. */
+    async function loadContractorHref(kind, entityId, slug) {
+        const column = kind === 'service' ? 'service_id' : 'product_id';
+        const { rows } = await pool.query(
+            `SELECT 1 FROM landing_pages
+              WHERE page_type = 'contractor' AND ${column} = $1 AND status = $2 LIMIT 1`,
+            [entityId, INDEXABLE_STATUS]
+        );
+        return rows.length ? `${contractors.ROOT}/${slug}` : '';
     }
 
     /** Связанные сущности другого вида — и только те, у которых есть
@@ -163,17 +184,23 @@ function createClusterRouter(deps) {
                 }
 
                 const entity = { id: row.id, slug: row.slug, name: row.name, description: row.description };
-                const [companies, entities, orders, cases] = await Promise.all([
+                const [companies, entities, orders, cases, contractorHref] = await Promise.all([
                     loadCompanies(kind, row.id),
                     loadRelated(kind, row.id),
                     loadOrders(kind, row.id),
                     loadCases(kind, row.id),
+                    loadContractorHref(kind, row.id, row.slug),
                 ]);
 
                 const page = {
                     kind, entity, landing,
-                    related: { companies, entities, orders, cases },
-                    counts: { companies: companies.length, orders: orders.length },
+                    related: { companies, entities, orders, cases, contractorHref },
+                    counts: {
+                        companies: companies.length, orders: orders.length,
+                        // Всего исполнителей по теме — может быть больше, чем
+                        // помещается на странице услуги.
+                        companiesTotal: companies.total || companies.length,
+                    },
                 };
 
                 const base = String(APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
@@ -273,25 +300,30 @@ function createClusterRouter(deps) {
     // Единственная страница кластера для исполнителя. Slug может принадлежать
     // и услуге, и изделию: заказы ищут и «на токарную обработку», и «на валы».
 
-    async function loadHubEntity(slug) {
+    /* Сущность + посадочная нужного типа. Slug один, а страниц по нему
+       несколько — /zakazy/valy и /podryadchiki/valy живут в одном реестре и
+       различаются page_type, поэтому тип передаётся параметром, а не зашит. */
+    async function loadByAnyKind(slug, pageType) {
         const { rows: [row] } = await pool.query(`
-            SELECT e.id, e.slug, e.name, 'service' AS kind,
+            SELECT e.id, e.slug, e.name, e.accusative, e.genitive, 'service' AS kind,
                    lp.status, lp.title, lp.description AS lp_description,
                    lp.h1, lp.intro, lp.redirect_to
               FROM services e
-              LEFT JOIN landing_pages lp ON lp.service_id = e.id AND lp.page_type = 'order'
+              LEFT JOIN landing_pages lp ON lp.service_id = e.id AND lp.page_type = $2
              WHERE e.slug = $1
              UNION ALL
-            SELECT e.id, e.slug, e.name, 'product' AS kind,
+            SELECT e.id, e.slug, e.name, e.accusative, e.genitive, 'product' AS kind,
                    lp.status, lp.title, lp.description AS lp_description,
                    lp.h1, lp.intro, lp.redirect_to
               FROM products e
-              LEFT JOIN landing_pages lp ON lp.product_id = e.id AND lp.page_type = 'order'
+              LEFT JOIN landing_pages lp ON lp.product_id = e.id AND lp.page_type = $2
              WHERE e.slug = $1
              LIMIT 1
-        `, [slug]);
+        `, [slug, pageType]);
         return row || null;
     }
+
+    const loadHubEntity = (slug) => loadByAnyKind(slug, 'order');
 
     /* Открытые заказы хаба — по связям со справочником, а не по вхождению
        названия в заголовок. Поиск подстроки давал «вальцовку» в ответ на «вал»
@@ -352,8 +384,12 @@ function createClusterRouter(deps) {
             }
 
             // kind нужен пустому состоянию: кнопка подписки должна знать,
-            // на услугу подписываются или на изделие.
-            const entity = { id: row.id, slug: row.slug, name: row.name, kind: row.kind };
+            // на услугу подписываются или на изделие. accusative — заголовку:
+            // «Заказы на токарную обработку» вместо «Открытые заказы: …».
+            const entity = {
+                id: row.id, slug: row.slug, name: row.name, kind: row.kind,
+                accusative: row.accusative,
+            };
             const { windowDays } = hub.supplyRule();
             const orders = await loadHubOrders(row.kind, row.id, windowDays);
             const fresh = orders.filter(o => o.isFresh).length;
@@ -391,6 +427,155 @@ function createClusterRouter(deps) {
             // что исполнитель видит вчерашнюю картину.
             res.setHeader('Cache-Control', robots.startsWith('index')
                 ? 'public, max-age=300' : 'private, max-age=0, must-revalidate');
+            res.type('html').send(html);
+        } catch (e) { next(e); }
+    });
+
+    // ─────────────────── Каталог подрядчиков ───────────────────
+    // Четвёртая страница кластера, ТЗ §6.4. Адрес подтверждён маркетингом
+    // 22.09: /podryadchiki/ — витрина подрядчиков для заказчика, ролевые
+    // лендинги уезжают на /zakazchikam/ и /ispolnitelyam/.
+
+    const loadContractorEntity = (slug) => loadByAnyKind(slug, 'contractor');
+
+    /** Все предприятия по теме — без потолка страницы услуги. В этом и смысл
+     *  отдельного каталога: на /izdeliya/ список обрезан двадцатью карточками,
+     *  а здесь он полный. Лимит всё же есть, но заметно выше, и остаток честно
+     *  уводится в общий каталог. */
+    async function loadContractors(kind, entityId) {
+        const linkTable = kind === 'service' ? 'company_services' : 'company_products';
+        const column = kind === 'service' ? 'service_id' : 'product_id';
+        const { rows } = await pool.query(`
+            SELECT c.id, c.company, c.city, c.specialization, c.products,
+                   c.verified_by_platform, c.claimed,
+                   COUNT(*) OVER ()::int AS total
+              FROM ${linkTable} l
+              JOIN companies c ON c.id = l.company_id
+             WHERE l.${column} = $1 AND c.status <> 'Отклонено'
+             ORDER BY c.verified_by_platform DESC, c.claimed DESC, c.company
+             LIMIT $2
+        `, [entityId, contractors.LIST_LIMIT]);
+        return {
+            total: rows.length ? rows[0].total : 0,
+            companies: rows.map(r => ({
+                id: r.id, company: r.company, city: r.city,
+                specialization: r.specialization, products: r.products,
+                verifiedByPlatform: r.verified_by_platform, claimed: r.claimed,
+            })),
+        };
+    }
+
+    /** Разбивка по городам. Считается по всей выборке, а не по показанным
+     *  карточкам: «в 14 городах» обязано быть правдой про тему, а не про первые
+     *  сорок восемь строк.
+     *
+     *  Ссылка на геостраницу ставится только там, где она индексируется, —
+     *  тот же предикат, что у самой геостраницы (lib/region-seo). Иначе каталог
+     *  гонит робота на страницы с noindex. */
+    async function loadContractorCities(kind, entityId) {
+        const linkTable = kind === 'service' ? 'company_services' : 'company_products';
+        const column = kind === 'service' ? 'service_id' : 'product_id';
+        const { rows } = await pool.query(`
+            SELECT c.city AS name, COUNT(*)::int AS count
+              FROM ${linkTable} l
+              JOIN companies c ON c.id = l.company_id
+             WHERE l.${column} = $1 AND c.status <> 'Отклонено'
+               AND COALESCE(c.city, '') <> ''
+             GROUP BY c.city
+             ORDER BY count DESC, c.city
+        `, [entityId]);
+
+        /* Сколько всего предприятий в самом регионе — не по этой теме, а
+           вообще: именно это число решает, открыта ли геостраница. */
+        const regionTotals = new Map();
+        if (rows.length) {
+            const { rows: totals } = await pool.query(
+                `SELECT city, COUNT(*)::int AS n FROM companies
+                  WHERE role = 'producer' AND status <> 'Отклонено' AND city = ANY($1)
+                  GROUP BY city`,
+                [rows.map(r => r.name)]
+            );
+            for (const t of totals) regionTotals.set(t.city, t.n);
+        }
+
+        return rows.map(r => {
+            const region = REGIONS.find(x => x.name === r.name);
+            const indexable = region && isRegionIndexable(regionTotals.get(r.name) || 0);
+            return {
+                name: r.name, count: r.count,
+                href: indexable ? `/zakupki/region/${region.slug}` : '',
+            };
+        });
+    }
+
+    router.get('/podryadchiki/:slug', async (req, res, next) => {
+        try {
+            const row = await loadContractorEntity(String(req.params.slug || ''));
+            if (!row) {
+                res.status(404);
+                return res.sendFile(path.join(__dirname, '..', '404.html'));
+            }
+
+            const landing = row.status ? {
+                status: row.status, title: row.title, description: row.lp_description,
+                h1: row.h1, intro: row.intro, redirect_to: row.redirect_to,
+            } : null;
+
+            const verdict = responseFor(landing);
+            if (verdict.status === 301) return res.redirect(301, verdict.location);
+            if (verdict.status === 410) {
+                res.status(410);
+                return res.type('html').send('<!doctype html><meta charset="utf-8">'
+                    + '<title>Страница удалена — ТехЗаказ</title>'
+                    + '<p>Эта страница удалена. <a href="/proizvoditeli">Перейти к каталогу производств</a>.</p>');
+            }
+            if (verdict.status !== 200) {
+                res.status(verdict.status);
+                return res.sendFile(path.join(__dirname, '..', '404.html'));
+            }
+
+            const entity = {
+                id: row.id, slug: row.slug, name: row.name, kind: row.kind,
+                genitive: row.genitive,
+            };
+            const [list, cities] = await Promise.all([
+                loadContractors(row.kind, row.id),
+                loadContractorCities(row.kind, row.id),
+            ]);
+
+            // Наполнение ужесточает решение редактора, но не смягчает: каталог,
+            // где осталось два предприятия, закрывается сам.
+            const robots = contractors.robotsForCatalog(landing, list.total);
+
+            const base = String(APP_URL || 'https://texzakaz.ru').replace(/\/$/, '');
+            const related = row.kind === 'service'
+                ? { href: `/uslugi/${entity.slug}`, title: entity.name }
+                : { href: `/izdeliya/${entity.slug}`, title: `Изготовление «${entity.name}»` };
+
+            const lead = landing && landing.intro
+                ? landing.intro
+                : 'Профили производств с указанной компетенцией. Город, специализация и происхождение карточки — у каждого предприятия.';
+
+            const html = template()
+                .replace(/<!--HEADER_CTA-->/g, 'Разместить закупку')
+                .replace(/<!--META_TITLE-->/g, htmlEscape(landing && landing.title
+                    ? landing.title : contractors.buildTitle(entity, list.total)))
+                .replace(/<!--META_DESC-->/g, htmlEscape(landing && landing.description
+                    ? landing.description : contractors.buildDescription(entity, list.total, cities.length)))
+                .replace(/<!--META_ROBOTS-->/g, robots)
+                .replace(/<!--CANONICAL_URL-->/g, `${base}${contractors.ROOT}/${entity.slug}`)
+                .replace(/<!--JSON_LD-->/g, contractors.buildJsonLd(entity, list.companies, base))
+                .replace(/<!--BREADCRUMB-->/g, contractors.buildBreadcrumb(entity))
+                .replace(/<!--PAGE_H1-->/g, esc(landing && landing.h1 ? landing.h1 : contractors.buildH1(entity)))
+                .replace(/<!--PAGE_LEAD-->/g, esc(lead))
+                .replace(/<!--PAGE_STATS-->/g, contractors.buildStats(list.total, cities.length))
+                .replace(/<!--PAGE_BODY-->/g, contractors.buildBody(entity, list.companies, cities, related, list.total))
+                .replace(/<!--EV_PAGE_TYPE-->/g, 'contractor')
+                .replace(/<!--EV_ENTITY_ID-->/g, String(entity.id))
+                .replace(/<!--EV_INTENT-->/g, 'customer');
+
+            res.setHeader('Cache-Control', robots.startsWith('index')
+                ? 'public, max-age=3600' : 'private, max-age=0, must-revalidate');
             res.type('html').send(html);
         } catch (e) { next(e); }
     });

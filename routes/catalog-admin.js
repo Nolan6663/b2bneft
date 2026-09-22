@@ -28,6 +28,7 @@
 const express = require('express');
 const { toSlug, uniqueSlug, isValidSlug } = require('../lib/slug');
 const { evaluate, canTransition } = require('../lib/index-gate');
+const contentLimits = require('../lib/content-limits');
 const { INDEXABLE_STATUS } = require('../lib/catalog-schema');
 
 /** Белый список: вид справочника → таблица и колонка связи с компанией. */
@@ -81,7 +82,11 @@ function parseSynonyms(value) {
 function createCatalogAdminRouter(deps) {
     const { pool, requireAuth, requireRole, withTransaction } = deps;
     const router = express.Router();
-    const admin = [requireAuth, requireRole('admin')];
+    /* Справочник и реестр посадочных открыты и SEO-специалисту: по ответу
+       маркетинга 22.09 очередь спроса разбирает он, а без справочника разбирать
+       нечего. Персональные данные сюда не попадают — только названия сущностей,
+       адреса страниц и их статусы. */
+    const admin = [requireAuth, requireRole('admin', 'seo')];
 
     /** Разбор вида справочника из URL. Возвращает null, если вид неизвестен. */
     function kindOf(req) {
@@ -92,6 +97,15 @@ function createCatalogAdminRouter(deps) {
     function badKind(res) {
         return res.status(404).json({ error: 'Неизвестный справочник: ожидается services или products' });
     }
+
+    /* Посадочные страницы живут в отдельном роутере, и подключается он здесь —
+       до маршрутов справочника. Иначе /landings съедает `/:kind`: Express
+       разбирает маршруты по порядку регистрации, и `GET /landings` уходил в
+       обработчик справочника с kind='landings', то есть отвечал 404. Сами
+       обработчики определены ниже, в своём разделе; на порядок это не влияет —
+       важно, где стоит router.use. */
+    const landings = express.Router();
+    router.use('/landings', landings);
 
     function parseId(value) {
         const n = Number(value);
@@ -420,7 +434,7 @@ function createCatalogAdminRouter(deps) {
     // Реестр посадочных правится отсюда же: заводить сущность и открывать её
     // страницу — разные решения, и второе проходит проверку перед индексацией.
 
-    router.get('/landings', ...admin, async (req, res, next) => {
+    landings.get('/', ...admin, async (req, res, next) => {
         try {
             const { rows } = await pool.query(`
                 SELECT lp.id, lp.system_key, lp.url, lp.page_type, lp.intent, lp.status,
@@ -474,7 +488,59 @@ function createCatalogAdminRouter(deps) {
         return { facts, result: evaluate(landing, facts) };
     }
 
-    router.get('/landings/:id/readiness', ...admin, async (req, res, next) => {
+    /** Рекомендуемые длины полей — чтобы счётчик под полем не пришлось
+     *  зашивать в вёрстку и потом искать по двум местам при правке. */
+    landings.get('/limits', ...admin, (req, res) => {
+        res.json(contentLimits.limits());
+    });
+
+    /**
+     * Тексты посадочной страницы.
+     *
+     * Длина здесь советует, а не запрещает — прямое требование маркетинга
+     * (ответ 22.09, пункт 8): предупреждать, но сохранять значение целиком, без
+     * автоматического обрезания и без блокировки сохранения. Поэтому
+     * превышение возвращается в warnings и рядом с сохранённым значением, а не
+     * в ошибке: ответ 200, текст записан, редактор предупреждён.
+     *
+     * Переданные поля правятся, непереданные не трогаются: правка одного лишь
+     * заголовка не должна стирать описание.
+     */
+    landings.patch('/:id', ...admin, async (req, res, next) => {
+        const id = parseId(req.params.id);
+        if (!id) return res.status(400).json({ error: 'Некорректный идентификатор' });
+        try {
+            const { values, measures, warnings } = contentLimits.measureAll(req.body || {});
+            const fields = Object.keys(values);
+            if (!fields.length) {
+                return res.status(400).json({
+                    error: `Нечего сохранять: ожидается одно из полей ${contentLimits.FIELD_NAMES.join(', ')}`,
+                });
+            }
+
+            /* Имена колонок подставляются в SQL строкой — иначе никак, — но
+               приходят они не из тела запроса: measureAll пропускает только
+               ключи из своего списка полей. Та же защита, что у справочников
+               выше (белый список KINDS). */
+            const sets = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+            const { rows: [row] } = await pool.query(
+                `UPDATE landing_pages SET ${sets}, updated_at = NOW()
+                  WHERE id = $1
+              RETURNING id, url, status, title, description, h1, intro, updated_at`,
+                [id, ...fields.map(f => values[f])]
+            );
+            if (!row) return res.status(404).json({ error: 'Посадочная страница не найдена' });
+
+            res.json({
+                id: row.id, url: row.url, status: row.status,
+                title: row.title, description: row.description, h1: row.h1, intro: row.intro,
+                updatedAt: row.updated_at,
+                measures, warnings,
+            });
+        } catch (e) { next(e); }
+    });
+
+    landings.get('/:id/readiness', ...admin, async (req, res, next) => {
         const id = parseId(req.params.id);
         if (!id) return res.status(400).json({ error: 'Некорректный идентификатор' });
         try {
@@ -485,7 +551,7 @@ function createCatalogAdminRouter(deps) {
         } catch (e) { next(e); }
     });
 
-    router.patch('/landings/:id/status', ...admin, async (req, res, next) => {
+    landings.patch('/:id/status', ...admin, async (req, res, next) => {
         const id = parseId(req.params.id);
         if (!id) return res.status(400).json({ error: 'Некорректный идентификатор' });
         const next_ = String(req.body?.status || '');

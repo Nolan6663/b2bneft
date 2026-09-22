@@ -281,3 +281,125 @@ test('закрыть страницу можно всегда, проверка 
         assert.ok(!pool.calls.some(c => /FROM company_services/i.test(c.sql)), 'наполнение при закрытии не считаем');
     });
 });
+
+// ─────────────────── Тексты посадочных страниц ───────────────────
+/* Правило маркетинга (ответ 22.09, пункт 8): предупреждать о длине, но
+   сохранять значение целиком — без автоматического обрезания и без блокировки
+   сохранения. Библиотека проверена отдельно (content-limits.test.js); здесь
+   сторожится то, что маршрут ею действительно пользуется. */
+
+const LANDING_UPDATE = /UPDATE landing_pages SET/i;
+
+test('длинный заголовок сохраняется целиком и возвращает предупреждение', async () => {
+    const long = 'Т'.repeat(140);
+    await withRouter([
+        { match: LANDING_UPDATE, rows: [{ id: 3, url: '/podryadchiki/valy', status: 'draft', title: long, description: '', h1: '', intro: '', updated_at: new Date() }] },
+    ], async ({ request, pool }) => {
+        const res = await request('/landings/3', { method: 'PATCH', body: { title: long } });
+        assert.equal(res.status, 200, 'сохранение не блокируется');
+        assert.equal(res.json.title, long, 'ни одного знака не потеряно');
+        assert.equal(res.json.warnings.length, 1);
+        assert.match(res.json.warnings[0], /140/);
+        // В базу ушло полное значение, а не подрезанное.
+        assert.equal(pool.calls[0].params[1], long);
+    });
+});
+
+test('правка одного поля не стирает остальные', async () => {
+    await withRouter([
+        { match: LANDING_UPDATE, rows: [{ id: 3, url: '/podryadchiki/valy', status: 'draft', title: 'Валы', description: 'было', h1: '', intro: '', updated_at: new Date() }] },
+    ], async ({ request, pool }) => {
+        await request('/landings/3', { method: 'PATCH', body: { title: 'Валы' } });
+        assert.ok(!/description/.test(pool.calls[0].text), pool.calls[0].text);
+    });
+});
+
+test('пустое тело не превращается в затирание текстов', async () => {
+    await withRouter([], async ({ request, pool }) => {
+        const res = await request('/landings/3', { method: 'PATCH', body: {} });
+        assert.equal(res.status, 400);
+        assert.equal(pool.calls.length, 0, 'до базы такой запрос доходить не должен');
+    });
+});
+
+test('посторонние ключи в тело запроса не пролезают в SQL', async () => {
+    // Имена колонок подставляются строкой, поэтому список полей закрытый.
+    await withRouter([
+        { match: LANDING_UPDATE, rows: [{ id: 3, url: '/x', status: 'draft', title: 'Валы', description: '', h1: '', intro: '', updated_at: new Date() }] },
+    ], async ({ request, pool }) => {
+        await request('/landings/3', { method: 'PATCH', body: { title: 'Валы', status: 'published_index', url: '/hack' } });
+        assert.ok(!/status =/.test(pool.calls[0].text), pool.calls[0].text);
+        assert.ok(!/url =/.test(pool.calls[0].text), pool.calls[0].text);
+    });
+});
+
+test('тексты правит только администратор', async () => {
+    await withRouter([], async ({ request }) => {
+        assert.equal((await request('/landings/3', { method: 'PATCH', body: { title: 'x' } })).status, 403);
+    }, EDITOR);
+});
+
+test('рекомендуемые длины отдаются админке', async () => {
+    await withRouter([], async ({ request, pool }) => {
+        const res = await request('/landings/limits');
+        assert.equal(res.status, 200);
+        assert.ok(res.json.some(l => l.field === 'title' && l.recommended === 60));
+        assert.equal(pool.calls.length, 0, 'это константы, в базу ходить незачем');
+    });
+});
+
+test('список посадочных отдаётся, а не съедается маршрутом справочника', async () => {
+    /* Express разбирает маршруты по порядку регистрации, и `/:kind` стоит выше
+       `/landings`. Пока посадочные не вынесли в отдельный роутер, GET /landings
+       уходил в обработчик справочника с kind='landings' и отвечал 404 — то
+       есть реестр посадочных из админки был недоступен вовсе. */
+    await withRouter([
+        { match: /FROM landing_pages lp/i, rows: [{ id: 1, system_key: 'contractor:customer:valy', url: '/podryadchiki/valy', page_type: 'contractor', intent: 'customer', status: 'draft', title: '', h1: '', demand_hits: 0, supply_count: 0, index_note: '', indexed_at: null, updated_at: new Date(), entity_name: 'Валы' }] },
+    ], async ({ request }) => {
+        const res = await request('/landings');
+        assert.equal(res.status, 200);
+        assert.equal(res.json[0].url, '/podryadchiki/valy');
+    });
+});
+
+test('справочник с именем несуществующего вида по-прежнему 404', async () => {
+    // Вынос /landings не должен был ослабить проверку белого списка.
+    await withRouter([], async ({ request, pool }) => {
+        assert.equal((await request('/companies')).status, 404);
+        assert.equal(pool.calls.length, 0);
+    });
+});
+
+// ─────────────────── Роль SEO ───────────────────
+/* Маркетинг попросил доступ к панели спроса (ответ 22.09, пункт 5). Полного
+   администратора под это выдавать нельзя: там заявки на верификацию, список
+   пользователей и контакты предприятий. Роль `seo` открывает справочник и
+   реестр посадочных — и ничего сверх того. */
+
+const SEO = { id: 3, role: 'seo', company: '', email: 'seo@agency.ru' };
+
+test('SEO-специалист видит справочник', async () => {
+    await withRouter([
+        { match: /FROM services e/i, rows: [] },
+    ], async ({ request }) => {
+        assert.equal((await request('/services')).status, 200);
+    }, SEO);
+});
+
+test('SEO-специалист правит тексты посадочных', async () => {
+    await withRouter([
+        { match: LANDING_UPDATE, rows: [{ id: 3, url: '/podryadchiki/valy', status: 'draft', title: 'Производители валов', description: '', h1: '', intro: '', updated_at: new Date() }] },
+    ], async ({ request }) => {
+        const res = await request('/landings/3', { method: 'PATCH', body: { title: 'Производители валов' } });
+        assert.equal(res.status, 200);
+    }, SEO);
+});
+
+test('заказчик и исполнитель в справочник не попадают', async () => {
+    await withRouter([], async ({ request }) => {
+        assert.equal((await request('/services')).status, 403);
+    }, EDITOR);
+    await withRouter([], async ({ request }) => {
+        assert.equal((await request('/services')).status, 403);
+    }, { id: 4, role: 'producer', company: 'ООО Завод', email: 'p@t.ru' });
+});

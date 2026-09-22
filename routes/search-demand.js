@@ -19,7 +19,10 @@ const TOP_LIMIT = 100;
 function createSearchDemandRouter(deps) {
     const { pool, requireAuth, requireRole } = deps;
     const router = express.Router();
-    const admin = [requireAuth, requireRole('admin')];
+    // Панель спроса — рабочий инструмент SEO-специалиста (ответ маркетинга
+    // 22.09, пункт 5). Журнал поиска обезличен: в нём тексты запросов, а не
+    // авторы, — поэтому доступ сюда не требует прав администратора.
+    const admin = [requireAuth, requireRole('admin', 'seo')];
 
     function windowDays(req) {
         const n = Number(req.query.days);

@@ -37,6 +37,11 @@ const SERVICE = {
     name: 'Токарная обработка',
     description: 'Точение деталей вращения на универсальных станках и станках с ЧПУ.',
     synonyms: ['токарка', 'точение', 'токарные работы', 'токарная обработка металла', 'токарно-фрезерная обработка'],
+    /* Падежи для заголовков. Без них выходит «Открытые заказы: Токарная
+       обработка» и «Исполнители: Токарная обработка» — грамотно, но не так, как
+       человек ищет. Склонять кодом нельзя, поэтому формы заданы руками. */
+    accusative: 'токарную обработку',
+    genitive: 'токарной обработки',
 };
 
 const PRODUCT = {
@@ -44,6 +49,8 @@ const PRODUCT = {
     name: 'Валы',
     description: 'Валы и оси: ступенчатые, гладкие, шлицевые, с термообработкой и шлифовкой.',
     synonyms: ['вал', 'валы стальные', 'ступенчатый вал', 'оси и валы'],
+    accusative: 'валы',
+    genitive: 'валов',
 };
 
 /* Посадочные страницы кластера. Системный ключ строится по «Краулинговому
@@ -53,18 +60,37 @@ const LANDINGS = [
     { key: 'service:customer:tokarnaya-obrabotka', url: '/uslugi/tokarnaya-obrabotka', type: 'service',   intent: 'customer', of: 'service' },
     { key: 'product:customer:valy',                url: '/izdeliya/valy',              type: 'product',   intent: 'customer', of: 'product' },
     { key: 'order:executor:valy',                  url: '/zakazy/valy',                type: 'order',     intent: 'executor', of: 'product' },
+    /* Четвёртая страница кластера — та самая, что ждала ответа маркетинга.
+       Адрес подтверждён 22.09: /podryadchiki/ остаётся за каталогом подрядчиков,
+       то есть интент здесь customer — заказчик выбирает исполнителя. */
+    { key: 'contractor:customer:valy',             url: '/podryadchiki/valy',          type: 'contractor', intent: 'customer', of: 'product' },
 ];
 
 const STATUS = 'published_noindex';
 
 async function upsertEntity(table, spec) {
     const { rows: [existing] } = await pool.query(`SELECT id, name FROM ${table} WHERE slug = $1`, [spec.slug]);
-    if (existing) return { id: existing.id, created: false };
+    if (existing) {
+        /* Падежные поля появились позже самого кластера, поэтому у уже
+           заведённой сущности они пустые. Дозаполняем только пустые: правку
+           редактора скрипт затирать не должен. */
+        if (APPLY) {
+            await pool.query(
+                `UPDATE ${table}
+                    SET accusative = CASE WHEN accusative = '' THEN $2 ELSE accusative END,
+                        genitive   = CASE WHEN genitive   = '' THEN $3 ELSE genitive   END
+                  WHERE id = $1`,
+                [existing.id, spec.accusative || '', spec.genitive || '']
+            );
+        }
+        return { id: existing.id, created: false };
+    }
     if (!APPLY) return { id: null, created: true };
     const { rows: [row] } = await pool.query(
-        `INSERT INTO ${table} (slug, name, description, status, synonyms)
-         VALUES ($1, $2, $3, 'published', $4) RETURNING id`,
-        [spec.slug, spec.name, spec.description, JSON.stringify(spec.synonyms)]
+        `INSERT INTO ${table} (slug, name, description, status, synonyms, accusative, genitive)
+         VALUES ($1, $2, $3, 'published', $4, $5, $6) RETURNING id`,
+        [spec.slug, spec.name, spec.description, JSON.stringify(spec.synonyms),
+         spec.accusative || '', spec.genitive || '']
     );
     return { id: row.id, created: true };
 }

@@ -13,9 +13,9 @@ const ENTITY = {
     id: 1, slug: 'tokarnaya-obrabotka', name: 'Токарная обработка', description: 'Точение деталей',
 };
 
-/** Пул отвечает на четыре запроса маршрута: сущность, исполнители,
- *  связанные сущности и открытые закупки. */
-function poolFor(landing, { companies = [], related = [], orders = [] } = {}) {
+/** Пул отвечает на запросы маршрута: сущность, исполнители, связанные
+ *  сущности, открытые закупки, кейсы и наличие каталога подрядчиков. */
+function poolFor(landing, { companies = [], related = [], orders = [], contractorLanding = [] } = {}) {
     return fakePool([
         { match: /FROM services e[\s\S]*LEFT JOIN landing_pages/i, rows: landing === undefined ? [] : [{ ...ENTITY, ...landing }] },
         { match: /FROM company_services l/i, rows: companies },
@@ -24,6 +24,9 @@ function poolFor(landing, { companies = [], related = [], orders = [] } = {}) {
         { match: /FROM order_services l/i, rows: orders },
         // Кейсы по теме — ТЗ §9.3.
         { match: /FROM case_services cs/i, rows: [] },
+        // Есть ли у темы открытый каталог подрядчиков: от этого зависит, ставить
+        // ли ссылку «все N предприятий» (ТЗ §6.4, §7.1).
+        { match: /FROM landing_pages[\s\S]*page_type = 'contractor'/i, rows: contractorLanding },
     ]);
 }
 
@@ -108,6 +111,7 @@ test('изделия обслуживаются тем же механизмом
         { match: /FROM service_products sp/i, rows: [] },
         { match: /FROM order_products l/i, rows: [] },
         { match: /FROM cases c[\s\S]*WHERE c\.product_id/i, rows: [] },
+        { match: /FROM landing_pages[\s\S]*page_type = 'contractor'/i, rows: [] },
     ]);
     await withRoute(pool, async (app) => {
         const res = await app.request('/izdeliya/valy');
@@ -115,5 +119,94 @@ test('изделия обслуживаются тем же механизмом
         const html = res.buf.toString('utf8');
         assert.match(html, /Изготовление «Валы»/);
         assert.match(html, /Пока ни одно предприятие/, 'пустой каталог говорит правду');
+    });
+});
+
+// ─────────────────── Каталог подрядчиков ───────────────────
+// Четвёртая страница кластера. Здесь проверяется только проводка: что маршрут
+// пользуется lib/contractors-seo, а не решает по-своему.
+
+const CONTRACTOR_ENTITY = {
+    id: 4, slug: 'valy', name: 'Валы', kind: 'product', genitive: 'валов',
+};
+
+function contractorPool(landing, { companies = [], cities = [], regionTotals = [] } = {}) {
+    return fakePool([
+        // Сущность ищется в обоих справочниках: slug может принадлежать и
+        // услуге, и изделию.
+        { match: /FROM services e[\s\S]*UNION ALL[\s\S]*FROM products e/i,
+          rows: landing === undefined ? [] : [{ ...CONTRACTOR_ENTITY, ...landing }] },
+        { match: /COUNT\(\*\) OVER \(\)/i, rows: companies },
+        { match: /GROUP BY c\.city/i, rows: cities },
+        { match: /WHERE role = 'producer'/i, rows: regionTotals },
+    ]);
+}
+
+test('каталог подрядчиков отдаётся с индексацией при достаточном наполнении', async () => {
+    const companies = Array.from({ length: 6 }, (_, i) => ({
+        id: i + 1, company: `ООО Завод ${i + 1}`, city: 'Челябинск',
+        specialization: 'Токарная обработка', claimed: true, verified_by_platform: false,
+        total: 6,
+    }));
+    const pool = contractorPool({ status: 'published_index', redirect_to: '' }, {
+        companies,
+        cities: [{ name: 'Челябинск', count: 6 }],
+        regionTotals: [{ city: 'Челябинск', n: 40 }],
+    });
+    await withRoute(pool, async (app) => {
+        const res = await app.request('/podryadchiki/valy');
+        assert.equal(res.status, 200);
+        const html = res.buf.toString('utf8');
+        assert.match(html, /name="robots" content="index, follow"/);
+        assert.match(html, /Производители валов/, 'родительный падеж из справочника');
+        assert.match(html, /ООО Завод 1/, 'карточки в исходном HTML, без JavaScript');
+        assert.match(html, /rel="canonical" href="https:\/\/texzakaz\.ru\/podryadchiki\/valy"/);
+    });
+});
+
+test('каталог с наполнением ниже порога закрывается сам', async () => {
+    // Порог по умолчанию — 5 предприятий (ответ маркетинга 22.09, пункт 6).
+    const companies = [{
+        id: 1, company: 'ООО Единственный', city: 'Пермь', claimed: true,
+        verified_by_platform: false, total: 1,
+    }];
+    const pool = contractorPool({ status: 'published_index', redirect_to: '' }, { companies });
+    await withRoute(pool, async (app) => {
+        const res = await app.request('/podryadchiki/valy');
+        assert.equal(res.status, 200, 'человеку страница открыта');
+        assert.match(res.buf.toString('utf8'), /name="robots" content="noindex, follow"/,
+            'а роботу — нет: витрина с одним предприятием в индексе вредна');
+    });
+});
+
+test('каталог без записи в реестре отдаёт 404', async () => {
+    const pool = contractorPool({ status: null });
+    await withRoute(pool, async (app) => {
+        assert.equal((await app.request('/podryadchiki/valy')).status, 404);
+    });
+});
+
+test('страница услуги ссылается на каталог, только когда он открыт', async () => {
+    const companies = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1, company: `ООО Завод ${i + 1}`, city: 'Пермь', claimed: true,
+        verified_by_platform: false, total: 31,
+    }));
+    const withCatalog = poolFor(
+        { status: 'published_index', redirect_to: '' },
+        { companies, contractorLanding: [{ '?column?': 1 }] }
+    );
+    await withRoute(withCatalog, async (app) => {
+        const html = (await app.request('/uslugi/tokarnaya-obrabotka')).buf.toString('utf8');
+        assert.match(html, /href="\/podryadchiki\/tokarnaya-obrabotka"/);
+        assert.match(html, /Все 31 предприятие/, 'число берётся из общего счёта, а не из выдачи');
+    });
+
+    const withoutCatalog = poolFor(
+        { status: 'published_index', redirect_to: '' },
+        { companies, contractorLanding: [] }
+    );
+    await withRoute(withoutCatalog, async (app) => {
+        const html = (await app.request('/uslugi/tokarnaya-obrabotka')).buf.toString('utf8');
+        assert.ok(!/podryadchiki/.test(html), 'ссылки в никуда быть не должно');
     });
 });

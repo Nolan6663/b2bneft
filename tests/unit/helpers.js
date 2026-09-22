@@ -31,13 +31,20 @@ function fakeAuth(user) {
     return (req, res, next) => { req.user = user; next(); };
 }
 
-// deps.requireRole — фабрика middleware, как в server.js
+/* deps.requireRole — фабрика middleware, как в server.js.
+   Повторяет настоящую буквально, включая приём нескольких ролей
+   (requireRole('admin', 'seo')). Раньше двойник дополнительно пропускал
+   администратора куда угодно, чего настоящий не делает: из-за этого тест
+   разрешал то, что на живом сервере отвечает 403. */
 function fakeRequireRole() {
-    return (role) => (req, res, next) => {
-        if (req.user.role !== role && req.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Недостаточно прав' });
-        }
-        next();
+    return (...roles) => {
+        const allowed = roles.flat();
+        return (req, res, next) => {
+            if (!allowed.includes(req.user.role)) {
+                return res.status(403).json({ error: 'Недостаточно прав' });
+            }
+            next();
+        };
     };
 }
 

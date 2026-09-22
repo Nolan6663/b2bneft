@@ -333,7 +333,11 @@ function createAdminRouter(deps) {
         try {
             const id = Number(req.params.id);
             const { role } = req.body;
-            if (!['customer', 'producer', 'admin'].includes(role)) return res.status(400).json({ error: 'Неверная роль' });
+            /* `seo` — узкая роль для подрядчика по поисковой оптимизации: из
+               админки ей открыты только справочник, реестр посадочных и панель
+               спроса. Заявки на верификацию, список пользователей и контакты
+               предприятий остаются за ролью admin (см. requireRole). */
+            if (!['customer', 'producer', 'admin', 'seo'].includes(role)) return res.status(400).json({ error: 'Неверная роль' });
             await pool.query('UPDATE users SET role=$1 WHERE id=$2', [role, id]);
             res.json({ ok: true });
         } catch (e) { next(e); }

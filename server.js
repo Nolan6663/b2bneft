@@ -98,6 +98,10 @@ const {
 } = require('./lib/region-seo');
 const { renderSitemap, latest } = require('./lib/sitemap');
 const { INDEXABLE_STATUS } = require('./lib/catalog-schema');
+/* Хаб заказов и каталог подрядчиков закрываются сами при нехватке наполнения.
+   Карта сайта спрашивает те же предикаты, что и мета-тег на самой странице. */
+const ordersHub = require('./lib/orders-hub');
+const contractorsSeo = require('./lib/contractors-seo');
 const catalogSeo = require('./lib/catalog-seo');
 const { acceptWonProposal } = require('./lib/proposal-accept');
 const tzAi = require('./lib/ai-client');
@@ -1320,12 +1324,60 @@ app.get('/sitemap.xml', async (req, res, next) => {
            Фильтр стоит в SQL, а не в JS, намеренно: так черновики и noindex не
            попадут в карту даже при ошибке в коде выше — из базы они не выедут. */
         const { rows: landings } = await pool.query(
-            `SELECT url, updated_at FROM landing_pages
+            `SELECT url, updated_at, page_type, service_id, product_id FROM landing_pages
               WHERE status = $1 AND url <> ''
               ORDER BY url`,
             [INDEXABLE_STATUS]
         );
+
+        /* Двум типам страниц статуса мало. Хаб заказов и каталог подрядчиков
+           закрываются сами, когда наполнение падает ниже порога, — значит их
+           мета-тег зависит от живых чисел, а не только от решения редактора.
+           Карта сайта обязана спрашивать ровно тот же предикат: если она зовёт
+           робота туда, где стоит noindex, получается «просканировано, но не
+           проиндексировано» — то самое, ради чего всё это затевалось.
+
+           Числа берём двумя агрегатами, а не запросом на страницу: посадочных
+           немного, но расти их число будет десятками кластеров. */
+        const needsSupply = landings.some(l => l.page_type === 'order' || l.page_type === 'contractor');
+        const freshByEntity = new Map();
+        const companiesByEntity = new Map();
+        const entityKey = (l) => (l.service_id ? `s${l.service_id}` : (l.product_id ? `p${l.product_id}` : ''));
+        if (needsSupply) {
+            const { windowDays } = ordersHub.supplyRule();
+            const { rows: fresh } = await pool.query(`
+                SELECT 's' AS kind, os.service_id AS id, COUNT(*)::int AS n
+                  FROM order_services os JOIN orders o ON o.id = os.order_id
+                 WHERE o.status = 'Активный' AND o.created_at > NOW() - ($1::int * INTERVAL '1 day')
+                 GROUP BY os.service_id
+                 UNION ALL
+                SELECT 'p', op.product_id, COUNT(*)::int
+                  FROM order_products op JOIN orders o ON o.id = op.order_id
+                 WHERE o.status = 'Активный' AND o.created_at > NOW() - ($1::int * INTERVAL '1 day')
+                 GROUP BY op.product_id
+            `, [Number(windowDays)]);
+            for (const r of fresh) freshByEntity.set(`${r.kind}${r.id}`, r.n);
+
+            const { rows: supply } = await pool.query(`
+                SELECT 's' AS kind, cs.service_id AS id, COUNT(*)::int AS n
+                  FROM company_services cs JOIN companies c ON c.id = cs.company_id
+                 WHERE c.status <> 'Отклонено'
+                 GROUP BY cs.service_id
+                 UNION ALL
+                SELECT 'p', cp.product_id, COUNT(*)::int
+                  FROM company_products cp JOIN companies c ON c.id = cp.company_id
+                 WHERE c.status <> 'Отклонено'
+                 GROUP BY cp.product_id
+            `);
+            for (const r of supply) companiesByEntity.set(`${r.kind}${r.id}`, r.n);
+        }
+
         for (const l of landings) {
+            const landing = { status: INDEXABLE_STATUS };
+            if (l.page_type === 'order'
+                && !ordersHub.hubInSitemap(landing, freshByEntity.get(entityKey(l)) || 0)) continue;
+            if (l.page_type === 'contractor'
+                && !contractorsSeo.catalogInSitemap(landing, companiesByEntity.get(entityKey(l)) || 0)) continue;
             pages.push({
                 url: l.url, priority: '0.7', changefreq: 'weekly', lastmod: l.updated_at,
             });
@@ -1663,9 +1715,24 @@ async function sendVerificationEmail(user) {
     );
 }
 
-function requireRole(role) {
+/**
+ * Доступ по роли. Ролей может быть несколько: requireRole('admin', 'seo').
+ *
+ * Вторая роль появилась по ответу маркетинга 22.09 (пункт 5): разбор очереди
+ * поискового спроса — работа SEO-специалиста, и ему нужен доступ. Выдавать
+ * ради этого полного администратора нельзя: под админом лежат заявки на
+ * верификацию, список пользователей и контакты предприятий, то есть
+ * персональные данные, которых у подрядчика по SEO быть не должно (152-ФЗ
+ * ст. 5 ч. 2 — объём данных соразмерен цели обработки).
+ *
+ * Поэтому роль `seo` открывает ровно два раздела — справочник с реестром
+ * посадочных и панель спроса, — а все остальные обработчики остаются на
+ * requireRole('admin') и её не пускают.
+ */
+function requireRole(...roles) {
+    const allowed = roles.flat();
     return (req, res, next) => {
-        if (req.user.role !== role) {
+        if (!allowed.includes(req.user.role)) {
             return sendHttpError(req, res, 403, 'Недостаточно прав для этого действия');
         }
         next();
